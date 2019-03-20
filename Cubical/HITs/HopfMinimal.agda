@@ -30,30 +30,25 @@ rot : S¹ → S¹ → S¹
 rot base x     = x
 rot (loop i) x = rotLoop x i
 
-_*_ : S¹ → S¹ → S¹
-a * b = rot a b
-
-infixl 30 _*_
-
 inv : S¹ → S¹
 inv base = base
 inv (loop i) = loop (~ i)
 
-rotInv : (a b : S¹) → b * a * inv b ≡ a
+rotInv : (a b : S¹) → rot (rot b a) (inv b) ≡ a
 rotInv base base i = base
 rotInv base (loop k) i =
   hcomp (λ l → λ { (k = i0) → loop (i ∧ ~ l)
                  ; (k = i1) → base
-                 ; (i = i0) → loop k * loop (~ k)
+                 ; (i = i0) → rot (loop k) (loop (~ k))
                  ; (i = i1) → loop (~ k ∧ ~ l) })
-        (loop (k ∨ i) * loop (~ k))
+        (rot (loop (k ∨ i)) (loop (~ k)))
 rotInv (loop j) base i = loop j
 rotInv (loop j) (loop k) i =
-  hcomp (λ l → λ { (k = i0) → loop (i ∧ ~ l) * loop j
+  hcomp (λ l → λ { (k = i0) → rot (loop (i ∧ ~ l)) (loop j)
                  ; (k = i1) → loop j
-                 ; (i = i0) → loop k * loop j * loop (~ k)
-                 ; (i = i1) → loop (~ k ∧ ~ l) * loop j })
-        (loop (k ∨ i) * loop j * loop (~ k))
+                 ; (i = i0) → rot (rot (loop k) (loop j)) (loop (~ k))
+                 ; (i = i1) → rot (loop (~ k ∧ ~ l)) (loop j) })
+        (rot (rot (loop (k ∨ i)) (loop j)) (loop (~ k)))
 
 isPropFamS¹ : ∀ {ℓ} (P : S¹ → Set ℓ) (pP : (x : S¹) → isProp (P x)) (b0 : P base) →
               PathP (λ i → P (loop i)) b0 b0
@@ -78,4 +73,4 @@ TotalHopf→JoinS¹S¹ south x = inr x
 TotalHopf→JoinS¹S¹ (merid y j) x =
   hcomp (λ t → λ { (j = i0) → inl (rotInv x y t)
                  ; (j = i1) → inr x })
-        (push (unglue (j ∨ ~ j) x * inv y) (unglue (j ∨ ~ j) x) j)
+        (push (rot (unglue (j ∨ ~ j) x) (inv y)) (unglue (j ∨ ~ j) x) j)
