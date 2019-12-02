@@ -54,8 +54,8 @@ isSet-Iso-≡ A isSet-A = iso (isoToPath) pathToIso h-sec h-ret
                      (funExt λ x → cong (Iso.inv a) (transportRefl _))
 
 
-record IsDefinition₂ (B : Type₀ → Type₁) : Type₁ where
-  constructor isDefinition₂
+record IsDefinition (B : Type₀ → Type₁) : Type₁ where
+  constructor isDefinition
 
   field
     ww1 : ∀ A₁ A₂ → B A₁ → B A₂ → A₁ → A₂
@@ -63,52 +63,25 @@ record IsDefinition₂ (B : Type₀ → Type₁) : Type₁ where
     ww2 : ∀ A₁ A₂ → ∀ x → ∀ xx → section (ww1 A₂ A₁ x xx) (ww1 A₁ A₂ xx x)
 
 
-  f1 : ∀ A₁ A₂ → B A₂ → B A₁ → A₂ ≡ A₁
-  f1 A₁ A₂ x xx = isoToPath (iso (ww1 A₂ A₁ x xx) (ww1 A₁ A₂ xx x) (ww2 A₁ A₂ x xx) ((ww2 A₂ A₁ xx x)))  
+  defToIso : ∀ {A₁ A₂} → B A₂ → B A₁ → Iso A₂ A₁
+  defToIso {A₁} {A₂} x xx = (iso (ww1 A₂ A₁ x xx) (ww1 A₁ A₂ xx x) (ww2 A₁ A₂ x xx) ((ww2 A₂ A₁ xx x)))  
 
-  f1-1 : ∀ A → ∀ ba → f1 A A ba ba ≡ refl
-  f1-1 A ba = isInjectiveTransport (funExt λ x → cong (transp (λ i → A) i0) (ww-law _ _ x))
+  defToPath : ∀ {A₁ A₂} → B A₂ → B A₁ → A₂ ≡ A₁
+  defToPath {A₁} {A₂} x xx = isoToPath (defToIso x xx)  
 
-  def-11 : ∀ A₁ A₂ → (ba1 : B A₁) →  (b : A₁ ≡ A₂) → f1 A₂ A₁ ba1 (subst B b ba1) ≡ b
-  def-11 A₁ A₂ ba1 b = J {x = A₁} (λ y x → f1 y A₁ ba1 ((subst B x ba1)) ≡ x) ((cong (f1 A₁ A₁ ba1 ) (transportRefl _) ∙ f1-1 A₁ ba1)) b
+  defToPath-Refl : ∀ {A} → ∀ ba → defToPath ba ba ≡ refl
+  defToPath-Refl {A} ba = isInjectiveTransport (funExt λ x → cong (transp (λ i → A) i0) (ww-law _ _ x))
 
+  defToPath-consistent : ∀ {A₁ A₂} → (ba : B A₁) →  (b : A₁ ≡ A₂) → defToPath ba (subst B b ba) ≡ b
+  defToPath-consistent ba b =
+    J {x = _} (λ y x → defToPath {y} {_} ba ((subst B x ba)) ≡ x) ((cong (defToPath ba ) (transportRefl _) ∙ defToPath-Refl ba)) b
 
+  -- It would be nice to have this, but i am unable to prove it for any B
+  
   -- field
-  --   ww3′ : ∀ A → ∀ x a → subst B (f1 A A x a) x ≡ a
-
-
-  field
-    ww3 : ∀ A₁ A₂ → ∀ x → (a : B A₂) → subst B (f1 A₂ A₁ x a) x ≡ a
-
-
-  -- ww3 : ∀ A₁ A₂ → ∀ x → (a : B A₂) → subst B (f1 A₂ A₁ x a) x ≡ a
-  -- ww3 A₁ A₂ x a = {!cong !} ∙ (ww3′ A₂ (subst B (f1 A₂ A₁ x a) x) a)
+  --   ww3 : ∀ A₁ A₂ → ∀ x → (a : B A₂) → subst B (f1 A₂ A₁ x a) x ≡ a
 
   -- def-≡ : ∀ A₁ A₂ → B A₁ → (( (B A₂)) ≡ ( (A₁ ≡ A₂)))
   -- def-≡ A₁ A₂ x = isoToPath (iso (λ x₁ → (f1 A₂ A₁ x (x₁))) (λ x₁ → (subst B ( x₁) x)) (def-11 A₁ A₂ x) ( ww3 A₁ A₂ x))
 
 
-
--- record IsUnit (A : Type₀) : Type₁ where
---   constructor isUnit
---   field
---     unit : A
---     Unit-induction : (F : A → Type₀) → F unit → (x : A) → (F x)
---     Unit-induction-unit : ∀ F → ∀ f → Unit-induction F f unit ≡ f
-
---   isContr-Unit : isContr A
---   isContr-Unit = unit , Unit-induction _ refl
-
--- IsUnit⊤ : IsUnit (fst ⊤)
--- IsUnit⊤ = isUnit
---   _
---   (λ F x x₁ → x)
---   λ F f → refl
-
--- UnitDef : IsDefinition₂ IsUnit
--- IsDefinition₂.ww1 UnitDef A₁ A₂ x y = IsUnit.Unit-induction x (λ _ → A₂) (IsUnit.unit y)
--- IsDefinition₂.ww-law UnitDef A ba x =  let e1 = (snd (IsUnit.isContr-Unit ba) x)
---                                        in subst (λ x → (IsUnit.Unit-induction ba (λ _ → A) (IsUnit.unit ba) x ≡ x) ) e1
---                                                 (IsUnit.Unit-induction-unit ba (λ v → A) (IsUnit.unit ba))
--- IsDefinition₂.ww2 UnitDef A₁ A₂ x xx b = {!!}
--- IsDefinition₂.ww3 UnitDef A₁ A₂ x a = {!!}
