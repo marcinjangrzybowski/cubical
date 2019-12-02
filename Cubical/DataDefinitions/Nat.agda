@@ -144,6 +144,9 @@ record isNat (ℕ : Type₀) : Type (ℓ-suc ℓ-zero) where
   isSet-Nat = Discrete→isSet Discrete-ℕ 
 
 
+
+
+
 isDefinition-isNat : IsDefinition isNat
 isDefinition-isNat = isDefinition h-f h-p h-pp
   where

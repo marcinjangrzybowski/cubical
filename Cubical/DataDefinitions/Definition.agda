@@ -85,4 +85,26 @@ record IsDefinition (B : Type₀ → Type₁) : Type₁ where
   -- def-≡ : ∀ A₁ A₂ → B A₁ → (( (B A₂)) ≡ ( (A₁ ≡ A₂)))
   -- def-≡ A₁ A₂ x = isoToPath (iso (λ x₁ → (f1 A₂ A₁ x (x₁))) (λ x₁ → (subst B ( x₁) x)) (def-11 A₁ A₂ x) ( ww3 A₁ A₂ x))
 
+record IsFamilyDefinition {B₀} {isd : IsDefinition B₀} (B : ∀ {A₀} → B₀ A₀ → (A₀ → Type₀) → Type₁) : Type₁ where
+  constructor isFamilyDefinition
+  field
+    wf1 : ∀ {A₀} → ∀ {b₀a₀ : B₀ A₀} → ∀ A₁ A₂
+            → (B b₀a₀ A₁) → (B b₀a₀ A₂) → ∀ a₀ → A₁ a₀ → A₂ a₀
+    wf-law : ∀ {A₀} → ∀ {b₀a₀ : B₀ A₀} → ∀ A → ∀ ba → (a₀ : A₀) → (x : A a₀) → wf1 {b₀a₀ = b₀a₀} A A ba ba a₀ x ≡ x
+    wf2 : ∀ {A₀} → ∀ {b₀a₀ : B₀ A₀} → ∀ A₁ A₂
+            → (ba₁ : B b₀a₀ A₁) → (ba₂ : B b₀a₀ A₂) → ∀ a₀
+            → section (wf1 {A₀} {b₀a₀} A₂ A₁ ba₂ ba₁ a₀) (wf1 {A₀} {b₀a₀} A₁ A₂ ba₁ ba₂ a₀)
 
+
+  defToIso : ∀ {A₀} → ∀ {b₀a₀ : B₀ A₀} → ∀ A₁ A₂
+               → (ba₁ : B b₀a₀ A₁) → (ba₂ : B b₀a₀ A₂) → ∀ a₀ → Iso (A₁ a₀) (A₂ a₀)
+  defToIso {A₀} {b₀a₀} A₁ A₂ ba₁ ba₂ a₀ =
+    iso
+    (wf1 {A₀} {b₀a₀} A₁ A₂ ba₁ ba₂ a₀)
+    (wf1 {A₀} {b₀a₀} A₂ A₁ ba₂ ba₁ a₀)
+    (wf2 {A₀} {b₀a₀} A₂ A₁ ba₂ ba₁ a₀)
+    (wf2 {A₀} {b₀a₀} A₁ A₂ ba₁ ba₂ a₀) 
+
+  defToPath : ∀ {A₀} → ∀ {b₀a₀ : B₀ A₀} → ∀ A₁ A₂
+               → (ba₁ : B b₀a₀ A₁) → (ba₂ : B b₀a₀ A₂) → (A₁ ≡ A₂)
+  defToPath {A₀} {b₀a₀} A₁ A₂ ba₁ ba₂ = funExt λ x → isoToPath (defToIso {A₀} {b₀a₀} A₁ A₂ ba₁ ba₂ x) 
