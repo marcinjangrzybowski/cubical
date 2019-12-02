@@ -165,8 +165,8 @@ isDefinition-isNat = isDefinition h-f h-p h-pp
                           ∙ cong (isNat.suc xx) pred=
 
 
-isNat-ℕ : isNat orgℕ.ℕ
-isNat-ℕ = c-isNat
+IsNat-ℕ : isNat orgℕ.ℕ
+IsNat-ℕ = c-isNat
   orgℕ.zero
   orgℕ.suc
   (λ A → orgℕ.ℕ-induction {_} {A})

@@ -77,6 +77,7 @@ record IsDefinition (B : Type₀ → Type₁) : Type₁ where
     J {x = _} (λ y x → defToPath {y} {_} ba ((subst B x ba)) ≡ x) ((cong (defToPath ba ) (transportRefl _) ∙ defToPath-Refl ba)) b
 
   -- It would be nice to have this, but i am unable to prove it for any B
+  -- would it be provalbe using parametricity?
   
   -- field
   --   ww3 : ∀ A₁ A₂ → ∀ x → (a : B A₂) → subst B (f1 A₂ A₁ x a) x ≡ a
