@@ -37,12 +37,13 @@ IsUnit⊤ = isUnit
 UnitDef : IsDefinition IsUnit
 IsDefinition.ww1 UnitDef A₁ A₂ x y = IsUnit.Unit-induction x (λ _ → A₂) (IsUnit.unit y)
 IsDefinition.ww-law UnitDef A ba x = isContr→isProp (IsUnit.isContr-Unit ba) _ _
-IsDefinition.ww2 UnitDef A₁ A₂ x xx b = isContr→isProp (IsUnit.isContr-Unit xx) _ _
+IsDefinition.ww3 UnitDef A₁ A₂ A₃ x₁ x₂ x₃ b = isContr→isProp (IsUnit.isContr-Unit x₃) _ _
 
 UnitDef₂ : IsDefinition (isContr ∘ Lift)
 IsDefinition.ww1 UnitDef₂ A₁ A₂ x x₁ x₂ = lower (fst x₁)
 IsDefinition.ww-law UnitDef₂ A ba x = isContr→isProp ((lower (fst ba)) , λ y → cong lower (snd ba (lift y))) _ _
-IsDefinition.ww2 UnitDef₂ A₁ A₂ x xx b = isContr→isProp ((lower (fst xx)) , λ y → cong lower (snd xx (lift y))) _ _
-
+IsDefinition.ww3 UnitDef₂ A₁ A₂ A₃ ba₁ ba₂ ba₃ x = isContr→isProp (((lower (fst ba₃)) , λ y → cong lower (snd ba₃ (lift y)))) _ _
+ 
 IsUnit-Unit : IsUnit Unit
 IsUnit-Unit = isUnit _ (λ F x x₁ → x) λ F f → refl
+

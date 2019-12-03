@@ -120,6 +120,10 @@ IsFamilyDefinition-IsFin =
       (Empty.⊥-elim ∘(IsFin.¬Fin0 isfin₁))
       λ n x → IsFin.finduction isfin₁ (λ {v} v₁ → A₂ v) (IsFin.fzero isfin₂ ) (IsFin.fsuc isfin₂) {isNat.suc isnat n}
 
+
+    
+    
+
     wf-law : ∀ {ℕ} → ∀ {isnat : isNat ℕ} → ∀ A → ∀ isfin → (n : ℕ) → (x : A n) → wf1 {isnat = isnat} A A isfin isfin n x ≡ x
     wf-law {ℕ} {isnat} A isfin = isNat.ℕ-induction isnat
            (λ z → (x : A z) → wf1 A A isfin isfin z x ≡ x)
@@ -137,7 +141,38 @@ IsFamilyDefinition-IsFin =
     wf2 : ∀ {ℕ} → ∀ {isnat : isNat ℕ} → ∀ A₁ A₂
             → (isfin₁ : IsFin isnat A₁) → (isfin₂ : IsFin isnat A₂) → ∀ n
             → section (wf1 {isnat = isnat} A₂ A₁ isfin₂ isfin₁ n) (wf1 {isnat = isnat} A₁ A₂ isfin₁ isfin₂ n)            
-    wf2 A₁ A₂ isfin₁ isfin₂ n b = {!!}
+    wf2 {ℕ} {isnat} A₁ A₂ isfin₁ isfin₂ =
+     ℕ-induction _
+      (((Empty.⊥-elim ∘(IsFin.¬Fin0 isfin₁))))
+      λ n x → 
+       IsFin.finduction isfin₁
+        (λ {v} fv → (wf1 A₂ A₁ isfin₂ isfin₁ (v)) ((wf1 A₁ A₂ isfin₁ isfin₂ (v)) fv) ≡ fv)
+        (λ {k} →  (cong (λ f → f ((ℕ-induction (λ z → A₁ z → A₂ z)
+       (λ x₁ → Empty.⊥-elim (IsFin.¬Fin0 isfin₁ x₁))
+       (λ n₁ x₁ →
+          IsFin.finduction isfin₁ (λ {v} v₁ → A₂ v) (IsFin.fzero isfin₂)
+          (λ {k = k₁} {fn} → IsFin.fsuc isfin₂))
+       (suc k) (IsFin.fzero isfin₁))))  (h1 _ _ k _ _))
+       ∙ cong (IsFin.finduction isfin₂ (λ {v} v₁ → A₁ v)
+      (IsFin.fzero isfin₁) (λ {k = k₁} {fn} → IsFin.fsuc isfin₁)) (cong (λ f → f (IsFin.fzero isfin₁)) (h1 A₂ A₁ k _ _))
+        ∙ cong (IsFin.finduction isfin₂ (λ {v} v₁ → A₁ v)
+      (λ {k = k₁} → IsFin.fzero isfin₁)
+      (λ {k = k₁} {fn} → IsFin.fsuc isfin₁)) (IsFin.finduction-zero isfin₁ (λ {v} v₁ → A₂ v) (λ {k = k₁} → IsFin.fzero isfin₂) (λ {k = k₁} {fn} → IsFin.fsuc isfin₂) k) 
+        ∙ (IsFin.finduction-zero isfin₂ (λ {v} v₁ → A₁ v) (λ {k = k₁} → IsFin.fzero isfin₁) (λ {k = k₁} {fn} → IsFin.fsuc isfin₁) k)
+         )
+        {!
+        !}
+
+      where
+
+      open isNat isnat
+
+      h1 : ∀ (A₁ A₂ : ℕ → Type₀) → ∀ k → ∀ ze → ∀ s →  ℕ-induction (λ z → A₂ z → A₁ z) ze s (suc k) ≡
+                                s k (ℕ-induction (λ z → A₂ z → A₁ z) ze s k)
+      h1  A₁ A₂ k ze s = ℕ-induction-suc (λ z → A₂ z → A₁ z) ze s k
+
+
+
 
 Fin⊎ : orgℕ.ℕ → Set
 Fin⊎ orgℕ.zero = fst ⊥
@@ -162,3 +197,4 @@ IsFin-Fin⊎ = isFin
                     {k : orgℕ.ℕ} (fn : Fin⊎ k) → P fn
     finduction⊎ P x x₁ {orgℕ.suc k} (_⊎_.inl x₂) = x₁ (finduction⊎ P x x₁ {k} x₂)
     finduction⊎ P x x₁ {orgℕ.suc k} (_⊎_.inr x₂) = x
+
