@@ -9,6 +9,10 @@ open import Cubical.Data.Sum
 
 open import Cubical.Data.Sigma
 
+open import Cubical.Data.Bool
+
+open import Cubical.Data.Unit
+
 open import Cubical.Relation.Nullary
 
 
@@ -58,7 +62,7 @@ isSet-Iso-≡ A isSet-A = iso (isoToPath) pathToIso h-sec h-ret
 
 
 record IsDefiningProperty (B : Type₀ → Type₁) : Type₁ where
-  constructor isDefinition
+  constructor isDefiningProperty
 
   field
     ww1 : ∀ A₁ A₂ → B A₁ → B A₂ → A₁ → A₂
@@ -70,6 +74,7 @@ record IsDefiningProperty (B : Type₀ → Type₁) : Type₁ where
 
   ww2 : ∀ A₁ A₂ → ∀ x → ∀ xx → section (ww1 A₂ A₁ x xx) (ww1 A₁ A₂ xx x)
   ww2 A₁ A₂ x xx b = (ww3 A₁ A₂ A₁ xx x xx b) ∙ (ww-law _ _ b) 
+
 
   defToIso : ∀ {A₁ A₂} → B A₂ → B A₁ → Iso A₂ A₁
   defToIso {A₁} {A₂} x xx = (iso (ww1 A₂ A₁ x xx) (ww1 A₁ A₂ xx x) (ww2 A₁ A₂ x xx) ((ww2 A₂ A₁ xx x)))  
@@ -83,7 +88,12 @@ record IsDefiningProperty (B : Type₀ → Type₁) : Type₁ where
   defToPath-consistent : ∀ {A₁ A₂} → (ba : B A₁) →  (b : A₁ ≡ A₂) → defToPath ba (subst B b ba) ≡ b
   defToPath-consistent ba b =
     J {x = _} (λ y x → defToPath {y} {_} ba ((subst B x ba)) ≡ x) ((cong (defToPath ba ) (transportRefl _) ∙ defToPath-Refl ba)) b
-  
+
+  -- zzz : ∀ A₀ → (ba₀ : B A₀)
+  --         → ∀ A₁ A₂ → ∀ ba₁ → ∀ ba₂
+  --         → ∀ x →  ww1 A₁ A₂ ba₁ ba₂ x ≡ {!(defToPath ba₁ ba₀) ∙ (defToPath ba₀ ba₂) !}
+  -- zzz = {!!}
+
   xxx : {𝓘 : Type₀} {𝓐 : 𝓘 → Type₀} (B𝓐 : ∀ 𝓲 → B (𝓐 𝓲 )) → Type₀
   xxx {𝓘} {𝓐} B𝓐 = (Σ 𝓘 𝓐) / λ x x₁ → ww1 _ _ (B𝓐 (fst x)) (B𝓐 (fst x₁)) (snd x) ≡ (snd x₁)
 
@@ -107,6 +117,9 @@ record IsDefiningProperty (B : Type₀ → Type₁) : Type₁ where
 
 record Definition : Type (ℓ-suc (ℓ-suc ℓ-zero)) where
   constructor definition
+
+  open IsDefiningProperty
+
   field
     𝑰def : Type₀
     defs : 𝑰def → Type₀ → Type₁
@@ -114,10 +127,49 @@ record Definition : Type (ℓ-suc (ℓ-suc ℓ-zero)) where
     defs→ : ∀ {𝒊₁} {𝒊₂} → ∀ {A} → defs 𝒊₁ A → defs 𝒊₂ A
     defs-id : ∀ {𝒊} → ∀ {A} → (d : defs 𝒊 A) → defs→ d ≡ d
     defs-∘ : ∀ {𝒊₁ 𝒊₂ 𝒊₃} → ∀ {A} →
-               (x : defs _ A) → ((defs→ {𝒊₂} {𝒊₃}) ∘ (defs→ {𝒊₁} {𝒊₂})) x ≡ (defs→ {𝒊₁} {𝒊₃}) x  
+               (x : defs _ A) → ((defs→ {𝒊₂} {𝒊₃}) ∘ (defs→ {𝒊₁} {𝒊₂})) x ≡ (defs→ {𝒊₁} {𝒊₃}) x
+
+  def-trans : ∀ {𝒊₁ 𝒊₂} → ∀ {A₁ A₂} → (ba₁ : defs 𝒊₁ A₁) → (ba₂ : defs 𝒊₂ A₂)
+               → A₁ → A₂ 
+  def-trans = λ ba₁ ba₂ → ww1 {B = defs _} areDefs _ _ ba₁ (defs→ ba₂)
 
 
+  def-trans′ : ∀ {𝒊₁ 𝒊₂} → ∀ {A₁ A₂} → (ba₁ : defs 𝒊₁ A₁) → (ba₂ : defs 𝒊₂ A₂)
+               → A₁ → A₂ 
+  def-trans′ = λ ba₁ ba₂ → ww1 {B = defs _} areDefs _ _ (defs→ ba₁) ba₂
 
+
+  field
+    defs-f : ∀ {𝒊₁} {𝒊₂} → ∀ {A₁ A₂} → (ba₁ : defs 𝒊₁ A₁) → (ba₂ : defs 𝒊₂ A₂) → ∀ x
+               → def-trans ba₁ ba₂ x ≡ def-trans′ ba₁ ba₂ x 
+
+  defs-F : ∀ {𝒊₁} {𝒊₂} → ∀ {A₁ A₂} → (ba₁ : defs 𝒊₁ A₁) → (ba₂ : defs 𝒊₁ A₂) → ∀ x
+               → ww1 {B = defs _} areDefs _ _ ba₁ ba₂ x
+               ≡
+               ww1 {B = defs 𝒊₂} areDefs _ _ (defs→ ba₁) (defs→ ba₂) x
+  defs-F ba₁ ba₂ x =
+   cong (λ qq → ww1 areDefs _ _ ba₁ qq x) (sym ( defs-∘ _ ∙ (defs-id _)))
+   ∙ defs-f ba₁ (defs→ ba₂) x
+
+
+Being : ∀ A → isSet A → IsDefiningProperty (A ≡_)
+Being A isSetA =
+  isDefiningProperty
+  (λ A₁ A₂ x x₁ → transport ((sym x) ∙ x₁))
+  (λ A₁ ba x → transportTransport⁻ ba (transport refl x) ∙ (transportRefl x))
+  (λ A₁ A₂ A₃ ba₁ ba₂ ba₃ x →
+   J
+   (λ A₂′ ba₂′ → ((λ {a} → transport ((λ i → ba₂′ (~ i)) ∙ ba₃)) ∘ transport ((λ i → ba₁ (~ i)) ∙ ba₂′)) x
+                           ≡ transport ((λ i → ba₁ (~ i)) ∙ ba₃) x)
+   (J (λ A₃′ ba₃′ → transport ((λ i → refl {x = A} (~ i)) ∙ ba₃′) (transport ((λ i → ba₁ (~ i)) ∙ refl) x) ≡ transport ((λ i → ba₁ (~ i)) ∙ ba₃′) x)
+   (cong (transp (λ i → A) i0) (transportRefl (transp (λ .i → A) i0
+       (transp (λ i → A) i0
+        (transp (λ i → ba₁ (~ i)) i0 (transp (λ .i → A₁) i0 x)))) ∙ (transportRefl (transp (λ i → A) i0
+       (transp (λ i → ba₁ (~ i)) i0 (transp (λ .i → A₁) i0 x))) ∙ transportRefl _ )))
+   ba₃)
+   ba₂
+  )
+  λ A₁ x → subst isSet x isSetA
 
 record DataType : Type (ℓ-suc (ℓ-suc ℓ-zero)) where
 
@@ -136,14 +188,29 @@ record DataType : Type (ℓ-suc (ℓ-suc ℓ-zero)) where
     impl : 𝑰 → Type₀
     impl-ok : ∀ 𝒊 → defs (impl-dp 𝒊) (impl 𝒊)
 
+  impl→′ : ∀ {𝒊₁ 𝒊₂} → impl 𝒊₁ → impl 𝒊₂ 
+  impl→′ {𝒊₁} {𝒊₂} x =  ww1 {B = defs (impl-dp 𝒊₂)} areDefs (impl 𝒊₁) (impl 𝒊₂) (defs→ ((impl-ok 𝒊₁))) (impl-ok 𝒊₂) x
+
   impl→ : ∀ {𝒊₁ 𝒊₂} → impl 𝒊₁ → impl 𝒊₂ 
-  impl→ {𝒊₁} {𝒊₂} x =  ww1 {B = defs (impl-dp 𝒊₂)} areDefs (impl 𝒊₁) (impl 𝒊₂) (defs→ ((impl-ok 𝒊₁))) (impl-ok 𝒊₂) x
+  impl→ {𝒊₁} {𝒊₂} x = ww1 {B = defs (impl-dp 𝒊₁)} areDefs (impl 𝒊₁) (impl 𝒊₂) ((impl-ok 𝒊₁)) (defs→ (impl-ok 𝒊₂)) x
 
-  -- data DT : Type₀ where
-  --   dt : ∀ 𝒊 → impl 𝒊 → DT
-  --   dt= : ∀ 𝒊₁ 𝒊₂ → ∀ a → dt 𝒊₁ a ≡ dt 𝒊₂ (impl→ a)
+  def-impl-law : ∀ {𝒊₁ 𝒊₂} → ∀ x → impl→ {𝒊₁} {𝒊₂} x ≡ impl→′ x
+  def-impl-law = defs-f _ _
 
+  impl-id : ∀ {𝒊} → ∀ x → impl→ {𝒊} {𝒊} x ≡ x
+  impl-id {𝒊} x = subst (λ q → ww1 areDefs (impl 𝒊) (impl 𝒊) (impl-ok 𝒊) (q) x ≡ x)
+                  (sym (defs-id (impl-ok 𝒊)))
+                  (ww-law areDefs _ (impl-ok 𝒊) x)
   
+  def-impl-∘ : ∀ {𝒊₁ 𝒊₂ 𝒊₃} → ∀ x → impl→ {𝒊₂} {𝒊₃} (impl→ {𝒊₁} {𝒊₂} x) ≡ impl→ x
+  def-impl-∘ {𝒊₁} {𝒊₂} {𝒊₃} x =
+     (cong (λ f → f ((ww1 areDefs (impl 𝒊₁) (impl 𝒊₂) (impl-ok 𝒊₁) (defs→ (impl-ok 𝒊₂)) x)))
+              (funExt (defs-F {impl-dp 𝒊₂} {impl-dp 𝒊₁} (impl-ok 𝒊₂) (defs→ (impl-ok 𝒊₃)))))
+     ∙ ww3 areDefs (impl 𝒊₁) (impl 𝒊₂) (impl 𝒊₃) (impl-ok 𝒊₁) (defs→ (impl-ok 𝒊₂)) (defs→ (defs→ (impl-ok 𝒊₃))) x  
+     ∙ cong (λ qq → ww1 areDefs (impl 𝒊₁) (impl 𝒊₃) (impl-ok 𝒊₁) (qq) x) (defs-∘ _)
+
+  def-section : ∀ {𝒊₁ 𝒊₂} →  section (impl→ {𝒊₂} {𝒊₁}) (impl→ {𝒊₁} {𝒊₂})
+  def-section {𝒊₁} {𝒊₂} b = def-impl-∘ _ ∙ impl-id _
 
   DT : Type₀ 
   DT = Σ _ impl / λ a b → impl→ (snd a) ≡ snd b
@@ -153,14 +220,110 @@ record DataType : Type (ℓ-suc (ℓ-suc ℓ-zero)) where
     (λ x → _/_.[ _ , x ])
     (elimSetQuotients (λ x → ww-Set (areDefs {impl-dp 𝒊}) (impl 𝒊) (impl-ok _))
       (λ a → impl→ (snd a))
-      λ a b r →
-       {!!})
-    (( elimSetQuotientsProp (λ x → squash/ _ x) (λ a → eq/ _ a {!!})))
-    {!!}
+      λ a b r → ((sym (def-impl-∘ _)) ∙  (cong (impl→) r)))
+    (( elimSetQuotientsProp (λ x → squash/ _ x) (λ a → eq/ _ a (def-section _))))
+    λ a → impl-id _
+    -- λ a → 
     )
 
-  B-DT : ∀ 𝒊 → defs 𝒊 DT
-  B-DT = {!!}
+  B-DT : ∀ 𝒊def → ∀ 𝒊 → defs 𝒊def DT
+  B-DT 𝒊def 𝒊 = subst (defs 𝒊def) (DT≡ 𝒊 ) (defs→ (impl-ok 𝒊) )
+
+
+
+
+TrivialDef : (A : Type₀) → isSet A → Definition
+TrivialDef A isSet-A =
+  definition
+    Unit
+    (λ _ → A ≡_)
+    (Being _ isSet-A)
+    (idfun _)
+    (λ _ → refl)
+    (λ _ → refl)
+    λ ba₁ ba₂ x → refl
+
+
+SimpleDef : ∀ {B} → IsDefiningProperty B → Definition
+SimpleDef {B} idp =
+  definition
+    Unit
+    (λ _ → B)
+    idp
+    (idfun _)
+    (λ _ → refl)
+    (λ _ → refl)
+    λ ba₁ ba₂ x → refl
+
+
+record _Def≈_ {B₁ B₂} (idp₁ : IsDefiningProperty B₁) (idp₂ : IsDefiningProperty B₂) : Type₁ where
+  constructor def≈
+
+  open IsDefiningProperty
+
+  field 
+    1→2 : ∀ {A} → B₁ A → B₂ A
+    2→1 : ∀ {A} → B₂ A → B₁ A
+    sec : ∀ {A} → section (1→2 {A}) 2→1
+    ret : ∀ {A} → retract (1→2 {A}) 2→1
+    law≈ : ∀ {A₁′} → ∀ {A₂′} → ∀ ba₁′ → ∀ ba₂′ → ∀ x →
+                        ww1 idp₂ A₁′ A₂′ ba₁′ (1→2 ba₂′) x ≡
+                        ww1 idp₁ A₁′ A₂′ (2→1 ba₁′) ba₂′ x 
+  
+  law≈′ : (∀ {A₁′} → ∀ {A₂′} → ∀ ba₁′ → ∀ ba₂′ → ∀ x → IsDefiningProperty.ww1 idp₁ A₁′ A₂′ ba₁′ (2→1 ba₂′) x ≡
+                        IsDefiningProperty.ww1 idp₂ A₁′ A₂′ (1→2 ba₁′) ba₂′ x )
+  law≈′ {A₁′} {A₂′} ba₁′ ba₂′ x =
+      (cong (λ ba₁′ → ww1 idp₁ A₁′ A₂′ ba₁′ (2→1 ba₂′) x) (sym (ret ba₁′)))
+      ∙ sym (law≈ {A₁′} {A₂′} (1→2 ba₁′) (2→1 ba₂′) x) ∙
+      cong (λ a →  ww1 idp₂ A₁′ A₂′ (1→2 ba₁′) a x) (sec ba₂′)
+
+  
+  From2Defs′ : Definition
+  From2Defs′ = 
+     definition
+       Bool
+       (caseBool B₁ B₂)
+       (λ {b} → areDefs b)
+       defs→
+       defs-id
+       (λ {𝒊₁} {𝒊₂} {𝒊₃} {A} → defs-∘ {𝒊₁} {𝒊₂} {𝒊₃} {A})
+       λ {𝒊₁} {𝒊₂} {A₁} {A₂} → defs-f {𝒊₁} {𝒊₂} {A₁} {A₂}
+
+     where
+       areDefs : ∀ b → IsDefiningProperty (caseBool B₁ B₂ b)
+       areDefs false = idp₂
+       areDefs true = idp₁
+
+       defs→ : {𝒊₁ 𝒊₂ : Bool} {A : Set} → caseBool B₁ B₂ 𝒊₁ A → caseBool B₁ B₂ 𝒊₂ A
+       defs→ {false} {false} {A} x = x
+       defs→ {false} {true} {A} = 2→1
+       defs→ {true} {false} {A} = 1→2
+       defs→ {true} {true} {A} x = x
+
+       defs-id : {𝒊 : Bool} {A : Set} (d : caseBool B₁ B₂ 𝒊 A) → defs→ d ≡ d
+       defs-id {false} d = refl
+       defs-id {true} d = refl
+
+       defs-∘ :  {𝒊₁ 𝒊₂ 𝒊₃ : Bool} {A : Set} (x : caseBool B₁ B₂ 𝒊₁ A) → (defs→ ∘ defs→ {𝒊₁} {𝒊₂}) x ≡ defs→ x
+       defs-∘ {false} {false} {false} x = refl
+       defs-∘ {false} {false} {true} x = refl
+       defs-∘ {false} {true} {false} = sec 
+       defs-∘ {false} {true} {true} x = refl
+       defs-∘ {true} {false} {false} x = refl
+       defs-∘ {true} {false} {true} = ret
+       defs-∘ {true} {true} {false} x = refl
+       defs-∘ {true} {true} {true} x = refl
+
+       defs-f : {𝒊₁ 𝒊₂ : Bool} {A₁ A₂ : Set} (ba₁ : caseBool B₁ B₂ 𝒊₁ A₁)
+                   (ba₂ : caseBool B₁ B₂ 𝒊₂ A₂) (x : A₁) →
+                    IsDefiningProperty.ww1 (areDefs 𝒊₁) A₁ A₂ ba₁ (defs→ ba₂) x ≡
+                    IsDefiningProperty.ww1 (areDefs 𝒊₂) A₁ A₂ (defs→ ba₁) ba₂ x
+       defs-f {false} {false} ba₁ ba₂ x = refl
+       defs-f {false} {true} = law≈
+       defs-f {true} {false} = law≈′
+       defs-f {true} {true} ba₁ ba₂ x = refl
+
+
 
 -- IsDef≡ : (A : Type₀) → IsDefinition λ x → A ≡ x
 -- IsDef≡ A = isDefinition
