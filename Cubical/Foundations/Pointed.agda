@@ -51,14 +51,14 @@ f ~* g = PDM _ (λ a → (fst f) a ≡ (fst g) a) (snd f ∙ (sym (snd g)))
 
 cong-sym : ∀ {ℓ} → {A : Type ℓ} → {x y z : A} → (p : x ≡ y) → (q : y ≡ z)
              → sym (p ∙ q) ≡ (sym q) ∙ (sym p)
-cong-sym p q = J (λ y₁ q′ → sym (p ∙ q′) ≡ sym q′ ∙ sym p)
+cong-sym p = J (λ y₁ q′ → sym (p ∙ q′) ≡ sym q′ ∙ sym p)
               (J (λ _ p′ → (λ i → (p′ ∙ refl) (~ i)) ≡
-              (λ i → refl (~ i)) ∙ (λ i → p′ (~ i))) refl p) q
+              (λ i → refl (~ i)) ∙ (λ i → p′ (~ i))) refl p)
 
 cong-∘ :  ∀ {ℓ ℓ′} → {A : Type ℓ} → {B : Type ℓ′} → (f : A → B)  → {x y z : A} → (p : x ≡ y) → (q : y ≡ z)
              → cong f (p ∙ q) ≡ (cong f p) ∙ (cong f q)
-cong-∘ f p q = J (λ _ q → cong f (p ∙ q) ≡ (cong f p) ∙ (cong f q)) (J (λ _ p → cong f (p ∙ refl) ≡ (cong f p) ∙ (cong f refl)) (cong (cong f)
-           (sym (lUnit _)) ∙ (rUnit _)) p) q
+cong-∘ f p = J (λ _ q → cong f (p ∙ q) ≡ (cong f p) ∙ (cong f q)) (J (λ _ p → cong f (p ∙ refl) ≡ (cong f p) ∙ (cong f refl)) (cong (cong f)
+           (sym (lUnit _)) ∙ (rUnit _)) p)
 
 
 app*-l : ∀ {ℓₛ ℓₘ ℓₜ} → {A : Type* ℓₛ} → {B : Type* ℓₘ} → {C : Type* ℓₜ}
@@ -103,7 +103,7 @@ law2 {A = A} {B = B} {f = f} =
 
 --pointed equivalence
 
-record IsEquiv* {ℓₛ } {A : Type* ℓₛ} {B : Type* ℓₛ} (e : fst (A →* B)) : Type (ℓ-max ℓₛ ℓₛ) where
+record IsEquiv* {ℓₛ ℓₜ} {A : Type* ℓₛ} {B : Type* ℓₜ} (e : fst (A →* B)) : Type (ℓ-max ℓₛ ℓₜ) where
   constructor isEquiv*
 
   field
@@ -115,33 +115,33 @@ record IsEquiv* {ℓₛ } {A : Type* ℓₛ} {B : Type* ℓₛ} (e : fst (A →*
   to≃ : (fst A) ≃ (fst B) 
   to≃ = biInvEquiv→Equiv-right (biInvEquiv (fst e) (fst r) (fst hr) (fst l) (fst hl)) 
 
--- _≃*_ : ∀ {ℓₛ ℓₜ} → (A : Type* ℓₛ) → (B : Type* ℓₜ) → Set (ℓ-max ℓₛ ℓₜ)
--- A ≃* B = Σ _ (IsEquiv* {A = A} {B = B})
+_≃*_ : ∀ {ℓₛ ℓₜ} → (A : Type* ℓₛ) → (B : Type* ℓₜ) → Set (ℓ-max ℓₛ ℓₜ)
+A ≃* B = Σ _ (IsEquiv* {A = A} {B = B})
 
 
 
--- ≃*id : ∀ {ℓ} → (A : Type* ℓ) → A ≃* A
--- ≃*id A = id* , isEquiv* id* id* law2 law2
+≃*id : ∀ {ℓ} → (A : Type* ℓ) → A ≃* A
+≃*id A = id* , isEquiv* id* id* law2 law2
 
--- compEquiv* : ∀ {ℓₛ ℓₘ ℓₜ} → {A : Type* ℓₛ} → {B : Type* ℓₘ} → {C : Type* ℓₜ}
---          → (A ≃* B) → (B ≃* C) → (A ≃* C)
--- compEquiv* f g =
---   ((fst g) ∘* (fst f))
---   ,
---   isEquiv*
---     ((l (snd f)) ∘* (l (snd g)))
---     (((r (snd f)) ∘* (r (snd g))))
---     {! (hl (snd g))!}
---     {!!}
---   where open IsEquiv*
+compEquiv* : ∀ {ℓₛ ℓₘ ℓₜ} → {A : Type* ℓₛ} → {B : Type* ℓₘ} → {C : Type* ℓₜ}
+         → (A ≃* B) → (B ≃* C) → (A ≃* C)
+compEquiv* f g =
+  ((fst g) ∘* (fst f))
+  ,
+  isEquiv*
+    ((l (snd f)) ∘* (l (snd g)))
+    (((r (snd f)) ∘* (r (snd g))))
+    {! (hl (snd g))!}
+    {!!}
+  where open IsEquiv*
 
 
--- lem-i : ∀ {ℓₛ ℓₜ} → {A : Type* ℓₛ} → {B : Type* ℓₜ}
---         → (f : fst (A →* B)) → IsEquiv* f ≃ isEquiv (fst f)
--- lem-i f =
---   (λ x → record { equiv-proof = {!!} })
---   ,
---   {!!}
+lem-i : ∀ {ℓₛ ℓₜ} → {A : Type* ℓₛ} → {B : Type* ℓₜ}
+        → (f : fst (A →* B)) → IsEquiv* f ≃ isEquiv (fst f)
+lem-i {A = A} {B} f =
+  (λ x → snd (IsEquiv*.to≃ x))
+  ,
+  record { equiv-proof = λ y → (isEquiv* ( (invEq (_ , y) , {!!})) {!!} {!!} {!!} , {!!}) , {!!} }
 
--- lem-ii : ∀ {ℓ} → {A B : Type* ℓ} → isEquiv {A = (fst A) ≃ (fst B)} {B = A ≃* B} {!!}
--- lem-ii = {!!}
+lem-ii : ∀ {ℓ} → {A B : Type* ℓ} → isEquiv {A = (fst A) ≃ (fst B)} {B = A ≃* B} {!!}
+lem-ii = {!!}
