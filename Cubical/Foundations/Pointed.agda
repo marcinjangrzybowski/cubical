@@ -8,6 +8,7 @@ module Cubical.Foundations.Pointed where
 open import Cubical.Core.Glue
 
 open import Cubical.Foundations.Everything
+import Cubical.Foundations.Id as Id
 
 open import Cubical.Data.Sigma
 
@@ -115,33 +116,75 @@ record IsEquiv* {ℓₛ ℓₜ} {A : Type* ℓₛ} {B : Type* ℓₜ} (e : fst (
   to≃ : (fst A) ≃ (fst B) 
   to≃ = biInvEquiv→Equiv-right (biInvEquiv (fst e) (fst r) (fst hr) (fst l) (fst hl)) 
 
-_≃*_ : ∀ {ℓₛ ℓₜ} → (A : Type* ℓₛ) → (B : Type* ℓₜ) → Set (ℓ-max ℓₛ ℓₜ)
-A ≃* B = Σ _ (IsEquiv* {A = A} {B = B})
+
+
+isProp-IsEquiv* : ∀ {ℓₛ ℓₜ} {A : Type* ℓₛ} {B : Type* ℓₜ} (e : fst (A →* B))
+                      → IsEquiv* e
+isProp-IsEquiv* e = {!!}
+
+-- →*-to-Equiv : ∀ {ℓₛ ℓₜ} → {A : Type* ℓₛ} → {B : Type* ℓₜ} →
+--                 (f : fst (A →* B)) → isEquiv (fst f) → IsEquiv* f
+-- IsEquiv*.l (→*-to-Equiv {A = A} {B} f x) = invEq (_ , x) ,  cong (invEq (fst f , x)) (sym (snd f)) ∙ secEq (_ , x) (pt A)  
+-- IsEquiv*.r (→*-to-Equiv f x) = invEq (_ , x) , cong (invEq (fst f , x)) (sym (snd f)) ∙ secEq (_ , x) (pt _)
+-- fst (IsEquiv*.hl (→*-to-Equiv f x)) = secEq (_ , x)
+-- snd (IsEquiv*.hl (→*-to-Equiv {A = A} {B} f x)) = (subst (λ q → (λ i →
+--          fst
+--          (snd (x .equiv-proof (fst f (snd A)))
+--           (snd A , (λ j → fst f (snd A))) i)) ≡ q ∙ (λ i →
+--          fst
+--          (snd (x .equiv-proof (fst f (snd A)))
+--           (snd A , (λ j → fst f (snd A))) i))) (sym (rCancel (λ i → fst (fst (x .equiv-proof (snd f i)))))) (lUnit _) ∙ sym (assoc _ _ _)) ∙ (rUnit _) 
+-- fst (IsEquiv*.hr (→*-to-Equiv f x)) = retEq (_ , x)
+-- snd (IsEquiv*.hr (→*-to-Equiv f x)) = {!!}                
 
 
 
-≃*id : ∀ {ℓ} → (A : Type* ℓ) → A ≃* A
-≃*id A = id* , isEquiv* id* id* law2 law2
-
-compEquiv* : ∀ {ℓₛ ℓₘ ℓₜ} → {A : Type* ℓₛ} → {B : Type* ℓₘ} → {C : Type* ℓₜ}
-         → (A ≃* B) → (B ≃* C) → (A ≃* C)
-compEquiv* f g =
-  ((fst g) ∘* (fst f))
-  ,
-  isEquiv*
-    ((l (snd f)) ∘* (l (snd g)))
-    (((r (snd f)) ∘* (r (snd g))))
-    {! (hl (snd g))!}
-    {!!}
-  where open IsEquiv*
+-- _≃*_ : ∀ {ℓₛ ℓₜ} → (A : Type* ℓₛ) → (B : Type* ℓₜ) → Set (ℓ-max ℓₛ ℓₜ)
+-- A ≃* B = Σ _ (IsEquiv* {A = A} {B = B})
 
 
-lem-i : ∀ {ℓₛ ℓₜ} → {A : Type* ℓₛ} → {B : Type* ℓₜ}
-        → (f : fst (A →* B)) → IsEquiv* f ≃ isEquiv (fst f)
-lem-i {A = A} {B} f =
-  (λ x → snd (IsEquiv*.to≃ x))
-  ,
-  record { equiv-proof = λ y → (isEquiv* ( (invEq (_ , y) , {!!})) {!!} {!!} {!!} , {!!}) , {!!} }
 
-lem-ii : ∀ {ℓ} → {A B : Type* ℓ} → isEquiv {A = (fst A) ≃ (fst B)} {B = A ≃* B} {!!}
-lem-ii = {!!}
+-- ≃*id : ∀ {ℓ} → (A : Type* ℓ) → A ≃* A
+-- ≃*id A = id* , isEquiv* id* id* law2 law2
+
+-- compEquiv* : ∀ {ℓₛ ℓₘ ℓₜ} → {A : Type* ℓₛ} → {B : Type* ℓₘ} → {C : Type* ℓₜ}
+--          → (A ≃* B) → (B ≃* C) → (A ≃* C)
+-- compEquiv* f g =
+--   ((fst g) ∘* (fst f))
+--   ,
+--   isEquiv*
+--     ((l (snd f)) ∘* (l (snd g)))
+--     (((r (snd f)) ∘* (r (snd g))))
+--     {! (hl (snd g))!}
+--     {!!}
+--   where open IsEquiv*
+
+-- h1 : ∀ {ℓₛ} {A B : Σ (Set ℓₛ) (λ A₁ → A₁)}
+--        {f : Σ (fst A → fst B) (λ f₁ → f₁ (snd A) ≡ snd B)}
+--        (x : IsEquiv* f) →
+--      →*-to-Equiv f
+--      (isoToIsEquiv
+--       (biInvEquiv→Iso-right
+--        (biInvEquiv (fst f) (fst (IsEquiv*.r x)) (fst (IsEquiv*.hr x))
+--         (fst (IsEquiv*.l x)) (fst (IsEquiv*.hl x)))))
+--      ≡ x
+-- h1 {f = f} (isEquiv* l r hl hr) = {! !}
+
+
+-- lem-i′ : ∀ {ℓₛ} → {A : Type* ℓₛ} → {B : Type* ℓₛ}
+--         → (f : fst (A →* B)) → isProp (IsEquiv* f)
+-- lem-i′ f = retractIsProp
+--   (snd ∘ IsEquiv*.to≃)
+--   ((→*-to-Equiv f ))
+--   h1 
+--   (isPropIsEquiv (fst f))
+
+-- -- lem-i : ∀ {ℓₛ} → {A : Type* ℓₛ} → {B : Type* ℓₛ}
+-- --         → (f : fst (A →* B)) → IsEquiv* f ≃ isEquiv (fst f)
+-- -- fst (lem-i {A = A} {B} f) = snd ∘ IsEquiv*.to≃ 
+-- -- equiv-proof (snd (lem-i {A = A} {B} f)) y = ((→*-to-Equiv f y)
+-- --   , isPropIsEquiv (fst f) _ _)
+-- --   , λ y₁ → {!!}
+
+-- -- lem-ii : ∀ {ℓ} → {A B : Type* ℓ} → isEquiv {A = (fst A) ≃ (fst B)} {B = A ≃* B} {!!}
+-- -- lem-ii = {!!}
