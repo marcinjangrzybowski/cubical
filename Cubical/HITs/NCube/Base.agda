@@ -149,7 +149,8 @@ snd isContr-Inrerval' (inside i) j = inside (i ∧ j)
 
 isPropCube : ∀ {n} → isProp (NCube n)
 isPropCube {zero} x y i = _
-isPropCube {suc n} (x , x₁) (x₂ , x₃) i = (isContr→isProp isContr-Inrerval') x x₂ i , (isPropCube x₁ x₃ i)
+isPropCube {suc n} (x , x₁) (x₂ , x₃) i =
+    (isContr→isProp isContr-Inrerval') x x₂ i , (isPropCube x₁ x₃ i)
 
 
 
@@ -170,44 +171,77 @@ NBoundary1-≡-Bool = isoToPath h
 
 
 
+Pathⁿ-typeBuilder : ∀ {ℓ} → ∀ {A : Type ℓ}
+                  → ∀ n → ∀ k
+                  → (bd : NCube n → NBoundary k → A)
+                  → (c : NCube n)
+                  → Type ℓ
+
+facePathⁿ-Builder : ∀ {ℓ} → ∀ {A : Type ℓ}
+                  →  ∀ n → ∀ k
+                  → (bc : NCube n → NCube k → A)
+                  → (c : NCube n)
+                  → (i' : Interval')
+                  → Pathⁿ-typeBuilder (suc n) k (λ x x₁ → bc c (boundaryMap x₁) ) (i' , c)
 
 
 
-Globeⁿ : ∀ {ℓ} → {A : Type ℓ} →  ∀ {n} → (S (-1+ n) → A) → Type ℓ
-
-northGlobeⁿ : ∀ {ℓ} → {A : Type ℓ} →  ∀ {n}
-                 → ∀ (bd : (S (-1+ (suc n)) → A))
-                 → Globeⁿ {A = A} {n = n} (bd ∘ (λ _ → north))
-
-southGlobeⁿ : ∀ {ℓ} → {A : Type ℓ} →  ∀ {n}
-                 → ∀ (bd : (S (-1+ (suc n)) → A))
-                 → Globeⁿ {A = A} {n = n} (bd ∘ (λ _ → south))
-                 
-Globeⁿ {A = A} {n = zero} bd = A 
-Globeⁿ {A = A} {n = suc n} bd =
-             PathP
-             (λ i → Globeⁿ {n = n} ( bd ∘ (λ x → merid x i)))
-             (northGlobeⁿ {A = A} {n = n} bd)
-             (southGlobeⁿ {A = A} {n = n} bd)
+Pathⁿ-typeBuilder {A = A} n zero bd c = A
+Pathⁿ-typeBuilder n (suc k) bd c = PathP
+                       (λ i → Pathⁿ-typeBuilder
+                              (suc n) k (λ x x₁ → bd c (cyl x₁ i)) (inside i , c))
+                       (facePathⁿ-Builder n k (λ x x₁ → bd x (lid false x₁ )) c (end false))
+                       (facePathⁿ-Builder n k (λ x x₁ → bd x (lid true x₁ )) c (end true))
 
 
-north-south-const : ∀ {ℓ} → ∀ {A : Type ℓ} → ∀ {n} → (a : A)
-                     →  (northGlobeⁿ {n = n} (λ _ → a))
-                        ≡ 
-                        (southGlobeⁿ {n = n} (λ _ → a))
 
-northGlobeⁿ {n = zero} bd = bd north
-northGlobeⁿ {ℓ} {A} {suc zero} bd _ = bd north
-northGlobeⁿ {ℓ} {A} {suc (suc n)} bd = north-south-const (bd north)
+facePathⁿ-Builder n zero bc c i' = bc c _
+facePathⁿ-Builder n (suc k) bc c i' i = facePathⁿ-Builder (suc n) k (λ x x₁ → bc c (inside i , x₁))
+                                    (i' , c) (inside i)
 
-southGlobeⁿ {n = zero} bd = bd south
-southGlobeⁿ {n = suc zero} bd _ = bd south
-southGlobeⁿ {n = suc (suc n)} bd = north-south-const (bd south)
 
-north-south-const {n = zero} a = refl
-north-south-const {n = suc zero} a = refl
-north-south-const {n = suc (suc n)} a = refl
+Pathⁿ : ∀ {ℓ} → ∀ {A : Type ℓ} → ∀ {n} → (NBoundary n → A) → Type ℓ
+Pathⁿ {ℓ} {A = A} {n-final} bd-final = Pathⁿ-typeBuilder 0 n-final (λ _ → bd-final) _ 
 
+faceⁿ : ∀ {ℓ} → ∀ {A : Type ℓ} → ∀ {n}
+        → (k : ℕ) → (s : Bool) 
+        → (bd : NBoundary (suc n) → A)
+        → Pathⁿ (bd ∘ (faceMap k s) ∘ boundaryMap)
+faceⁿ {n = zero} k s bd = bd (lid s _)
+faceⁿ {n = suc n} k s bd i =
+         facePathⁿ-Builder 0 n
+         (λ x x₁ → bd (faceMap k s (inside i , x₁))) tt (inside i)
+
+
+nInside : ∀ n → Pathⁿ (boundaryMap {n})
+nInside zero = _
+nInside (suc n) i = facePathⁿ-Builder 0 (n)
+                             (λ x x₁ → inside i , x₁) _ (inside i)
+
+
+
+test-3-Type : Cube
+              (faceⁿ 0 false boundaryMap) (faceⁿ 0 true boundaryMap)
+              (faceⁿ 1 false boundaryMap) (faceⁿ 1 true boundaryMap)
+              (faceⁿ 2 false boundaryMap) (faceⁿ 2 true boundaryMap)
+              ≡
+              Pathⁿ (boundaryMap {3})
+test-3-Type = refl
+
+-- arguments for Cube can be also infered
+test-3-Type-holes : Cube _ _ _ _ _ _
+                    ≡
+                    Pathⁿ (boundaryMap {3})
+test-3-Type-holes = refl
+
+
+test-6-term :  nInside 6
+               ≡ 
+               (λ i i₁ i₂ i₃ i₄ i₅ →
+               inside i , inside i₁ , inside i₂ ,
+               inside i₃ , inside i₄ , inside i₅ ,
+               _)
+test-6-term = refl
 
 
 
@@ -272,88 +306,40 @@ NBoundary-≡-S {suc n} = NBoundary-≡-S₊
 
 
 
+Globeⁿ : ∀ {ℓ} → {A : Type ℓ} →  ∀ {n} → (S (-1+ n) → A) → Type ℓ
+
+northGlobeⁿ : ∀ {ℓ} → {A : Type ℓ} →  ∀ {n}
+                 → ∀ (bd : (S (-1+ (suc n)) → A))
+                 → Globeⁿ {A = A} {n = n} (bd ∘ (λ _ → north))
+
+southGlobeⁿ : ∀ {ℓ} → {A : Type ℓ} →  ∀ {n}
+                 → ∀ (bd : (S (-1+ (suc n)) → A))
+                 → Globeⁿ {A = A} {n = n} (bd ∘ (λ _ → south))
+                 
+Globeⁿ {A = A} {n = zero} bd = A 
+Globeⁿ {A = A} {n = suc n} bd =
+             PathP
+             (λ i → Globeⁿ {n = n} ( bd ∘ (λ x → merid x i)))
+             (northGlobeⁿ {A = A} {n = n} bd)
+             (southGlobeⁿ {A = A} {n = n} bd)
 
 
+north-south-const : ∀ {ℓ} → ∀ {A : Type ℓ} → ∀ {n} → (a : A)
+                     →  (northGlobeⁿ {n = n} (λ _ → a))
+                        ≡ 
+                        (southGlobeⁿ {n = n} (λ _ → a))
 
-Pathⁿ : ∀ {ℓ} → ∀ {A : Type ℓ} → ∀ {n} → (NBoundary n → A) → Type ℓ
-Pathⁿ {ℓ} {A = A} {n-final} bd-final = Pathⁿ-typeBuilder 0 n-final (λ _ → bd-final) _ 
+northGlobeⁿ {n = zero} bd = bd north
+northGlobeⁿ {ℓ} {A} {suc zero} bd _ = bd north
+northGlobeⁿ {ℓ} {A} {suc (suc n)} bd = north-south-const (bd north)
 
+southGlobeⁿ {n = zero} bd = bd south
+southGlobeⁿ {n = suc zero} bd _ = bd south
+southGlobeⁿ {n = suc (suc n)} bd = north-south-const (bd south)
 
-   where
-
-   Pathⁿ-typeBuilder : ∀ n → ∀ k
-                     → (bd : NCube n → NBoundary k → A)
-                     → (c : NCube n) → Type ℓ
-
-   facePathⁿ-Builder : ∀ n → ∀ k
-                     → (bc : NCube n → NCube k → A)
-                     → (c : NCube n)
-                     → (i' : Interval')
-                     → Pathⁿ-typeBuilder (suc n) k (λ x x₁ → bc c (boundaryMap x₁) ) (i' , c)
-
-
-
-   Pathⁿ-typeBuilder n zero bd c = A
-   Pathⁿ-typeBuilder n (suc k) bd c = PathP
-                          (λ i → Pathⁿ-typeBuilder
-                                 (suc n) k (λ x x₁ → bd c (cyl x₁ i)) (inside i , c))
-                          (facePathⁿ-Builder n k (λ x x₁ → bd x (lid false x₁ )) c (end false))
-                          (facePathⁿ-Builder n k (λ x x₁ → bd x (lid true x₁ )) c (end true))
-
-
-
-   facePathⁿ-Builder n zero bc c i' = bc c _
-   facePathⁿ-Builder n (suc k) bc c i' i = facePathⁿ-Builder (suc n) k (λ x x₁ → bc c (inside i , x₁))
-                                     (i' , c) (inside i)
-
-
-
-nInside : ∀ n → Pathⁿ (boundaryMap {n})
-nInside zero = corner0
-nInside (suc n') i = nInside-hlp 0 (suc n') _ (inside i) i
-
-  where
-
-  nInside-Hlp : ∀ n → ℕ → NCube n → Type₀ 
-
-
-  nInside-hlp : ∀ n → ∀ k → ∀ c → (i' : Interval') → nInside-Hlp n k c
-
-  nInside-Hlp zero k _ = Pathⁿ {n = k} (boundaryMap {k})
-  nInside-Hlp (suc n) zero _ = NCube (suc n)
-  nInside-Hlp (suc n) (suc k) c =
-    PathP (λ i → nInside-Hlp (suc (suc n)) k (inside i , c))
-      (nInside-hlp (suc (suc n)) k (end false , c) (end false))
-      (nInside-hlp (suc (suc n)) k (end true , c) (end true))
-
-
-  nInside-hlp (suc n) zero c i' = c
-
-  nInside-hlp zero zero _ i' = _
-  nInside-hlp zero (suc k) c (i') i = {!(nInside-hlp (suc zero) k (inside i , c) (inside i))!}
-  -- (λ x x₁ → inside i , {!nInside-hlp zero k!}) _ (inside i)
-  nInside-hlp (suc n) (suc k) c i' i = (nInside-hlp (suc (suc n)) k (inside i , c) (inside i))
-
--- -- GG : ∀ n → ℕ → NCube n → Type₀
-
--- -- gg : ∀ n → ∀ k → (cu : NCube n) → GG n k cu
-
--- -- GG n zero _ = NCube n
--- -- GG (n) (suc k) cu = PathP (λ j → GG (suc n) k (inside j , cu) )
--- --                        (gg (suc n) k (end false , cu))
--- --                        (gg (suc n) k (end true , cu))
-
--- -- gg zero zero cu = tt
--- -- gg zero (suc k) cu j = gg 1 k (inside j , cu)
--- -- gg (suc n) zero cu = cu
--- -- gg (suc n) (suc k) cu j = gg (suc (suc n)) k (inside j , cu)
-
--- -- NInside : ℕ → Type₀
--- -- NInside n = GG 0 n _
-
--- -- nInside : ∀ n → NInside n
--- -- nInside n = gg 0 n _
-
+north-south-const {n = zero} a = refl
+north-south-const {n = suc zero} a = refl
+north-south-const {n = suc (suc n)} a = refl
 
 
 -- Pathⁿ-≡-Globeⁿ : ∀ {ℓ} → (A : Type ℓ) → ∀ n
