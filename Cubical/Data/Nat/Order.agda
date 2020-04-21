@@ -230,23 +230,3 @@ module _
 
   +inductionStep : ∀ n → +induction (b + n) ≡ step n (+induction n)
   +inductionStep n = induction-compute wfStep (b + n) ∙ wfStepLemma₁ n _
-
-
-
-≥Ty : ℕ → ℕ → Type₀
-≥Ty _ zero = Unit
-≥Ty zero (suc x₁) = ⊥
-≥Ty (suc x) (suc x₁) = ≥Ty x x₁
-
-≤→≥Ty : (n m : ℕ) → n ≤ m → ≥Ty m n   
-≤→≥Ty zero _ =  const _
-≤→≥Ty (suc n) zero =  ¬-<-zero 
-≤→≥Ty (suc n) (suc m) = ≤→≥Ty n m ∘ (pred-≤-pred)
-
-≥Ty→≤ : (n m : ℕ) → ≥Ty m n → n ≤ m   
-≥Ty→≤ zero _ = (const zero-≤ ) 
-≥Ty→≤ (suc n) zero = (λ ()) 
-≥Ty→≤ (suc n) (suc m) = suc-≤-suc ∘ (≥Ty→≤ n m)
-
-≥Ty-weak : ∀ {m n} → ≥Ty m (suc n)  → ≥Ty m n  
-≥Ty-weak {m} {n} = (≤→≥Ty n m) ∘ <-weaken  ∘ (≥Ty→≤ (suc n) m)
