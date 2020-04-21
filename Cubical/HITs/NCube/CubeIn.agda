@@ -13,54 +13,71 @@ open import Cubical.Foundations.Isomorphism
 
 open import Cubical.HITs.NCube.Base
 
-
-
+variable
+  ℓ : Level
 
 NCubeIn : ∀ {ℓ} → (A : Type ℓ) → ℕ → Type ℓ  
 NCubeIn A n = NCube n → A
 
-nCubeLid : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → Bool → NCubeIn A (suc n) → NCubeIn A n 
+NBoundaryIn : ∀ {ℓ} → (A : Type ℓ) → ℕ → Type ℓ  
+NBoundaryIn A n = NBoundary n → A 
+
+variable
+  A : Type ℓ
+
+
+nCubeLid : ∀ {n} → Bool → NCubeIn A (suc n) → NCubeIn A n 
 nCubeLid b = _∘ boundaryMap ∘ lid b
 
-nCubeFace : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → ℕ → Bool → NCubeIn A (suc n) → NCubeIn A n 
+nCubeFace : ∀ {n} → ℕ → Bool → NCubeIn A (suc n) → NCubeIn A n 
 nCubeFace k b = _∘ boundaryMap ∘ faceMap k b
 
-NBorderIn : ∀ {ℓ} → (A : Type ℓ) → ℕ → Type ℓ  
-NBorderIn A n = NBorder n → A 
 
-_isBorderOf_ : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → NBorderIn A n → NCubeIn A n → Type ℓ
-_isBorderOf_ {A = A} {n = n} bd nci = nci ∘ boundaryMap ≡ bd 
+_isBoundaryOf_ : ∀ {n} → NBoundaryIn A n → NCubeIn A n → Type _
+_isBoundaryOf_ {n = n} bd nci = nci ∘ boundaryMap ≡ bd 
 
-nBorderEnd : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → Bool → NBorderIn A (suc n) → NBorderIn A n
-nBorderEnd b = _∘ lid b ∘ boundaryMap
+nBoundaryEnd : ∀ {n} → Bool → NBoundaryIn A (suc n) → NBoundaryIn A n
+nBoundaryEnd b = _∘ lid b ∘ boundaryMap
 
-nBorderFaceBorder : ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
+
+nCubeFromPath : ∀ {n} → (I → NCubeIn A n) → NCubeIn A (suc n)  
+nCubeFromPath x (end x₁ , x₂) = x (Bool→I x₁) x₂ 
+nCubeFromPath x (inside i , x₂) = x i x₂
+
+nBoundaryFaceBoundary : ∀ {n}
                      → ℕ → Bool
-                     →  NBorderIn A (suc n)
-                     →  NBorderIn A n
-nBorderFaceBorder k b = _∘ (faceMap k b) ∘ boundaryMap 
+                     →  NBoundaryIn A (suc n)
+                     →  NBoundaryIn A n
+nBoundaryFaceBoundary k b = _∘ (faceMap k b) ∘ boundaryMap 
 
 
-nBorderEndsPath :  ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
-                     → (bd : NBorderIn A (suc n)) 
-                     → nBorderEnd false bd ≡ nBorderEnd true bd 
-nBorderEndsPath bd i = bd ∘ cylEx i
+nBoundaryEndsPath :  ∀ {n}
+                     → (bd : NBoundaryIn A (suc n)) 
+                     → nBoundaryEnd false bd ≡ nBoundaryEnd true bd 
+nBoundaryEndsPath bd i = bd ∘ cylEx i
 
-isBorderOf-Pt : ∀ {ℓ} → {A : Type ℓ} → ∀ {bd : NBorderIn A 0} → {a : A} → bd isBorderOf (const a)
-isBorderOf-Pt i ()
+isBoundaryOf-Pt : ∀ {bd : NBoundaryIn A 0} → {a : A} → bd isBoundaryOf (const a)
+isBoundaryOf-Pt i ()
 
 
-isBorderOfLid : ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
-                     → ∀ b → (bd : NBorderIn A (suc n)) → ∀ c
-                     → bd isBorderOf c
-                     → (nBorderEnd b bd) isBorderOf nCubeLid b c
-isBorderOfLid {n = suc n} b bd c x i zz = x i (lid b (boundaryMap zz))
+isBoundaryOfLid : ∀ {n}
+                     → ∀ b → (bd : NBoundaryIn A (suc n)) → ∀ c
+                     → bd isBoundaryOf c
+                     → (nBoundaryEnd b bd) isBoundaryOf nCubeLid b c
+isBoundaryOfLid {n = suc n} b bd c x i zz = x i (lid b (boundaryMap zz))
 
-isBorderOfFace : ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
-                     → ∀ k → ∀ b → (bd : NBorderIn A (suc n)) → ∀ c
-                     → bd isBorderOf c
-                     → (nBorderFaceBorder k b bd) isBorderOf nCubeFace k b c
-isBorderOfFace {n = suc n} k b bd c x i zz = x i (faceMap k b (boundaryMap zz))
+isBoundaryOfFace : ∀ {n}
+                     → ∀ k → ∀ b → (bd : NBoundaryIn A (suc n)) → ∀ c
+                     → bd isBoundaryOf c
+                     → (nBoundaryFaceBoundary k b bd) isBoundaryOf nCubeFace k b c
+isBoundaryOfFace {n = suc n} k b bd c x i zz = x i (faceMap k b (boundaryMap zz))
+
+
+
+-- this cutoff is introduced becouse i was not able to convince agda to accept definition of
+-- NCubeIn→insideOf for arbitrary n,
+-- it can be easily lifted just by changing this number and
+-- adding new lines to definition of NCubeIn→insideOf
 
 cutoffVal = 7
 
@@ -70,31 +87,29 @@ cutoffVal = 7
 ✂↓ = ≥Ty-weak {m = cutoffVal} 
 
 
-InsideOf : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → {✂ : ✂ n} → NBorderIn A n → Type ℓ
 
-insideOfBorderLid : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → {✂ : ✂ n}
-                     → (s : Bool) → (bd : NBorderIn A (suc n))
-                     → InsideOf {✂ = ✂} (nBorderEnd s bd)
+-- InsideOf, NCubeIn→insideOf and insideOfBoundaryLid are mutually defined
 
-InsideOf {A = A} {n = zero} {✂ = ✂} _ = A
-InsideOf {A = A} {n = suc n} {✂ = ✂} bd =
-             PathP
-             (λ i → InsideOf {✂ = ✂↓ {n = n} ✂} (nBorderEndsPath bd i))
-             (insideOfBorderLid {✂ = ✂↓ {n = n} ✂} false bd)
-             (insideOfBorderLid {✂ = ✂↓ {n = n} ✂} true  bd)
+InsideOf : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → {✂ : ✂ n} → NBoundaryIn A n → Type ℓ
 
-insideOf→NCubeIn : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → ∀ {✂}
-                   → {bd : NBorderIn A n} → InsideOf {✂ = ✂} (bd)
-                   → NCubeIn A n
-insideOf→NCubeIn {ℓ} {A} {zero} {✂₁} {bd} x x₁ = x
-insideOf→NCubeIn {ℓ} {A} {suc n} {✂₁} {bd} x (end x₁ , x₂) =
-    insideOf→NCubeIn (x (Bool→I x₁)) x₂
-insideOf→NCubeIn {ℓ} {A} {suc n} {✂₁} {bd} x (inside i , x₂) =
-    insideOf→NCubeIn (x i) x₂
-
-NCubeIn→insideOf : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → ∀ {✂}
+NCubeIn→insideOf : ∀ {n} → ∀ {✂}
                     → (c : NCubeIn A n)
                     → InsideOf {✂ = ✂} (c ∘ boundaryMap)
+
+insideOfBoundaryLid : ∀ {n} → {✂ : ✂ n}
+                     → (s : Bool) → (bd : NBoundaryIn A (suc n))
+                     → InsideOf {✂ = ✂} (nBoundaryEnd s bd)
+insideOfBoundaryLid {n = n} {✂ = ✂} s bd = NCubeIn→insideOf (bd ∘ (lid s))
+
+
+
+InsideOf {ℓ} {A = A} {n = zero} {✂ = ✂} _ = A
+InsideOf {n = suc n} {✂ = ✂} bd =
+             PathP
+             (λ i → InsideOf {✂ = ✂↓ {n = n} ✂} (nBoundaryEndsPath bd i))
+             (insideOfBoundaryLid {✂ = ✂↓ {n = n} ✂} false bd)
+             (insideOfBoundaryLid {✂ = ✂↓ {n = n} ✂} true  bd)
+
 NCubeIn→insideOf {n = 0} c =
   c _
 NCubeIn→insideOf {n = 1} c i =
@@ -115,140 +130,192 @@ NCubeIn→insideOf {n = 7} c i i₁ i₂ i₃ i₄ i₅ i₆ =
      inside i₃ , inside i₄ , inside i₅ , inside i₆ , _)
 
 
-
-insideOfBorderLid {n = n} {✂ = ✂} s bd = NCubeIn→insideOf (bd ∘ (lid s))
-
+--- end of mutual definitions of InsideOf, NCubeIn→insideOf and insideOfBoundaryLid
 
 
 
-
--- InsideOf-Iso-ΣisInsideOf : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → ∀ {✂}
---                           → (bd : NBorderIn A n) 
---                           → Iso (InsideOf {✂ = ✂} bd) (Σ _ (bd isBorderOf_) )
--- fst (Iso.fun (InsideOf-Iso-ΣisInsideOf {n = zero} bd) x) x₁ = x
--- snd (Iso.fun (InsideOf-Iso-ΣisInsideOf {n = zero} bd) x) i ()
--- Iso.inv (InsideOf-Iso-ΣisInsideOf {n = zero} bd) (fst₁ , snd₁) = fst₁ _
--- fst (Iso.rightInv (InsideOf-Iso-ΣisInsideOf {n = zero} bd) b i) = fst b
--- snd (Iso.rightInv (InsideOf-Iso-ΣisInsideOf {n = zero} bd) b i) i₁ ()
--- Iso.leftInv (InsideOf-Iso-ΣisInsideOf {n = zero} bd) a = refl
--- -- InsideOf-Iso-ΣisInsideOf {n = 1} bd = {!!}
-
--- InsideOf-Iso-ΣisInsideOf {A = A} {n = suc zero} {✂ = ✂} bd = {!!}
--- InsideOf-Iso-ΣisInsideOf {A = A} {n = suc (suc n)} {✂ = ✂} bd = {!!}
+insideOf→NCubeIn : ∀ {n} → ∀ {✂}
+                   → {bd : NBoundaryIn A n} → InsideOf {✂ = ✂} (bd)
+                   → NCubeIn A n
+insideOf→NCubeIn {ℓ} {A} {zero} {✂₁} {bd} x x₁ = x
+insideOf→NCubeIn {ℓ} {A} {suc n} {✂₁} {bd} x (end x₁ , x₂) =
+    insideOf→NCubeIn (x (Bool→I x₁)) x₂
+insideOf→NCubeIn {ℓ} {A} {suc n} {✂₁} {bd} x (inside i , x₂) =
+    insideOf→NCubeIn (x i) x₂
 
 
+-- this function allows one to assmble boundaries up to 5th dimension,
+-- it can be easily expanded to higher dimensions, agda is unbale to fill values automatically
+-- but for each expanded argument proper value can copied without any changes from constrains
 
--- asembleBorder :  ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → ∀ {✂}
---                   → {endBorders : Bool → NBorderIn A n}
---                   → (ends : ∀ b → InsideOf {✂ = ✂} (endBorders b))
---                   →  endBorders false ≡ endBorders true 
---                    → NBorderIn A (suc n)
+asembleBoundary :  ∀ {n} → ∀ {✂} → {✂ab : ≥Ty 4 n}
+                  → {endBoundarys : Bool → NBoundaryIn A n}
+                  → (ends : ∀ b → InsideOf {✂ = ✂} (endBoundarys b))
+                  →  endBoundarys false ≡ endBoundarys true 
+                   → NBoundaryIn A (suc n)
 
--- asembleBorder {n = suc n} ends x (cyl (lid b x₁) i) = x i (lid b x₁)
--- asembleBorder {n = suc n} {endBorders = eb} ends _ (lid b (end bb , x₁)) =  eb b (lid bb x₁)
+asembleBoundary {n = suc n} ends x (cyl (lid b x₁) i) = x i (lid b x₁)
+asembleBoundary {n = suc n} {endBoundarys = eb} ends _ (lid b (end bb , x₁)) =  eb b (lid bb x₁)
 
--- asembleBorder {n = 0} ends _ (lid b _) = ends b
--- asembleBorder {n = 1} ends _ (lid b (inside i , _)) =  ends b i
--- asembleBorder {n = 2} ends _ (lid b (inside i , inside i₁ , _)) = ends b i i₁
--- asembleBorder {n = 3} ends _ (lid b (inside i , inside i₁ , inside i₂ , _)) =
---   ends b i i₁ i₂
--- -- asembleBorder {n = 4} ends _ (lid b (inside i , inside i₁ , inside i₂ , inside i₃ , _)) =
--- --   ends b i i₁ i₂ i₃
+asembleBoundary {n = 0} ends _ (lid b _) = ends b
+asembleBoundary {n = 1} ends _ (lid b (inside i , _)) =  ends b i
+asembleBoundary {n = 2} ends _ (lid b (inside i , inside i₁ , _)) = ends b i i₁
+asembleBoundary {n = 3} ends _ (lid b (inside i , inside i₁ , inside i₂ , _)) =
+  ends b i i₁ i₂
+asembleBoundary {n = 4} ends _ (lid b (inside i , inside i₁ , inside i₂ , inside i₃ , _)) =
+  ends b i i₁ i₂ i₃ 
 
+asembleBoundary {n = suc (suc n)} {endBoundarys = eb} _ _ (lid b (inside i , (end x₁ , x₂)))
+                                        = eb b (cyl (lid x₁ x₂) i )
+asembleBoundary {n = 2} ends x (cyl (cyl (lid x₁ _) i₁) i) =
+                                        x i (cyl (lid x₁ _) i₁)
+asembleBoundary {n = 3} {endBoundarys = eb} _ _ (lid b (inside i , (inside i₁ , (end x₂ , x₃))))
+                                        = eb b (cyl (cyl (lid x₂ x₃) i₁) i )
 
--- asembleBorder {n = suc (suc n)} {endBorders = eb} _ _ (lid b (inside i , (end x₁ , x₂)))
---                                         = eb b (cyl (lid x₁ x₂) i )
--- asembleBorder {n = 2} ends x (cyl (cyl (lid x₁ _) i₁) i) =
---                                         x i (cyl (lid x₁ _) i₁)
--- asembleBorder {n = 3} {endBorders = eb} _ _ (lid b (inside i , (inside i₁ , (end x₂ , x₃))))
---                                         = eb b (cyl (cyl (lid x₂ x₃) i₁) i )
+asembleBoundary {n = 3} _ x (cyl (cyl (lid x₁ x₂) i₁) i) =
+                                       x i (cyl (lid x₁ x₂) i₁)
 
--- --***
--- asembleBorder {n = 3} _ x (cyl (cyl (lid x₁ x₂) i₁) i) =
---                                        x i (cyl (lid x₁ x₂) i₁)
-
--- asembleBorder {n = 3} _ x (cyl (cyl (cyl (lid x₁ _) i₂) i₁) i) =
---                                        x i (cyl (cyl (lid x₁ _) i₂) i₁)
-
-
--- -- asembleBorder {n = 4} {endBorders = eb} _ _ (lid x₁ (inside i , (inside i₁ , (end x , (end x₃ , _))))) =
--- --                                        eb x₁ (cyl (cyl (lid x (end x₃ , _)) i₁) i)
--- -- asembleBorder {n = 4} {endBorders = eb} _ _ (lid x₁ (inside i , (inside i₁ , (inside i₂ , (end x₃ , x₄))))) =
--- --                                        eb x₁ (cyl (cyl (cyl (lid x₃ _) i₂) i₁) i)
-
--- -- asembleBorder {n = 4} {endBorders = eb} _ _ (lid x₁ (inside i , (inside i₁ , (end x₂ , (inside i₂ , _))))) =
--- --                                         eb x₁ (cyl (cyl (lid x₂ (inside i₂ , _)) i₁) i)
-                                        
--- -- asembleBorder {n = 4} ends x (cyl (cyl (lid x₁ (end x₂ , (end x₃ , x₄))) i) i₁) = {!!}
--- -- asembleBorder {n = 4} ends x (cyl (cyl (lid x₁ (end x₂ , (inside i₂ , x₄))) i) i₁) = {!!}
--- -- asembleBorder {n = 4} ends x (cyl (cyl (lid x₁ (inside i₂ , (end x₂ , x₃))) i) i₁) = {!!}
--- -- asembleBorder {n = 4} ends x (cyl (cyl (lid x₁ (inside i₂ , (inside i₃ , x₃))) i) i₁) = {!!}
--- -- asembleBorder {n = 4} ends x (cyl (cyl (cyl (lid x₁ (end x₂ , x₃)) i) i₁) i₂) =
--- --                                 x i₂ ((cyl (cyl (lid x₁ (end x₂ , x₃)) i) i₁))
--- -- asembleBorder {n = 4} ends x (cyl (cyl (cyl (lid x₁ (inside i₃ , x₃)) i) i₁) i₂) =
--- --                                 x i₂ (cyl (cyl (lid x₁ (inside i₃ , x₃)) i) i₁)
-                                
--- -- asembleBorder {n = 4} ends x (cyl (cyl (cyl (cyl (lid x₁ x₂) i) i₁) i₂) i₃) =
--- --                                 x i₃ ((cyl (cyl (cyl (lid x₁ x₂) i) i₁) i₂))
+asembleBoundary {n = 3} _ x (cyl (cyl (cyl (lid x₁ _) i₂) i₁) i) =
+                                       x i (cyl (cyl (lid x₁ _) i₂) i₁)
 
 
--- makeSquareBorder :
---    ∀ {ℓ} → {A : Type ℓ} →
---    {a₀₀ a₀₁ : A} (a₀₋ : a₀₀ ≡ a₀₁)
---    {a₁₀ a₁₁ : A} (a₁₋ : a₁₀ ≡ a₁₁)
---    (a₋₀ : a₀₀ ≡ a₁₀) (a₋₁ : a₀₁ ≡ a₁₁)
---     →  NBorderIn A 2
--- makeSquareBorder a₀₋ a₁₋ a₋₀ a₋₁ =
---   asembleBorder
---  {endBorders = eb}
---  (xx )
---   yy
---  where
---    eb : Bool → NBorderIn _ 1
---    eb false (lid false x₁) = a₀₋ i0
---    eb false (lid true x₁) = a₀₋ i1
---    eb true (lid false x₁) = a₁₋ i0
---    eb true (lid true x₁) = a₁₋ i1
+asembleBoundary {n = 4} {endBoundarys = eb} _ _ (lid x₁ (inside i , (inside i₁ , (end x , (end x₃ , _))))) =
+                                       eb x₁ (cyl (cyl (lid x (end x₃ , _)) i₁) i)
+asembleBoundary {n = 4} {endBoundarys = eb} _ _ (lid x₁ (inside i , (inside i₁ , (inside i₂ , (end x₃ , x₄))))) =
+                                       eb x₁ (cyl (cyl (cyl (lid x₃ _) i₂) i₁) i)
 
---    xx : (b : Bool) → InsideOf (eb b)
---    xx false = a₀₋ 
---    xx true = a₁₋ 
-
---    yy : eb false ≡ eb true
---    yy i (lid false x₁) = a₋₀ i
---    yy i (lid true x₁) = a₋₁ i
+asembleBoundary {n = 4} {endBoundarys = eb} _ _ (lid x₁ (inside i , (inside i₁ , (end x₂ , (inside i₂ , _))))) =
+                                       eb x₁ (cyl (cyl (lid x₂ (inside i₂ , _)) i₁) i)
 
 
--- square≡ :
---      ∀ {ℓ} → {A : Type ℓ} →
---     {a₀₀ a₀₁ : A} (a₀₋ : a₀₀ ≡ a₀₁)
---     {a₁₀ a₁₁ : A} (a₁₋ : a₁₀ ≡ a₁₁)
---     (a₋₀ : a₀₀ ≡ a₁₀) (a₋₁ : a₀₁ ≡ a₁₁)
---      → 
---        (Square a₀₋ a₁₋ a₋₀ a₋₁) ≡
---        (InsideOf (makeSquareBorder  a₀₋ a₁₋ a₋₀ a₋₁))
--- square≡ a₀₋ a₁₋ a₋₀ a₋₁ = refl
+asembleBoundary {n = 4} ends x (cyl (cyl (lid x₁ (end x₂ , (end x₃ , _))) i) i₁) =
+                                x i₁ (cyl (lid x₁ (end x₂ , (end x₃ , _))) i)
+asembleBoundary {n = 4} ends x (cyl (cyl (lid x₁ (end x₂ , (inside i₂ , x₄))) i) i₁) =
+                                x i₁ (cyl (lid x₁ (end x₂ , (inside i₂ , x₄))) i)
+asembleBoundary {n = 4} ends x (cyl (cyl (lid x₁ (inside i₂ , (end x₂ , x₃))) i) i₁) =
+                                x i₁ (cyl (lid x₁ (inside i₂ , (end x₂ , x₃))) i)
+asembleBoundary {n = 4} ends x (cyl (cyl (lid x₁ (inside i₂ , (inside i₃ , x₃))) i) i₁) =
+                                x i₁ (cyl (lid x₁ (inside i₂ , (inside i₃ , x₃))) i)
+asembleBoundary {n = 4} ends x (cyl (cyl (cyl (lid x₁ (end x₂ , x₃)) i) i₁) i₂) =
+                                x i₂ ((cyl (cyl (lid x₁ (end x₂ , x₃)) i) i₁))
+asembleBoundary {n = 4} ends x (cyl (cyl (cyl (lid x₁ (inside i₃ , x₃)) i) i₁) i₂) =
+                                x i₂ (cyl (cyl (lid x₁ (inside i₃ , x₃)) i) i₁)
+asembleBoundary {n = 4} ends x (cyl (cyl (cyl (cyl (lid x₁ x₂) i) i₁) i₂) i₃) =
+                                x i₃ ((cyl (cyl (cyl (lid x₁ x₂) i) i₁) i₂))
 
--- square≡' :
---      ∀ {ℓ} → {A : Type ℓ} →
---      ∀ bd
---      → 
---        (Square
---          (insideOfBorderLid false bd)
---          (insideOfBorderLid true bd)
---          (λ i → insideOfBorderLid false (nBorderEndsPath bd i))
---          λ i → insideOfBorderLid true (nBorderEndsPath bd i)
---          ) ≡
---        (InsideOf {A = A} bd)
--- square≡' bd = refl
 
-squareTest : ∀ {ℓ} → {A : Type ℓ} →  ∀ (bd : NBorderIn A 2) →   
+
+mkBoundary :  ∀ {n} → ∀ {✂} → {✂ab : ≥Ty 4 n}
+                  → {eb0 eb1 : NBoundaryIn A n}
+                  → (end0 : InsideOf {✂ = ✂} eb0)
+                  → (end1 : InsideOf {✂ = ✂} eb1)
+                  →  eb0 ≡ eb1 
+                   → NBoundaryIn A (suc n)
+mkBoundary {✂ = ✂} {✂ab = ✂ab} {eb0 = eb0} {eb1 = eb1} end0 end1 =
+    asembleBoundary {✂ = ✂} {✂ab = ✂ab}
+    {endBoundarys = caseBool eb1 eb0  }
+    h
+  where
+
+  h : (b : Bool) → InsideOf (caseBool eb1 eb0 b)
+  h false = end0
+  h true = end1
+
+-- By infering all holes in Square and Cube
+-- those tests shows that NBoundaryIn carries all the informations from hidden and
+-- explicit arguments of Square and Cube from Prelude
+
+makeSquareBoundary :
+   {a₀₀ a₀₁ : A} (a₀₋ : a₀₀ ≡ a₀₁)
+   {a₁₀ a₁₁ : A} (a₁₋ : a₁₀ ≡ a₁₁)
+   (a₋₀ : a₀₀ ≡ a₁₀) (a₋₁ : a₀₁ ≡ a₁₁)
+    →  NBoundaryIn A 2
+makeSquareBoundary a₀₋ a₁₋ a₋₀ a₋₁ =
+    mkBoundary a₀₋ a₁₋
+    λ i → mkBoundary {eb0 = λ ()} ( a₋₀ i) ( a₋₁ i) refl 
+
+makeCubeBoundary :
+    {a₀₀₀ a₀₀₁ : A} {a₀₀₋ : a₀₀₀ ≡ a₀₀₁}
+    {a₀₁₀ a₀₁₁ : A} {a₀₁₋ : a₀₁₀ ≡ a₀₁₁}
+    {a₀₋₀ : a₀₀₀ ≡ a₀₁₀} {a₀₋₁ : a₀₀₁ ≡ a₀₁₁}
+    (a₀₋₋ : Square a₀₀₋ a₀₁₋ a₀₋₀ a₀₋₁)
+    {a₁₀₀ a₁₀₁ : A} {a₁₀₋ : a₁₀₀ ≡ a₁₀₁}
+    {a₁₁₀ a₁₁₁ : A} {a₁₁₋ : a₁₁₀ ≡ a₁₁₁}
+    {a₁₋₀ : a₁₀₀ ≡ a₁₁₀} {a₁₋₁ : a₁₀₁ ≡ a₁₁₁}
+    (a₁₋₋ : Square a₁₀₋ a₁₁₋ a₁₋₀ a₁₋₁)
+    {a₋₀₀ : a₀₀₀ ≡ a₁₀₀} {a₋₀₁ : a₀₀₁ ≡ a₁₀₁}
+    (a₋₀₋ : Square a₀₀₋ a₁₀₋ a₋₀₀ a₋₀₁)
+    {a₋₁₀ : a₀₁₀ ≡ a₁₁₀} {a₋₁₁ : a₀₁₁ ≡ a₁₁₁}
+    (a₋₁₋ : Square a₀₁₋ a₁₁₋ a₋₁₀ a₋₁₁)
+    (a₋₋₀ : Square a₀₋₀ a₁₋₀ a₋₀₀ a₋₁₀)
+    (a₋₋₁ : Square a₀₋₁ a₁₋₁ a₋₀₁ a₋₁₁)
+    →  NBoundaryIn A 3
+makeCubeBoundary a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁ =
+    mkBoundary a₀₋₋ a₁₋₋
+    λ i → makeSquareBoundary (a₋₀₋ i) (a₋₁₋ i) (a₋₋₀ i) (a₋₋₁ i) 
+
+
+
+squareTest :
+    {a₀₀ a₀₁ : A} (a₀₋ : a₀₀ ≡ a₀₁)
+    {a₁₀ a₁₁ : A} (a₁₋ : a₁₀ ≡ a₁₁)
+    (a₋₀ : a₀₀ ≡ a₁₀) (a₋₁ : a₀₁ ≡ a₁₁)
+     → 
+       (Square a₀₋ a₁₋ a₋₀ a₋₁) ≡
+       (InsideOf (makeSquareBoundary  a₀₋ a₁₋ a₋₀ a₋₁))
+squareTest a₀₋ a₁₋ a₋₀ a₋₁ = refl
+
+squareTestHoles :
+          (bd : NBoundaryIn A 2) →   
           (Square _ _ _ _) ≡
           (InsideOf {A = A} {n = 2} bd)
-squareTest bd = refl
+squareTestHoles bd = refl
 
 
-cubeTest : ∀ {ℓ} → {A : Type ℓ} →  ∀ (bd : NBorderIn A 3) →   
+cubeTest :
+    {a₀₀₀ a₀₀₁ : A} {a₀₀₋ : a₀₀₀ ≡ a₀₀₁}
+    {a₀₁₀ a₀₁₁ : A} {a₀₁₋ : a₀₁₀ ≡ a₀₁₁}
+    {a₀₋₀ : a₀₀₀ ≡ a₀₁₀} {a₀₋₁ : a₀₀₁ ≡ a₀₁₁}
+    (a₀₋₋ : Square a₀₀₋ a₀₁₋ a₀₋₀ a₀₋₁)
+    {a₁₀₀ a₁₀₁ : A} {a₁₀₋ : a₁₀₀ ≡ a₁₀₁}
+    {a₁₁₀ a₁₁₁ : A} {a₁₁₋ : a₁₁₀ ≡ a₁₁₁}
+    {a₁₋₀ : a₁₀₀ ≡ a₁₁₀} {a₁₋₁ : a₁₀₁ ≡ a₁₁₁}
+    (a₁₋₋ : Square a₁₀₋ a₁₁₋ a₁₋₀ a₁₋₁)
+    {a₋₀₀ : a₀₀₀ ≡ a₁₀₀} {a₋₀₁ : a₀₀₁ ≡ a₁₀₁}
+    (a₋₀₋ : Square a₀₀₋ a₁₀₋ a₋₀₀ a₋₀₁)
+    {a₋₁₀ : a₀₁₀ ≡ a₁₁₀} {a₋₁₁ : a₀₁₁ ≡ a₁₁₁}
+    (a₋₁₋ : Square a₀₁₋ a₁₁₋ a₋₁₀ a₋₁₁)
+    (a₋₋₀ : Square a₀₋₀ a₁₋₀ a₋₀₀ a₋₁₀)
+    (a₋₋₁ : Square a₀₋₁ a₁₋₁ a₋₀₁ a₋₁₁)
+     → 
+       (Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁) ≡
+       (InsideOf (makeCubeBoundary  a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁))
+cubeTest a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁ = refl
+
+cubeTestHoles :
+          (bd : NBoundaryIn A 3) →   
           (Cube _ _ _ _ _ _) ≡
           (InsideOf {A = A} {n = 3} bd)
-cubeTest bd = refl
+cubeTestHoles bd = refl
+
+
+
+cubeTest' :
+    {a₀₀₀ a₀₀₁ : A} {a₀₀₋ : a₀₀₀ ≡ a₀₀₁}
+    {a₀₁₀ a₀₁₁ : A} {a₀₁₋ : a₀₁₀ ≡ a₀₁₁}
+    {a₀₋₀ : a₀₀₀ ≡ a₀₁₀} {a₀₋₁ : a₀₀₁ ≡ a₀₁₁}
+    (a₀₋₋ : Square a₀₀₋ a₀₁₋ a₀₋₀ a₀₋₁)
+    {a₁₀₀ a₁₀₁ : A} {a₁₀₋ : a₁₀₀ ≡ a₁₀₁}
+    {a₁₁₀ a₁₁₁ : A} {a₁₁₋ : a₁₁₀ ≡ a₁₁₁}
+    {a₁₋₀ : a₁₀₀ ≡ a₁₁₀} {a₁₋₁ : a₁₀₁ ≡ a₁₁₁}
+    (a₁₋₋ : Square a₁₀₋ a₁₁₋ a₁₋₀ a₁₋₁)
+    {a₋₀₀ : a₀₀₀ ≡ a₁₀₀} {a₋₀₁ : a₀₀₁ ≡ a₁₀₁}
+    (a₋₀₋ : Square a₀₀₋ a₁₀₋ a₋₀₀ a₋₀₁)
+    {a₋₁₀ : a₀₁₀ ≡ a₁₁₀} {a₋₁₁ : a₀₁₁ ≡ a₁₁₁}
+    (a₋₁₋ : Square a₀₁₋ a₁₁₋ a₋₁₀ a₋₁₁)
+    (a₋₋₀ : Square a₀₋₀ a₁₋₀ a₋₀₀ a₋₁₀)
+    (a₋₋₁ : Square a₀₋₁ a₁₋₁ a₋₀₁ a₋₁₁)
+     → 
+       (Cube {A = A} a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁) ≡
+       (Pathⁿ A 3 (makeCubeBoundary  a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁))
+cubeTest' a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁ = refl
