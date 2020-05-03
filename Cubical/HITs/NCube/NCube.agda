@@ -65,15 +65,15 @@ borderEndInj≡ {n} i x = tube x i
 
 -- -- -- --------------
 
-Border : (A : Type₀) → (n : ℕ) → Type₀
-Border A n = Hborder n → A
+Boundary : (A : Type₀) → (n : ℕ) → Type₀
+Boundary A n = Hborder n → A
 
 Cubi : (A : Type₀) → (n : ℕ) → Type₀
 Cubi A n = Hcube n → A
 
 
-Cubi→Border : ∀ {A : Type₀} → ∀ {n} → Cubi A n → Border A n 
-Cubi→Border cu =  cu  E.∘ borderInj 
+Cubi→Boundary : ∀ {A : Type₀} → ∀ {n} → Cubi A n → Boundary A n 
+Cubi→Boundary cu =  cu  E.∘ borderInj 
 
 CubiEnd : ∀ {A} → ∀ {n} → Bool → Cubi A (suc n) → Cubi A n
 CubiEnd x x₁ x₂ = x₁ (hcubeEndInd x x₂)
@@ -82,34 +82,34 @@ CubiEnd≡ : ∀ {A} → ∀ {n} → ∀ (cu : Cubi A (suc n))
    →  CubiEnd {n = n} false cu ≡ CubiEnd {n = n} true cu
 CubiEnd≡ cu i x = cu (ins x i)
 
-BorderEnd : ∀ {A} → ∀ {n} → Bool → Border A (suc n) → Border A n 
-BorderEnd {n = n} x = E._∘ ((borderEndInj {n} x))
+BoundaryEnd : ∀ {A} → ∀ {n} → Bool → Boundary A (suc n) → Boundary A n 
+BoundaryEnd {n = n} x = E._∘ ((borderEndInj {n} x))
 
-BorderEnd≡ : ∀ {A} → ∀ {n} → ∀ (bd : Border A (suc n))
-   →  BorderEnd {n = n} false bd ≡ BorderEnd {n = n} true bd
-BorderEnd≡ {n = n} bd i = (λ x → bd (borderEndInj≡ {n} i x)) 
+BoundaryEnd≡ : ∀ {A} → ∀ {n} → ∀ (bd : Boundary A (suc n))
+   →  BoundaryEnd {n = n} false bd ≡ BoundaryEnd {n = n} true bd
+BoundaryEnd≡ {n = n} bd i = (λ x → bd (borderEndInj≡ {n} i x)) 
 
 
-Hycu :  ∀ {A : Type₀} → ∀ {n} → Border A n → Type₀
-Hycu {A} {n} bd = Σ (Cubi A n) λ c → Cubi→Border c ≡ bd 
+Hycu :  ∀ {A : Type₀} → ∀ {n} → Boundary A n → Type₀
+Hycu {A} {n} bd = Σ (Cubi A n) λ c → Cubi→Boundary c ≡ bd 
 
-BorderCap : ∀ {A} → ∀ n → (b : Bool) → (bd : Border A (suc n))
-             → Hycu {n = n} (BorderEnd {n = n} b bd) 
-BorderCap n b bd = (λ x → bd (sideBo b x)) , E.refl
+BoundaryCap : ∀ {A} → ∀ n → (b : Bool) → (bd : Boundary A (suc n))
+             → Hycu {n = n} (BoundaryEnd {n = n} b bd) 
+BoundaryCap n b bd = (λ x → bd (sideBo b x)) , E.refl
 
 
 CubiDeco : ∀ {A : Type₀} → ∀ {n} → (c : Cubi A n)
-                → Hycu {n = n} (Cubi→Border {n = n} c)
+                → Hycu {n = n} (Cubi→Boundary {n = n} c)
 CubiDeco c = c , E.refl
 
 -- many hours spent on trying to convince agda that this definition should mention HycuP itself,
 -- so HycuP could be defined without "gluing" in Hycu
-HycuP : ∀ {A : Type₀} → ∀ {n} → Border A n → Type₀
+HycuP : ∀ {A : Type₀} → ∀ {n} → Boundary A n → Type₀
 HycuP {A} {n = zero} _ =  A
 HycuP {n = suc n} bd = PathP
-             (λ i → Hycu {n = n} (BorderEnd≡ {n = n} bd i))
-             (BorderCap n false bd)
-             (BorderCap n true bd)
+             (λ i → Hycu {n = n} (BoundaryEnd≡ {n = n} bd i))
+             (BoundaryCap n false bd)
+             (BoundaryCap n true bd)
 
 hycuP : ∀ {A} → ∀ n → ∀ bd → Hycu {A} {n = n} bd → HycuP {A} bd 
 hycuP zero bd (c , _) = c _
@@ -144,7 +144,7 @@ hycuP (suc n) bd (c , bd-glue) i =
 
 mkBo2 : ∀ {A : Type₀} → ∀ {w x y z : A }
                → (p : w ≡ y) (q : w ≡ x) (r : y ≡ z) (s : x ≡ z)
-               → Border A 2
+               → Boundary A 2
 mkBo2 p q r s (sideBo false (co false x₁)) = q i0
 mkBo2 p q r s (sideBo false (co true x₁)) = q i1
 mkBo2 p q r s (sideBo false (ins a i)) = q i
