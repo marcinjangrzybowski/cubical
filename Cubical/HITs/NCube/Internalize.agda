@@ -4,7 +4,7 @@ module Cubical.HITs.NCube.Internalize where
 
 open import Cubical.Data.Empty renaming (rec to ⊥-rec)
 open import Cubical.Data.Unit.Properties
-open import Cubical.Data.Bool
+open import Cubical.Data.Bool renaming (_≟_ to _≟Bool_)
 open import Cubical.Data.Nat
 open import Cubical.Data.Nat.Order
 open import Cubical.Data.List
@@ -85,6 +85,11 @@ data BdFacet : (n : ℕ) → Type₀ where
      lid : ∀ n → Bool → BdFacet (suc n)
      cyl : ∀ n → Maybe Bool → BdFacet (suc n) → BdFacet (suc (suc n))
 
+¬BdFacet0 : BdFacet 0 → ⊥
+¬BdFacet0 ()
+
+
+
 cylF' : ∀ {n} → Maybe Bool → BdFacet (n) → BdFacet (suc n)
 cylF' {suc n} x x₁ = cyl _ x x₁
 
@@ -95,6 +100,33 @@ facetCase {suc n} (cyl .n nothing x₁) =
   let z = facetCase x₁
   in Sum.map (λ x → fsuc (fst x) , snd x) (λ x → fst x , cylF' (fst x) (snd x)) z
 facetCase {suc n} (cyl .n (just x) x₁) = inr (just x , x₁)
+
+
+facetLidSide : ∀ {n} → BdFacet (suc n) → Bool  
+facetLidSide (lid _ x) = x
+facetLidSide (cyl n x x₁) = false
+
+facetIsLid? : ∀ {n} → BdFacet (suc n) → Bool  
+facetIsLid? (lid _ x) = true
+facetIsLid? (cyl n x x₁) = false
+
+lid-injective : ∀ {n} → ∀ {x y} → BdFacet.lid n x ≡ lid n y → x ≡ y
+lid-injective {x = false} {false} p = refl
+lid-injective {x = false} {true} p = ⊥-rec (false≢true (cong facetLidSide p ))
+lid-injective {x = true} {false} p = ⊥-rec (true≢false (cong facetLidSide p ))
+lid-injective {x = true} {true} p = refl
+
+-- BdFacet-Discrete : ∀ {n} → Discrete (BdFacet n)
+-- BdFacet-Discrete (lid n x) (lid .n x₁) =
+--              mapDec
+--             (cong (lid _))
+--             (λ x₂ x₃ → x₂ (lid-injective x₃))
+--             (x ≟Bool x₁)
+-- BdFacet-Discrete (lid .(suc n) x) (cyl n x₁ y) = no (⊥-rec ∘ true≢false ∘ (cong facetIsLid?))
+-- BdFacet-Discrete (cyl n x x₁) (lid .(suc n) x₂) = no (⊥-rec ∘ false≢true ∘ (cong facetIsLid?))
+-- BdFacet-Discrete (cyl n x x₁) (cyl .n x₂ y) = {!!}
+
+
 
 mkFace : ∀ {n} → (Fin n × Bool) → BdFacet n
 mkFace {zero} (k , snd₁) = ⊥-rec (¬Fin0 k)
@@ -171,6 +203,7 @@ fctInj⊂' {suc (suc n)} {suc k} (cyl n nothing ft) ft' p | inr (just x , snd₁
 
 fctInj⊂' {suc .(suc n)} {suc k} (cyl n (just x) ft) ft' p = refl , fctInj⊂' _ _ p
 
+
 fctInj⊂'F : ∀ {n k} → (ft : BdFacet n) → ∀ ft'₁ → ∀ ft'₂
             →  ∀ p → ft'₁ ⊆ft ft'₂
             →  (fctInj' {k = k} ft p ft'₁) ⊆ft (fctInj' {k = k} ft p ft'₂)
@@ -200,12 +233,21 @@ isPartialBoundaryAtom (f , _) sf = (f sf ≡ true) × (∀ sf' → (sf ⊂ft sf'
 PartialBoundaryAtom : ∀ {n} → PartialBoundary n → Type₀
 PartialBoundaryAtom x = Σ _ (isPartialBoundaryAtom x)
 
+isPba? : ∀ {n} → (pb : PartialBoundary n) → ∀ x → Dec (isPartialBoundaryAtom pb x)
+isPba? = {!!}
+
+notAtomCases : ∀ {n} → (pb : PartialBoundary n) → ∀ x
+                → ¬ (isPartialBoundaryAtom pb x)
+                → (fst pb x ≡ false) ⊎
+                  ((fst pb x ≡ true) × Σ (PartialBoundaryAtom pb) λ a → x ⊂ft fst a) 
+notAtomCases = {!!}
+
 atomInj : ∀ {n} → {pb : PartialBoundary n} → ∀ sf
-           → (sfNotAtom : fst pb sf ≡ false)
+           → (sfNotInPb : fst pb sf ≡ false)
            → (x : PartialBoundaryAtom (partialBoundaryProj pb sf)) 
-           → PartialBoundaryAtom pb
-atomInj {pb = pb} sf sfNotAtom x =
-  {!!}
+           → Σ (PartialBoundaryAtom pb)
+             (λ a → fctInj sf (fst x) ⊆ft fst a)
+atomInj = {!!}
 
 
 -- this is not true!!
@@ -233,31 +275,47 @@ data Skel' : (n : ℕ) → Type₀ where
 
 
 
-data Skel {ℓ} (A : Type ℓ) (n : ℕ) : Type ℓ where
-   holeS : A → Skel A n 
-   compS : Vec (Skel A n) (2^ n) → Skel A n → Skel A n
-
 skelEnd : ∀ {n} → Skel' (suc n) → Skel' (n)
-skelEnd = {!!}
+
 
 skelFace : ∀ {n} → Skel' n → (ft : BdFacet n)  → Skel' (toℕ (fctDim ft))
 skelFace {n} holeS ft = holeS
-skelFace {n} (compS {_} {ptBnd} x x₁) ft with dichotomyBool (fst ptBnd ft)
+skelFace {n} (compS {_} {ptBnd} x x₁) ft with isPba? ptBnd ft 
+... | yes p = skelEnd (x (ft , p))
+... | no ¬p with notAtomCases ptBnd ft ¬p
 ... | inl x₂ =
-  let z : Skel' (suc (fst (fctDim ft)))
-      z = x {!x₂!}
-  in skelEnd z
-... | inr x₂ = 
-  let pb = partialBoundaryProj ptBnd ft
-      z : (ft₁ : _) → _
-      z = λ ft₁ →
-           let qq : (fst (fctDim {!!}) , {!!}) ≡ (fst (fctDim (fst ft₁)) , {!!})
-               qq = {!!}
-           in 
-           subst (Skel' ∘ suc ∘ toℕ {n} )
-           qq
-           (x (atomInj {pb = ptBnd} ft x₂ ft₁))
-  
-  in compS {fst (fctDim ft)} {pb}
-      (z)
+      let z = λ ft₁ →
+              let (a' , xx) = atomInj {pb = ptBnd} ft x₂ ft₁
+              in skelFace (x a') {! fst a'!}
+      --x ∘ atomInj {pb = ptBnd} ft x₂
+      in
+      compS {ptBnd = partialBoundaryProj ptBnd ft}
+      z
       (skelFace x₁ ft)
+... | inr x₂ = {!!}
+
+skelEnd x = skelFace x (lid _ true)
+
+-- ... | inl x₂ =
+--   let z : Skel' (suc (fst (fctDim ft)))
+--       z = x {!x₂!}
+--   in skelEnd z
+-- ... | inr x₂ = 
+--   let pb = partialBoundaryProj ptBnd ft
+--       z : (ft₁ : _) → _
+--       z = λ ft₁ →
+--            let qq : (fst (fctDim {!!}) , {!!}) ≡ (fst (fctDim (fst ft₁)) , {!!})
+--                qq = {!!}
+--            in 
+--            subst (Skel' ∘ suc ∘ toℕ {n} )
+--            qq
+--            (x (atomInj {pb = ptBnd} ft x₂ ft₁))
+  
+--   in compS {fst (fctDim ft)} {pb}
+--       (z)
+--       (skelFace x₁ ft)
+
+
+-- data Skel {ℓ} (A : Type ℓ) (n : ℕ) : Type ℓ where
+--    holeS : A → Skel A n 
+--    compS : Vec (Skel A n) (2^ n) → Skel A n → Skel A n
