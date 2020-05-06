@@ -289,6 +289,10 @@ isPropΠ3 h = isPropΠ λ x → isPropΠ λ y → isPropΠ λ z → h x y z
 isSetΠ : ((x : A) → isSet (B x)) → isSet ((x : A) → B x)
 isSetΠ = isOfHLevelΠ 2
 
+isSetΠ2 : (h : (x : A) (y : B x) → isSet (C x y))
+        → isSet ((x : A) (y : B x) → C x y)
+isSetΠ2 h = isSetΠ λ x → isSetΠ λ y → h x y
+
 isGroupoidΠ : ((x : A) → isGroupoid (B x)) → isGroupoid ((x : A) → B x)
 isGroupoidΠ = isOfHLevelΠ 3
 
@@ -347,6 +351,9 @@ isOfHLevelLift n = isOfHLevelRetract n lower lift λ _ → refl
 
 inhProp→isContr : A → isProp A → isContr A
 inhProp→isContr x h = x , h x
+
+extend : isContr A → (∀ φ → (u : Partial φ A) → Sub A φ u)
+extend (x , p) φ u = inS (hcomp (λ { j (φ = i1) → p (u 1=1) j }) x)
 
 isContrPartial→isContr : ∀ {ℓ} {A : Type ℓ}
                        → (extend : ∀ φ → Partial φ A → A)
