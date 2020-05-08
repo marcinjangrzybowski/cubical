@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical --safe  #-}
+{-# OPTIONS --cubical  #-}
 module Cubical.HITs.NCube.Internalize where
 
 
@@ -150,7 +150,7 @@ _⊆ft_ : ∀ {n} → BdFacet n → BdFacet n → Type₀
 x ⊆ft x₁ = (bdInj x) ⊆ (bdInj x₁)
 
 _⊂ft_ : ∀ {n} → BdFacet n → BdFacet n → Type₀ 
-x ⊂ft x₁ = ((bdInj x) ⊆ (bdInj x₁)) × ((toℕ (fctDim x)) < (toℕ (fctDim x)))
+x ⊂ft x₁ = ((bdInj x) ⊆ (bdInj x₁)) × ((toℕ (fctDim x₁)) < (toℕ (fctDim x)))
 
 
 isPartialBoundaryTest : ∀ {n} →  (BdFacet n → Bool) → Type₀
@@ -164,6 +164,37 @@ substFct {suc n} {zero} x ft = ⊥-rec (snotz x)
 substFct {suc n} {suc k} x (lid .n x₁) = lid _ x₁
 substFct {suc .(suc n)} {suc zero} x (cyl n x₁ ft) = ⊥-rec (snotz (injSuc x))
 substFct {suc .(suc n)} {suc (suc k)} x (cyl n x₁ ft) = cyl _ x₁ (substFct (injSuc x) ft)
+
+
+¬full-⊆-bdInj : ∀ {n} → ∀ x₂ → (repeat nothing) ⊆ bdInj {n = n} x₂ → ⊥
+¬full-⊆-bdInj (cyl n nothing x₂) x = ¬full-⊆-bdInj _ (snd x)
+
+¬lid-⊆-cyl : ∀ {n} → ∀ b → ∀ x₁ → ∀ x₂
+                 → lid _ b ⊆ft BdFacet.cyl n x₁ x₂ → ⊥
+¬lid-⊆-cyl b nothing x₂ x = ¬full-⊆-bdInj _ (snd x)
+¬lid-⊆-cyl b (just x₁) x₂ x = ¬full-⊆-bdInj _ (snd x)
+
+⊆ft-cases : ∀ {n} → (x y : BdFacet n) → x ⊆ft y → (x ≡ y) ⊎ (x ⊂ft y) 
+⊆ft-cases = {!!}
+
+fctProj :  ∀ {n}
+           → (ft ft' : BdFacet n)
+           → ft' ⊆ft ft
+           → BdFacet (suc (toℕ (fctDim ft))) 
+fctProj {.(suc n)} (lid n x₁) ft' x = ft'
+fctProj {.(suc (suc n))} (cyl n (x₁) ft) (lid .(suc n) x₂) x = ⊥-rec (¬lid-⊆-cyl _ _ _ x) -- ⊥
+
+fctProj {.(suc (suc n))} (cyl n nothing ft) (cyl .n nothing ft') x =
+     cyl _ nothing (fctProj ft ft' (snd x))
+
+fctProj {.(suc (suc n))} (cyl n nothing ft) (cyl .n (just x₁) ft') x =
+     cyl _ (just x₁) (fctProj ft ft' (snd x))
+
+fctProj {.(suc (suc n))} (cyl n (just x₁) ft) (cyl .n (just x₂) ft') x =
+    fctProj ft ft' (snd x)
+    
+
+
 
 fctInj' : ∀ {n k} → (ft : BdFacet n) → k ≡ toℕ (fctDim ft) →  BdFacet (k) → BdFacet n
 
@@ -183,6 +214,7 @@ fctInj' {suc (suc n)} {suc k} (cyl n nothing ft) x x₁ | inr (fst₁ , snd₁) 
 
 fctInj : ∀ {n} → (ft : BdFacet n) → BdFacet (toℕ (fctDim ft)) → BdFacet n
 fctInj ft x = fctInj' ft refl x
+
 
 fctInj⊂' : ∀ {n k} → (ft : BdFacet n) → ∀ ft' →  ∀ p →  (fctInj' {k = k} ft p ft') ⊆ft ft 
 fctInj⊂' {suc zero} {suc k} (lid .0 x) (lid .k x₁) p = ⊥-rec (snotz p)
@@ -204,10 +236,20 @@ fctInj⊂' {suc (suc n)} {suc k} (cyl n nothing ft) ft' p | inr (just x , snd₁
 fctInj⊂' {suc .(suc n)} {suc k} (cyl n (just x) ft) ft' p = refl , fctInj⊂' _ _ p
 
 
+
+
+
 fctInj⊂'F : ∀ {n k} → (ft : BdFacet n) → ∀ ft'₁ → ∀ ft'₂
             →  ∀ p → ft'₁ ⊆ft ft'₂
             →  (fctInj' {k = k} ft p ft'₁) ⊆ft (fctInj' {k = k} ft p ft'₂)
-fctInj⊂'F = {!!}
+fctInj⊂'F ft ft'₁ ft'₂ p x = 
+
+    Sum.elim (λ a → {!!})
+     (λ b → {!!})
+     (⊆ft-cases _ _ x)
+
+
+
 -- fctinj⊂'f {k = suc k} (lid zero x₁) ft'₁ ft'₂ p x =  ⊥-rec (snotz p)
 
 -- fctinj⊂'f (lid (suc n) x₁) (lid n₁ x₂) (lid .n₁ x₃) p x = refl , (fst x , ⊆-refl _)
@@ -218,6 +260,10 @@ fctInj⊂'F = {!!}
 
 --- cyl
 -- fctinj⊂'f (cyl n x₁ ft) ft'₁ ft'₂ p x = {!!}
+
+
+
+
 
 partialBoundaryProj : ∀ {n} → PartialBoundary n
                       → (sf : BdFacet n)
@@ -233,8 +279,15 @@ isPartialBoundaryAtom (f , _) sf = (f sf ≡ true) × (∀ sf' → (sf ⊂ft sf'
 PartialBoundaryAtom : ∀ {n} → PartialBoundary n → Type₀
 PartialBoundaryAtom x = Σ _ (isPartialBoundaryAtom x)
 
+
+-- isPba?Help : {!!}
+-- isPba?Help = {!!}
+
 isPba? : ∀ {n} → (pb : PartialBoundary n) → ∀ x → Dec (isPartialBoundaryAtom pb x)
-isPba? = {!!}
+isPba? pb x with (fst pb x) ≟Bool true
+... | no ¬p = no λ x₁ → ¬p (fst x₁)
+... | yes p with {!!}
+isPba? pb x | yes p | w = {!!}
 
 notAtomCases : ∀ {n} → (pb : PartialBoundary n) → ∀ x
                 → ¬ (isPartialBoundaryAtom pb x)
@@ -267,13 +320,15 @@ snd (full n) sf₁ sf₂ x x₁ = x₁
 -- isFromBd A n f = {!!}
 
 
+
 data Skel' : (n : ℕ) → Type₀ where
    holeS : ∀ {n} → Skel' n 
    compS : ∀ {n} → ∀ {ptBnd : PartialBoundary n} →
                 ((ft : PartialBoundaryAtom ptBnd) → Skel' (suc (toℕ (fctDim (fst ft)))))
                 → Skel' n → Skel' n
 
-
+Skel'-subst : ∀ {n k} → n ≡ k →  Skel' n  → Skel' k
+Skel'-subst = {!!}
 
 skelEnd : ∀ {n} → Skel' (suc n) → Skel' (n)
 
@@ -286,11 +341,11 @@ skelFace {n} (compS {_} {ptBnd} x x₁) ft with isPba? ptBnd ft
 ... | inl x₂ =
       let z = λ ft₁ →
               let (a' , xx) = atomInj {pb = ptBnd} ft x₂ ft₁
-              in skelFace (x a') {! fst a'!}
-      --x ∘ atomInj {pb = ptBnd} ft x₂
+                  zz = fctProj (fst a') (fctInj' ft (λ _ → toℕ (fctDim ft)) (fst ft₁)) xx
+              in skelFace (x a') (zz )
       in
       compS {ptBnd = partialBoundaryProj ptBnd ft}
-      z
+      ((Skel'-subst {!!}) ∘ z)
       (skelFace x₁ ft)
 ... | inr x₂ = {!!}
 
