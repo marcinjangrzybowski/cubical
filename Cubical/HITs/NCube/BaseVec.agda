@@ -25,35 +25,7 @@ open import Cubical.Foundations.CartesianKanOps
 
 open import Cubical.Foundations.Equiv.HalfAdjoint
 
-
--- this version of Interval will let us handle both ends in single case
--- the convention of i0 ↔ false , i1 ↔ true is used everywhere in this module
-
-data Interval' : Type₀ where
-   end : Bool → Interval'
-   inside : end false ≡ end true 
-
-Bool→I : Bool → I
-Bool→I false = i0
-Bool→I true = i1
-
--- I did not check how it would behave, but (Vec n Interval') , or (Fin n → Interval')
--- should also work here
-
-NCube : ℕ -> Type₀
-NCube = Vec Interval' 
-
-Iapp : ∀ {ℓ} → {A : Type ℓ} → {a₀ a₁ : A}
-         → a₀ ≡ a₁ → Interval' → A
-Iapp {a₀ = a₀} {a₁} x (end x₁) = caseBool a₁ a₀ x₁ 
-Iapp x (inside i) = x i
-
-IappP : ∀ {ℓ} → {A : I → Type ℓ} → {a₀ : A i0} → {a₁ : A i1}
-      → PathP (λ i → A i) a₀ a₁ 
-      → ∀ i' →  Iapp (λ i → A i) i'
-IappP {a₀ = a₀} x (end false) = a₀
-IappP {a₁ = a₁} x (end true) = a₁
-IappP x (inside i) = x i
+open import Cubical.HITs.NCube.IntervalPrim
 
 -- This helper datatype will be injected with
 -- boundary of lower dimension and boundaryInj later
@@ -111,17 +83,17 @@ cyl'' (inside i) y = cyl y i
 cylEx : ∀ {n} → boundaryEndMap {n} false ≡ boundaryEndMap true 
 cylEx i x = cyl x i
 
--- faceInj : ∀ {n}
---           → ℕ → Bool
---           → NCube n → NBoundary (suc n)  
--- faceInj {suc n} (suc k) s (end x₂ , x₃) = lid x₂ (boundaryInj (faceInj k s x₃))
--- faceInj {suc n} (suc k) s (inside i , x₃) = cyl (faceInj k s x₃) i
--- faceInj  _  = lid
+faceInj : ∀ {n}
+          → ℕ → Bool
+          → NCube n → NBoundary (suc n)  
+faceInj {suc n} (suc k) s (end x₂ ∷ x₃) = lid x₂ (boundaryInj (faceInj k s x₃))
+faceInj {suc n} (suc k) s (inside i ∷ x₃) = cyl (faceInj k s x₃) i
+faceInj  _  = lid
 
--- faceMap : ∀ {n}
---           → ℕ → Bool
---           → NCube n → NCube (suc n)  
--- faceMap n b = boundaryInj ∘ faceInj n b 
+faceMap : ∀ {n}
+          → ℕ → Bool
+          → NCube n → NCube (suc n)  
+faceMap n b = boundaryInj ∘ faceInj n b 
 
 boundaryProj : ∀ {n} → NBoundary (suc n) → NCube n
 boundaryProj {zero} _ = []
@@ -171,11 +143,6 @@ corner0Bd-≡-corner1Bd : ∀ {n} → corner0Bd {n = suc n} ≡ corner1Bd {n = s
 corner0Bd-≡-corner1Bd {n} i = ((λ i₁ → cyl (lid false (corner0-≡  corner0 i₁)) i₁)
                              ∙ λ i₁ → lid true (inside i₁ ∷ (corner0-≡-corner1 i₁))) i
 
-isContr-Inrerval' : isContr Interval'
-fst isContr-Inrerval' = end false
-snd isContr-Inrerval' (end false) = refl
-snd isContr-Inrerval' (end true) = inside
-snd isContr-Inrerval' (inside i) j = inside (i ∧ j) 
 
 
 isPropCube : ∀ {n} → isProp (NCube n)
@@ -297,6 +264,11 @@ toCubical {n = suc n} {bd} x (inside i ∷ x₂) = toCubical (x i) x₂
 
 
 
+
+injNBoundary+ : ∀ n k → NBoundary n →  NBoundary (k + n) 
+injNBoundary+ n zero x = x
+injNBoundary+ n (suc zero) x = cyl x i0
+injNBoundary+ n (suc (suc k)) x = cyl (injNBoundary+ n (suc k) x) i0
 
 
 
