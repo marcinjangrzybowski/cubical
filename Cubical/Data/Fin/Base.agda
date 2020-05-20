@@ -69,3 +69,5 @@ elim P fz fs {suc k} fj
   ; (inr (fk , p)) → subst P p (fs (elim P fz fs fk))
   }
 
+inject₁ : {k : ℕ} → Fin k → Fin (suc k)
+inject₁ x = _ ,  ≤-suc (snd x)

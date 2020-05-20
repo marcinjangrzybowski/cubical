@@ -261,8 +261,6 @@ lid-injective {x = true} {true} p = refl
 
 
 
-inject₁ : {k : ℕ} → Fin k → Fin (suc k)
-inject₁ x = _ ,  ≤-suc (snd x)
 
 fctDim : ∀ {n} → BdFacet n → Fin n
 fctDim {.(suc n)} (lid n x) = n , (zero , refl)
@@ -800,3 +798,94 @@ snd (full n) sf₁ sf₂ x x₁ = x₁
 --                 (λ x x₁ → (x ⊆ft x₁) , isProp-⊆ft {x = x} {x₁})
 --                  ,
 --                  {!!} , {!!}
+
+
+
+
+
+
+-- --------------- OMEGA
+
+
+
+-- skelFaceHalf : ∀ {ℓ} → (A : Type ℓ)
+--                → ∀ n → ∀ k
+--                → Skelω A (suc n) (inject₁ k)
+--                → Bool
+--                → Skelω A n k
+-- skelFaceHalf = {!!}
+
+-- skelFaceSkel :
+--            ∀ {ℓ} → (A : Type ℓ) → ∀ n → ∀ k
+--            → Skelω A n k
+--            → (sf : Σ (SubFace n) (λ x → toℕ (sfDim x) ≡ suc (toℕ k)))
+--            → Skelω A (suc (toℕ k)) ((suc (toℕ k) ) , (1 , refl))
+-- skelFaceSkel A zero (zero , snd₁) x sf i ()
+-- skelFaceSkel A zero (suc zero , zero , snd₁) x ([] , snd₂) i = {!!} --!!
+-- skelFaceSkel A zero (suc (suc fst₁) , zero , snd₁) x sf i = {!!} -- !!
+-- skelFaceSkel A zero (suc fst₁ , suc fst₂ , snd₁) x sf i = {!snd₁!} --!!
+
+-- skelFaceSkel A (suc n) (_ , zero , snd₁) x (fst₁ , snd₂) i = {!!}
+-- skelFaceSkel A (suc n) (zero , _  , snd₁) x sf i = {!!}
+-- skelFaceSkel A (suc n) (suc fst₁ , suc fst₂ , snd₁) x sf i = {!!}
+
+
+
+
+-- skelFaces : ∀ {ℓ} → (A : Type ℓ)
+--           → ∀ n → (k : Fin (suc (suc n)))
+--           → Skelω A n k → Σ (SubFace n) (λ x → toℕ (sfDim x) ≡ suc (toℕ k))
+--           → Typeω
+-- skelFaces A n (zero , _ , _) x _ = Partial i1 A
+-- skelFaces A n (_ , zero , _) x _ = Partial i0 A
+-- skelFaces A zero (suc fst₁ , suc fst₂ , snd₁) x _ = Partial i0 A
+-- skelFaces A (suc n) (suc fst₁ , suc fst₂ , snd₁) x p =
+--   let fsk : Partialⁿ A ((suc (suc fst₁))) (skelExpr (suc (suc fst₁))
+--                ((suc (suc fst₁)) , 1 , refl))
+--       fsk = skelFaceSkel A (suc n) (suc fst₁ , suc fst₂ , snd₁) x p
+--   in Subⁿ A ((suc (suc fst₁)))
+--      _
+--      fsk
+
+
+-- Skel↑ : ∀ {ℓ} → (A : Type ℓ)
+--           → ∀ n → (k : Fin (suc (suc n)))
+--           → (sk : Skelω A (suc n) (inject₁ k))
+--           → (∀ sf → Subⁿ A ((suc (toℕ (inject₁ k)))) _
+--                ((skelFaceSkel A (suc n) (inject₁ k) sk sf)) ) 
+--           → Skelω A (suc n) (fsuc k)
+-- Skel↑ A n (zero , zero , snd₁) sk x = {!!} --!!
+-- Skel↑ A n (zero , suc zero , snd₁) sk x = {!!} --!!
+-- Skel↑ A n (zero , suc (suc fst₁) , snd₁) sk x = {!!}
+-- Skel↑ A n (suc zero , snd₁) sk x = {!snd₁!}
+-- Skel↑ A n (suc (suc fst₁) , snd₁) sk x = {!!}
+
+-- Skel↑ :  ∀ {ℓ} → (A : Type ℓ) → ∀ n → ∀ k → (sk : Skelω A (suc n) ((inject₁ k)) → ?
+-- Skel↑ = ?
+
+
+-- --            -- → ?
+-- --            --  -- (∀ sf → Subⁿ A ((suc (toℕ (inject₁ k)))) _
+-- --            --  --              (skelFaceSkel A (suc n) (inject₁ k) sk sf)
+-- --            --  --              )
+-- -- Skel↑ = ?            
+
+
+
+-- -- skelFaceBoundary :
+-- --            ∀ {ℓ} → (A : Type ℓ) → ∀ n → ∀ k
+-- --            → Skelω A (suc n) (inject₁ k)
+-- --            → Bool → Fin (suc n)
+-- --            → Boundaryω A (toℕ k)
+-- -- skelFaceBoundary A = {!!}
+
+-- -- -- -- ⊥-recω (snotz (cong predℕ snd₁))
+
+-- -- -- Boundaryω-elim : ∀ {ℓ} → (A : Type ℓ) → ∀ n
+-- -- --          → (sk : Skelω A (suc n) (n , 2 , refl))
+-- -- --          → ((b : Bool) → (l : Fin (suc n))
+-- -- --               → InsideOfω {A = A} {n = suc n}
+-- -- --                 (skelFaceBoundary A n (n , 2 , {!!}) {!sk!} b l ) )
+-- -- --          → Boundaryω A (suc n)
+-- -- -- Boundaryω-elim = {!!}
+

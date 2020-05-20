@@ -1,11 +1,13 @@
 {-# OPTIONS --cubical --safe #-}
-module Cubical.HITs.NCube.BaseVec where
+module Cubical.HITs.NCube.BaseVecCut where
 
 
 open import Cubical.Data.Empty
 open import Cubical.Data.Unit.Properties
 open import Cubical.Data.Bool
 open import Cubical.Data.Nat
+open import Cubical.Data.Sum
+open import Cubical.Data.Nat.Order
 open import Cubical.Data.Sigma
 open import Cubical.Data.Vec
 
@@ -27,367 +29,69 @@ open import Cubical.Foundations.Equiv.HalfAdjoint
 
 open import Cubical.HITs.NCube.IntervalPrim
 
--- This helper datatype will be injected with
--- boundary of lower dimension and boundaryInj later
+open import Cubical.HITs.NCube.BaseVec
 
-data NBoundary' {n} {X : Type₀} (injX : X → NCube (n)) : Type₀ where
-   lid : Bool → NCube (n) → NBoundary' injX
-   cyl : ∀ x → lid false (injX x) ≡ lid true (injX x)
 
 
--- NBoundary and boundaryInj are recursively defined
+Nmax : ℕ 
+Nmax = 5
 
-NBoundary : ℕ → Type₀
-boundaryInj : ∀ {n} → NBoundary n → NCube n
+dichotomy≤ : ∀ b n → (n < b) ⊎ (Σ[ m ∈ ℕ ] n ≡ b + m)
+dichotomy≤ b n
+  = case n Cubical.Data.Nat.Order.≟ b return (λ _ → (n < b) ⊎ (Σ[ m ∈ ℕ ] n ≡ b + m)) of λ
+  { (lt o) → inl o
+  ; (eq p) → inr (0 , p ∙ sym (+-zero b))
+  ; (gt (m , p)) → inr (suc m , sym p ∙ +-suc m b ∙ +-comm (suc m) b)
+  }
 
-NBoundary zero = ⊥
-NBoundary (suc n) = NBoundary' {n} (boundaryInj)
 
-boundaryInj {suc n} (lid x x₁) = end x ∷ x₁
-boundaryInj {suc n} (cyl x i) = inside i ∷ boundaryInj x
+Partialⁿ-NBoundary-Max : Partialⁿ (NBoundary Nmax) Nmax (boundaryExpr Nmax)
+Partialⁿ-NBoundary-Max = {!!}
 
--- flipNBoundaryHead : ∀ {n} → Iso (NBoundary (suc (suc n))) (NBoundary (suc (suc n)))
--- flipNBoundaryHead = iso f f law law
---   where
---     f : _
---     f (lid x (end x₁ , x₂)) = (lid x₁ (end x , x₂))
---     f (lid x (inside i , x₂)) = (cyl (lid x x₂) i)
---     f (cyl (lid x x₁) i) = (lid x (inside i , x₁))
---     f (cyl (cyl x i₁) i) = (cyl (cyl x i) i₁)
-    
---     law : _
---     law (lid x (end x₁ , x₂)) = refl
---     law (lid x (inside i , x₂)) = refl
---     law (cyl (lid x x₁) i) = refl
---     law (cyl (cyl x i₁) i) = refl
 
--- flipNBoundaryHeadF : ∀ {n} → NBoundary (suc (suc n)) → NBoundary (suc (suc n)) 
--- flipNBoundaryHeadF {n} = Iso.fun (flipNBoundaryHead {n})
-
-boundaryEndMap : ∀ {n} → Bool → NBoundary n → NBoundary (suc n)
-boundaryEndMap {n} x = lid x ∘ boundaryInj
-
-cyl' : ∀ {n} → (bd : NBoundary (suc n)) →
-               boundaryEndMap false bd ≡ boundaryEndMap true bd 
-cyl' = cyl
-
-lid' : ∀ {n} → Bool  → NCube n → NBoundary (suc n) 
-lid' = lid
-
-
-cyl'' : ∀ {n} →  Interval' → NBoundary n → NBoundary (suc n)
-cyl'' (end x) y = cyl y (Bool→I x)
-cyl'' (inside i) y = cyl y i
-
-
-cylEx : ∀ {n} → boundaryEndMap {n} false ≡ boundaryEndMap true 
-cylEx i x = cyl x i
-
-faceInj : ∀ {n}
-          → ℕ → Bool
-          → NCube n → NBoundary (suc n)  
-faceInj {suc n} (suc k) s (end x₂ ∷ x₃) = lid x₂ (boundaryInj (faceInj k s x₃))
-faceInj {suc n} (suc k) s (inside i ∷ x₃) = cyl (faceInj k s x₃) i
-faceInj  _  = lid
-
-faceMap : ∀ {n}
-          → ℕ → Bool
-          → NCube n → NCube (suc n)  
-faceMap n b = boundaryInj ∘ faceInj n b 
-
-boundaryProj : ∀ {n} → NBoundary (suc n) → NCube n
-boundaryProj {zero} _ = []
-boundaryProj {suc n} (lid _ x₁) = x₁
-boundaryProj {suc n} (cyl x _) = boundaryInj x
-
-
-boundaryHead : ∀ {n} → NBoundary (suc n) →  Interval'
-boundaryHead (lid x x₁) = end x
-boundaryHead (cyl x i) = inside i
-
-
-corner0 : ∀ {n} → NCube n
-corner0 {zero} = []
-corner0 {suc n} =  end false ∷ corner0
-
-corner1 : ∀ {n} → NCube n
-corner1 {zero} = []
-corner1 {suc n} =  end true ∷ corner1
-
-corner0Bd : ∀ {n} → NBoundary (suc n)
-corner0Bd {zero} = lid false []
-corner0Bd {suc n} = lid false corner0
-
-corner1Bd : ∀ {n} → NBoundary (suc n)
-corner1Bd {zero} = lid true []
-corner1Bd {suc n} = lid true corner1
-
-
-corner0-≡ : ∀ {n} → ∀ (a : NCube n) → _≡_ {A = NCube n} (corner0) a  
-corner0-≡ {zero} [] = refl
-corner0-≡ {suc n} (end false ∷ x₁) i = end false ∷ corner0-≡ x₁ i
-corner0-≡ {suc n} (end true ∷ x₁) i = inside i ∷ corner0-≡ x₁ i
-corner0-≡ {suc n} (inside i ∷ x₁) j = inside (i ∧ j) ∷ corner0-≡ x₁ j
-
-≡-corner1 : ∀ {n} → ∀ (a : NCube n) → _≡_ {A = NCube n}  a (corner1)  
-≡-corner1 {zero} [] = refl
-≡-corner1 {suc n} (end true ∷ x₁) i = end true ∷ ≡-corner1 x₁ i
-≡-corner1 {suc n} (end false ∷ x₁) i = inside i ∷ ≡-corner1 x₁ i
-≡-corner1 {suc n} (inside i ∷ x₁) j = inside (i ∨ j) ∷ ≡-corner1 x₁ j
-
-corner0-≡-corner1 : ∀ {n} → _≡_ {A = NCube n}  corner0 corner1  
-corner0-≡-corner1 {zero} = refl
-corner0-≡-corner1 {suc n} i = (inside i) ∷ corner0-≡-corner1 i
-
-corner0Bd-≡-corner1Bd : ∀ {n} → corner0Bd {n = suc n} ≡ corner1Bd {n = suc n}
-corner0Bd-≡-corner1Bd {n} i = ((λ i₁ → cyl (lid false (corner0-≡  corner0 i₁)) i₁)
-                             ∙ λ i₁ → lid true (inside i₁ ∷ (corner0-≡-corner1 i₁))) i
-
-
-
-isPropCube : ∀ {n} → isProp (NCube n)
-isPropCube {zero} [] [] i = []
-isPropCube {suc n} (x ∷ x₁) (x₂ ∷ x₃) i =
-    (isContr→isProp isContr-Inrerval') x x₂ i ∷ (isPropCube x₁ x₃ i)
-
-
-
--- NBoundary1-≡-Bool : NBoundary 1 ≡ Bool
--- NBoundary1-≡-Bool = isoToPath h 
---   where
-
---   h : Iso (NBoundary 1) Bool
---   Iso.fun h (lid x _) = x
---   Iso.inv h x = lid x _
---   Iso.rightInv h b = refl
---   Iso.leftInv h (lid x x₁) = refl
-
-
--- Bool≃Susp⊥' : Bool ≃ Susp ⊥
--- Bool≃Susp⊥' =
---   isoToEquiv
---     (iso
---       (λ {false  → north; true → south})
---       (λ {north → false;  south → true})
---       (λ {north → refl;  south → refl})
---       (λ {true  → refl;  false → refl}))
-
--- -- Equality of NBoundary and Sn
-
--- NBoundary-≡-S₊ : ∀ {n} → NBoundary (suc n) ≡ S₊ n
-
--- NBoundary-≡-S₊ {zero} = NBoundary1-≡-Bool ∙ (ua Bool≃Susp⊥' ) 
-
--- NBoundary-≡-S₊ {suc n} = (isoToPath (lem) ) ∙ cong Susp (NBoundary-≡-S₊)
---   where
-
---   lem : Iso (NBoundary' {suc n} _) (Susp _)
---   Iso.fun (lem) (lid false x₁) = north
---   Iso.fun (lem) (lid true x₁) = south
---   Iso.fun (lem) (cyl x i) = merid x i
---   Iso.inv (lem) north = lid false (corner0)
---   Iso.inv (lem) south = lid true (corner1)
---   Iso.inv (lem) (merid x i) =   ((cong (lid false) (corner0-≡ (boundaryInj x)))
---                               ∙∙ (cyl x)
---                               ∙∙ (cong (lid true) (≡-corner1 (boundaryInj x)))) i
-
---   Iso.rightInv (lem) north = refl
---   Iso.rightInv (lem) south = refl
---   Iso.rightInv (lem) (merid x i₁) i =
-          
---          doubleCompPath-filler
---         (λ _ → north)
---         (λ j → doubleCompPath-filler
---                 (λ i₂ → merid (transp (λ _ → NBoundary (suc n)) ((~ i₂) ∨ i) x) (i₂ ∧ j))
---                 (λ i₂ → merid (transp ((λ _ → NBoundary (suc n))) i x)  j )
---                 (λ i₂ → merid (transp (λ _ → NBoundary (suc n)) ((~ i₂) ∧ i) x) (i₂ ∨  j))
---                 (~ i) j )
---         (λ _ → south)
---         (~ i) i₁
-
---   Iso.leftInv (lem) (lid false x₁) = cong (lid false) (corner0-≡ _)
---   Iso.leftInv (lem) (lid true x₁) = sym (cong (lid true) (≡-corner1 _))
---   Iso.leftInv (lem) (cyl x i₁) i =
---       doubleCompPath-filler
---         (cong (lid false) (corner0-≡ (boundaryInj x)))
---         (cyl x)
---         (cong (lid true) (≡-corner1 (boundaryInj x)))
---         (~ i) i₁
-
--- NBoundary-≡-S :  ∀ {n} → NBoundary n ≡ S (-1+ n)
--- NBoundary-≡-S {zero} = refl
--- NBoundary-≡-S {suc n} = NBoundary-≡-S₊
-
-
-
--- _isBoundaryOf_ : ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
---                → (NBoundary n → A) → (NCube n → A)
---                → Type ℓ
--- x isBoundaryOf x₁ = x ≡ x₁ ∘ boundaryInj
-
-
-
-InsideOf : ∀ {ℓ} → ∀ {A : Type ℓ}
-                  → ∀ {n}
-                  → (bd : NBoundary n → A)
-                  → Type ℓ
-
-insideOf : ∀ {ℓ} → ∀ {A : Type ℓ}
-                  → ∀ {n}
-                  → (bc : NCube n → A)                  
-                  → InsideOf (bc ∘ boundaryInj)
-
-InsideOf {A = A} {n = zero} bd = A
-InsideOf {n = suc n} bd =
-                       PathP
-                       (λ i → InsideOf (bd ∘ cyl'' (inside i)))
-                       (insideOf (bd ∘ lid false))
-                       (insideOf (bd ∘ lid true))
-
-insideOf {n = zero} bc = bc [] 
-insideOf {n = suc n} bc i = insideOf (λ x₁ → bc (inside i ∷ x₁))
-
-
-reflⁿ : ∀ {ℓ} → {A : Type ℓ} → ∀ n → (a : A) → InsideOf {n = n} (const a)
-reflⁿ zero a = a
-reflⁿ (suc n) a = refl
-
-nInside : ∀ n → InsideOf (boundaryInj {n})
-nInside n = insideOf (idfun _)
-
-toCubical :  ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → ∀ {bd}
-             → (InsideOf {A = A} {n = n} bd )
-             → NCube n → A 
-toCubical {n = zero} {bd} x x₁ = x
-toCubical {n = suc n} {bd} x (end x₁ ∷ x₂) = toCubical (x (Bool→I x₁)) x₂
-toCubical {n = suc n} {bd} x (inside i ∷ x₂) = toCubical (x i) x₂
-
-
-
-NBoundary-rec :  ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
-                 → (f : Bool → NCube n → A)
-                 → f false ∘ boundaryInj ≡ f true ∘ boundaryInj 
-                 → NBoundary (suc n) → A 
-NBoundary-rec f x (lid x₁ x₂) = f x₁ x₂
-NBoundary-rec f x (cyl x₁ i) = x i x₁
-
-
-NBoundary-lids :  ∀ n → ∀ i → Partialⁿ (NBoundary (suc n)) (suc n)
-                                        ((C→I-const (suc n) i ∨ⁿ C→I-const (suc n) (~ i))) 
-NBoundary-lids n i  =
-  Partial∨ⁿ-ends (suc n) i
-       (Partialⁿ-const (NBoundary (suc n)) (suc n) (C→I-const (suc n) i)
-         (C→elim {n = (suc n)} {(NBoundary (suc n))} (lid' true ∘ tail)) )
-       (Partialⁿ-const (NBoundary (suc n)) (suc n) (C→I-const (suc n) (~ i))
-        (C→elim {n = (suc n)} {(NBoundary (suc n))} (lid' false ∘ tail)) )
-
-NBoundary-cyl :  ∀ n →
-                       Partialⁿ (NBoundary n) n (boundaryExpr n)
-                     → Partialⁿ (NBoundary (suc n)) (suc n)
-                                        (λ _ → boundaryExpr n ) 
-NBoundary-cyl n x i = Partialⁿ-map {n = n} ((cyl'' (inside i))) (x) 
-
-
-InsideOfω→Cub : ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
-                     → (bd : Boundaryω A n)
-                     → InsideOfω {ℓ} {A} {n} bd
-                     → NCube n → A
-InsideOfω→Cub {A = A} {n = n} bd x = C→-app {n = n} {A = A} (outSⁿ n (boundaryExpr n) bd x) 
-
-InsideOfω→InsideOf : ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
-                     → (bd : Boundaryω A n)
-                     → InsideOfω {ℓ} {A} {n} bd
-                     → Σ _ (InsideOf {A = A} {n = n})
-InsideOfω→InsideOf bd x = (InsideOfω→Cub bd x ∘ boundaryInj) , insideOf (InsideOfω→Cub bd x)
-
-InsideOf→InsideOfω-bd : ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
-                     → (bd : NBoundary n → A)
-                     → InsideOf bd
-                     → Boundaryω A n
-InsideOf→InsideOfω-bd {A = A} {n = n} bd x =
-  Partialⁿ-const A n (boundaryExpr n)
-   (C→elim {n = n} {A = A} (toCubical x)) 
-
-InsideOf→InsideOfω : ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
-                     → (bd : NBoundary n → A)
-                     → (x : InsideOf bd)
-                     → InsideOfω {A = A} {n = n} (InsideOf→InsideOfω-bd bd x)
-InsideOf→InsideOfω {A = A} {n = n} bd x =
-    inSⁿ n (boundaryExpr n) (C→elim {n = n} {A = A} (toCubical x))
-
-
-InsideOfω-Path-bd : ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
-                     → (bd : Boundaryω A (suc n))
-                     → InsideOfω {ℓ} {A} {(suc n)} bd
-                     → (i : I) → Boundaryω A n
-InsideOfω-Path-bd {n = n} bd x i = 
-  InsideOf→InsideOfω-bd
-    (fst (InsideOfω→InsideOf bd x) ∘ (cyl'' (inside i)))
-    ((snd (InsideOfω→InsideOf bd x)) i)
-
-InsideOfω-Path : ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
-                     → (bd : Boundaryω A (suc n))
-                     → (x : InsideOfω {ℓ} {A} {(suc n)} bd)
-                     → (i : I)
-                     → InsideOfω {A = A} {n = n} ((InsideOfω-Path-bd {A = A} {n = n} bd x) i)
-InsideOfω-Path {n = n} bd x i = 
-  InsideOf→InsideOfω
-    (fst (InsideOfω→InsideOf bd x) ∘ (cyl'' (inside i)))
-    ((snd (InsideOfω→InsideOf bd x)) i)
-
-Subⁿ-elim : ∀ {ℓ} → ∀ (A : Type ℓ) → ∀ n
-            → (pa : Partialⁿ A (suc n) (boundaryExpr (suc n)))
-            → (s : Subⁿ A (suc n) _ pa)
-            → C→-app {n = n} {A} ((outSⁿ (suc n) (boundaryExpr (suc n)) pa s) i0)
-              ≡
-              C→-app {n = n} {A} ((outSⁿ (suc n) (boundaryExpr (suc n)) pa s) i1)
-            
-Subⁿ-elim A n pa s i =
-  C→-app (outSⁿ (suc n) (boundaryExpr (suc n)) pa s i)
-
-
-
-Face-lem :  ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
-            → ∀ k → ∀ b → ∀ cu
-            → Σ[ x ∈ NBoundary (suc n) ] faceMap k b cu ≡ boundaryInj x
-            
-Face-lem = {!!}
-
-
--- Partialⁿ-NBoundary : ∀ n → Partialⁿ (NBoundary n) n (boundaryExpr n)
--- Partialⁿ-NBoundary zero ()
--- Partialⁿ-NBoundary 6 = {!!}
--- Partialⁿ-NBoundary (suc n) = {!!}
-
-
-
-
-
-
-
-
--- NBoundary→ω : (n : ℕ) → (NBoundary n) → I → NCubeBoundaryω (suc n)
--- NBoundary→ω = {!!}
+NBoundary→ω : (n : ℕ) → (NBoundary n) → I → NCubeBoundaryω (suc n)
+NBoundary→ω = {!!}
  
 
--- Partialⁿ-NBoundary : ∀ n → Partialⁿ (NBoundary n) n (boundaryExpr n)
+
+Partialⁿ-NBoundary↓ : ∀ n → Partialⁿ (NBoundary (suc n)) (suc n) (boundaryExpr (suc n))
+                          → Partialⁿ (NBoundary n) n (boundaryExpr n)
+Partialⁿ-NBoundary↓ zero x ()
+Partialⁿ-NBoundary↓ (suc n) x i = {!x i1 i!}
+
+Partialⁿ-NBoundary< : ∀ n → (Σ[ m ∈ ℕ ] n ≡ Nmax + m) →
+                       Partialⁿ (NBoundary n) n (boundaryExpr n)
+Partialⁿ-NBoundary< n (zero , _) = {!!}
+Partialⁿ-NBoundary< n (suc fst₁ , snd₁) = {!!}
+
+Partialⁿ-NBoundary : ∀ n → Partialⁿ (NBoundary n) n (boundaryExpr n)
+Partialⁿ-NBoundary n with dichotomy≤ Nmax n
+... | inl x = Partialⁿ-bd-const NBoundary n (λ n' → lid' {n = n'} false corner0)
+... | inr x = Partialⁿ-NBoundary< n x
+
+Boundary→ω : ∀ {ℓ} → {A : Type ℓ} → (n : ℕ)
+        → (NBoundary n → A)
+        → Boundaryω A n
+Boundary→ω n bd = Partialⁿ-map {n = n} bd (Partialⁿ-NBoundary n)
 
 
--- Boundary→ω : ∀ {ℓ} → {A : Type ℓ} → (n : ℕ)
---         → (NBoundary n → A)
---         → Boundaryω A n
--- Boundary→ω n bd = Partialⁿ-map {n = n} bd (Partialⁿ-NBoundary n)
-
--- Partialⁿ-NBoundary = {!!}
 
 
 
 
 
+-- NBoundary-lids :  ∀ n → ∀ i → Partialⁿ (NBoundary (suc n)) (suc n)
+--                                         ((C→I-const (suc n) i ∨ⁿ C→I-const (suc n) (~ i))) 
+-- NBoundary-lids n i  =
+--   Partial∨ⁿ-ends (suc n) i
+--        (Partialⁿ-const (NBoundary (suc n)) (suc n) (C→I-const (suc n) i)
+--          (C→elim {n = (suc n)} {(NBoundary (suc n))} (lid' true ∘ tail)) )
+--        (Partialⁿ-const (NBoundary (suc n)) (suc n) (C→I-const (suc n) (~ i))
+--         (C→elim {n = (suc n)} {(NBoundary (suc n))} (lid' false ∘ tail)) )
 
-
-
-
+-- NBoundary-cyl :  ∀ n → Partialⁿ (NBoundary (suc n)) (suc n)
+--                                         (λ _ → boundaryExpr n ) 
+-- NBoundary-cyl n i = Partialⁿ-map {n = n} ((cyl'' (inside i))) ((Partialⁿ-NBoundary n)) 
 
 -- NBoundary-intersec : ∀ n → ∀ i j → Partialⁿ (NBoundary (suc (suc n))) n
 --                                      ((C→I-const n i ∨ⁿ C→I-const n (~ i))

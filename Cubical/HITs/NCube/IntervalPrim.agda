@@ -31,7 +31,7 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.CartesianKanOps
-open import Cubical.Foundations.Logic
+open import Cubical.Foundations.Logic renaming (⊥ to ⊥ₗ)
 
 open import Cubical.Foundations.Transport
 
@@ -39,12 +39,16 @@ open import Cubical.Relation.Nullary
 
 open import Cubical.Foundations.Equiv.HalfAdjoint
 
+
 -- this version of Interval will let us handle both ends in single case
 -- the convention of i0 ↔ false , i1 ↔ true is used everywhere in this module
 
 ifω : Typeω → Typeω → Bool → Typeω 
 ifω x y false = x
 ifω x y true = y
+
+⊥-recω : {A : Typeω} → ⊥ → A
+⊥-recω ()
 
 ×ω : Typeω → Typeω → Typeω 
 ×ω x y = ∀ b → ifω x y b
@@ -60,6 +64,8 @@ Iⁿ→ A (suc x) = I → Iⁿ→ A x
 C→ :  ∀ {ℓ} → ∀ (A  : Type ℓ) → ℕ → Typeω
 C→ A zero = Partial i1 A -- lifting A from Type ℓ to Typeω
 C→ A (suc x) = I → C→ A x
+
+
 
 C→I : ℕ → Typeω
 C→I zero = I
@@ -77,8 +83,17 @@ Bool→I : Bool → I
 Bool→I false = i0
 Bool→I true = i1
 
--- I did not check how it would behave, but (Vec n Interval') , or (Fin n → Interval')
--- should also work here
+isOne-∨B : ∀ b → IsOne (Bool→I b ∨ ~ Bool→I b)
+isOne-∨B false = 1=1
+isOne-∨B true = 1=1
+
+bool-elimω : ∀ {A : Typeω} → Bool → A → A → A
+bool-elimω false f _ = f
+bool-elimω true _ t = t
+
+negIf : Bool → I → I
+negIf b i = bool-elimω b (~ i) i 
+
 
 NCube : ℕ -> Type₀
 NCube = Vec Interval' 
@@ -160,6 +175,12 @@ C→elim {n = suc n} x i = C→elim (x ∘ (inside i ∷_))
 C→map : ∀ {ℓ ℓ'} → ∀ {n} → ∀ {A  : Type ℓ} → ∀ {B  : Type ℓ'} → (A → B) → C→ A n → C→ B n
 C→map {n = zero} f x _ = f (x 1=1)
 C→map {n = suc n} f x i = C→map {n = n} f (x i)
+
+-- C→NCube : ∀ n → C→ (NCube n) n
+-- C→NCube zero _ = []
+-- C→NCube (suc n) i = {!(C→NCube n)!}
+-- -- C→NCube (suc (suc n)) i j = {!(C→NCube (suc n)) j  !}
+
 
 IappP : ∀ {ℓ} → {A : I → Type ℓ} → {a₀ : A i0} → {a₁ : A i1}
       → PathP (λ i → A i) a₀ a₁ 
@@ -257,6 +278,7 @@ C-const zero a _ = a
 C-const (suc n) a _ = C-const n a
 
 
+
 -- SubstC→I : ℕ → ℕ → Typeω
 -- SubstC→I n m = (C→I n) → (C→I m)
 
@@ -314,6 +336,7 @@ hfillRefl2 :  ∀ {ℓ} → {A : Type ℓ} → (a : A) → I → ∀ n → ∀ a
 hfillRefl2 a0 i n a1 a1=a0 = C→A-subst1 n (λ φ → hfill {φ = φ} (λ i₁ _ → a1=a0 i₁) (inS a0) i)
 
 
+
 C→Cu-app : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → C→ (Vec Interval' n → A) n → C→ A n 
 C→Cu-app {n = zero} x x₁ = x 1=1 []
 C→Cu-app {n = suc n} x i = C→Cu-app {n = n} (C→map {n = n} (_∘ (inside i ∷_)) (x i))
@@ -322,6 +345,7 @@ C→Cu-app {n = suc n} x i = C→Cu-app {n = n} (C→map {n = n} (_∘ (inside i
 IsOneⁿ-expr : ∀ n → C→I n → Typeω
 IsOneⁿ-expr zero x = IsOne x
 IsOneⁿ-expr (suc n) x = ∀ i → IsOneⁿ-expr n (x i)
+
 
 
 _∨ⁿ_ : ∀ {n} → C→I n → C→I n → C→I n
@@ -335,6 +359,7 @@ _∧ⁿ_ {suc n} x x₁ i = x i ∧ⁿ x₁ i
 ~ⁿ : ∀ {n} → C→I n → C→I n
 ~ⁿ {zero} x = ~ x 
 ~ⁿ {suc n} x i = ~ⁿ (x i)
+
 
 ⊂I : ∀ {n} → C→I n → C→I n → Typeω
 ⊂I {zero} x x₁ = IsOne x → IsOne x₁ 
@@ -351,11 +376,47 @@ C→I-const : ∀ n → I → C→I n
 C→I-const zero x = x
 C→I-const (suc n) x i = C→I-const n x
 
-i1-max : ∀ n → ∀ x →  ⊂I x (C→I-const n i1)
+i0ⁿ : ∀ {n} → C→I n
+i0ⁿ {n} = (C→I-const n i0)
+
+i1ⁿ : ∀ {n} → C→I n
+i1ⁿ {n} = (C→I-const n i1)
+
+boundaryExpr : ∀ n → C→I n
+boundaryExpr zero = i0
+boundaryExpr (suc zero) x = (x ∨ ~ x)
+boundaryExpr (suc (suc n)) x = ((C→I-const (suc n) (x)) ∨ⁿ (C→I-const (suc n) (~ x))) ∨ⁿ (boundaryExpr (suc n))
+
+skelExpr : ∀ n → Fin (suc (suc n)) → C→I n
+skelExpr zero _ = i0
+skelExpr (suc n) (_ , zero , _) = i1ⁿ
+skelExpr (suc n) (zero , _ , _) = i0ⁿ
+skelExpr (suc n) (suc fst₁ , suc fst₂ , snd₁) =
+     (
+     (λ i → (C→I-const _ i) ∧ⁿ skelExpr n ((suc fst₁) , fst₂ , cong predℕ snd₁ ))
+     ∨ⁿ
+     (λ i → (C→I-const _ (~ i)) ∧ⁿ skelExpr n ((suc fst₁) , fst₂ , cong predℕ snd₁ ))
+     )
+      ∨ⁿ
+      (λ _ → skelExpr n (fst₁ , (suc fst₂) , (sym (+-suc _ _)) ∙ cong predℕ snd₁))
+
+endExpr : ∀ {n} → Bool → C→I n
+endExpr {zero} b = bool-elimω b i0 i1
+endExpr {suc n} b i = C→I-const n (bool-elimω b (~ i) i)
+
+
+faceExpr : ∀ {n} → Bool → ℕ → C→I n
+faceExpr b zero = endExpr b
+faceExpr {zero} b (suc k) = bool-elimω b i0 i1
+faceExpr {suc n} b (suc k) i = faceExpr {n} b (k)
+
+
+
+i1-max : ∀ n → (x : C→I n) →  ⊂I x i1ⁿ
 i1-max zero x _ = 1=1
 i1-max (suc n) x i = i1-max n (x i)
 
-i0-min : ∀ n → ∀ x →  ⊂I (C→I-const n i0) x
+i0-min : ∀ n → (x : C→I n) →  ⊂I i0ⁿ x
 i0-min zero x () 
 i0-min (suc n) x i = i0-min n (x i)
 
@@ -367,6 +428,50 @@ i0-min (suc n) x i = i0-min n (x i)
 ⊂-∨2 {zero} = IsOne2
 ⊂-∨2 {suc n} x y i = ⊂-∨2 (x i) (y i)
 
+⊂-∨~ : ∀ {n} → (b : Bool) → let x = C→I-const n (Bool→I b) in ⊂I i1ⁿ (x ∨ⁿ (~ⁿ x))
+⊂-∨~ {zero} false _ = 1=1
+⊂-∨~ {zero} true _ = 1=1
+⊂-∨~ {suc n} b _ = ⊂-∨~ {n} b
+
+⊂-∨~' : ∀ {n} → (b : Bool) → ⊂I i1ⁿ ((C→I-const n (Bool→I b)) ∨ⁿ (C→I-const n (~ (Bool→I b))))
+⊂-∨~' {zero} false _ = 1=1
+⊂-∨~' {zero} true _ = 1=1
+⊂-∨~' {suc n} b _ = ⊂-∨~' {n} b
+
+
+∧-comm : ∀ {n} → (x y : C→I n) → ⊂I (x ∧ⁿ y) (y ∧ⁿ x)
+∧-comm {zero} x y x₁ = x₁
+∧-comm {suc n} x y i = ∧-comm (x i) (y i)
+
+
+boundaryExpr-cyl : ∀ n → ∀ i → ⊂I (boundaryExpr n) (boundaryExpr (suc n) i)
+boundaryExpr-cyl zero i ()
+boundaryExpr-cyl (suc zero) i i₁ = IsOne2 (i ∨ ~ i) (boundaryExpr 1 i₁)
+boundaryExpr-cyl (suc (suc n)) i i₁ i₂ = ⊂-∨2 _ _
+
+face-⊂-boundaryExpr : ∀ n → ∀ b → (k : Fin n) → ⊂I (faceExpr b (fst k) ) (boundaryExpr n)
+face-⊂-boundaryExpr zero _ k _ = ⊥-recω (¬Fin0 k)
+face-⊂-boundaryExpr (suc zero) false (zero , _) i = IsOne2 i (~ i)
+face-⊂-boundaryExpr (suc zero) true (zero , _) i = IsOne1 i (~ i)
+face-⊂-boundaryExpr (suc zero) b (suc k , snd₁) = ⊥-recω (¬-<-zero (pred-≤-pred snd₁))
+face-⊂-boundaryExpr (suc (suc n)) false (zero , snd₁) i j = ⊂I-trans (⊂-∨2 _ _) (⊂-∨1 _ _)
+face-⊂-boundaryExpr (suc (suc n)) true (zero , snd₁) i j = ⊂I-trans (⊂-∨1 _ _) (⊂-∨1 _ _)
+face-⊂-boundaryExpr (suc (suc n)) b (suc fst₁ , snd₁) i j =
+  ⊂I-trans (face-⊂-boundaryExpr (suc n) b (fst₁ , pred-≤-pred snd₁) j) ((⊂-∨2 _ _))
+
+
+1⊂lid : ∀ n → ∀ b → ⊂I i1ⁿ (boundaryExpr (suc n) (Bool→I b))
+1⊂lid zero b = ⊂-∨~ {0} b
+1⊂lid (suc n) b i = ⊂I-trans (⊂-∨~' {suc n} b i) (⊂-∨1 _ _)
+
+-- 
+
+lid-⊂-boundaryExpr : ∀ n → ∀ b →  ⊂I (boundaryExpr n) (boundaryExpr (suc n) (Bool→I b)  )
+lid-⊂-boundaryExpr n b = ⊂I-trans (i1-max _ _) (1⊂lid n b)
+
+
+-- those to wont work, this relation treats expresion as interval expresions
+-- this is provable for ⊂'I , defined bellow, becouse is treating expressions as face expressions
 -- ⊂-~ : ∀ {n} → (x : C→I n) → ⊂I (x ∧ⁿ (~ⁿ x)) (C→I-const n i0)
 -- ⊂-~ {zero} x x₁ = {!!}
 -- ⊂-~ {suc n} = {!!}
@@ -387,8 +492,19 @@ Partialⁿ A zero x = Partial x A
 Partialⁿ A (suc n) x = ∀ i → Partialⁿ A n (x i)
 
 
+Partial∨ :  ∀ {ℓ} → {A : Type ℓ} → (i j : I)
+           → {xy : Partial (i ∧ j) A} 
+           → ( (i=1 : (IsOne i)) → (Sub A j (λ { (j = i1) → xy i=1  })))
+           → ( (j=1 : (IsOne j)) → (Sub A i (λ { (i = i1) → xy j=1  })))
+           → Partial (i ∨ j) A
+Partial∨ i j x y = (λ { (i = i1) → outS (x 1=1) ; (j = i1) → outS (y 1=1)})
+
+
+
 ⊂'I : ∀ {n} → C→I n → C→I n → Typeω
 ⊂'I {n} x x₁ = ∀ {ℓ} → ∀ {A : Type ℓ} → Partialⁿ A n x₁ → Partialⁿ A n x
+
+
 
 ≡'I :  ∀ {n} → C→I n → C→I n → Typeω
 ≡'I x x₁ = ×ω (⊂'I x x₁) (⊂'I x₁ x) 
@@ -400,6 +516,15 @@ Partialⁿ A (suc n) x = ∀ i → Partialⁿ A n (x i)
 ⊂'-∧ {zero} x y {ℓ} {A} x₂ = λ { (x = i1)(y = i1) → x₂ 1=1 }
 ⊂'-∧ {suc n} x y {ℓ} {A} x₂ i = ⊂'-∧ {n} (x i) (y i) (x₂ i)
 
+⊂'-∧2 : ∀ {n} → (x y : C→I n) → ⊂'I (x ∧ⁿ y) y
+⊂'-∧2 {zero} x y {ℓ} {A} x₂ = λ { (x = i1)(y = i1) → x₂ 1=1 }
+⊂'-∧2 {suc n} x y {ℓ} {A} x₂ i = ⊂'-∧2 {n} (x i) (y i) (x₂ i)
+
+
+
+
+
+
 ⊂→⊂' : ∀ {n} → (x y : C→I n) → ⊂I x y → ⊂'I x y
 ⊂→⊂' {zero} x y x₁ x₂ x₃ = x₂ (x₁ x₃)
 ⊂→⊂' {suc n} x y x₁ x₂ i = ⊂→⊂' {n} (x i) (y i) (x₁ i) (x₂ i)
@@ -408,6 +533,14 @@ Partialⁿ A (suc n) x = ∀ i → Partialⁿ A n (x i)
 Partialⁿ-const :  ∀ {ℓ} → (A : Type ℓ) → ∀ n → (e : C→I n) → C→ A n → Partialⁿ A n e
 Partialⁿ-const {ℓ} A zero e a _ = a 1=1
 Partialⁿ-const {ℓ} A (suc n) e a i = Partialⁿ-const A n _ (a i)
+
+Partialⁿ-map :  ∀ {ℓa ℓb} → {A : Type ℓa} → {B : Type ℓb}
+                → ∀ {n} → {e : C→I n}
+                → (A → B)
+                → Partialⁿ A n e
+                → Partialⁿ B n e
+Partialⁿ-map {ℓ} {n = zero} f x e=1 = f (x e=1)
+Partialⁿ-map {ℓ} {n = suc n} f x i = Partialⁿ-map {n = n} f (x i)
 
 -- Partialⁿ' : ∀ {ℓ} → (A : Type ℓ) → ∀ n → C→I n → Typeω
 -- Partialⁿ' A n x = {!!} → C→ A n
@@ -420,6 +553,12 @@ Partialⁿ-app : ∀ {ℓ} → (A : Type ℓ) → ∀ n → (e : C→I n) →
                 Partialⁿ A n e → IsOneⁿ-expr n e → C→ A n
 Partialⁿ-app A zero e x x₁ _ = x x₁
 Partialⁿ-app A (suc n) e x x₁ i = Partialⁿ-app A n (e i) (x i) (x₁ i)
+
+Partialⁿ-app⊂ : ∀ {ℓ} → (A : Type ℓ) → ∀ n → (e : C→I n) →
+                Partialⁿ A n e → ⊂I i1ⁿ e → C→ A n
+Partialⁿ-app⊂ A zero e x x₁ e=1 = x (x₁ e=1)
+Partialⁿ-app⊂ A (suc n) e x x₁ i = Partialⁿ-app⊂ A n (e i) (x i) (x₁ i)
+
 
 -- Partialⁿ-test→ : {!!}
 -- Partialⁿ-test→  = {!y!}
@@ -438,78 +577,299 @@ inSⁿ : {ℓ : Level} {A : Set ℓ} → ∀ n → ∀ e → (x : C→ A n) → 
 inSⁿ zero e x = inS (x 1=1)
 inSⁿ (suc n) e x i = inSⁿ n (e i) (x i)
 
+inSⁿ' : {ℓ : Level} {A : Set ℓ} → ∀ n → ∀ e → (x : Partialⁿ A n e ) → ⊂I i1ⁿ e  → Subⁿ A n e x 
+inSⁿ' {ℓ} {A} zero e x x₁ = inS (x (x₁ 1=1))
+inSⁿ' {ℓ} {A} (suc n) e x x₁ i = inSⁿ' n (e i) (x i) (x₁ i)
+
 outSⁿ : {ℓ : Level} {A : Set ℓ} → ∀ n → ∀ e → ∀ x → Subⁿ A n e x →  C→ A n         
 outSⁿ zero e x x₁ _ = outS x₁
 outSⁿ (suc n) e x x₁ i = outSⁿ n (e i) (x i) (x₁ i)
+
+Partialⁿ-Sub : ∀ {ℓ} → (A : Type ℓ) → ∀ n → (i : C→I n) → (j : C→I n) → Partialⁿ A n (i ∧ⁿ j) → Typeω
+Partialⁿ-Sub A zero ei ej x = (ei=1 : (IsOne ei)) → Sub A ej λ { (ej = i1) → x ei=1}
+Partialⁿ-Sub A (suc n) ei ej x = ∀ i → Partialⁿ-Sub A n (ei i) (ej i) (x i)
+
+Partialⁿ-Sub' : ∀ {ℓ} → (A : Type ℓ) → ∀ n → (i j : C→I n) → Partialⁿ A n j → Typeω
+Partialⁿ-Sub' A zero i j x = (i=1 : (IsOne i)) → Sub A j x
+Partialⁿ-Sub' A (suc n) ei ej x = ∀ i → Partialⁿ-Sub' A n (ei i) (ej i) (x i)
+
+inPartialⁿ-Sub : ∀ {ℓ} → (A : Type ℓ) → ∀ n → (i j : C→I n)
+                  → (x : C→ A n)
+                  → Partialⁿ-Sub A n i j (Partialⁿ-const A n (i ∧ⁿ j) x)
+inPartialⁿ-Sub A zero i j x i=1 = inS (x 1=1)
+inPartialⁿ-Sub A (suc n) ei ej x i = inPartialⁿ-Sub  A n (ei i) (ej i) (x i)
+
+
+inPartialⁿ-Sub⊂ : ∀ {ℓ} → (A : Type ℓ) → ∀ n
+         → (ei ej :  C→I n) → (ej-⊂I-ei : ⊂I ej ei)
+         → (paX : Partialⁿ A n ei) 
+         → Partialⁿ-Sub' A n ei ej (⊂→⊂' _ _ ej-⊂I-ei paX)
+
+inPartialⁿ-Sub⊂ A zero ei ej ej-⊂I-ei paX ei=1 = inS (paX (ei=1))
+inPartialⁿ-Sub⊂ A (suc n) ei ej ej-⊂I-ei paX i = inPartialⁿ-Sub⊂ A n (ei i) (ej i) (ej-⊂I-ei i) (paX i)
+
+
+outPartialⁿ-Sub' :  ∀ {ℓ} → (A : Type ℓ) → ∀ n → (i j : C→I n)
+                  → (x : Partialⁿ A n j)
+                  → Partialⁿ-Sub' A n i j x
+                  → ⊂I i1ⁿ i → Subⁿ A n j x
+outPartialⁿ-Sub' A zero i j px x x₂ = x (x₂ 1=1)
+outPartialⁿ-Sub' A (suc n) i j px x x₂ i₁ = outPartialⁿ-Sub' A n (i i₁) (j i₁) (px i₁) (x i₁) (x₂ i₁)
+
+
+Partial∨ⁿ :  ∀ {ℓ} → {A : Type ℓ} → ∀ n
+              → (i j : C→I n)
+              → (∩a : Partialⁿ A n (i ∧ⁿ j))
+              → Partialⁿ-Sub A n i j ∩a
+              → Partialⁿ-Sub A n j i (⊂→⊂' _ _ (∧-comm j i) ∩a)
+              → Partialⁿ A n (i ∨ⁿ j)   
+Partial∨ⁿ zero i j ∩a ai aj = Partial∨ i j {∩a} ai aj
+Partial∨ⁿ (suc n) i j ∩a x x₁ l = Partial∨ⁿ n (i l) (j l) (∩a l) (x l) (x₁ l)
+
+Partial∨ⁿ-ends :  ∀ {ℓ} → {A : Type ℓ} → ∀ n
+              → (i : I)
+              → Partialⁿ A n (C→I-const n i)
+              → Partialⁿ A n (C→I-const n (~ i))
+              → Partialⁿ A n (C→I-const n i ∨ⁿ C→I-const n (~ i))
+Partial∨ⁿ-ends {A = A} zero i x1 x0 = λ { (i = i0) → x0 1=1 ; (i = i1) → x1 1=1  }
+Partial∨ⁿ-ends {A = A} (suc n) i x1 x0 i₁ = Partial∨ⁿ-ends n i (x1 i₁) (x0 i₁)
+
+
+inSⁿ⊂ : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → {ei ej :  C→I n} → {⊂ij : ⊂I ej ei}
+       →  {x : Partialⁿ A n ei}
+       → ⊂I i1ⁿ ei →  Subⁿ A n ej (⊂→⊂' ej ei ⊂ij x) 
+inSⁿ⊂ {A = A} {n} {ei} {ej} {⊂ij} {x} z = outPartialⁿ-Sub' A n ei ej (⊂→⊂' ej ei ⊂ij x)
+                        (inPartialⁿ-Sub⊂ A n ei ej ⊂ij x)
+                        (z) 
+
+-- It would be very nice to have this proven
+-- Sub-⊂ : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → {ei ej :  C→I n} → {⊂ij : ⊂I ej ei}
+--        → {x : Partialⁿ A n ei}
+--        → Subⁿ A n ei x → Subⁿ A n ej (⊂→⊂' ej ei ⊂ij x) 
+-- Sub-⊂ = ?
+
+-- in case where above is needed,
+-- Sometimes it sufficeint to use this:
+Sub-⊂∨ : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → {ei ej :  C→I n}
+       → {x : Partialⁿ A n (ej ∨ⁿ ei)}
+       → Subⁿ A n (ej ∨ⁿ ei) (x) 
+       → Subⁿ A n ei (⊂→⊂' _ _ (⊂-∨2 ej ei) x)
+Sub-⊂∨ {n = zero} x = inS (outS x)
+Sub-⊂∨ {n = suc n} x i = Sub-⊂∨ {n = n} (x i)
+
+-- or this
+Sub-⊂∧ : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → {ei ej :  C→I n}
+       → {x : Partialⁿ A n ei}
+       → Subⁿ A n ei x 
+       → Subⁿ A n (ej ∧ⁿ ei) (⊂'-∧2 ej ei x)
+Sub-⊂∧ {n = zero} x = inS (outS x)
+Sub-⊂∧ {n = suc n} x i = Sub-⊂∧ {n = n} (x i)
+
 
 hcompⁿ :  ∀ {ℓ} → (A : Type ℓ) → ∀ n → (e :  C→I n) → (sides : I → Partialⁿ A n e)
             → Subⁿ A n e (sides i0) → C→ A n
 hcompⁿ A zero e sides x _ = hcomp {φ = e} sides (outS x)
 hcompⁿ A (suc n) e sides x i = hcompⁿ A n (e i) (λ j → sides j i) (x i)
 
--- Subⁿ : ∀ {ℓ} → (A : Type ℓ) → ∀ n → C→ A n → C→I n → Typeω
--- Subⁿ A zero x i = Sub A i λ x₁ → x 1=1 
--- Subⁿ A (suc n) x x₁ = ∀ i → Subⁿ A n (x i) (x₁ i) 
 
--- Subⁿ-test : {!!}
--- Subⁿ-test = {!Sub!}
-
-
--- inSⁿ : {ℓ : Level} {A : Set ℓ} → ∀ n → ∀ x → ∀ e → Subⁿ A n x e 
--- inSⁿ zero x e = inS (x 1=1)
--- inSⁿ (suc n) x e i = inSⁿ n (x i) (e i)
+hfillⁿ : ∀ {ℓ} → (A : Type ℓ) → ∀ n
+          → (e :  C→I n) →  (sides : I → Partialⁿ A n e)
+          → Subⁿ A n e (sides i0)
+          → I → C→ A n
+hfillⁿ A zero e sides x i _ = hfill sides x i 
+hfillⁿ A (suc n) e sides x i j = hfillⁿ A (n) (e j) (λ l → sides l j) (x j) i
 
 
--- Subⁿ' : ∀ {ℓ} → {A : Type ℓ} → ∀ n → C→ A n → C→I n → Typeω
--- Subⁿ' {A = A} zero x x₁ = {!!}
--- Subⁿ' {A = A} (suc n) x x₁ = {!Sub (Vec Interval' n → A) {!!} (λ _ → C→-app (x))!}
---Sub (Vec Interval' n → A) {!!} (λ _ → C→-app (x))
--- Subⁿ-hlp : ∀ {ℓ} → {A : Type ℓ} → ∀ n → ∀ (x : C→ A n) → (e : C→I n)
---                →  Subⁿ n (x) e → (φ : I) → (Vec Interval' n → A) [ φ ↦ (λ _ → C→-app x) ]
--- Subⁿ-hlp zero x e s φ = inS {!s!}
--- Subⁿ-hlp (suc n) x e s φ = {!!}
--- SubⁿC : ∀ {ℓ} → {A : Type ℓ} → ∀ n → C→ A n → C→I n → Typeω
--- SubⁿC {A = A} zero x i = Sub A i λ x₁ → x 1=1 
--- SubⁿC {A = A} (suc n) x x₁ = ∀ i → SubⁿC {A = NCube (suc n) → A} n {!x i!} (x₁ i) 
+Boundaryω : ∀ {ℓ} → (A : Type ℓ) → ℕ → Typeω
+Boundaryω A n = Partialⁿ A n (boundaryExpr n)
+
+Skelω : ∀ {ℓ} → (A : Type ℓ) → ∀ n → (Fin (suc (suc n))) → Typeω
+Skelω A n k = Partialⁿ A n (skelExpr n k)
 
 
--- Subⁿ-test : {!!} 
--- Subⁿ-test = {!!}
+nCubeω : ∀ n → C→ (NCube n) n
+nCubeω n = (C→elim (idfun (NCube n)))
 
-hfill' :  ∀ {ℓ} → {A : Type ℓ} → ∀ n → (I → C→ A n) → (C→I n) →  I → C→ A n
-hfill' {A = A} n x e i =
-   let zz : C→ (Vec Interval' n → _) n
-       zz = C→A-subst1 n (λ φ → hfill {φ = φ} (λ i₁ _ → C→-app (x i₁)) (inS (C→-app (x i0))) i) e
-   in C→Cu-app {A = A} {n = n} zz
+NCubeBoundaryω : ℕ → Typeω
+NCubeBoundaryω n = Partialⁿ (NCube n) n (boundaryExpr n) 
 
--- hfill'' :  ∀ {ℓ} → {A : Type ℓ} → ∀ n → (x : I → C→ A n) → (e : C→I n) →
---               Subⁿ A n (x i0) e → C→ A n
--- hfill'' {A = A} 5 x e x0 i₀ i₁ i₂ i₃ i₄ _ =
---    hcomp {φ = e i₀ i₁ i₂ i₃ i₄} (λ l _ → {!x l i₀ i₁ i₂ i₃ i₄ 1=1!}) (outS (x0 i₀ i₁ i₂ i₃ i₄) ) 
-   -- let n = 5
-   --     zz : C→ (Vec Interval' n → _) n
-   --     zz = C→A-subst1 n (λ φ → hcomp {φ = e} (λ i₁ _ → C→-app (x i₁))
-   --           ((C→-app {n = 5} {A = A}
-   --             λ x₁ x₂ x₃ x₄ x₅ _ → {!inS (x0 x₁ x₂ x₃ x₄ x₅)!}
-   --             ))) e
-   -- in C→Cu-app {A = A} {n = n} zz
--- hfill'' {A = A} (n) x e x0 = {!!}
+nCubeBoundaryω : ∀ n → NCubeBoundaryω n
+nCubeBoundaryω n = Partialⁿ-const _ n (boundaryExpr n) (C→elim (idfun (NCube n)))
 
+cylω : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → Boundaryω A (suc n) → I → Boundaryω A n
+cylω {ℓ} {A} {n} x i = (⊂→⊂' _ _ (boundaryExpr-cyl n i)) (x i)
 
-hfill'-test : ∀ {ℓ} → {A : Type ℓ} → (x : Iⁿ→ A 1) →
-                Square (λ i → x i0 i) (λ i → x i1 i) (λ i → x i i0) λ i → x i i1
-hfill'-test x i₀ i₁ = x i₀ i₁
+InsideOfω : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → Boundaryω A n → Typeω
+InsideOfω {A = A} {n} bd = Subⁿ A n (boundaryExpr n) bd
 
-hfill'-test2 : ∀ {ℓ} → {A : Type ℓ} → (x : Iⁿ→ A 2) →
-                Square
-                  (λ i → x i1 i0 i)
-                  (((λ i → x (~ i) i1 i0)) ∙∙ (λ i → x i0 i1 i) ∙∙ (λ i → x i i1 i1))
-                  (λ i → x i1 i i0)
-                  (((λ i → x (~ i) i0 i1)) ∙∙ (λ i → x i0 i i1) ∙∙ (λ i → x i i1 i1))
-hfill'-test2 x i₀ i₁ = hfill' 2 (λ x₁ x₂ x₃ _ → x x₁ x₂ x₃)
-           (λ x₀ x₁ → (x₀ ∧ x₁) ∨ (~ x₀) ∨ (~ x₁) ) i1 i₀ i₁ 1=1
+lidω : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → (bd : Boundaryω A (suc n)) → (b : Bool) → InsideOfω {A = A} {n = n} (cylω {A = A} {n} bd (Bool→I b)) 
+lidω {A = A} {n} bd b = inSⁿ⊂ ((1⊂lid _ _))
+
+⊂bd-Sub→ : ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → (bd :  Boundaryω A (suc n)) 
+           → ∀ i
+           → Subⁿ A n (boundaryExpr (suc n) i) (bd i)
+           → Subⁿ A n (boundaryExpr n)
+                       (⊂→⊂' (boundaryExpr n) (boundaryExpr (suc n) i)
+                        (boundaryExpr-cyl n i) (bd i))
+⊂bd-Sub→ {n = zero} bd _ x = inS (outS x)
+⊂bd-Sub→ {A = A} {n = suc zero} bd _ x i₁ = inS (outS (x i₁))
+⊂bd-Sub→ {A = A} {n = suc (suc n)} bd i x i₁ = Sub-⊂∨ (x i₁)
 
 
--- bdMk : ∀ n → I^→I n
--- bdMk zero = {!!}
--- bdMk (suc n) = {!!}
+
+Partialⁿ-bd-const : ∀ {ℓ} → (A : ℕ → Type ℓ) → ∀ n
+                     → (∀ n → A (suc n))
+                     → Partialⁿ (A n) n (boundaryExpr n) 
+Partialⁿ-bd-const _ zero x ()
+Partialⁿ-bd-const A (suc n) x =
+  Partialⁿ-const (A (suc n)) (suc n) (boundaryExpr (suc n)) (C→elim {n = suc n} (const (x n)))
+
+
+
+
+
+
+
+
+-- -- failed?
+
+-- ----------
+
+-- -- Partialⁿ-Sub-Ends : ∀ {ℓ} → (A : Type ℓ) → ∀ n → (i : I) → (j : C→I n)
+-- --                     →  Partialⁿ A n ((C→I-const n (~ i)) ∧ⁿ j)
+-- --                     →  Partialⁿ A n ((C→I-const n (i)) ∧ⁿ j)
+-- --                     → Typeω
+-- -- Partialⁿ-Sub-Ends A zero i j x x₁ = (j=1 : IsOne j) → Sub A (i ∨ ~ i) λ {(i = i0) → x j=1 ; (i = i1) → x₁ j=1}
+-- -- Partialⁿ-Sub-Ends A (suc n) i j x x₁ = ∀ i' →  Partialⁿ-Sub-Ends A n i (j i') (x i') (x₁ i')
+
+-- -- Partialⁿ∨-Ends : ∀ {ℓ} → ∀ {A : Type ℓ} → ∀ n
+-- --                    → ∀ i → ∀ j
+-- --                    → (intersection0 : Partialⁿ A n ((C→I-const n (~ i)) ∧ⁿ j))
+-- --                    → (intersection1 : Partialⁿ A n ((C→I-const n i) ∧ⁿ j))
+-- --                    → (cyl : Partialⁿ-Sub-Ends A n i (j) intersection0 intersection1 )
+-- --                    → (end0 : Partialⁿ-Sub _ n _ _ intersection0 )
+-- --                    → (end1 : Partialⁿ-Sub _ n _ _ intersection1)
+-- --                    → Partialⁿ (A) n
+-- --                          (((C→I-const n i) ∨ⁿ (C→I-const n (~ i)))
+-- --                                ∨ⁿ j)
+-- -- Partialⁿ∨-Ends {ℓ} {A} zero i i₁ intersection0 intersection1 cyl end0 end1 =
+-- --   λ { (i = i1) → outS (end1 1=1) ; (i = i0) → outS (end0 1=1) ; (i₁ = i1) → outS (cyl 1=1)  }
+-- -- Partialⁿ∨-Ends {ℓ} {A} (suc n) i i₁ intersection0 intersection1 cyl end0 end1 i' =
+-- --   Partialⁿ∨-Ends {A = A} n i (i₁ i') (intersection0 i') (intersection1 i') (cyl i') (end0 i') (end1 i')
+  
+-- -- Partialⁿ-boundaryExpr : ∀ {ℓ} → ∀ {A : Type ℓ} → ∀ n
+-- --                    → ∀ i i₁
+-- --                    → (intersection0 : Partialⁿ A n ((C→I-const n (~ i)) ∧ⁿ boundaryExpr (suc n) i₁))
+-- --                    → (intersection1 : Partialⁿ A n ((C→I-const n i) ∧ⁿ boundaryExpr (suc n) i₁))
+-- --                    → (cyl : Partialⁿ-Sub-Ends A n i (boundaryExpr (suc n) i₁) intersection0 intersection1 )
+-- --                    → (end0 : Partialⁿ-Sub _ n _ _ intersection0 )
+-- --                    → (end1 : Partialⁿ-Sub _ n _ _ intersection1)
+-- --                    → Partialⁿ (A) n
+-- --                      (boundaryExpr (suc (suc n)) i i₁)
+-- -- Partialⁿ-boundaryExpr n i i₁ intersection0 intersection1 cyl end0 end1 =
+-- --    Partialⁿ∨-Ends n i (boundaryExpr (suc n) i₁) intersection0 intersection1 cyl end0 end1  
+
+
+
+
+-- Partialⁿ-Sub-Ends : ∀ {ℓ} → (A : Type ℓ) → ∀ n → (i : I) → (j : C→I n)
+--                       → (end0 : C→ A n)
+--                       → (end1 : C→ A n)
+--                     → Typeω
+-- Partialⁿ-Sub-Ends A zero i j end0 end1 =
+--   (j=1 : IsOne j) → Sub A (i ∨ ~ i) λ {(i = i0) → end0 1=1 ; (i = i1) → end1 1=1}
+-- Partialⁿ-Sub-Ends A (suc n) i j end0 end1 = ∀ i' → Partialⁿ-Sub-Ends A n i (j i') (end0 i') (end1 i')
+
+
+
+
+-- Partialⁿ∨-Ends : ∀ {ℓ} → ∀ {A : Type ℓ} → ∀ n
+--                    → ∀ i → ∀ j
+--                    → (end0 : C→ A n)
+--                    → (end1 : C→ A n)
+--                    → (cyl : Partialⁿ-Sub-Ends A n i j end0 end1 )
+--                    → Partialⁿ (A) n
+--                          (((C→I-const n i) ∨ⁿ (C→I-const n (~ i)))
+--                                ∨ⁿ j)
+-- Partialⁿ∨-Ends {ℓ} {A} zero i j end0 end1 cyl  = 
+--     λ { (i = i1) → (end1 1=1) ; (i = i0) → (end0 1=1) ; (j = i1) → outS (cyl 1=1)  }
+-- Partialⁿ∨-Ends {ℓ} {A} (suc n) i j end0 end1 cyl i' = 
+--   Partialⁿ∨-Ends {A = A} n i (j i') (end0 i') (end1 i') (cyl i')
+
+
+-- -- toPartialⁿ-Sub-Ends-boundaryExpr : ∀ {ℓ} → (A : Type ℓ) → ∀ n → (i : I)
+-- --                       → (end0 : C→ A (suc n))
+-- --                       → (end1 : C→ A (suc n))
+-- --                       → (∀ (i' : I) → (IsOne i') → {!!} )
+-- --                       → Partialⁿ-Sub-Ends A (suc n) i (boundaryExpr (suc n)) end0 end1
+-- -- toPartialⁿ-Sub-Ends-boundaryExpr {ℓ} A n i end0 end1 p = {!!}
+
+-- Partialⁿ-boundaryExpr : ∀ {ℓ} → ∀ {A : Type ℓ} → ∀ n
+--                    → ∀ i i₁
+--                    → (end0 : C→ A n )
+--                    → (end1 : C→ A n)
+--                    -- → (cyl : (c : NCube n) → C→-app end0 c ≡ C→-app end1 c)
+--                    → (cyl : Partialⁿ-Sub-Ends A n i (boundaryExpr (suc n) i₁) end0 end1 )
+--                    → Partialⁿ (A) n
+--                      (boundaryExpr (suc (suc n)) i i₁)
+-- Partialⁿ-boundaryExpr n i i₁ end0 end1 cyl  =
+--    Partialⁿ∨-Ends n i (boundaryExpr (suc n) i₁) end0 end1 cyl
+--      -- (toPartialⁿ-Sub-Ends _ n i _ end0 end1 cyl) 
+
+
+
+-- -- -- Pathⁿ-P :  ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → Boundaryω A n → Type ℓ
+
+-- -- -- -- Pathⁿω→P :  ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → (bd : Boundaryω A n)
+-- -- -- --            → Pathⁿω {A = A} {n = n} bd
+-- -- -- --            → Pathⁿ-P {A = A} {n = n} bd
+
+-- -- -- -- Pathⁿω←P :  ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → (bd : Boundaryω A n)
+-- -- -- --            → Pathⁿ-P {A = A} {n = n} bd
+-- -- -- --            → Pathⁿω {A = A} {n = n} bd
+
+-- -- -- PathⁿωEnd :  ∀ {ℓ} → {A : Type ℓ} → ∀ {n} → (bd : Boundaryω A (suc n))
+-- -- --            → ∀ b → Pathⁿ-P {A = A} {n = n} ((cylω {A = A} {n = n} bd (Bool→I b)))
+
+
+
+-- -- -- Pathⁿ-P {A = A} {n = zero} _ = A
+-- -- -- Pathⁿ-P {A = A} {n = suc n} bd = 
+-- -- --      PathP (λ i → Pathⁿ-P {A = A} {n = n} (cylω {A = A} {n = n} bd i))
+-- -- --        (PathⁿωEnd {A = A} {n = n} bd false)
+-- -- --        (PathⁿωEnd {A = A} {n = n} bd true)
+
+
+
+-- -- --  --{!  (x i)!}
+
+
+
+
+
+-- -- -- PathⁿωEnd {n = zero} bd b = bd (Bool→I b) (isOne-∨B b )
+-- -- -- PathⁿωEnd {n = suc zero} bd b i =  bd (Bool→I b) i (IsOne1 (Bool→I b ∨ ~ Bool→I b) (i ∨ ~ i) ((isOne-∨B b )))
+-- -- -- PathⁿωEnd {A = A} {n = suc (suc n)} bd false i j =
+-- -- --   let
+-- -- --       zz0 : {!!}
+-- -- --       zz0 = {!!}
+
+-- -- --   in {!!}
+-- -- -- PathⁿωEnd {A = A} {n = suc (suc n)} bd true i j = {!!}
+
+-- -- -- -- Pathⁿω←P {n = zero} bd x = inS x
+-- -- -- -- Pathⁿω←P {n = suc zero} bd x i = {!!}
+-- -- -- -- Pathⁿω←P {n = suc (suc n)} bd x i = {!!}
+
+-- -- -- -- Pathⁿω→P {n = zero} bd x = outS x
+-- -- -- -- Pathⁿω→P {A = A} {n = suc n} bd x i = {!!}
+-- -- -- --   -- let zz0 : Pathⁿω (cylω {A = A} {n = n} bd i)
+-- -- -- --   --     zz0 = ⊂bd-Sub→ bd i (x i)
+
+-- -- -- --   --     zz' : {!!}
+-- -- -- --   --     zz' = {!!} 
+
+-- -- -- --   --     zz : Pathⁿω (cylω {A = A} {n = n} bd i)
+-- -- -- --   --     zz = {!zz0!}
+
+-- -- -- --   -- in Pathⁿω→P {n = n} (cylω {A = A} {n = n} bd i) zz
