@@ -7,7 +7,6 @@ open import Cubical.Data.Unit.Properties
 open import Cubical.Data.Bool renaming (_≟_ to _≟Bool_)
 open import Cubical.Data.Nat
 open import Cubical.Data.Nat.Order
-open import Cubical.Data.List
 open import Cubical.Data.Vec
 open import Cubical.Data.Fin
 open import Cubical.Data.Sigma

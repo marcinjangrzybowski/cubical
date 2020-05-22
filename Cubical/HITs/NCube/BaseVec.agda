@@ -6,6 +6,7 @@ open import Cubical.Data.Empty
 open import Cubical.Data.Unit.Properties
 open import Cubical.Data.Bool
 open import Cubical.Data.Nat
+open import Cubical.Data.Fin
 open import Cubical.Data.Sigma
 open import Cubical.Data.Vec
 
@@ -106,14 +107,6 @@ boundaryHead (lid x x₁) = end x
 boundaryHead (cyl x i) = inside i
 
 
-corner0 : ∀ {n} → NCube n
-corner0 {zero} = []
-corner0 {suc n} =  end false ∷ corner0
-
-corner1 : ∀ {n} → NCube n
-corner1 {zero} = []
-corner1 {suc n} =  end true ∷ corner1
-
 corner0Bd : ∀ {n} → NBoundary (suc n)
 corner0Bd {zero} = lid false []
 corner0Bd {suc n} = lid false corner0
@@ -122,33 +115,9 @@ corner1Bd : ∀ {n} → NBoundary (suc n)
 corner1Bd {zero} = lid true []
 corner1Bd {suc n} = lid true corner1
 
-
-corner0-≡ : ∀ {n} → ∀ (a : NCube n) → _≡_ {A = NCube n} (corner0) a  
-corner0-≡ {zero} [] = refl
-corner0-≡ {suc n} (end false ∷ x₁) i = end false ∷ corner0-≡ x₁ i
-corner0-≡ {suc n} (end true ∷ x₁) i = inside i ∷ corner0-≡ x₁ i
-corner0-≡ {suc n} (inside i ∷ x₁) j = inside (i ∧ j) ∷ corner0-≡ x₁ j
-
-≡-corner1 : ∀ {n} → ∀ (a : NCube n) → _≡_ {A = NCube n}  a (corner1)  
-≡-corner1 {zero} [] = refl
-≡-corner1 {suc n} (end true ∷ x₁) i = end true ∷ ≡-corner1 x₁ i
-≡-corner1 {suc n} (end false ∷ x₁) i = inside i ∷ ≡-corner1 x₁ i
-≡-corner1 {suc n} (inside i ∷ x₁) j = inside (i ∨ j) ∷ ≡-corner1 x₁ j
-
-corner0-≡-corner1 : ∀ {n} → _≡_ {A = NCube n}  corner0 corner1  
-corner0-≡-corner1 {zero} = refl
-corner0-≡-corner1 {suc n} i = (inside i) ∷ corner0-≡-corner1 i
-
 corner0Bd-≡-corner1Bd : ∀ {n} → corner0Bd {n = suc n} ≡ corner1Bd {n = suc n}
 corner0Bd-≡-corner1Bd {n} i = ((λ i₁ → cyl (lid false (corner0-≡  corner0 i₁)) i₁)
                              ∙ λ i₁ → lid true (inside i₁ ∷ (corner0-≡-corner1 i₁))) i
-
-
-
-isPropCube : ∀ {n} → isProp (NCube n)
-isPropCube {zero} [] [] i = []
-isPropCube {suc n} (x ∷ x₁) (x₂ ∷ x₃) i =
-    (isContr→isProp isContr-Inrerval') x x₂ i ∷ (isPropCube x₁ x₃ i)
 
 
 
@@ -273,12 +242,12 @@ NBoundary-rec f x (cyl x₁ i) = x i x₁
 
 
 NBoundary-lids :  ∀ n → ∀ i → Partialⁿ (NBoundary (suc n)) (suc n)
-                                        ((C→I-const (suc n) i ∨ⁿ C→I-const (suc n) (~ i))) 
+                                        (([_]Iexpr {suc n} i ∨ⁿ [_]Iexpr {suc n} (~ i))) 
 NBoundary-lids n i  =
   Partial∨ⁿ-ends (suc n) i
-       (Partialⁿ-const (NBoundary (suc n)) (suc n) (C→I-const (suc n) i)
+       (Partialⁿ-const (NBoundary (suc n)) (suc n) ([_]Iexpr {suc n} i)
          (C→elim {n = (suc n)} {(NBoundary (suc n))} (lid' true ∘ tail)) )
-       (Partialⁿ-const (NBoundary (suc n)) (suc n) (C→I-const (suc n) (~ i))
+       (Partialⁿ-const (NBoundary (suc n)) (suc n) ([_]Iexpr {suc n} (~ i))
         (C→elim {n = (suc n)} {(NBoundary (suc n))} (lid' false ∘ tail)) )
 
 NBoundary-cyl :  ∀ n →
@@ -335,24 +304,86 @@ InsideOfω-Path {n = n} bd x i =
     (fst (InsideOfω→InsideOf bd x) ∘ (cyl'' (inside i)))
     ((snd (InsideOfω→InsideOf bd x)) i)
 
-Subⁿ-elim : ∀ {ℓ} → ∀ (A : Type ℓ) → ∀ n
+
+InsideOfω-Path' : ∀ {ℓ} → ∀ (A : Type ℓ) → ∀ n
             → (pa : Partialⁿ A (suc n) (boundaryExpr (suc n)))
             → (s : Subⁿ A (suc n) _ pa)
             → C→-app {n = n} {A} ((outSⁿ (suc n) (boundaryExpr (suc n)) pa s) i0)
               ≡
               C→-app {n = n} {A} ((outSⁿ (suc n) (boundaryExpr (suc n)) pa s) i1)
             
-Subⁿ-elim A n pa s i =
+InsideOfω-Path' A n pa s i =
   C→-app (outSⁿ (suc n) (boundaryExpr (suc n)) pa s i)
 
 
 
-Face-lem :  ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
-            → ∀ k → ∀ b → ∀ cu
-            → Σ[ x ∈ NBoundary (suc n) ] faceMap k b cu ≡ boundaryInj x
-            
-Face-lem = {!!}
 
+
+
+-- sq-help : ∀ {n} → (bd : NBoundary (suc n))
+--           → Square {A = NBoundary (suc (suc (suc n)))}
+--               (λ i → lid false (boundaryInj (cyl bd i)))
+--               (λ i → lid true (boundaryInj (cyl bd i)))
+--               (λ i → cyl (lid false (boundaryInj bd)) i)
+--               λ i → cyl (lid true (boundaryInj bd)) i
+-- sq-help bd i i₁ = cyl' (cyl' bd i₁) i
+
+-- sq-Cu-help : ∀ n → (b : Bool) → C→ (NBoundary (suc n)) n 
+-- sq-Cu-help zero b _ = lid' b []
+-- sq-Cu-help (suc n) b i = C→map {n = n} (cyl'' (inside i)) (sq-Cu-help n b)
+
+-- Cu-help : ∀ n → C→ (NBoundary n) n → C→ (NBoundary (suc n)) (suc n) 
+-- Cu-help zero x x₁ = ⊥-recω (x 1=1)
+-- Cu-help (suc n) x i = C→map {n = suc n} (cyl'' (inside i)) x
+
+-- nCubeBoundaryω
+
+
+------------
+
+
+
+
+-- --------------------------
+
+
+
+
+-- PartialCuTy : ∀ n → (e : C→I n) → Typeω
+-- PartialCuTy n cu = {!!}
+
+-- ppp∨Ty : ∀ n → NCube n → Typeω
+-- ppp∨Ty n cu = {!  !}
+
+-- -------------------------
+
+-- Face-lem :  ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
+--             → ∀ k → ∀ b → ∀ cu
+--             → Σ[ x ∈ NBoundary (suc n) ] faceMap k b cu ≡ boundaryInj x            
+-- Face-lem = {!!}
+
+
+-- Partialⁿ-NBoundary-comp :
+--            ∀ n
+--            → Partialⁿ (NBoundary n) n (boundaryExpr n)
+--            → {!!}
+-- Partialⁿ-NBoundary-comp n pa =
+--   {! !}
+
+-- Partialⁿ-NBoundary-step : ∀ n →
+--                              Partialⁿ (NBoundary n) n (boundaryExpr n)
+
+--                             → Partialⁿ (NBoundary (suc n)) (suc n) (boundaryExpr (suc n))
+-- Partialⁿ-NBoundary-step zero x i = {!!}
+-- Partialⁿ-NBoundary-step (suc n') x i =
+--   let n = suc n'
+--   in
+--    Partialⁿ-const (NBoundary (suc n)) n (boundaryExpr (suc n) i)
+--     (C→elim {n = n} {A = (NBoundary (suc n))}
+--       λ x₁ →  ((λ j → cyl (lid false {!!}) (i ∧ j))
+--        ∙∙ (λ i₁ → cyl (cyl {!!} i₁) i) ∙∙
+--        (λ j → cyl (lid true {!!}) (i ∨ j))) i)
+    
 
 -- Partialⁿ-NBoundary : ∀ n → Partialⁿ (NBoundary n) n (boundaryExpr n)
 -- Partialⁿ-NBoundary zero ()
@@ -390,7 +421,7 @@ Face-lem = {!!}
 
 
 -- NBoundary-intersec : ∀ n → ∀ i j → Partialⁿ (NBoundary (suc (suc n))) n
---                                      ((C→I-const n i ∨ⁿ C→I-const n (~ i))
+--                                      (([_]Iexpr n i ∨ⁿ [_]Iexpr n (~ i))
 --                                        ∧ⁿ boundaryExpr (suc n) j)
 -- NBoundary-intersec zero i j =
 --   λ {
@@ -416,7 +447,7 @@ Face-lem = {!!}
 
 --    -- in
 --     Partial∨ⁿ n
---       ((C→I-const n i ∨ⁿ C→I-const n (~ i)))
+--       (([_]Iexpr i ∨ⁿ [_]Iexpr (~ i)))
 --       (boundaryExpr (suc n) i₁)
 --       (NBoundary-intersec n i i₁)
 --       {!!}
