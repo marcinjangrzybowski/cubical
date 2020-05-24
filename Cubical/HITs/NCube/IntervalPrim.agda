@@ -270,6 +270,7 @@ C→-app : ∀ {ℓ} → ∀ {n} → ∀ {A  : Type ℓ} → C→ A n → NCube 
 C→-app {n = zero} x _ = C→z x
 C→-app {n = suc n} x v = Iapp (λ i → C→-app (x i) (tail v)) (head v)
 
+-- TODO make n explicit 
 C→elim : ∀ {ℓ} → ∀ {n} → ∀ {A  : Type ℓ} → (NCube n → A) → C→ A n 
 C→elim {n = zero} x _ = x []
 C→elim {n = suc n} x i = C→elim (x ∘ (inside i ∷_))
@@ -569,6 +570,10 @@ i0-min (suc n) x i = i0-min n (x i)
 ∧-comm {zero} x y x₁ = x₁
 ∧-comm {suc n} x y i = ∧-comm (x i) (y i)
 
+∨-comm : ∀ {n} → (x y : C→I n) → ⊂I (x ∨ⁿ y) (y ∨ⁿ x)
+∨-comm {zero} x y x₁ = x₁
+∨-comm {suc n} x y i = ∨-comm (x i) (y i)
+
 
 boundaryExpr-cyl : ∀ n → ∀ i → ⊂I (boundaryExpr n) (boundaryExpr (suc n) i)
 boundaryExpr-cyl zero i ()
@@ -625,16 +630,30 @@ PartialPⁿ (suc n) e A = ∀ i → PartialPⁿ n (e i) (A i)
 
 Partial∨ :  ∀ {ℓ} → {A : Type ℓ} → (i j : I)
            → {xy : Partial (i ∧ j) A} 
-           → ( (i=1 : (IsOne i)) → (Sub A j (λ { (j = i1) → xy i=1  })))
-           → ( (j=1 : (IsOne j)) → (Sub A i (λ { (i = i1) → xy j=1  })))
+           → ( .(i=1 : (IsOne i)) → (Sub A j (λ { (j = i1) → xy i=1  })))
+           → ( .(j=1 : (IsOne j)) → (Sub A i (λ { (i = i1) → xy j=1  })))
            → Partial (i ∨ j) A
 Partial∨ i j x y = (λ { (i = i1) → outS (x 1=1) ; (j = i1) → outS (y 1=1)})
+
+PartialP∨ :  ∀ {ℓ}  → (i j : I) → (A : Partial (i ∨ j) (Type ℓ))
+           → {xy : PartialP (i ∨ j) A } 
+           → ( .(i=1 : (IsOne i)) → Sub (A (IsOne1 i j i=1)) j
+                                        λ { (j = i1) → xy ((IsOne1 i j i=1)) })
+           → ( .(j=1 : (IsOne j)) → Sub (A ((IsOne2 i j j=1))) i
+                                        λ { (i = i1) → xy ((IsOne2 i j j=1)) })
+           → PartialP (i ∨ j) A
+PartialP∨ i j A {xy} x y = primPOr i j (λ p → outS (x p)) (λ p → outS (y p))
 
 
 
 ⊂'I : ∀ {n} → C→I n → C→I n → Typeω
 ⊂'I {n} x x₁ = ∀ {ℓ} → ∀ {A : Type ℓ} → Partialⁿ A n x₁ → Partialⁿ A n x
 
+⊂'IP : ∀ {n} → (ei ej : C→I n) → ⊂'I ei ej
+           → Typeω
+⊂'IP {n} ei ej x =
+         ∀ {ℓ} → {A : Partialⁿ (Type ℓ) n ej}
+         → PartialPⁿ n ej A → PartialPⁿ n ei (x A)
 
 
 ≡'I :  ∀ {n} → C→I n → C→I n → Typeω
@@ -647,9 +666,19 @@ Partial∨ i j x y = (λ { (i = i1) → outS (x 1=1) ; (j = i1) → outS (y 1=1)
 ⊂'-∧ {zero} x y {ℓ} {A} x₂ = λ { (x = i1)(y = i1) → x₂ 1=1 }
 ⊂'-∧ {suc n} x y {ℓ} {A} x₂ i = ⊂'-∧ {n} (x i) (y i) (x₂ i)
 
+
 ⊂'-∧2 : ∀ {n} → (x y : C→I n) → ⊂'I (x ∧ⁿ y) y
 ⊂'-∧2 {zero} x y {ℓ} {A} x₂ = λ { (x = i1)(y = i1) → x₂ 1=1 }
 ⊂'-∧2 {suc n} x y {ℓ} {A} x₂ i = ⊂'-∧2 {n} (x i) (y i) (x₂ i)
+
+∧-⊂'-∨ : ∀ {n} → (x y : C→I n) → ⊂'I (x ∧ⁿ y) (x ∨ⁿ y)
+∧-⊂'-∨ {zero} x y x₁ = λ {(x = i1)(y = i1) → x₁ 1=1}
+∧-⊂'-∨ {suc n} x y x₁ i = ∧-⊂'-∨ (x i) (y i) (x₁ i) 
+
+
+⊂'P-∧2 : ∀ {n} → ∀ (ei ej : C→I n) → ⊂'IP {n} _ _ (⊂'-∧2 ei ej)
+⊂'P-∧2 {zero} ei ej x =  λ { (ei = i1)(ej = i1) → x 1=1 }
+⊂'P-∧2 {suc n} ei ej x i = ⊂'P-∧2 {n = n} (ei i) (ej i) (x i)
 
 Partialⁿ-lift-i0 :  ∀ {ℓ} → {A : Type ℓ} → ∀ n
                    → Partialⁿ A _ (liftExpr n i0)
@@ -662,7 +691,16 @@ Partialⁿ-lift-i0 (suc n) i = Partialⁿ-lift-i0 n
 ⊂→⊂' {zero} x y x₁ x₂ x₃ = x₂ (x₁ x₃)
 ⊂→⊂' {suc n} x y x₁ x₂ i = ⊂→⊂' {n} (x i) (y i) (x₁ i) (x₂ i)
 
+⊂→⊂'P : ∀ {ℓ} → ∀ {n} → {ei : C→I n} → {ej : C→I n}
+          → (x : ⊂I ei ej)
+          → (A : Partialⁿ (Set ℓ) n ej)
+          → PartialPⁿ n ej A
+          → PartialPⁿ n ei (⊂→⊂' _ _ x A)
+⊂→⊂'P {n = zero} x A x₁ p = x₁ (x p)
+⊂→⊂'P {n = suc n} x A x₁ i = ⊂→⊂'P (x i) (A i) (x₁ i)
 
+
+-- const meaning "not dependent on IsOne e"
 Partialⁿ-const :  ∀ {ℓ} → (A : Type ℓ) → ∀ n → (e : C→I n) → C→ A n → Partialⁿ A n e
 Partialⁿ-const A zero e a _ = a 1=1
 Partialⁿ-const A (suc n) e a i = Partialⁿ-const A n _ (a i)
@@ -681,6 +719,15 @@ Partialⁿ-map :  ∀ {ℓa ℓb} → {A : Type ℓa} → {B : Type ℓb}
                 → Partialⁿ B n e
 Partialⁿ-map zero f x e=1 = f (x e=1)
 Partialⁿ-map (suc n) f x i = Partialⁿ-map n f (x i)
+
+Partialⁿ-map2 :  ∀ {ℓa ℓa' ℓb} → {A : Type ℓa} → {A' : Type ℓa'} → {B : Type ℓb}
+                → ∀ n → {e : C→I n}
+                → (A → A' → B)
+                → Partialⁿ A n e
+                → Partialⁿ A' n e
+                → Partialⁿ B n e
+Partialⁿ-map2 (zero) f x x' e=1 = f (x e=1) (x' e=1)
+Partialⁿ-map2 (suc n) f x x' i = Partialⁿ-map2 n f (x i) (x' i)  
 
 PartialPⁿ-mapTo :  ∀ {ℓa ℓb}
                 → ∀ {n} → {e : C→I n}
@@ -702,6 +749,24 @@ PartialPⁿ-mapFrom :  ∀ {ℓa ℓb}
 PartialPⁿ-mapFrom zero f a x = (f x) (a x)
 PartialPⁿ-mapFrom (suc n) f a i = PartialPⁿ-mapFrom n (f i) (a i)
 
+PartialPⁿ-map : ∀ {ℓa ℓb}
+                → ∀ n → {e : C→I n}
+                → {A : Partialⁿ (Type ℓa) n e}
+                → {B : Partialⁿ (Type ℓb) n e}         
+                → (f : PartialPⁿ n e (Partialⁿ-map2 n (λ x y → x → y) A B))
+                → (a : PartialPⁿ n e A)
+                → PartialPⁿ n e B
+PartialPⁿ-map zero f a x = f x (a x)
+PartialPⁿ-map (suc n) f a i = PartialPⁿ-map n (f i) (a i)
+
+-- PartialPⁿ-mapDep : ∀ {ℓa ℓb}
+--                 → ∀ n → {e : C→I n}
+--                 → {A : Partialⁿ (Type ℓa) n e}
+--                 → {B : PartialPⁿ n e (Partialⁿ-map n (λ x → x → Type ℓb) A)}         
+--                 → (f : PartialPⁿ n e (PartialPⁿ-mapFrom n {!!} B))
+--                 → (a : PartialPⁿ n e A)
+--                 → PartialPⁿ n e {!!}
+-- PartialPⁿ-mapDep = {!!}
 
 -- PartialPⁿ-map :  ∀ {ℓa ℓb}
 --                 → ∀ {n} → {e : C→I n}
@@ -721,14 +786,7 @@ PartialPⁿ-mapFrom (suc n) f a i = PartialPⁿ-mapFrom n (f i) (a i)
 --                 → Partialⁿ B n e
 -- PartialPⁿ-map = {!!}
 
-Partialⁿ-map2 :  ∀ {ℓa ℓa' ℓb} → {A : Type ℓa} → {A' : Type ℓa'} → {B : Type ℓb}
-                → ∀ {n} → {e : C→I n}
-                → (A → A' → B)
-                → Partialⁿ A n e
-                → Partialⁿ A' n e
-                → Partialⁿ B n e
-Partialⁿ-map2 {n = zero} f x x' e=1 = f (x e=1) (x' e=1)
-Partialⁿ-map2 {n = suc n} f x x' i = Partialⁿ-map2 {n = n} f (x i) (x' i)  
+
 
 Partialⁿ-app :  ∀ {ℓa ℓb} → {A : Type ℓa} → {B : Type ℓb}
                 → ∀ {n} → {e : C→I n}
@@ -797,22 +855,35 @@ Partialⁿ-Sub : ∀ {ℓ} → (A : Type ℓ) → ∀ n
 Partialⁿ-Sub A zero ei ej x = .(e=1 : (IsOne ei)) → Sub A ej (λ { (ej = i1) → x e=1 })
 Partialⁿ-Sub A (suc n) ei ej x = ∀ i → Partialⁿ-Sub A n (ei i) (ej i) (x i)
 
+Partialⁿ-Sub2 : ∀ {ℓ} → (A : Type ℓ) → ∀ n
+               → (i : C→I n) → (j : C→I n)
+               → Partialⁿ A n (j ∧ⁿ i) → Typeω
+Partialⁿ-Sub2 A zero ei ej x = .(e=1 : (IsOne ei)) → Sub A ej (λ { (ej = i1) → x e=1 })
+Partialⁿ-Sub2 A (suc n) ei ej x = ∀ i → Partialⁿ-Sub2 A n (ei i) (ej i) (x i)
 
--- PartialPⁿ-Sub-help : ∀ {ℓ} {i = ei} {j = ej} (A : Partialⁿ (Set ℓ) zero ei)
---                       (x : PartialPⁿ zero (ei ∧ⁿ ej) (⊂'-∧ ei ej A)) .(e=1 : IsOne ei) →
---                        Partial ej (A e=1)
--- PartialPⁿ-Sub-help {i = ei} {j = ej} A x e=1 x₁ = {!!}
 
--- PartialPⁿ-Sub : ∀ {ℓ} → ∀ n → (i : C→I n) → (j : C→I n)
---                  → (A : Partialⁿ (Set ℓ) n i)
---                  → PartialPⁿ n (i ∧ⁿ j) (⊂'-∧ i j A ) → Typeω
--- PartialPⁿ-Sub zero ei ej A x = .(e=1 : (IsOne ei)) → Sub (A e=1) ej λ {(ej = i1) → {!x!} } 
--- PartialPⁿ-Sub (suc n) i j A x = {!!}
+PartialPⁿ-Sub : ∀ {ℓ} → ∀ n → (i : C→I n) → (j : C→I n)
+                 → (A : Partialⁿ (Set ℓ) n i)
+                 → PartialPⁿ n (i ∧ⁿ j) (⊂'-∧ i j A ) → Typeω
+PartialPⁿ-Sub zero ei ej A x =
+  .(e=1 : (IsOne ei)) →
+    Sub (⊂'-∧ ei i1 A e=1) ej (λ { (ej = i1) → x e=1 })
 
-Partialⁿ-Sub' : ∀ {ℓ} → (A : Type ℓ) → ∀ n → (i j : C→I n) → Partialⁿ A n j → Typeω
-Partialⁿ-Sub' A zero i j x = (.(IsOne i)) → Sub A j x
-Partialⁿ-Sub' A (suc n) ei ej x = ∀ i → Partialⁿ-Sub' A n (ei i) (ej i) (x i)
+PartialPⁿ-Sub (suc n) ei ej A x = ∀ i → PartialPⁿ-Sub n (ei i) (ej i) (A i) (x i)
 
+PartialPⁿ-Sub2 : ∀ {ℓ} → ∀ n → (i : C→I n) → (j : C→I n)
+                 → (A : Partialⁿ (Set ℓ) n i)
+                 → PartialPⁿ n (j ∧ⁿ i) ((⊂'-∧2 j i A )) → Typeω
+PartialPⁿ-Sub2 zero ei ej A x = 
+  .(e=1 : (IsOne ei)) →
+    Sub (⊂'-∧2 i1 ei A e=1) ej (λ { (ej = i1) → x e=1 })
+
+PartialPⁿ-Sub2 (suc n) ei ej A x = ∀ i → PartialPⁿ-Sub2 n (ei i) (ej i) (A i) (x i)
+
+
+-- Partialⁿ-Sub' : ∀ {ℓ} → (A : Type ℓ) → ∀ n → (i j : C→I n) → Partialⁿ A n j → Typeω
+-- Partialⁿ-Sub' A zero i j x = (.(IsOne i)) → Sub A j x
+-- Partialⁿ-Sub' A (suc n) ei ej x = ∀ i → Partialⁿ-Sub' A n (ei i) (ej i) (x i)
 
 inPartialⁿ-Sub : ∀ {ℓ} → (A : Type ℓ) → ∀ n → (i j : C→I n)
                   → (x : C→ A n)
@@ -849,6 +920,22 @@ Partial∨ⁿ :  ∀ {ℓ} → {A : Type ℓ} → ∀ n
 Partial∨ⁿ zero i j ∩a ai aj = Partial∨ i j {∩a} ai aj
 Partial∨ⁿ (suc n) i j ∩a x x₁ l = Partial∨ⁿ n (i l) (j l) (∩a l) (x l) (x₁ l)
 
+Partial∨Pⁿ-help : ∀ {ℓ} (n : ℕ) (i j : C→I n) (A : Partialⁿ (Type ℓ) n (i ∨ⁿ j))
+      (∩a : PartialPⁿ n (i ∧ⁿ j) (⊂'-∧ i j (⊂→⊂' i (i ∨ⁿ j) (⊂-∨1 i j) A)))
+          → PartialPⁿ n (i ∧ⁿ j) (⊂'-∧2 i j (⊂→⊂' j (i ∨ⁿ j) (⊂-∨2 i j) A))
+Partial∨Pⁿ-help zero i j A ∩a = λ {(i = i1)(j = i1) → ∩a 1=1 }
+Partial∨Pⁿ-help (suc n) i j A ∩a i' = Partial∨Pⁿ-help n (i i') (j i') (A i') (∩a i')
+
+PartialP∨ⁿ :  ∀ {ℓ} → ∀ n
+              → (i j : C→I n)
+              → {A : Partialⁿ (Type ℓ) n (i ∨ⁿ j)  }
+              → (∩a : PartialPⁿ n (i ∧ⁿ j) (⊂'-∧ i j (⊂→⊂' _ _ (⊂-∨1 i j) A)))
+              → PartialPⁿ-Sub n i j (⊂→⊂' i (i ∨ⁿ j) (⊂-∨1 i j) A) ∩a
+              → PartialPⁿ-Sub2 n j i ((⊂→⊂' j (i ∨ⁿ j) (⊂-∨2 i j) A))
+                    (Partial∨Pⁿ-help n i j A ∩a)                       
+              → PartialPⁿ n (i ∨ⁿ j) A   
+PartialP∨ⁿ zero i j {A} ∩a x x₁ = λ { (i = i1) → outS (x 1=1) ; (j = i1) → outS (x₁ 1=1)}
+PartialP∨ⁿ (suc n) i j ∩a x x₁ i' = PartialP∨ⁿ n (i i') (j i') (∩a i') (x i') (x₁ i')
 
 Partial∨ⁿ-ends :  ∀ {ℓ} → {A : Type ℓ} → ∀ n
               → (i : I)

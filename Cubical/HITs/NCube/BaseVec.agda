@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical  #-}
+{-# OPTIONS --cubical --safe  #-}
 module Cubical.HITs.NCube.BaseVec where
 
 
@@ -300,21 +300,10 @@ InsideOfω-Path' A n pa s i =
   C→-app (outSⁿ (suc n) (boundaryExpr (suc n)) pa s i)
 
 
-OnBoundary : ∀ {n} → NCube n → Type₀
-OnBoundary c = Σ[ bd ∈ NBoundary _ ] (c ≡ boundaryInj bd)
-
-
 -- TODO 
 -- OnBoundary-test : ∀ n → (∀ c → OnBoundary {n = n} c) → ⊥ 
 -- OnBoundary-test zero x = fst (x [])
 -- OnBoundary-test (suc n) x = {!!}
-
-
-boundaryω-Σ : ℕ → Typeω
-boundaryω-Σ n = PartialPⁿ n (boundaryExpr n)
-               ((Partialⁿ-map {A = NCube n}
-                    {B = Type₀} n OnBoundary )
-                      (Partialⁿ-const (NCube n) n (boundaryExpr n) (nCubeω n)))
 
 -- NBoundary-cyl-Ty : ∀ n → Boundaryω (NBoundary n) n → Typeω  
 -- NBoundary-cyl-Ty n bd = PartialPⁿ n (boundaryExpr n)
@@ -366,12 +355,37 @@ boundaryω-Σ n = PartialPⁿ n (boundaryExpr n)
 -- onBoundary-refl : ∀ n → NBoundary n → (Σ _ (OnBoundary {n}))
 -- onBoundary-refl n x = (boundaryInj x) , (x , refl)
 
-{-# TERMINATING #-}
-NBoundaryω : ∀ n → (boundaryω-Σ n)
 
--- NBoundaryω-Ins : ∀ n → Partialⁿ (Σ _ (OnBoundary {n})) n (boundaryExpr n)
--- NBoundaryω-Ins zero ()
--- NBoundaryω-Ins (suc n) = {!!}
+
+indω : (x : ℕ → Typeω) → (x 0) → (∀ n → x n → x (suc n)) → ∀ n → x n 
+indω x x₁ x₂ zero = x₁
+indω x x₁ x₂ (suc n) = x₂ n (indω x x₁ x₂ n)
+
+
+OnBoundary : ∀ {n} → NCube n → Type₀
+OnBoundary c = Σ[ bd ∈ NBoundary _ ] (c ≡ boundaryInj bd)
+
+boundaryω-Σ : ℕ → Typeω
+boundaryω-Σ n = PartialPⁿ n (boundaryExpr n)
+                (Partialⁿ-const Type₀ n _ (C→elim {n = n} OnBoundary))
+
+
+
+PartialP-map-Σ : ∀ {ℓ ℓ' ℓ'' ℓ'''} → ∀ n → {e : C→I n}
+                     → {A : Type ℓ} → {A' : Type ℓ'}
+                     → {B : NCube n → A → Type ℓ''}
+                     → {B' : NCube n → A' → Type ℓ'''}
+                     → (f : A → A')
+                     → (g : ∀ {c} → ∀ {a} → B c a → B' c (f a))
+                     → PartialPⁿ n e
+                         (Partialⁿ-const _ n _ (C→elim {n = n} λ c → Σ _ (B c) ))
+                     → PartialPⁿ n e
+                         ((Partialⁿ-const _ n _ (C→elim {n = n} λ c → Σ _ (B' c) )))
+PartialP-map-Σ zero f g x p = (f (fst (x p))) , (g (snd (x p)))
+PartialP-map-Σ (suc n) f g x i = PartialP-map-Σ n f g (x i)
+
+
+
 
 Partialⁿ-Sub-ends-split : ∀ {ℓ} → {A : Type ℓ} → ∀ n → {i : I} → {j : C→I (suc n)}
                           → (p : I → Partialⁿ A (suc n) j)
@@ -386,20 +400,127 @@ Partialⁿ-Sub-ends-split n p l0 l1 i = {!!}
 
 
 
-NBoundaryω zero ()
-NBoundaryω (suc zero) i =
-   λ { (i = i0) → (lid false []) , refl ; (i = i1) → (lid true []) , refl } 
-NBoundaryω (suc (suc n)) i  = {!!}
-   Partial∨ⁿ (suc n)
-       ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) (boundaryExpr (suc n))
-       (?)
+lem1 : ∀ {ℓ} → ∀ {n} → ∀ (i : I) → (j : C→I (suc n))
+          → {A : (i₁ : I) → Partialⁿ (Set ℓ) n (j i₁)}
+          → PartialPⁿ (suc n) j A
+          → PartialPⁿ (suc n) (([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) ∧ⁿ j) {!!}
+lem1 = {!!}
+
+NBoundaryω-step : ∀ n → boundaryω-Σ (suc n) → boundaryω-Σ (suc (suc n))
+NBoundaryω-step n' prev i = 
+   PartialP∨ⁿ n 
+       ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) (boundaryExpr n)       
+       intersection
+       
        {!!}
-       ? --(inPartialⁿ-Sub⊂' (suc n) (prev-cyl i))
+       {!!} --(inPartialⁿ-Sub⊂' (suc n) (prev-cyl i))
 
    where
+     n = suc n'
 
-     prev-cyl : (i' : I) → {!!}
-     prev-cyl = {!!}
+     prev-cyl : (i' : I) → PartialPⁿ n ((boundaryExpr n))
+                       ((Partialⁿ-const Type₀ (suc n) (λ _ → boundaryExpr n)
+                           (C→elim {n = (suc n)} OnBoundary)) i')
+     prev-cyl i' =  PartialP-map-Σ n
+                       {B' = λ x x₁ → inside i' ∷ x ≡ boundaryInj x₁}
+                        (cyl'' (inside i'))  
+                        (cong (inside i' ∷_))
+                      (prev)
+
+     iTy0 : {!!}
+     iTy0 = {!!}
+
+     intersection0 : PartialPⁿ n
+                       (([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) ∧ⁿ boundaryExpr n)
+                       (⊂'-∧2 ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) (boundaryExpr n)
+                        ( Partialⁿ-const Type₀ (suc n) (λ _ x → boundaryExpr n x)
+                           (C→elim {n = suc n} OnBoundary) i))
+     intersection0 = ⊂'P-∧2
+                     ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)
+                     (boundaryExpr n)
+                      (prev-cyl i)
+
+     iTy : {!!}
+     iTy = {!!}
+
+     intersection : PartialPⁿ n (([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) ∧ⁿ boundaryExpr n)
+                      (⊂'-∧ ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) (boundaryExpr n)
+                       (⊂→⊂' ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)
+                        (([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) ∨ⁿ boundaryExpr n)
+                        (⊂-∨1 ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) (boundaryExpr n))
+                        ( Partialⁿ-const Type₀ (suc n)
+                               (λ i′ x → ([ i′ ]Iexpr ∨ⁿ [ ~ i′ ]Iexpr) ∨ⁿ boundaryExpr n x)
+                           (C→elim {n = suc n} OnBoundary) i)))
+                           
+     intersection = {!!}
+
+NBoundaryω1 : boundaryω-Σ 1
+NBoundaryω1 i =
+  λ { (i = i0) → (lid false []) , refl ;
+      (i = i1) → (lid true []) , refl }
+
+
+NBoundaryω : ∀ n → (boundaryω-Σ n)
+NBoundaryω zero ()
+NBoundaryω (suc n) =
+   indω (λ n → boundaryω-Σ (suc n)) NBoundaryω1
+    NBoundaryω-step
+    n
+
+
+-- NBoundaryω : ∀ n → (boundaryω-Σ n)
+-- NBoundaryω zero ()
+-- NBoundaryω (suc zero) i =
+--    λ { (i = i0) → (lid false []) , refl ; (i = i1) → (lid true []) , refl } 
+-- NBoundaryω (suc (suc n)) i  = 
+--    PartialP∨ⁿ (suc n)
+--        ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) (boundaryExpr (suc n))
+--        {Partialⁿ-const Type₀ (suc (suc n)) (boundaryExpr (suc (suc n)))
+--             (C→elim {n = suc (suc n)} OnBoundary) i}
+--        intersection
+       
+--        {!!}
+--        {!!} --(inPartialⁿ-Sub⊂' (suc n) (prev-cyl i))
+
+--    where
+
+--      prev-cyl : (i' : I) → PartialPⁿ (suc n) ((boundaryExpr (suc n)))
+--                        ((Partialⁿ-const Type₀ (suc (suc n)) (λ _ → boundaryExpr (suc n))
+--                            (C→elim {n = (suc (suc n))} OnBoundary)) i')
+--      prev-cyl i' =  PartialP-map-Σ (suc n)
+--                        {A = NBoundary (suc n)} {A' = NBoundary (suc (suc n))}
+--                        {B = λ x x₁ → x ≡ boundaryInj x₁}
+--                        {B' = λ x x₁ → inside i' ∷ x ≡ boundaryInj x₁}
+--                         (cyl'' (inside i'))  
+--                         (cong (inside i' ∷_))
+--                       (NBoundaryω (suc n))
+
+--      iTy0 : {!!}
+--      iTy0 = {!!}
+
+--      intersection0 : PartialPⁿ (suc n)
+--                        (([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) ∧ⁿ boundaryExpr (suc n))
+--                        (⊂'-∧2 ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) (boundaryExpr (suc n))
+--                         ( Partialⁿ-const Type₀ (suc (suc n)) (λ _ → boundaryExpr (suc n))
+--                            (C→elim {n = suc (suc n)} OnBoundary) i))
+--      intersection0 = ⊂'P-∧2
+--                      ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)
+--                      (boundaryExpr (suc n))
+--                       (prev-cyl i)
+
+--      iTy : {!!}
+--      iTy = {!!}
+
+--      intersection : PartialPⁿ (suc n) (([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) ∧ⁿ boundaryExpr (suc n))
+--                        λ i₁ →
+--                            ⊂'-∧ ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) (boundaryExpr (suc n))
+--                            (⊂→⊂' ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)
+--                             (([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) ∨ⁿ boundaryExpr (suc n))
+--                             (⊂-∨1 ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) (boundaryExpr (suc n)))
+--                             (Partialⁿ-const Type₀ (suc (suc n)) (boundaryExpr (suc (suc n)))
+--                              (C→elim {n = suc (suc n)} OnBoundary) i))
+--                            i₁
+--      intersection = {!prev-cyl i!}
 
      -- prev-cyl' : I → Partialⁿ (NBoundary (suc (suc n))) (suc n) (boundaryExpr (suc n))
      -- prev-cyl' i' = Partialⁿ-map (suc n) (cyl'' (inside i')) (NBoundaryω (suc n))
