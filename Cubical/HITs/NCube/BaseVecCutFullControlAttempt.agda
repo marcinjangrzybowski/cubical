@@ -111,7 +111,7 @@ truncate-step n x = Partialⁿ-map {e = (faceControlExpr n)} (tail {A = Interval
                     (Pa0∨-hlp' _ (faceControlExpr n) (x i0 i0 i0) )
 
 nCubeBoundaryω< : ∀ n → n ≤ maxPC → NCubeBoundaryω n
-nCubeBoundaryω< n (zero , snd₁) = {!n!}
+nCubeBoundaryω< 5 (zero , snd₁) = {!n!}
 nCubeBoundaryω< n w = {!!}
 
 nCubeBoundaryω : ∀ n → NCubeBoundaryω n
