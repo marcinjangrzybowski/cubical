@@ -200,7 +200,7 @@ Cube-test _ _ _ _ _ _ _ = refl
 
 
 test-3 : ∀ {ℓ} → ∀ (A : Type ℓ)
-             → (PathPⁿ {n = 2} (const A)) ≡  {!(Square {A = A})!}
+             → (PathPⁿ {n = 2} (const A)) ≡  {!Pathⁿ 3!}
 test-3 = {!!}
 
 -- PathPⁿ-Ty : ∀ {ℓ} → ∀ {n} → Typeⁿ n ℓ → Type ℓ

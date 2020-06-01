@@ -39,9 +39,6 @@ open import Cubical.HITs.NCube.CompN
 open import Cubical.HITs.NCube.IntervalPrim
 
 
-Fin1-elim : ∀ {ℓ} → {p : Fin 1 → Type ℓ}
-            → p fzero → ∀ x → p x  
-Fin1-elim {p = p} x x₁ = subst p (snd isContrFin1 x₁) x
 
 
 injTrim : ∀ {n} → ℕ → Fin (suc n)

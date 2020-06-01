@@ -210,7 +210,7 @@ NBoundary-≡-S {suc n} = NBoundary-≡-S₊
 NBoundary-elim : ∀ {ℓ} → ∀ {n} → (A : NCube n → Type ℓ)
                  → Boundary A
                  → Π (A ∘ boundaryInj)
-NBoundary-elim = ?
+NBoundary-elim = {!!}
 
 
 
