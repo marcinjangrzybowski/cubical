@@ -11,7 +11,7 @@ open import Cubical.Data.Bool
 
 open import Cubical.Foundations.Everything
 
-open import Cubical.HITs.Interval.Base renaming (elim to I-elim)
+open import Cubical.HITs.Interval.Base renaming (elim to I-elim ; rec to I-rec)
 
 
 
@@ -29,18 +29,6 @@ Typeⁿ n ℓ = NCube n → Type ℓ
 Π B = ∀ x → B x
 
 
-Interval-rec : ∀ {ℓ} → {A : Type ℓ} {a0 a1 : A}
-               (p : a0 ≡ a1) → (x : Interval) → A
-Interval-rec p zero = p i0
-Interval-rec p one = p i1
-Interval-rec p (seg i) = p i
-
-Interval-elim : ∀ {ℓ} → (A : Interval → Type ℓ) (x : A zero) (y : A one)
-               (p : PathP (λ i → A (seg i)) x y) → (x : Interval) → A x
-Interval-elim A x y p zero    = x
-Interval-elim A x y p one     = y
-Interval-elim A x y p (seg i) = p i
-
 _∘∷_ : ∀ {ℓ ℓ'} → {A : Type ℓ} → {B : Type ℓ'}
        → ∀ {n}
        → (Vec A (suc n) → B) → A → (Vec A n → B)
@@ -56,8 +44,8 @@ _∘∷ₗ_ : ∀ {ℓ ℓ'} → {A : Type ℓ} → {B : Type ℓ'}
 A ∘∷ₗ a = A ∘ (_∷ₗ a )
 
 Typeⁿ'→Typeⁿ : ∀ {ℓ} → ∀ n →  Typeⁿ' n ℓ → Typeⁿ (suc n) ℓ
-Typeⁿ'→Typeⁿ zero x x₁ = Interval-rec (λ i → x i) (head x₁)
-Typeⁿ'→Typeⁿ (suc n) x x₁ = Interval-rec (λ i →  Typeⁿ'→Typeⁿ n (x i) (tail x₁)) (head x₁)
+Typeⁿ'→Typeⁿ zero x x₁ = I-rec (λ i → x i) (head x₁)
+Typeⁿ'→Typeⁿ (suc n) x x₁ = I-rec (λ i →  Typeⁿ'→Typeⁿ n (x i) (tail x₁)) (head x₁)
 
 Typeⁿ→Typeⁿ' : ∀ {ℓ} → ∀ n → Typeⁿ (suc n) ℓ → Typeⁿ' n ℓ
 Typeⁿ→Typeⁿ' zero x i = x (seg i ∷ [])
@@ -89,10 +77,10 @@ trim-sig {n = suc (suc (suc n))} s = fst s , λ x → trim-sig (snd s x)
 -- Π-sig-pick (suc x ∷ xs) {suc (suc n)} s = {a : fst s} → Π-sig-pick (x ∷ xs) (snd s a)
 
 
--- Σ-sig : ∀ {ℓ} → ∀ {n} → Sig ℓ n → Type ℓ
--- Σ-sig {n = 0} x = Lift Unit
--- Σ-sig {n = 1} x = x
--- Σ-sig {n = suc (suc n)} x = Σ (fst x) (Σ-sig ∘ snd x) 
+Σ-sig : ∀ {ℓ} → ∀ {n} → Sig ℓ n → Type ℓ
+Σ-sig {n = 0} x = Lift Unit
+Σ-sig {n = 1} x = x
+Σ-sig {n = suc (suc n)} x = Σ (fst x) (Σ-sig ∘ snd x) 
 
 Type-in-sig : ∀ {ℓ} → Bool → List ℕ → ∀ {n} → Sig ℓ n → Type (ℓ-suc ℓ)
 Type-in-sig _ _ {zero} _ = Type _
@@ -117,7 +105,6 @@ Type-in-sig true (suc k ∷ xs) {suc (suc n)} x = {a : fst x} → Type-in-sig tr
 -- Type-in-sig-impl {ℓ} {n = suc zero} x = ∀ {a : x} → Type ℓ
 -- Type-in-sig-impl {n = suc (suc n)} x = {a : fst x} → Type-in-sig-impl ((snd x) a)
 
-
 pop-Type : ∀ {ℓ} → ∀ {n}
            → (b : Bool) → (l : List ℕ) → (A : Sig ℓ n)
            → Type-in-sig b l (trim-sig A)
@@ -136,9 +123,18 @@ pop-Type {n = suc (suc (suc n))} false (suc k ∷ l) A a = pop-Type false (k ∷
 pop-Type {n = suc (suc (suc n))} true (zero ∷ l) A a = pop-Type true l (snd A a)
 pop-Type {n = suc (suc (suc n))} true (suc k ∷ l) A {a} = pop-Type true (k ∷ l) (snd A a)
 
+pop-Type-overΣ : ∀ {ℓ} → ∀ {n}
+                     → (A : Sig ℓ n)
+                     →  Σ-sig (trim-sig A) → Type ℓ
+pop-Type-overΣ {n = zero} _ _ = Lift Unit
+pop-Type-overΣ {n = suc zero} A _ = A
+pop-Type-overΣ {n = suc (suc zero)} x a = snd x a
+pop-Type-overΣ {n = suc (suc (suc n))} x a = pop-Type-overΣ (snd x (fst a)) (snd a)
+
+
 combineSig : ∀ {ℓ} → ∀ {n} → (I → Sig ℓ n) → Sig ℓ (n * 3)
 combineSig {n = 0} x = lift _
-combineSig {n = 1} x = (x i0) , (λ x0 → (x i1) , PathP x x0)
+combineSig {n = 1} x = (x i0) , (λ x0 → (x i1) , λ x1 → PathP x x0 x1)
 combineSig {n = suc (suc n)} x =
              (fst (x i0)) ,
      (λ x0 → (fst (x i1)) ,
@@ -174,7 +170,112 @@ Pathⁿ : ∀ {ℓ} → ∀ n
                   → Type-in-sig true (argsToPick n) (trim-sig (CubeIn-Sig {n = n} (const A)) )
 Pathⁿ n {x} = PathPⁿ (const x)
 
+BoundaryPⁿ : ∀ {ℓ} → ∀ {n}
+                 → (A : Typeⁿ n ℓ)
+                 → Type ℓ
+BoundaryPⁿ A = Σ-sig (trim-sig (CubeIn-Sig A) )
 
+Boundaryⁿ : ∀ {ℓ} → ∀ n → (A : Type ℓ) → Type ℓ
+Boundaryⁿ n A = BoundaryPⁿ {n = n} (const A)
+
+InsideOfP :  ∀ {ℓ} → ∀ {n}
+                 → (A : Typeⁿ n ℓ)
+                 → BoundaryPⁿ A → Type ℓ
+InsideOfP A = pop-Type-overΣ (CubeIn-Sig A)
+
+
+Σ-Bd-Ins : ∀ {ℓ} → ∀ {n} → (A : Typeⁿ n ℓ) → Type ℓ
+Σ-Bd-Ins A = Σ (BoundaryPⁿ A) (InsideOfP A)
+
+
+Boundaryⁿ-ends : ∀ {ℓ} → ∀ {n}
+                 → (A : Typeⁿ (suc n) ℓ)
+                 → BoundaryPⁿ A
+                 → (b : Bool) → Σ-Bd-Ins (A ∘∷ (end b) ) 
+Boundaryⁿ-ends {n = zero} A x false = _ , fst x
+Boundaryⁿ-ends {n = zero} A x true = _ , snd x
+Boundaryⁿ-ends {n = suc zero} A x false = (fst x , fst (snd (snd (snd x)))) ,
+                                          {!fst (snd (snd x))!}
+Boundaryⁿ-ends {n = suc zero} A x true = {!!}
+Boundaryⁿ-ends {n = suc (suc n)} = {!!}
+
+
+from-ends-Path :  ∀ {ℓ} → ∀ {n} → (A : Typeⁿ (suc n) ℓ)
+                  → Iso ((i' : Interval) → Σ-Bd-Ins (A ∘∷ i'))
+                        (Σ-Bd-Ins A)
+
+IsoCub : ∀ {ℓ} → ∀ n → (A : Typeⁿ n ℓ)
+           → Iso (Π A) (Σ (BoundaryPⁿ A) (InsideOfP A))
+
+Iso.fun (IsoCub 0 A) x = lift _ , x []
+Iso.inv (IsoCub 0 A) x [] = snd x 
+Iso.rightInv (IsoCub 0 A) b = refl
+Iso.leftInv (IsoCub 0 A) a i [] = a []
+
+-- Iso.fun (IsoCub 1 A) x = (x _ , x _) , λ i →  x (seg i ∷ [])  
+-- Iso.inv (IsoCub 1 A) x (x₁ ∷ []) = I-elim (λ v → (A ∘∷ v) []) (snd x) x₁
+-- Iso.rightInv (IsoCub 1 A) _ = refl
+-- Iso.leftInv (IsoCub 1 A) a i (x ∷ []) = intervalEta {A = (λ v → (A ∘∷ v) []) } (λ _ → a _) i x 
+
+-- IsoCub 2 A = {!!}
+
+IsoCub (suc n) A = iso funS invS secS retS
+
+   where
+     prev : (i' : Interval) → Iso (Π (λ x → A (i' ∷ x)))
+                        (Σ (BoundaryPⁿ (λ x → A (i' ∷ x)))
+                         (InsideOfP (λ x → A (i' ∷ x))))
+     prev i' = IsoCub n (A ∘∷ i' )
+
+     sec : ∀ i → _
+     sec i = Iso.rightInv (prev i)
+
+     ret : ∀ i → _
+     ret i = Iso.leftInv (prev i)
+     
+
+     funS : Π A → Σ (BoundaryPⁿ A) (InsideOfP A)
+     funS x = Iso.fun (from-ends-Path A) (λ i' → (Iso.fun (prev i')) (x ∘ (i' ∷_))) 
+
+     invS : Σ (BoundaryPⁿ A) (InsideOfP A) → Π A
+     invS x (i' ∷ c) = (Iso.inv (prev i')) (Iso.inv (from-ends-Path A) x i') c
+
+     secS : section funS invS
+     secS = {!!}
+
+     retS : retract funS invS
+     retS = {!!}
+
+
+Iso.fun (from-ends-Path {n = zero} A) x = snd (x (seg i0) , snd (x (seg i0))
+                                         , snd (x (seg i1))) , λ i → snd (x (seg i))
+Iso.inv (from-ends-Path {n = zero} A) x i' = (lift _) , I-elim (λ v → A (v ∷ []) ) (snd x) i'
+Iso.rightInv (from-ends-Path {n = zero} A) b = refl
+Iso.leftInv (from-ends-Path {n = zero} A) a i i' =
+   (lift _) , (intervalEta {A = λ x → A (x ∷ [])} (snd ∘ a) i i')
+
+from-ends-Path {n = 1} A = {!!}
+
+fst (Iso.fun (from-ends-Path {n = suc (suc n)} A) x) = {!!}
+snd (Iso.fun (from-ends-Path {n = suc (suc n)} A) x) = {!!}
+Iso.inv (from-ends-Path {n = suc (suc n)} A) = {!!}
+Iso.rightInv (from-ends-Path {n = suc (suc n)} A) = {!!}
+Iso.leftInv (from-ends-Path {n = suc (suc n)} A) = {!!}
+
+  -- let
+  --     w11 : ((i' : Interval) → Σ-Bd-Ins (λ x → A (i' ∷ x))) ≡
+  --            ((i' : Interval) → Π λ z → A (i' ∷ z))
+  --     w11 i = (i' : Interval) → isoToPath (IsoCub (suc n) (λ x → A (i' ∷ x))) (~ i)
+
+  --     w1 : Iso ((i' : Interval) → Σ-Bd-Ins (A ∘∷ i')) ((i' : Interval) → Π (λ z → A (i' ∷ z)))
+  --     w1 = pathToIso w11
+
+  --     w22 : {!!}
+  --     w22 = {!!}
+
+  --     w2 = Iso {!!} (Σ-Bd-Ins A)
+  --     w2 = {!!}
+  -- in  compIso w1 (compIso w22 w2)  
 
 -- generated cube is definationaly equall to one from Prelude
 Cube-test : ∀ {ℓ} → ∀ (A : Type ℓ) → 
@@ -200,7 +301,7 @@ Cube-test _ _ _ _ _ _ _ = refl
 
 
 test-3 : ∀ {ℓ} → ∀ (A : Type ℓ)
-             → (PathPⁿ {n = 2} (const A)) ≡  {!Pathⁿ 3!}
+             → (PathPⁿ {n = 2} (const A)) ≡ {!Pathⁿ 3!}
 test-3 = {!!}
 
 -- PathPⁿ-Ty : ∀ {ℓ} → ∀ {n} → Typeⁿ n ℓ → Type ℓ
