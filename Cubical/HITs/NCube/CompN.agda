@@ -35,41 +35,9 @@ compMaxN : ℕ
 compMaxN = 10
 
 
-dichotomy≤ : ∀ b n → (n < b) ⊎ (Σ[ m ∈ ℕ ] n ≡ b + m)
-dichotomy≤ b n
-  = case n Cubical.Data.Nat.Order.≟ b return (λ _ → (n < b) ⊎ (Σ[ m ∈ ℕ ] n ≡ b + m)) of λ
-  { (lt o) → inl o
-  ; (eq p) → inr (0 , p ∙ sym (+-zero b))
-  ; (gt (m , p)) → inr (suc m , sym p ∙ +-suc m b ∙ +-comm (suc m) b)
-  }
 
 
-replaceAt : ∀ {ℓ} → ∀ {A  : Type ℓ} → ∀ {n} → ℕ → A → Vec A n → Vec A n  
-replaceAt {n = zero} _ _ _ = []
-replaceAt {n = suc n} zero a v = a ∷ (tail v)
-replaceAt {n = suc n} (suc k) a v = head v ∷ replaceAt k a (tail v)
 
-removeAt : ∀ {ℓ} → ∀ {A  : Type ℓ} → ∀ {n} → ℕ → Vec A (suc n) → Vec A n  
-removeAt zero v = (tail v)
-removeAt {n = zero} (suc k) v = []
-removeAt {n = suc n} (suc k) v = head v ∷ removeAt k (tail v)
-
-padWithFirst : ∀ {ℓ} → ∀ {A  : Type ℓ} → ∀ {n} → ∀ k → Vec A (suc n) → Vec A (k + suc n)  
-padWithFirst k x = repeat {n = k} (head x) ++ x
-
-padWithFirst< : ∀ {ℓ} → ∀ {A  : Type ℓ} → ∀ {n}
-                → ∀ m → (suc n ≤ m)
-                → Vec A (suc n) → Vec A (m)  
-padWithFirst< m sn<m v = subst (Vec _) (snd sn<m) (padWithFirst (fst sn<m) v)
-
-dropFirst : ∀ {ℓ} → ∀ {A  : Type ℓ} → ∀ {n} → ∀ k →  Vec A (k + suc n) → Vec A (suc n)
-dropFirst zero x = x
-dropFirst (suc k) x = dropFirst k (tail x) 
-
-trimFin : ∀ {n} → ℕ → Fin (suc n) 
-trimFin {zero} _ = fzero
-trimFin {suc n} zero = fzero
-trimFin {suc n} (suc x) = fsuc (trimFin x)
 
 FM : ∀ {ℓ} → ∀ {A  : Type ℓ} → ∀ {n}
      → (I → (NBoundary (suc n) → A)) → NCube (suc n)
