@@ -34,6 +34,25 @@ rec p zero = p i0
 rec p one = p i1
 rec p (seg i) = p i
 
+intervalEta-rec : ∀ {ℓ} → {A : Type ℓ} 
+                    → (f : Interval → A)
+                    → rec (cong f seg) ≡ f
+intervalEta-rec f i zero = f zero
+intervalEta-rec f i one = f one
+intervalEta-rec f i (seg i₁) = f (seg i₁)
+
+-- intervalEta-rec-p : ∀ {ℓ} → {A : Type ℓ} {a0 a1 : A}
+--                     → (p : a0 ≡ a1)
+--                     → ∀ i → rec p (seg i) ≡ p i
+-- intervalEta-rec-p p i = {!!}
+
+-- elim' : ∀ {ℓ} → (A : ?) → {x : A (seg i0)} → {y : A (seg i1)}
+--                (p : PathP (λ i → A (seg i)) x y) → (x : Interval) → A x
+-- elim' A p zero    = p i0
+-- elim' A p one     = p i1
+-- elim' A p (seg i) = p i
+
+
 elim : ∀ {ℓ} → (A : Interval → Type ℓ) → {x : A (seg i0)} → {y : A (seg i1)}
                (p : PathP (λ i → A (seg i)) x y) → (x : Interval) → A x
 elim A p zero    = p i0
