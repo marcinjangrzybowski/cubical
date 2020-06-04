@@ -49,6 +49,8 @@ _∘∷-dep_ : ∀ {ℓ ℓ'} → {A : Type ℓ} → ∀ {n}
            → Π B → Π (Π ∘ (B ∘∷_))
 A ∘∷-dep a = A ∘ (a ∷_ )
 
+
+
 ∷∘-dep : ∀ {ℓ ℓ'} → {A : Type ℓ} → ∀ {n}
            → {B : Vec A (suc n) → Type ℓ'}
            → Π (Π ∘ B ∘∷_) → Π B 
@@ -108,9 +110,14 @@ trim-sig {n = suc (suc (suc n))} s = fst s , λ x → trim-sig (snd s x)
 
 
 Rec : ∀ {ℓ} → ∀ {n} → Sig ℓ n → Type ℓ
-Rec {n = 0} x = Lift Unit
+Rec {n = 0} _ = Lift Unit
 Rec {n = 1} x = x
-Rec {n = suc (suc n)} x = Σ (fst x) (Rec ∘ snd x) 
+Rec {n = suc (suc n)} x = Σ (fst x) (Rec ∘ snd x)
+
+-- Rec' : ∀ {ℓ} → ∀ {n} → Sig ℓ n → Type ℓ
+-- Rec' {n = zero} _ = Lift Unit
+-- Rec' {n = suc zero} x = x
+-- Rec' {n = suc (suc n)} x = Σ (Rec' (trim-sig x)) λ x₁ → {!!}
 
 
 push-Type :  ∀ {ℓ} → ∀ {n} → (s : Sig ℓ n)
@@ -173,8 +180,8 @@ pop-Type {n = suc (suc (suc n))} true (zero ∷ l) A a = pop-Type true l (snd A 
 pop-Type {n = suc (suc (suc n))} true (suc k ∷ l) A {a} = pop-Type true (k ∷ l) (snd A a)
 
 pop-Type-overRec : ∀ {ℓ} → ∀ {n}
-                     → (A : Sig ℓ n)
-                     →  Rec (trim-sig A) → Type ℓ
+                     → (s : Sig ℓ n)
+                     →  Rec (trim-sig s) → Type ℓ
 pop-Type-overRec {n = zero} _ _ = Lift Unit
 pop-Type-overRec {n = suc zero} A _ = A
 pop-Type-overRec {n = suc (suc zero)} x a = snd x a
@@ -329,13 +336,13 @@ concatSig-dep {n = suc (suc n)} {m = suc m} s x =
   (fst s) , (λ a → concatSig-dep (snd s a) (x ∘ (a ,_ )))
 
 
-pathPSigma-Iso-sigmaPathP : ∀ {ℓ ℓ'} → {A : I → Type ℓ} → {B : ∀ i → A i → Type ℓ' }
+pathPSigma-≡-sigmaPathP : ∀ {ℓ ℓ'} → {A : I → Type ℓ} → {B : ∀ i → A i → Type ℓ' }
                       → (a : Σ (A i0) (B i0)) → (b : Σ (A i1) (B i1))
                       → (PathP (λ i → Σ (A i) (B i)) a b)
                          ≡
                         (Σ[ p ∈ (PathP A (fst a) (fst b)) ]
                          (PathP (λ i → B i (p i)) (snd a) (snd b)))
-pathPSigma-Iso-sigmaPathP _ _ =
+pathPSigma-≡-sigmaPathP _ _ =
   isoToPath (iso
     (λ x → (λ i → fst (x i)) , (λ i → snd (x i)))
     (λ x i → (fst x i) , (snd x i)) (λ _ → refl) λ _ → refl)
@@ -346,283 +353,252 @@ push-trim {n = zero} x = refl
 push-trim {n = suc zero} x = refl
 push-trim {n = suc (suc n)} {s} x i = fst s , λ a → push-trim ( x ∘ (a ,_)) i
 
-pop-push-Type : ∀ {ℓ} → ∀ {n} → {s : Sig ℓ n}
-                  → ∀ x → PathP (λ i → Rec (push-trim {n = n} x i) → Type ℓ)
-                          (pop-Type-overRec (push-Type s x)) x
-pop-push-Type {n = zero} x = refl
-pop-push-Type {n = suc zero} x = refl
-pop-push-Type {ℓ} {n = suc (suc zero)} {s} x = refl
-pop-push-Type {ℓ} {n = suc (suc (suc n))} {s} x i x₁ =
- let z : {!!}
-     z = pop-push-Type {n = (suc (suc n))}
-        {s = (push-trim {s = trim-sig s} (pop-push-Type (x ∘ (λ a → (fst x₁) , {!snd x₁!})) i) i)}
-        {!!}
- in  (pop-push-Type {n = suc (suc n)} {!!} i) (fst x₁ , {!pop-push-Type ? (snd x₁)!})
+
+zzz∀ :  ∀ {ℓ ℓ'} → {A : Type ℓ}
+                  → {B : A → Type ℓ'}
+                  → (∀ x → B x) ≡ Π (λ x → B x)
+zzz∀ = refl
 
 
--- push-trim-Rec : ∀ {ℓ} → ∀ {n} → {s : Sig ℓ n} → ∀ x →
---                    Σ (Rec (trim-sig (push-Type s x)))
---                       (pop-Type-overRec (push-Type s x))
---                    ≡ Σ (Rec s) x
--- push-trim-Rec {ℓ} {s = s} x i =
---   Σ (Rec (push-trim {s = s} x i)) (pop-push-Type x i)
-
--- -- combineSig'-hlp : ∀ {ℓ} → ∀ {n}
--- --                  → (p : I → Sig ℓ n)
--- --                  → (x₀ : Rec (p i0)) → (x₁ : Rec (p i1))
--- --                  → Σ[ sₚ ∈ (Sig ℓ n) ]
--- --                     (Rec sₚ) ≡ (PathP (λ i → Rec (p i)) x₀ x₁) 
--- -- fst (combineSig'-hlp {ℓ} {zero} p x₀ x₁) = _
--- -- snd (combineSig'-hlp {ℓ} {zero} p x₀ x₁) = {!!}
--- -- fst (combineSig'-hlp {ℓ} {suc zero} p x₀ x₁) = PathP p x₀ x₁
--- -- snd (combineSig'-hlp {ℓ} {suc zero} p x₀ x₁) = refl
--- -- -- combineSig'-hlp {ℓ} {2} p x₀ x₁ = {!!}
--- -- combineSig'-hlp {ℓ} {suc (suc n)} p x₀ x₁ =
--- --   let zz = (combineSig'-hlp (λ i → trim-sig (p i))
--- --                   (trim-rec (p i0) x₀) (trim-rec (p i1) x₁))
-
--- --   in sNext zz , (zzz zz)
+-- pop-push-Type : ∀ {ℓ} → ∀ {n} → {s : Sig ℓ n}
+--                   → (x : Rec s → Set ℓ)
+--                   → PathP (λ i → Rec (push-trim {n = n} x i) → Type ℓ)
+--                           (pop-Type-overRec (push-Type s x)) x
+-- pop-push-Type {ℓ} {n = n} {s = s} = {!!}
 
 
+push-trim-Rec : ∀ {ℓ} → ∀ {n} → {s : Sig ℓ n} → ∀ x →
+                   Σ (Rec (trim-sig (push-Type s x)))
+                      (pop-Type-overRec (push-Type s x))
+                   ≡ Σ (Rec s) x
+push-trim-Rec {ℓ} {0} {s = s} x = refl
+push-trim-Rec {ℓ} {1} {s = s} x = refl
+push-trim-Rec {ℓ} {suc (suc n)} {s = s} x
+  = 
+ isoToPath (push-popVal-Iso (push-Type s x))
+   ∙∙ cong (Σ (fst s))
+        ((funExt (λ x₁ →
+          sym (isoToPath (push-popVal-Iso  (snd (push-Type s x) x₁)))
+          ∙ push-trim-Rec {s = (snd s x₁)}  (λ b → x (x₁ , b)))))
+   ∙∙ sym (ua  assocΣ)
+
+
+combineSig'-hlp : ∀ {ℓ} → ∀ {n}
+                 → (p : I → Sig ℓ n)
+                 → (x₀ : Rec (p i0)) → (x₁ : Rec (p i1))
+                 → Σ[ sₚ ∈ Sig ℓ n ]
+                    (Rec sₚ) ≡ (PathP (λ i → Rec (p i)) x₀ x₁) 
+fst (combineSig'-hlp {ℓ} {zero} p x₀ x₁) = _
+snd (combineSig'-hlp {ℓ} {zero} p x₀ x₁) =
+  isoToPath (iso (λ x i → _) (λ _ → _) (λ b i i₁ → _) (λ a i → _))
+fst (combineSig'-hlp {ℓ} {suc zero} p x₀ x₁) = PathP p x₀ x₁
+snd (combineSig'-hlp {ℓ} {suc zero} p x₀ x₁) = refl
+
+combineSig'-hlp {ℓ} {suc (suc n)} p x₀ x₁ =
+  let
+       -- zzTy = Σ[ sₚ ∈ Sig ℓ (suc n) ]
+       --             Rec sₚ ≡ PathP (λ i → Rec (trim-sig (p i))) (trim-rec (p i0) x₀)
+       --                                        (trim-rec (p i1) x₁)
+                                              
+       (sPrev , lawPrev) = (combineSig'-hlp (λ i → trim-sig (p i))
+                               (trim-rec (p i0) x₀) (trim-rec (p i1) x₁))   
+
+       typeToPush : Rec sPrev → Type ℓ
+       typeToPush x = PathP (λ i → pop-Type-overRec (p i) (transport (lawPrev) x i))
+                            (popVal (p i0) x₀)
+                            (popVal (p i1) x₁)
+
+       sNext : Sig ℓ _
+       sNext = push-Type (sPrev) typeToPush
+
+       zzh : (i j : I) → Type ℓ 
+       zzh i j = isoToPath (push-popVal-Iso (p i)) j
+
+
+       zzx'' : Path (Type ℓ) (Σ (Rec sPrev) typeToPush) _
+       zzx'' = (λ i → Σ (lawPrev i) (coe0→i (λ i → lawPrev i → Type ℓ) i typeToPush))
+                ∙ {!!}
+   
+
+       lawNext : Rec (push-Type sPrev typeToPush)
+                          ≡
+                 PathP (λ i → Rec (p i)) x₀ x₁
+       lawNext =   sym (isoToPath (push-popVal-Iso sNext) )
+                  ∙∙ (push-trim-Rec {s = sPrev} typeToPush
+                  ∙∙ zzx''
+                  ∙∙ sym (pathPSigma-≡-sigmaPathP _ _))
+                  ∙∙
+                   λ j → PathP (λ i → zzh i j) (coe1→i (zzh i0) j x₀) (coe1→i (zzh i1) j x₁)
+
+  in sNext , lawNext
+
+
+combineSig' : ∀ {ℓ} → ∀ {n} → (I → Sig ℓ n) → Sig ℓ ((n + n) + n)
+combineSig' x =
+  concatSig-dep (concatSig (x i0) (x i1))
+    λ x₀₁ →
+      let (x₀ , x₁) = Iso.inv (concatSig-rec-Iso (x i0) (x i1)) x₀₁
+      in fst (combineSig'-hlp x x₀ x₁)
+
+-- combineSig' : ∀ {ℓ} → ∀ {n} → ∀ k → k ≤ n → (I → Sig ℓ n) → Sig ℓ ((n + n) + k)
+-- combineSig' {n = n} zero k≤n x = subst (Sig _) lem (concatSig (x i0) (x i1))
+--   where
+--    lem : n + n ≡ n + n + zero
+--    lem = {!!}
+-- combineSig' {n = zero} (suc k) k≤n _ = ⊥-rec (¬-<-zero k≤n)
+-- combineSig' {n = suc zero} (suc zero) k≤n x = (x i0) , (λ x0 → (x i1) , λ x1 → PathP x x0 x1)
+-- combineSig' {n = suc zero} (suc (suc k)) k≤n x = {!!}
+-- combineSig' {n = suc (suc n)} (suc k) k≤n x =
+--   concatSig-dep (concatSig (x i0) (x i1)) {!!}
+
+-- combineSig' : ∀ {ℓ} → ∀ {n} → (I → Sig ℓ n) → Sig ℓ (3 * n)
+-- combineSig' {n = zero} _ = _
+-- combineSig' {n = suc zero} x = (x i0) , (λ x0 → (x i1) , λ x1 → PathP x x0 x1)
+-- combineSig' {n = suc (suc n)} x =
+--               concatSig (x i0)
+--              (concatSig (x i1) {!!})
+
+
+-- 3^ : ℕ → ℕ
+-- 3^ zero = suc zero
+-- 3^ (suc x) = (3^ x) * 3
+
+-- -- this signature is describing record of all the cells of the cube 
+
+-- CubeSig : ∀ {ℓ} → ∀ {n} → Typeⁿ n ℓ → Sig ℓ (3^ n)
+-- CubeSig {n = zero} x = x []
+-- CubeSig {n = suc n} x = combineSig (λ i → CubeSig (x ∘∷ (seg i)))
+
+-- -- this isomorphism is betwen
+-- -- dependent function from n dimensional cube
+-- -- and record of 3^ n cells 
+
+-- cubeSig-Iso : ∀ {ℓ} → ∀ {n} → (A : Typeⁿ n ℓ)
+--            → Iso (Π A) (Rec (CubeSig A))
+-- Iso.fun (cubeSig-Iso {n = zero} _) x = x []
+-- Iso.inv (cubeSig-Iso {n = zero} _) x [] = x 
+-- Iso.rightInv (cubeSig-Iso {n = zero} _) _ = refl
+-- Iso.leftInv (cubeSig-Iso {n = zero} A) a i [] = a []
+-- cubeSig-Iso {n = suc n} A =
+--   compIso
+--   (compIso ∘∷-Iso (pathToIso (cong Π (funExt (isoToPath ∘ cubeSig-Iso ∘ A ∘∷_)))))
+--   (combineSig-Rec-Iso (CubeSig ∘ A ∘∷_ ))
+
+-- PathPⁿ-explicit : ∀ {ℓ} → ∀ {n}
+--                  → (A : Typeⁿ n ℓ)
+--                   → Type-in-sig false [] (trim-sig (CubeSig A) )
+-- PathPⁿ-explicit x = pop-Type _ _ (CubeSig x)
+
+-- argsToPick : ℕ → List ℕ
+-- argsToPick zero = []
+-- argsToPick (suc x) = predℕ (3^ x) ∷ predℕ (3^ x) ∷ argsToPick x 
+
+-- PathPⁿ : ∀ {ℓ} → ∀ {n}
+--                  → (A : Typeⁿ n ℓ)
+--                   → Type-in-sig true (argsToPick n) (trim-sig (CubeSig A) )
+-- PathPⁿ x = pop-Type _ _ (CubeSig x)
+
+-- Pathⁿ : ∀ {ℓ} → ∀ n
+--                  → {A : Type ℓ}
+--                   → Type-in-sig true (argsToPick n) (trim-sig (CubeSig {n = n} (const A)) )
+-- Pathⁿ n {x} = PathPⁿ (const x)
+
+-- -- generated cube is definationaly equall to one from Prelude
+-- Cube-test : ∀ {ℓ} → ∀ (A : Type ℓ) → 
+--   {a₀₀₀ a₀₀₁ : A} {a₀₀₋ : a₀₀₀ ≡ a₀₀₁}
+--   {a₀₁₀ a₀₁₁ : A} {a₀₁₋ : a₀₁₀ ≡ a₀₁₁}
+--   {a₀₋₀ : a₀₀₀ ≡ a₀₁₀} {a₀₋₁ : a₀₀₁ ≡ a₀₁₁}
+--   (a₀₋₋ : Square a₀₀₋ a₀₁₋ a₀₋₀ a₀₋₁)
+--   {a₁₀₀ a₁₀₁ : A} {a₁₀₋ : a₁₀₀ ≡ a₁₀₁}
+--   {a₁₁₀ a₁₁₁ : A} {a₁₁₋ : a₁₁₀ ≡ a₁₁₁}
+--   {a₁₋₀ : a₁₀₀ ≡ a₁₁₀} {a₁₋₁ : a₁₀₁ ≡ a₁₁₁}
+--   (a₁₋₋ : Square a₁₀₋ a₁₁₋ a₁₋₀ a₁₋₁)
+--   {a₋₀₀ : a₀₀₀ ≡ a₁₀₀} {a₋₀₁ : a₀₀₁ ≡ a₁₀₁}
+--   (a₋₀₋ : Square a₀₀₋ a₁₀₋ a₋₀₀ a₋₀₁)
+--   {a₋₁₀ : a₀₁₀ ≡ a₁₁₀} {a₋₁₁ : a₀₁₁ ≡ a₁₁₁}
+--   (a₋₁₋ : Square a₀₁₋ a₁₁₋ a₋₁₀ a₋₁₁)
+--   (a₋₋₀ : Square a₀₋₀ a₁₋₀ a₋₀₀ a₋₁₀)
+--   (a₋₋₁ : Square a₀₋₁ a₁₋₁ a₋₀₁ a₋₁₁)
+--   → Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
+--     ≡
+--     Pathⁿ 3 _ _ _ _ _ _
+-- Cube-test _ _ _ _ _ _ _ = refl
+
+
+-- -- by discarding last field (the interior cell) we can create signature of boundary record
+
+-- BoundaryPⁿ : ∀ {ℓ} → ∀ {n}
+--                  → (A : Typeⁿ n ℓ)
+--                  → Type ℓ
+-- BoundaryPⁿ A = Rec (trim-sig (CubeSig A) )
+
+-- Boundaryⁿ : ∀ {ℓ} → ∀ n → (A : Type ℓ) → Type ℓ
+-- Boundaryⁿ n A = BoundaryPⁿ {n = n} (const A)
+
+-- InteriorP :  ∀ {ℓ} → ∀ {n}
+--                  → (A : Typeⁿ n ℓ)
+--                  → BoundaryPⁿ A → Type ℓ
+-- InteriorP A = pop-Type-overRec (CubeSig A)
+
+
+-- Σ-Bd-Ins : ∀ {ℓ} → ∀ {n} → (A : Typeⁿ n ℓ) → Type ℓ
+-- Σ-Bd-Ins A = Σ (BoundaryPⁿ A) (InteriorP A)
+
+
+-- -- this isomorphism splits cube into boundary and interior
+
+-- IsoCub : ∀ {ℓ} → ∀ {n} → (A : Typeⁿ n ℓ)
+--            → Iso (Π A) (Σ (BoundaryPⁿ A) (InteriorP A))
+-- IsoCub A = compIso (cubeSig-Iso A) (invIso (push-popVal-Iso (CubeSig A)))
+
+
+-- from-ends-Path :  ∀ {ℓ} → ∀ {n} → (A : Typeⁿ (suc n) ℓ)
+--                   → Iso (Π (Σ-Bd-Ins ∘ A ∘∷_))
+--                         (Σ-Bd-Ins A)
+-- from-ends-Path  A = compIso (pathToIso p1) (compIso p2 p3)
+
+--   where
+--     p1 : ((i' : Interval) → Σ-Bd-Ins (A ∘∷ i'))
+--            ≡ ((i' : Interval) → Rec (CubeSig (A ∘∷ i')))
+--     p1 i = (i' : Interval) → isoToPath (push-popVal-Iso (CubeSig (A ∘∷ i'))) i
+
+--     p2 : Iso ((i' : Interval) → Rec (CubeSig (A ∘∷ i'))) (Rec (CubeSig A))
+--     p2 = combineSig-Rec-Iso λ x → (CubeSig (A ∘∷ x))
+
+--     p3 : Iso (Rec (CubeSig A)) (Σ-Bd-Ins A)
+--     p3 = invIso (push-popVal-Iso (CubeSig A))
+
+
+
+
+
+
+
+-- -- PathPⁿ-Ty : ∀ {ℓ} → ∀ {n} → Typeⁿ n ℓ → Type ℓ
+-- -- PathPⁿ-Ty {n = n} x = Π-sig-pick (argsToPick n) (CubeSig x) 
 -- --   where
--- --     zzTy = Σ[ sₚ ∈ Sig ℓ _ ]
--- --                 Rec sₚ ≡ PathP (λ i → Rec (trim-sig (p i))) (trim-rec (p i0) x₀)
--- --                                            (trim-rec (p i1) x₁)
-                                      
-
--- --     z : (zz : zzTy) → Rec (fst zz) → Type ℓ
--- --     z zz x =
--- --       let ww : PathP (λ z → Rec (trim-sig (p z))) (trim-rec (p i0) x₀) (trim-rec (p i1) x₁)
--- --           ww = transport (snd zz) x
-
--- --       in PathP (λ i → pop-Type-overRec (p i) (ww i)) (popVal (p i0) x₀) (popVal (p i1) x₁)
-
--- --     sNext : (zz : zzTy) → Sig ℓ _
--- --     sNext zz = push-Type (fst zz) (z zz)
-
--- --     zzh : (i j : I) → Type ℓ 
--- --     zzh i j = isoToPath (push-popVal-Iso (p i)) j
-
--- --     -- zzh' : (zz : zzTy) → (j : I) → Type ℓ 
--- --     -- zzh' zz j = isoToPath (push-popVal-Iso (sNext zz)) (~ j)
-
--- --     zzx' : (zz : zzTy) → Path (Type ℓ)
--- --                          (Σ (Rec (trim-sig (push-Type (fst zz) (z zz))))
--- --                              (pop-Type-overRec (push-Type (fst zz) (z zz))
--- --                                 ))
--- --                          (Σ (PathP (λ z₁ → Rec (trim-sig (p z₁)))
--- --                               (fst (coe1→i (zzh i0) i0 x₀))
--- --                               (fst (coe1→i (zzh i1) i0 x₁)))
--- --                             λ p₁ → PathP (λ i → pop-Type-overRec (p i) (p₁ i))
--- --                                    (snd (coe1→i (zzh i0) i0 x₀))
--- --                                    (snd (coe1→i (zzh i1) i0 x₁)))
--- --                          --    (coe1→i (zzh i0) i0 x₀)
--- --                          --    (coe1→i (zzh i1) i0 x₁))
--- --     zzx' zz i = Σ (pp1 i ) (pp2 i)
--- --       where
--- --         pp1 : (Rec (trim-sig (push-Type (fst zz) (z zz))))
--- --               ≡
--- --               (PathP (λ z₁ → Rec (trim-sig (p z₁)))
--- --                               (fst (coe1→i (zzh i0) i0 x₀))
--- --                               (fst (coe1→i (zzh i1) i0 x₁)))
--- --         pp1 = {!!}
--- --               ∙∙ snd zz
--- --               ∙∙ λ i₁ → PathP (λ i₁ → Rec (trim-sig (p i₁)))
--- --                 (trim-rec (p i0) (transp (λ i₂ → Σ (fst (p i0))
--- --                     (λ x → Rec (snd (p i0) x))) (i0 ∨ ~ i₁) x₀))
--- --                 ((trim-rec (p i1) (transp (λ i₂ → Σ (fst (p i1))
--- --                      (λ x → Rec (snd (p i1) x))) (i0 ∨ ~ i₁) x₁)))
-
--- --         pp2 : PathP (λ x → pp1 x → Type ℓ)
--- --                {!!} {!!}
--- --         pp2 i = {!!}
+-- --     argsToPick : ℕ → List ℕ
+-- --     argsToPick zero = []
+-- --     argsToPick (suc x) = predℕ (3^ x) ∷ predℕ (3^ x) ∷ argsToPick x 
 
 
--- --     zzx : (zz : zzTy) → Iso
--- --                          (Σ (Rec (trim-sig (push-Type (fst zz) (z zz)))) _)
--- --                          (PathP (λ i → zzh i i0)
--- --                             (coe1→i (zzh i0) i0 x₀)
--- --                             (coe1→i (zzh i1) i0 x₁))
--- --     fst (Iso.fun (zzx zz) x i) = {!transport (snd zz) ?!}
--- --     snd (Iso.fun (zzx zz) x i) = {!!}
--- --     Iso.inv (zzx zz) = {!!}
--- --     Iso.rightInv (zzx zz) = {!!}
--- --     Iso.leftInv (zzx zz) = {!!}
+-- -- PathPⁿ-test : ∀ {ℓ} → ∀ (A : Typeⁿ' 3 ℓ) → PathPⁿ-Ty {n = 4} (Typeⁿ'→Typeⁿ {ℓ} 3 A)
+-- -- PathPⁿ-test A a a₁ a₂ a₃ a₄ a₅ a₆ a₇ = {!!}
 
--- --     zzz : (zz : zzTy) → (Rec (push-Type (fst zz) (z zz)))
--- --                        ≡ (PathP (λ i → Rec (p i)) x₀ x₁)
--- --     zzz zz = (λ i → isoToPath (push-popVal-Iso (sNext zz)) (~ i) )
--- --              ∙∙ ((zzx' zz) ∙ (sym (pathPSigma-Iso-sigmaPathP _ _))) ∙∙
--- --              λ j → PathP (λ i → zzh i j) (coe1→i (zzh i0) j x₀) (coe1→i (zzh i1) j x₁)
-
-
-
--- -- combineSig' : ∀ {ℓ} → ∀ {n} → (I → Sig ℓ n) → Sig ℓ ((n + n) + n)
--- -- combineSig' x =
--- --   concatSig-dep (concatSig (x i0) (x i1))
--- --     λ x₀₁ →
--- --       let (x₀ , x₁) = Iso.inv (concatSig-rec-Iso (x i0) (x i1)) x₀₁
--- --       in fst (combineSig'-hlp x x₀ x₁)
-
--- -- -- combineSig' : ∀ {ℓ} → ∀ {n} → ∀ k → k ≤ n → (I → Sig ℓ n) → Sig ℓ ((n + n) + k)
--- -- -- combineSig' {n = n} zero k≤n x = subst (Sig _) lem (concatSig (x i0) (x i1))
--- -- --   where
--- -- --    lem : n + n ≡ n + n + zero
--- -- --    lem = {!!}
--- -- -- combineSig' {n = zero} (suc k) k≤n _ = ⊥-rec (¬-<-zero k≤n)
--- -- -- combineSig' {n = suc zero} (suc zero) k≤n x = (x i0) , (λ x0 → (x i1) , λ x1 → PathP x x0 x1)
--- -- -- combineSig' {n = suc zero} (suc (suc k)) k≤n x = {!!}
--- -- -- combineSig' {n = suc (suc n)} (suc k) k≤n x =
--- -- --   concatSig-dep (concatSig (x i0) (x i1)) {!!}
-
--- -- -- combineSig' : ∀ {ℓ} → ∀ {n} → (I → Sig ℓ n) → Sig ℓ (3 * n)
--- -- -- combineSig' {n = zero} _ = _
--- -- -- combineSig' {n = suc zero} x = (x i0) , (λ x0 → (x i1) , λ x1 → PathP x x0 x1)
--- -- -- combineSig' {n = suc (suc n)} x =
--- -- --               concatSig (x i0)
--- -- --              (concatSig (x i1) {!!})
-
-
--- -- -- 3^ : ℕ → ℕ
--- -- -- 3^ zero = suc zero
--- -- -- 3^ (suc x) = (3^ x) * 3
-
--- -- -- -- this signature is describing record of all the cells of the cube 
-
--- -- -- CubeSig : ∀ {ℓ} → ∀ {n} → Typeⁿ n ℓ → Sig ℓ (3^ n)
--- -- -- CubeSig {n = zero} x = x []
--- -- -- CubeSig {n = suc n} x = combineSig (λ i → CubeSig (x ∘∷ (seg i)))
-
--- -- -- -- this isomorphism is betwen
--- -- -- -- dependent function from n dimensional cube
--- -- -- -- and record of 3^ n cells 
-
--- -- -- cubeSig-Iso : ∀ {ℓ} → ∀ {n} → (A : Typeⁿ n ℓ)
--- -- --            → Iso (Π A) (Rec (CubeSig A))
--- -- -- Iso.fun (cubeSig-Iso {n = zero} _) x = x []
--- -- -- Iso.inv (cubeSig-Iso {n = zero} _) x [] = x 
--- -- -- Iso.rightInv (cubeSig-Iso {n = zero} _) _ = refl
--- -- -- Iso.leftInv (cubeSig-Iso {n = zero} A) a i [] = a []
--- -- -- cubeSig-Iso {n = suc n} A =
--- -- --   compIso
--- -- --   (compIso ∘∷-Iso (pathToIso (cong Π (funExt (isoToPath ∘ cubeSig-Iso ∘ A ∘∷_)))))
--- -- --   (combineSig-Rec-Iso (CubeSig ∘ A ∘∷_ ))
-
--- -- -- PathPⁿ-explicit : ∀ {ℓ} → ∀ {n}
--- -- --                  → (A : Typeⁿ n ℓ)
--- -- --                   → Type-in-sig false [] (trim-sig (CubeSig A) )
--- -- -- PathPⁿ-explicit x = pop-Type _ _ (CubeSig x)
-
--- -- -- argsToPick : ℕ → List ℕ
--- -- -- argsToPick zero = []
--- -- -- argsToPick (suc x) = predℕ (3^ x) ∷ predℕ (3^ x) ∷ argsToPick x 
-
--- -- -- PathPⁿ : ∀ {ℓ} → ∀ {n}
--- -- --                  → (A : Typeⁿ n ℓ)
--- -- --                   → Type-in-sig true (argsToPick n) (trim-sig (CubeSig A) )
--- -- -- PathPⁿ x = pop-Type _ _ (CubeSig x)
-
--- -- -- Pathⁿ : ∀ {ℓ} → ∀ n
--- -- --                  → {A : Type ℓ}
--- -- --                   → Type-in-sig true (argsToPick n) (trim-sig (CubeSig {n = n} (const A)) )
--- -- -- Pathⁿ n {x} = PathPⁿ (const x)
-
--- -- -- -- generated cube is definationaly equall to one from Prelude
--- -- -- Cube-test : ∀ {ℓ} → ∀ (A : Type ℓ) → 
--- -- --   {a₀₀₀ a₀₀₁ : A} {a₀₀₋ : a₀₀₀ ≡ a₀₀₁}
--- -- --   {a₀₁₀ a₀₁₁ : A} {a₀₁₋ : a₀₁₀ ≡ a₀₁₁}
--- -- --   {a₀₋₀ : a₀₀₀ ≡ a₀₁₀} {a₀₋₁ : a₀₀₁ ≡ a₀₁₁}
--- -- --   (a₀₋₋ : Square a₀₀₋ a₀₁₋ a₀₋₀ a₀₋₁)
--- -- --   {a₁₀₀ a₁₀₁ : A} {a₁₀₋ : a₁₀₀ ≡ a₁₀₁}
--- -- --   {a₁₁₀ a₁₁₁ : A} {a₁₁₋ : a₁₁₀ ≡ a₁₁₁}
--- -- --   {a₁₋₀ : a₁₀₀ ≡ a₁₁₀} {a₁₋₁ : a₁₀₁ ≡ a₁₁₁}
--- -- --   (a₁₋₋ : Square a₁₀₋ a₁₁₋ a₁₋₀ a₁₋₁)
--- -- --   {a₋₀₀ : a₀₀₀ ≡ a₁₀₀} {a₋₀₁ : a₀₀₁ ≡ a₁₀₁}
--- -- --   (a₋₀₋ : Square a₀₀₋ a₁₀₋ a₋₀₀ a₋₀₁)
--- -- --   {a₋₁₀ : a₀₁₀ ≡ a₁₁₀} {a₋₁₁ : a₀₁₁ ≡ a₁₁₁}
--- -- --   (a₋₁₋ : Square a₀₁₋ a₁₁₋ a₋₁₀ a₋₁₁)
--- -- --   (a₋₋₀ : Square a₀₋₀ a₁₋₀ a₋₀₀ a₋₁₀)
--- -- --   (a₋₋₁ : Square a₀₋₁ a₁₋₁ a₋₀₁ a₋₁₁)
--- -- --   → Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
--- -- --     ≡
--- -- --     Pathⁿ 3 _ _ _ _ _ _
--- -- -- Cube-test _ _ _ _ _ _ _ = refl
-
-
--- -- -- -- by discarding last field (the interior cell) we can create signature of boundary record
-
--- -- -- BoundaryPⁿ : ∀ {ℓ} → ∀ {n}
--- -- --                  → (A : Typeⁿ n ℓ)
--- -- --                  → Type ℓ
--- -- -- BoundaryPⁿ A = Rec (trim-sig (CubeSig A) )
-
--- -- -- Boundaryⁿ : ∀ {ℓ} → ∀ n → (A : Type ℓ) → Type ℓ
--- -- -- Boundaryⁿ n A = BoundaryPⁿ {n = n} (const A)
-
--- -- -- InteriorP :  ∀ {ℓ} → ∀ {n}
--- -- --                  → (A : Typeⁿ n ℓ)
--- -- --                  → BoundaryPⁿ A → Type ℓ
--- -- -- InteriorP A = pop-Type-overRec (CubeSig A)
-
-
--- -- -- Σ-Bd-Ins : ∀ {ℓ} → ∀ {n} → (A : Typeⁿ n ℓ) → Type ℓ
--- -- -- Σ-Bd-Ins A = Σ (BoundaryPⁿ A) (InteriorP A)
-
-
--- -- -- -- this isomorphism splits cube into boundary and interior
-
--- -- -- IsoCub : ∀ {ℓ} → ∀ {n} → (A : Typeⁿ n ℓ)
--- -- --            → Iso (Π A) (Σ (BoundaryPⁿ A) (InteriorP A))
--- -- -- IsoCub A = compIso (cubeSig-Iso A) (invIso (push-popVal-Iso (CubeSig A)))
-
-
--- -- -- from-ends-Path :  ∀ {ℓ} → ∀ {n} → (A : Typeⁿ (suc n) ℓ)
--- -- --                   → Iso (Π (Σ-Bd-Ins ∘ A ∘∷_))
--- -- --                         (Σ-Bd-Ins A)
--- -- -- from-ends-Path  A = compIso (pathToIso p1) (compIso p2 p3)
-
--- -- --   where
--- -- --     p1 : ((i' : Interval) → Σ-Bd-Ins (A ∘∷ i'))
--- -- --            ≡ ((i' : Interval) → Rec (CubeSig (A ∘∷ i')))
--- -- --     p1 i = (i' : Interval) → isoToPath (push-popVal-Iso (CubeSig (A ∘∷ i'))) i
-
--- -- --     p2 : Iso ((i' : Interval) → Rec (CubeSig (A ∘∷ i'))) (Rec (CubeSig A))
--- -- --     p2 = combineSig-Rec-Iso λ x → (CubeSig (A ∘∷ x))
-
--- -- --     p3 : Iso (Rec (CubeSig A)) (Σ-Bd-Ins A)
--- -- --     p3 = invIso (push-popVal-Iso (CubeSig A))
-
-
-
-
-
-
-
--- -- -- -- PathPⁿ-Ty : ∀ {ℓ} → ∀ {n} → Typeⁿ n ℓ → Type ℓ
--- -- -- -- PathPⁿ-Ty {n = n} x = Π-sig-pick (argsToPick n) (CubeSig x) 
--- -- -- --   where
--- -- -- --     argsToPick : ℕ → List ℕ
--- -- -- --     argsToPick zero = []
--- -- -- --     argsToPick (suc x) = predℕ (3^ x) ∷ predℕ (3^ x) ∷ argsToPick x 
-
-
--- -- -- -- PathPⁿ-test : ∀ {ℓ} → ∀ (A : Typeⁿ' 3 ℓ) → PathPⁿ-Ty {n = 4} (Typeⁿ'→Typeⁿ {ℓ} 3 A)
--- -- -- -- PathPⁿ-test A a a₁ a₂ a₃ a₄ a₅ a₆ a₇ = {!!}
-
--- -- -- -- PathPⁿ-test-3' : ∀ {ℓ} → ∀ (A : Type ℓ) → {!!}
+-- -- PathPⁿ-test-3' : ∀ {ℓ} → ∀ (A : Type ℓ) → {!!}
               
--- -- -- -- PathPⁿ-test-3'  A = {! !}
+-- -- PathPⁿ-test-3'  A = {! !}
 
 
--- -- -- -- PathPⁿ-test-3 : ∀ {ℓ} → ∀ (A : Type ℓ) →
--- -- -- --                     PathPⁿ-Ty {n = 2} (const A)   
+-- -- PathPⁿ-test-3 : ∀ {ℓ} → ∀ (A : Type ℓ) →
+-- --                     PathPⁿ-Ty {n = 2} (const A)   
               
--- -- -- -- PathPⁿ-test-3  A = {!Square {A = A}!}
+-- -- PathPⁿ-test-3  A = {!Square {A = A}!}
 
--- -- -- -- -- PathPⁿ-test : ∀ {ℓ} → ∀ (A : Typeⁿ' 3 ℓ) → PathPⁿ {n = 4} (Typeⁿ'→Typeⁿ {ℓ} 3 A)
--- -- -- -- -- PathPⁿ-test A a a₁ a₂ a₃ a₄ a₅ a₆ a₇ = {!!}
+-- -- -- PathPⁿ-test : ∀ {ℓ} → ∀ (A : Typeⁿ' 3 ℓ) → PathPⁿ {n = 4} (Typeⁿ'→Typeⁿ {ℓ} 3 A)
+-- -- -- PathPⁿ-test A a a₁ a₂ a₃ a₄ a₅ a₆ a₇ = {!!}
 
--- -- -- -- -- 1 - 0,0
--- -- -- -- -- 2 - 2,2,0,0
--- -- -- -- -- 3 - 8,8,2,2,0,0
--- -- -- -- -- 4 - 26,26,8,8,2,2,0,0
+-- -- -- 1 - 0,0
+-- -- -- 2 - 2,2,0,0
+-- -- -- 3 - 8,8,2,2,0,0
+-- -- -- 4 - 26,26,8,8,2,2,0,0
