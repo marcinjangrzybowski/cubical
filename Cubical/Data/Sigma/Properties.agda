@@ -145,6 +145,18 @@ pathSigma≡sigmaPath a b =
                  (pathSigma→sigmaPath→pathSigma {a = a})
                  sigmaPath→pathSigma→sigmaPath)
 
+pathPSigma-≡-sigmaPathP :
+                      ∀ {ℓ ℓ'} → {A : I → Type ℓ} → {B : ∀ i → A i → Type ℓ' }
+                      → {a : Σ (A i0) (B i0)} → {b : Σ (A i1) (B i1)}
+                      → (PathP (λ i → Σ (A i) (B i)) a b)
+                         ≡
+                        (Σ[ p ∈ (PathP A (fst a) (fst b)) ]
+                         (PathP (λ i → B i (p i)) (snd a) (snd b)))
+pathPSigma-≡-sigmaPathP =
+  isoToPath (iso
+    (λ x → (λ i → fst (x i)) , (λ i → snd (x i)))
+    (λ x i → (fst x i) , (snd x i)) (λ _ → refl) λ _ → refl)
+
 discreteΣ : Discrete A → ((a : A) → Discrete (B a)) → Discrete (Σ A B)
 discreteΣ {B = B} Adis Bdis (a0 , b0) (a1 , b1) = discreteΣ' (Adis a0 a1)
   where

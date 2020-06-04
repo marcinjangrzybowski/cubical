@@ -6,6 +6,14 @@ module Cubical.Foundations.Function where
 
 open import Cubical.Foundations.Prelude
 
+
+Π : ∀ {ℓ ℓ'} → {A : Type ℓ} → (B : A → Type ℓ') → Type (ℓ-max ℓ ℓ')
+Π B = ∀ x → B x
+
+Π' : ∀ {ℓ ℓ'} → {A : Type ℓ} → (B : A → Type ℓ') → Type (ℓ-max ℓ ℓ')
+Π' B = ∀ {x} → B x
+
+
 -- The identity function
 idfun : ∀ {ℓ} → (A : Type ℓ) → A → A
 idfun _ x = x
