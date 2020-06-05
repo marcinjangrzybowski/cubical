@@ -169,6 +169,7 @@ concat-split {ℓ} n m = toPathP (funExt λ x → isoToPath (uncurry h x) )
 concat-split' : ∀ {ℓ} → ∀ n m → 
                      Path (Σ (Type (ℓ-suc ℓ)) (λ x → x → Type ℓ))
                           (Sigₗ ℓ (n + m) , Recₗ)
+                          
                           ((Σ[ sₙ ∈ Sigₗ ℓ n     ] (Recₗ sₙ → Sigₗ ℓ m))
                            , λ x → Σ[ rₙ ∈ Recₗ (fst x) ] Recₗ ((snd x) rₙ))
 concat-split' n m i = isoToPath (concat-split-Sigₗ n m) i , concat-split n m i
@@ -189,182 +190,190 @@ LR-Path {ℓ} (suc (suc n)) =
 
 
 
-×-n-assoc : ∀ {ℓ} → ∀ {n} → Vec (Type ℓ) n → Σ (Type (ℓ-suc ℓ)) λ x → x
-×-n-assoc {n = n} v =
-   (_ ≡ _) , (λ i → snd (LR-Path n i) (coe0→i (λ j → fst (LR-Path n j)) i (fromVecOfTypes v)))
-
-×-n-assoc-test :  ℕ × Bool × Unit × ℕ × Bool ≡ (((ℕ × Bool) × Unit) × ℕ) × Bool 
-×-n-assoc-test = snd (×-n-assoc (ℕ ∷ Bool ∷ Unit ∷ ℕ ∷ Bool ∷ []))
 
 
-repeat-Type-sigₗ : ∀ {ℓ} → ∀ n → Sigₗ (ℓ-suc ℓ) n
-repeat-Type-sigₗ zero = _
-repeat-Type-sigₗ (suc zero) = Type _
-repeat-Type-sigₗ (suc (suc n)) = Type _ , const (repeat-Type-sigₗ (suc n))
 
 
-Σ-n-assoc : ∀ {ℓ} → ∀ n → (s : Sigₗ ℓ n) → Σ (Type (ℓ-suc ℓ)) (λ x → x)
-Σ-n-assoc n s =
-  (_ ≡ _) , (λ i → snd (LR-Path n i) (coe0→i (λ j → fst (LR-Path n j)) i s))
+-- --- EXPERIMENTS
 
 
--- SigSigᵣ : ∀ ℓ → ∀ n → Σ[ s ∈ Sigᵣ (ℓ-suc ℓ) n ] (Recᵣ s → Sigᵣ ℓ n)  
--- SigSigᵣ ℓ zero = _ , (idfun _)
--- SigSigᵣ ℓ (suc zero) = Type ℓ , idfun _ 
--- SigSigᵣ ℓ (suc (suc zero)) = (Type ℓ , λ x → x → Type ℓ) , idfun _
--- SigSigᵣ ℓ (suc (suc (suc n))) =
---    let (s , to) = SigSigᵣ ℓ (suc (suc n))
---    in (s , λ x → Recᵣ (to x) → Type ℓ) ,
---         (λ x → (to (fst x)) , (λ x₁ → (snd x) x₁)) 
 
--- SigSigᵣ : ∀ ℓ → ∀ n → Σ[ s ∈ Sigᵣ (ℓ-suc ℓ) n ] (Iso (Recᵣ s) (Sigᵣ ℓ n))  
--- SigSigᵣ ℓ zero = _ , idIso
--- SigSigᵣ ℓ (suc zero) = Type ℓ , idIso 
--- SigSigᵣ ℓ (suc (suc zero)) = (Type ℓ , λ x → x → Type ℓ) , idIso
--- SigSigᵣ ℓ (suc (suc (suc n))) =
---    let (s , iso to from ri li) = SigSigᵣ ℓ (suc (suc n))
---    in (s , λ x → Recᵣ (to x) → Type ℓ) ,
---        iso ((λ x → (to (fst x)) , snd x) )
---                (λ x → (from (fst x)) , λ x₁ → snd x (subst Recᵣ (ri (fst x)) x₁))
---             (λ b i → ri (fst b) i ,
---                λ x → snd b (coei→1 (λ i → Σ (Recᵣ (fst (ri (fst b) i))) (snd (ri (fst b) i))) i x) )
---             λ a i → {!!}
+-- ×-n-assoc : ∀ {ℓ} → ∀ {n} → Vec (Type ℓ) n → Σ (Type (ℓ-suc ℓ)) λ x → x
+-- ×-n-assoc {n = n} v =
+--    (_ ≡ _) , (λ i → snd (LR-Path n i) (coe0→i (λ j → fst (LR-Path n j)) i (fromVecOfTypes v)))
 
---   where
+-- ×-n-assoc-test :  ℕ × Bool × Unit × ℕ × Bool ≡ (((ℕ × Bool) × Unit) × ℕ) × Bool 
+-- ×-n-assoc-test = snd (×-n-assoc (ℕ ∷ Bool ∷ Unit ∷ ℕ ∷ Bool ∷ []))
 
---    to = Iso.fun (snd (SigSigᵣ ℓ (suc (suc n))))
+
+-- repeat-Type-sigₗ : ∀ {ℓ} → ∀ n → Sigₗ (ℓ-suc ℓ) n
+-- repeat-Type-sigₗ zero = _
+-- repeat-Type-sigₗ (suc zero) = Type _
+-- repeat-Type-sigₗ (suc (suc n)) = Type _ , const (repeat-Type-sigₗ (suc n))
+
+
+-- Σ-n-assoc : ∀ {ℓ} → ∀ n → (s : Sigₗ ℓ n) → Σ (Type (ℓ-suc ℓ)) (λ x → x)
+-- Σ-n-assoc n s =
+--   (_ ≡ _) , (λ i → snd (LR-Path n i) (coe0→i (λ j → fst (LR-Path n j)) i s))
+
+
+-- -- SigSigᵣ : ∀ ℓ → ∀ n → Σ[ s ∈ Sigᵣ (ℓ-suc ℓ) n ] (Recᵣ s → Sigᵣ ℓ n)  
+-- -- SigSigᵣ ℓ zero = _ , (idfun _)
+-- -- SigSigᵣ ℓ (suc zero) = Type ℓ , idfun _ 
+-- -- SigSigᵣ ℓ (suc (suc zero)) = (Type ℓ , λ x → x → Type ℓ) , idfun _
+-- -- SigSigᵣ ℓ (suc (suc (suc n))) =
+-- --    let (s , to) = SigSigᵣ ℓ (suc (suc n))
+-- --    in (s , λ x → Recᵣ (to x) → Type ℓ) ,
+-- --         (λ x → (to (fst x)) , (λ x₁ → (snd x) x₁)) 
+
+-- -- SigSigᵣ : ∀ ℓ → ∀ n → Σ[ s ∈ Sigᵣ (ℓ-suc ℓ) n ] (Iso (Recᵣ s) (Sigᵣ ℓ n))  
+-- -- SigSigᵣ ℓ zero = _ , idIso
+-- -- SigSigᵣ ℓ (suc zero) = Type ℓ , idIso 
+-- -- SigSigᵣ ℓ (suc (suc zero)) = (Type ℓ , λ x → x → Type ℓ) , idIso
+-- -- SigSigᵣ ℓ (suc (suc (suc n))) =
+-- --    let (s , iso to from ri li) = SigSigᵣ ℓ (suc (suc n))
+-- --    in (s , λ x → Recᵣ (to x) → Type ℓ) ,
+-- --        iso ((λ x → (to (fst x)) , snd x) )
+-- --                (λ x → (from (fst x)) , λ x₁ → snd x (subst Recᵣ (ri (fst x)) x₁))
+-- --             (λ b i → ri (fst b) i ,
+-- --                λ x → snd b (coei→1 (λ i → Σ (Recᵣ (fst (ri (fst b) i))) (snd (ri (fst b) i))) i x) )
+-- --             λ a i → {!!}
+
+-- --   where
+
+-- --    to = Iso.fun (snd (SigSigᵣ ℓ (suc (suc n))))
    
---    from = Iso.fun (snd (SigSigᵣ ℓ (suc (suc n))))
---    li = Iso.leftInv (snd (SigSigᵣ ℓ (suc (suc n))))
---    ri = Iso.rightInv (snd (SigSigᵣ ℓ (suc (suc n))))
+-- --    from = Iso.fun (snd (SigSigᵣ ℓ (suc (suc n))))
+-- --    li = Iso.leftInv (snd (SigSigᵣ ℓ (suc (suc n))))
+-- --    ri = Iso.rightInv (snd (SigSigᵣ ℓ (suc (suc n))))
 
---    zzzz : (a : Σ (Recᵣ (fst (SigSigᵣ ℓ (suc (suc n)))))
---                  (λ x → Recᵣ (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) x) → Type ℓ))
---                  → Recᵣ
---                      (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n))))
---                       (Iso.inv (snd (SigSigᵣ ℓ (suc (suc n))))
---                        (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) (fst a)))) →
---                      Type ℓ
---    zzzz a y = snd a ( {!qq!}) 
+-- --    zzzz : (a : Σ (Recᵣ (fst (SigSigᵣ ℓ (suc (suc n)))))
+-- --                  (λ x → Recᵣ (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) x) → Type ℓ))
+-- --                  → Recᵣ
+-- --                      (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n))))
+-- --                       (Iso.inv (snd (SigSigᵣ ℓ (suc (suc n))))
+-- --                        (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) (fst a)))) →
+-- --                      Type ℓ
+-- --    zzzz a y = snd a ( {!qq!}) 
 
---      where
+-- --      where
   
---        zzTy= : Σ
---                  (Recᵣ
---                   (fst
---                    (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n))))
---                     (Iso.inv (snd (SigSigᵣ ℓ (suc (suc n))))
---                      (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) (fst a))))))
---                  (snd
---                   (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n))))
---                    (Iso.inv (snd (SigSigᵣ ℓ (suc (suc n))))
---                     (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) (fst a)))))
---                  ≡ Σ {!!} {!!}
---        zzTy= = (λ i → Σ (Recᵣ (fst (to (li (fst a) i)))) ((snd (to (li (fst a) i)))))
+-- --        zzTy= : Σ
+-- --                  (Recᵣ
+-- --                   (fst
+-- --                    (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n))))
+-- --                     (Iso.inv (snd (SigSigᵣ ℓ (suc (suc n))))
+-- --                      (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) (fst a))))))
+-- --                  (snd
+-- --                   (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n))))
+-- --                    (Iso.inv (snd (SigSigᵣ ℓ (suc (suc n))))
+-- --                     (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) (fst a)))))
+-- --                  ≡ Σ {!!} {!!}
+-- --        zzTy= = (λ i → Σ (Recᵣ (fst (to (li (fst a) i)))) ((snd (to (li (fst a) i)))))
 
---        qq : {!!}
---        qq = transport (zzTy=) y
+-- --        qq : {!!}
+-- --        qq = transport (zzTy=) y
 
---    zzz : (a : Σ (Recᵣ (fst (SigSigᵣ ℓ (suc (suc n)))))
---                 (λ x → Recᵣ (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) x) → Type ℓ))
---                       → (Iso.inv (snd (SigSigᵣ ℓ (suc (suc n))))
---                          (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) (fst a))
---                          , zzzz a)
---                         ≡ a
---    zzz = {!!}
+-- --    zzz : (a : Σ (Recᵣ (fst (SigSigᵣ ℓ (suc (suc n)))))
+-- --                 (λ x → Recᵣ (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) x) → Type ℓ))
+-- --                       → (Iso.inv (snd (SigSigᵣ ℓ (suc (suc n))))
+-- --                          (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) (fst a))
+-- --                          , zzzz a)
+-- --                         ≡ a
+-- --    zzz = {!!}
 
--- -- ?3 (i = i1) = snd a x : Set ℓ
--- -- ?3 (i = i0)
--- --   = snd a
--- --     (transp
--- --      (λ i₁ →
--- --         Σ
--- --         (Recᵣ
--- --          (fst
--- --           (Iso.rightInv (snd (SigSigᵣ ℓ (suc (suc n))))
--- --            (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) (fst a)) i₁)))
--- --         (snd
--- --          (Iso.rightInv (snd (SigSigᵣ ℓ (suc (suc n))))
--- --           (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) (fst a)) i₁)))
--- --      i0 x)
--- --   : Set ℓ
-
-
---  -- Recᵣ (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) (fst a))
+-- -- -- ?3 (i = i1) = snd a x : Set ℓ
+-- -- -- ?3 (i = i0)
+-- -- --   = snd a
+-- -- --     (transp
+-- -- --      (λ i₁ →
+-- -- --         Σ
+-- -- --         (Recᵣ
+-- -- --          (fst
+-- -- --           (Iso.rightInv (snd (SigSigᵣ ℓ (suc (suc n))))
+-- -- --            (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) (fst a)) i₁)))
+-- -- --         (snd
+-- -- --          (Iso.rightInv (snd (SigSigᵣ ℓ (suc (suc n))))
+-- -- --           (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) (fst a)) i₁)))
+-- -- --      i0 x)
+-- -- --   : Set ℓ
 
 
--- -- (λ x → (to (fst x)) , (λ x₁ → (snd x) x₁)) 
+-- --  -- Recᵣ (Iso.fun (snd (SigSigᵣ ℓ (suc (suc n)))) (fst a))
 
 
--- -- SigSigₗ : ∀ ℓ → ∀ n → Σ[ s ∈ Sigₗ (ℓ-suc ℓ) n ] (Recₗ s → Sigₗ ℓ n)  
--- -- SigSigₗ ℓ zero = _ , (idfun _)
--- -- SigSigₗ ℓ (suc zero) = Type ℓ , idfun _ 
--- -- SigSigₗ ℓ (suc (suc zero)) = (Type ℓ , λ x → x → Type ℓ) , idfun _
--- -- SigSigₗ ℓ (suc (suc (suc n))) =
--- --    let (s , to) = SigSigₗ ℓ (suc (suc n))
--- --        nextS = push-Type s (λ x → Recₗ ((to x)) → Type ℓ )
--- --    in nextS ,
--- --       λ x → let ww = Iso.inv (push-popVal-Iso nextS) x  
--- --                 z = (transport (push-trim-Recₗ {s = s} (λ x → Recₗ (to x) → Type ℓ )) ww)
--- --             in push-Type (to (fst z)) λ x₁ → (snd z x₁)
-
--- -- mk-Σ-n-assocTy : ∀ ℓ → ℕ → Σ (Type (ℓ-suc (ℓ-suc ℓ))) λ x → x
--- -- mk-Σ-n-assocTy ℓ n =  _ , pop-Type false []
--- --                       (push-Type {!fst (SigSigₗ ℓ n)!} {!!}) 
+-- -- -- (λ x → (to (fst x)) , (λ x₁ → (snd x) x₁)) 
 
 
--- -- mk-Σ-n-assoc : fst (mk-Σ-n-assocTy ℓ-zero 3)
--- -- mk-Σ-n-assoc = snd (mk-Σ-n-assocTy ℓ-zero 3)
+-- -- -- SigSigₗ : ∀ ℓ → ∀ n → Σ[ s ∈ Sigₗ (ℓ-suc ℓ) n ] (Recₗ s → Sigₗ ℓ n)  
+-- -- -- SigSigₗ ℓ zero = _ , (idfun _)
+-- -- -- SigSigₗ ℓ (suc zero) = Type ℓ , idfun _ 
+-- -- -- SigSigₗ ℓ (suc (suc zero)) = (Type ℓ , λ x → x → Type ℓ) , idfun _
+-- -- -- SigSigₗ ℓ (suc (suc (suc n))) =
+-- -- --    let (s , to) = SigSigₗ ℓ (suc (suc n))
+-- -- --        nextS = push-Type s (λ x → Recₗ ((to x)) → Type ℓ )
+-- -- --    in nextS ,
+-- -- --       λ x → let ww = Iso.inv (push-popVal-Iso nextS) x  
+-- -- --                 z = (transport (push-trim-Recₗ {s = s} (λ x → Recₗ (to x) → Type ℓ )) ww)
+-- -- --             in push-Type (to (fst z)) λ x₁ → (snd z x₁)
 
--- -- mk-Σ-n-assocXX : {!!}
--- -- mk-Σ-n-assocXX = {!snd (mk-Σ-n-assocTy ℓ-zero 2)!}
+-- -- -- mk-Σ-n-assocTy : ∀ ℓ → ℕ → Σ (Type (ℓ-suc (ℓ-suc ℓ))) λ x → x
+-- -- -- mk-Σ-n-assocTy ℓ n =  _ , pop-Type false []
+-- -- --                       (push-Type {!fst (SigSigₗ ℓ n)!} {!!}) 
 
--- -- -- Sig-ff :  ∀ {ℓ} → ∀ {n} → Type ℓ → Sigₗ ℓ n → Sigₗ ℓ (suc n)
--- -- -- Sig-ff {n = zero} x x₁ = x
--- -- -- Sig-ff {n = suc zero} x x₁ = {!!}
--- -- -- Sig-ff {n = suc (suc n)} x x₁ = x , λ x₂ →  (x → fst x₁) , λ x₃ → (snd x₁) (x₃ x₂)
 
--- -- -- SigSigₗ : ∀ ℓ → ∀ n → Type ℓ → Sigₗ (ℓ-suc ℓ) n 
--- -- -- SigSigₗ ℓ zero _ = _
--- -- -- SigSigₗ ℓ (suc zero) x = Type ℓ
--- -- -- SigSigₗ ℓ (suc (suc zero)) x = (Type ℓ) , (λ x → x → Type ℓ)
--- -- -- SigSigₗ ℓ (suc (suc (suc n))) = {!!}
+-- -- -- mk-Σ-n-assoc : fst (mk-Σ-n-assocTy ℓ-zero 3)
+-- -- -- mk-Σ-n-assoc = snd (mk-Σ-n-assocTy ℓ-zero 3)
 
--- -- -- -- SigSigₗ : ∀ ℓ → ∀ n → Type ℓ  → Sigₗ (ℓ-suc ℓ) n 
--- -- -- -- SigSigₗ ℓ zero _ = _ 
--- -- -- -- SigSigₗ ℓ (suc zero) x = x → Type ℓ  
--- -- -- -- SigSigₗ ℓ (suc (suc zero)) x = (x → Type ℓ) , (λ x → {!!})
+-- -- -- mk-Σ-n-assocXX : {!!}
+-- -- -- mk-Σ-n-assocXX = {!snd (mk-Σ-n-assocTy ℓ-zero 2)!}
+
+-- -- -- -- Sig-ff :  ∀ {ℓ} → ∀ {n} → Type ℓ → Sigₗ ℓ n → Sigₗ ℓ (suc n)
+-- -- -- -- Sig-ff {n = zero} x x₁ = x
+-- -- -- -- Sig-ff {n = suc zero} x x₁ = {!!}
+-- -- -- -- Sig-ff {n = suc (suc n)} x x₁ = x , λ x₂ →  (x → fst x₁) , λ x₃ → (snd x₁) (x₃ x₂)
+
+-- -- -- -- SigSigₗ : ∀ ℓ → ∀ n → Type ℓ → Sigₗ (ℓ-suc ℓ) n 
+-- -- -- -- SigSigₗ ℓ zero _ = _
+-- -- -- -- SigSigₗ ℓ (suc zero) x = Type ℓ
+-- -- -- -- SigSigₗ ℓ (suc (suc zero)) x = (Type ℓ) , (λ x → x → Type ℓ)
 -- -- -- -- SigSigₗ ℓ (suc (suc (suc n))) = {!!}
--- -- -- --   -- Type ℓ ,
--- -- -- --   --           λ x → let  z : {!!}
--- -- -- --   --                      z = concatSigₗ-dep {n = 1} x {!!}
--- -- -- --   --                   in {!!}
+
+-- -- -- -- -- SigSigₗ : ∀ ℓ → ∀ n → Type ℓ  → Sigₗ (ℓ-suc ℓ) n 
+-- -- -- -- -- SigSigₗ ℓ zero _ = _ 
+-- -- -- -- -- SigSigₗ ℓ (suc zero) x = x → Type ℓ  
+-- -- -- -- -- SigSigₗ ℓ (suc (suc zero)) x = (x → Type ℓ) , (λ x → {!!})
+-- -- -- -- -- SigSigₗ ℓ (suc (suc (suc n))) = {!!}
+-- -- -- -- --   -- Type ℓ ,
+-- -- -- -- --   --           λ x → let  z : {!!}
+-- -- -- -- --   --                      z = concatSigₗ-dep {n = 1} x {!!}
+-- -- -- -- --   --                   in {!!}
 
 
--- -- -- -- -- -- SigSigₗ : ∀ ℓ → ∀ n → Sigₗ (ℓ-suc ℓ) n
--- -- -- -- -- -- SigSigₗ ℓ n = transport⁻ (cong fst (LR-Path {ℓ-suc ℓ} n)) (fst (SigSig ℓ n)) 
+-- -- -- -- -- -- -- SigSigₗ : ∀ ℓ → ∀ n → Sigₗ (ℓ-suc ℓ) n
+-- -- -- -- -- -- -- SigSigₗ ℓ n = transport⁻ (cong fst (LR-Path {ℓ-suc ℓ} n)) (fst (SigSig ℓ n)) 
 
--- -- -- -- -- SigSig-test : Recᵣ (fst (SigSig ℓ-zero 6))
--- -- -- -- -- SigSig-test = {!!}
+-- -- -- -- -- -- SigSig-test : Recᵣ (fst (SigSig ℓ-zero 6))
+-- -- -- -- -- -- SigSig-test = {!!}
 
--- -- -- -- -- -- SigSig : ∀ ℓ → ∀ n → Σ[ s ∈ Sigᵣ (ℓ-suc ℓ) n ] ((Recᵣ s → Sigᵣ ℓ n) × (Sigᵣ ℓ n → Recᵣ s) )  
--- -- -- -- -- -- SigSig ℓ zero = _ , (idfun _ , idfun _)
--- -- -- -- -- -- SigSig ℓ (suc zero) = Type ℓ , idfun _ , idfun _
--- -- -- -- -- -- SigSig ℓ (suc (suc zero)) = {!!}
--- -- -- -- -- -- SigSig ℓ (suc (suc (suc n))) =
--- -- -- -- -- --    let (s , (to , from)) = SigSig ℓ (suc (suc n))
--- -- -- -- -- --    in (s , (Lift ∘ Recᵣ) ∘ to) ,
--- -- -- -- -- --                               (λ x → to (fst x) , λ x₁ → {!!}) , {!!}
-
-
+-- -- -- -- -- -- -- SigSig : ∀ ℓ → ∀ n → Σ[ s ∈ Sigᵣ (ℓ-suc ℓ) n ] ((Recᵣ s → Sigᵣ ℓ n) × (Sigᵣ ℓ n → Recᵣ s) )  
+-- -- -- -- -- -- -- SigSig ℓ zero = _ , (idfun _ , idfun _)
+-- -- -- -- -- -- -- SigSig ℓ (suc zero) = Type ℓ , idfun _ , idfun _
+-- -- -- -- -- -- -- SigSig ℓ (suc (suc zero)) = {!!}
+-- -- -- -- -- -- -- SigSig ℓ (suc (suc (suc n))) =
+-- -- -- -- -- -- --    let (s , (to , from)) = SigSig ℓ (suc (suc n))
+-- -- -- -- -- -- --    in (s , (Lift ∘ Recᵣ) ∘ to) ,
+-- -- -- -- -- -- --                               (λ x → to (fst x) , λ x₁ → {!!}) , {!!}
 
 
 
 
--- -- -- -- -- -- ×-n-assoc' : ∀ {ℓ} → ℕ → Σ (Type (ℓ-suc (ℓ-suc ℓ))) λ x → x
--- -- -- -- -- -- ×-n-assoc' n =
--- -- -- -- -- --   _ , pop-Type true [] ((push-Type (repeat-Type-sigₗ n)
--- -- -- -- -- --     {!!}))
+
+
+-- -- -- -- -- -- -- ×-n-assoc' : ∀ {ℓ} → ℕ → Σ (Type (ℓ-suc (ℓ-suc ℓ))) λ x → x
+-- -- -- -- -- -- -- ×-n-assoc' n =
+-- -- -- -- -- -- --   _ , pop-Type true [] ((push-Type (repeat-Type-sigₗ n)
+-- -- -- -- -- -- --     {!!}))
 
 
 
