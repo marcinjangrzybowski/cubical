@@ -48,7 +48,6 @@ _∘∷-dep_ : ∀ {ℓ ℓ'} → {A : Type ℓ} → ∀ {n}
 A ∘∷-dep a = A ∘ (a ∷_ )
 
 
-
 ∷∘-dep : ∀ {ℓ ℓ'} → {A : Type ℓ} → ∀ {n}
            → {B : Vec A (suc n) → Type ℓ'}
            → Π (Π ∘ B ∘∷_) → Π B 
@@ -74,8 +73,6 @@ A ∘∷ₗ a = A ∘ (_∷ₗ a )
 
 
 
-
-
 Typeⁿ'→Typeⁿ : ∀ {ℓ} → ∀ n →  Typeⁿ' n ℓ → Typeⁿ (suc n) ℓ
 Typeⁿ'→Typeⁿ zero x x₁ = I-rec (λ i → x i) (head x₁)
 Typeⁿ'→Typeⁿ (suc n) x x₁ = I-rec (λ i →  Typeⁿ'→Typeⁿ n (x i) (tail x₁)) (head x₁)
@@ -83,7 +80,6 @@ Typeⁿ'→Typeⁿ (suc n) x x₁ = I-rec (λ i →  Typeⁿ'→Typeⁿ n (x i) 
 Typeⁿ→Typeⁿ' : ∀ {ℓ} → ∀ n → Typeⁿ (suc n) ℓ → Typeⁿ' n ℓ
 Typeⁿ→Typeⁿ' zero x i = x (seg i ∷ [])
 Typeⁿ→Typeⁿ' (suc n) x i = Typeⁿ→Typeⁿ' n (x ∘∷ (seg i))
-
 
 
 
@@ -177,7 +173,7 @@ InteriorP A = pop-Type-overRecₗ (NCubeSig A)
 
 IsoCub : ∀ {ℓ} → ∀ {n} → (A : Typeⁿ n ℓ)
            → Iso (Π A) (Σ (BoundaryPⁿ A) (InteriorP A))
-IsoCub A = compIso (cubeSig-Iso A) (invIso (push-popVal-Iso (CubeSig A)))
+IsoCub A = compIso (cubeSig-Iso A) (invIso (push-popVal-Iso (NCubeSig A)))
 
 
 from-ends-Path :  ∀ {ℓ} → ∀ {n} → (A : Typeⁿ (suc n) ℓ)
@@ -187,46 +183,18 @@ from-ends-Path  A = compIso (pathToIso p1) (compIso p2 p3)
 
   where
     p1 : ((i' : Interval) → Σ-Bd-Ins (A ∘∷ i'))
-           ≡ ((i' : Interval) → Rec (CubeSig (A ∘∷ i')))
-    p1 i = (i' : Interval) → isoToPath (push-popVal-Iso (CubeSig (A ∘∷ i'))) i
+           ≡ ((i' : Interval) → Recₗ (NCubeSig (A ∘∷ i')))
+    p1 i = (i' : Interval) → isoToPath (push-popVal-Iso (NCubeSig (A ∘∷ i'))) i
 
-    p2 : Iso ((i' : Interval) → Rec (CubeSig (A ∘∷ i'))) (Rec (CubeSig A))
-    p2 = combineSig-Rec-Iso λ x → (CubeSig (A ∘∷ x))
+    p2 : Iso ((i' : Interval) → Recₗ (NCubeSig (A ∘∷ i'))) (Recₗ (NCubeSig A))
+    p2 = sigₗ-Ends-with-PathP'-Iso-Interval λ x → (NCubeSig (A ∘∷ x))
 
-    p3 : Iso (Rec (CubeSig A)) (Σ-Bd-Ins A)
-    p3 = invIso (push-popVal-Iso (CubeSig A))
-
-
+    p3 : Iso (Recₗ (NCubeSig A)) (Σ-Bd-Ins A)
+    p3 = invIso (push-popVal-Iso (NCubeSig A))
 
 
 
 
-
--- PathPⁿ-Ty : ∀ {ℓ} → ∀ {n} → Typeⁿ n ℓ → Type ℓ
--- PathPⁿ-Ty {n = n} x = Π-sig-pick (argsToPick n) (CubeSig x) 
---   where
---     argsToPick : ℕ → List ℕ
---     argsToPick zero = []
---     argsToPick (suc x) = predℕ (3^ x) ∷ predℕ (3^ x) ∷ argsToPick x 
-
-
--- PathPⁿ-test : ∀ {ℓ} → ∀ (A : Typeⁿ' 3 ℓ) → PathPⁿ-Ty {n = 4} (Typeⁿ'→Typeⁿ {ℓ} 3 A)
--- PathPⁿ-test A a a₁ a₂ a₃ a₄ a₅ a₆ a₇ = {!!}
-
--- PathPⁿ-test-3' : ∀ {ℓ} → ∀ (A : Type ℓ) → {!!}
+PathPⁿ-test-3' : ∀ {ℓ} → ∀ (A : Type ℓ) → {!!}
               
--- PathPⁿ-test-3'  A = {! !}
-
-
--- PathPⁿ-test-3 : ∀ {ℓ} → ∀ (A : Type ℓ) →
---                     PathPⁿ-Ty {n = 2} (const A)   
-              
--- PathPⁿ-test-3  A = {!Square {A = A}!}
-
--- -- PathPⁿ-test : ∀ {ℓ} → ∀ (A : Typeⁿ' 3 ℓ) → PathPⁿ {n = 4} (Typeⁿ'→Typeⁿ {ℓ} 3 A)
--- -- PathPⁿ-test A a a₁ a₂ a₃ a₄ a₅ a₆ a₇ = {!!}
-
--- -- 1 - 0,0
--- -- 2 - 2,2,0,0
--- -- 3 - 8,8,2,2,0,0
--- -- 4 - 26,26,8,8,2,2,0,0
+PathPⁿ-test-3'  A = {! PathPⁿ {n = 5}!}

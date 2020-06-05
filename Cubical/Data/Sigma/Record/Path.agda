@@ -20,6 +20,7 @@ open import Cubical.Data.Sigma.Record.Base
 open import Cubical.Data.Sigma.Record.Properties
 
 
+ 
 
 sigₗ-PathP : ∀ {ℓ} → ∀ {n}
                  → (p : I → Sigₗ ℓ n)
@@ -98,7 +99,7 @@ sigₗ-Ends-with-PathP x =
 
 
 -- this alternative construction of path with ends signature arranges paths in diferent order
--- putting coresponding paths right after coresponnding ends
+-- putting paths right after coresponnding ends
 
 sigₗ-Ends-with-PathP' : ∀ {ℓ} → ∀ {n} → (I → Sigₗ ℓ n) → Sigₗ ℓ (n * 3)
 sigₗ-Ends-with-PathP' {n = 0} x = lift _
@@ -182,13 +183,55 @@ sigₗ-Ends-with-PathP'-Iso-Interval p =
              (sigₗ-Ends-with-PathP'-Recₗ-Iso' λ i → p (seg i))
 
 
+sigₗ-Ends-with-PathP-Iso : ∀ {ℓ} → ∀ {n} → (p : I → Sigₗ ℓ n) →
+                            Recₗ (sigₗ-Ends-with-PathP p)
+                             ≡
+                            Recₗ (sigₗ-Ends-with-PathP' p) 
+sigₗ-Ends-with-PathP-Iso = {!!}
 
 
 
 
+--------
 
+SigSigᵣ : ∀ ℓ → ∀ n → Σ[ s ∈ Sigᵣ (ℓ-suc ℓ) n ] (Iso (Recᵣ s) (Sigᵣ ℓ n))  
+SigSigᵣ ℓ zero = _ , idIso
+SigSigᵣ ℓ (suc zero) = Type ℓ , idIso 
+SigSigᵣ ℓ (suc (suc zero)) = (Type ℓ , λ x → x → Type ℓ) , idIso
+SigSigᵣ ℓ (suc (suc (suc n))) =
+   let (s , iso to from ri li) = SigSigᵣ ℓ (suc (suc n))
+   in (s , λ x → Recᵣ (to x) → Type ℓ) ,
+       iso ((λ x → (to (fst x)) , snd x) )
+               (λ x → (from (fst x)) , λ x₁ → snd x (subst Recᵣ (ri (fst x)) x₁))
+            (λ b i → ri (fst b) i ,
+               λ x → snd b (coei→1 (λ i → Σ (Recᵣ (fst (ri (fst b) i))) (snd (ri (fst b) i))) i x) )
+               λ a i → {!!}
 
+-- SigSigₗ : ∀ ℓ → ∀ n → Σ[ s ∈ Sigₗ (ℓ-suc ℓ) n ] (Recₗ s → Sigₗ ℓ n)  
+-- SigSigₗ ℓ zero = _ , (idfun _)
+-- SigSigₗ ℓ (suc zero) = Type ℓ , idfun _ 
+-- SigSigₗ ℓ (suc (suc zero)) = (Type ℓ , λ x → x → Type ℓ) , idfun _
+-- SigSigₗ ℓ (suc (suc (suc n))) =
+--    let (s , to) = SigSigₗ ℓ (suc (suc n))
+--        nextS = push-Type s (λ x → Recₗ ((to x)) → Type ℓ )
+--    in nextS ,
+--       λ x → let ww = Iso.inv (push-popVal-Iso nextS) x  
+--                 z = (transport (push-trim-Recₗ {s = s} (λ x → Recₗ (to x) → Type ℓ )) ww)
+--             in push-Type (to (fst z)) λ x₁ → (snd z x₁)
 
-
-
-
+SigSigₗ : ∀ ℓ → ∀ n → Σ[ s ∈ Sigₗ (ℓ-suc ℓ) n ] (Iso (Recₗ s) (Sigₗ ℓ n))  
+SigSigₗ ℓ zero = _ , idIso
+SigSigₗ ℓ (suc zero) = Type ℓ , idIso 
+SigSigₗ ℓ (suc (suc zero)) = (Type ℓ , λ x → x → Type ℓ) , idIso
+SigSigₗ ℓ (suc (suc (suc n))) =
+   let (s , iso to from li ri ) = SigSigₗ ℓ (suc (suc n))
+       nextS = push-Type s (λ x → Recₗ ((to x)) → Type ℓ )
+   in nextS ,
+      iso (λ x → let ww = Iso.inv (push-popVal-Iso nextS) x  
+                     z = (transport (push-trim-Recₗ {s = s} (λ x → Recₗ (to x) → Type ℓ )) ww)
+                 in push-Type (to (fst z)) λ x₁ → (snd z x₁))
+           (λ x → let zz : {!!}
+                      zz = {!!}
+                      in pushVal nextS {!!} {!!})
+           {!!}
+           {!!}
