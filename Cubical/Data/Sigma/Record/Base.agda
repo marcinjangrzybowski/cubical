@@ -135,23 +135,24 @@ Sigᵣ ℓ n = Sig* ℓ {n} corner1
 Recᵣ : ∀ {ℓ} → ∀ {n} → Sigᵣ ℓ n → Type ℓ
 Recᵣ {ℓ} {n} = snd (RI {ℓ} {n} corner1)
 
-Sig*-subst : ∀ {ℓ} → ∀ {n} → {v₁ v₂ : Vec Interval n}
+Sig*-subst : ∀ {ℓ} → ∀ {n} → {v₁ : Vec Interval n}
+                   → (v₂ : Vec Interval n)
                    → Sig* ℓ v₁ → Sig* ℓ v₂  
-Sig*-subst {v₁ = v₁} {v₂ = v₂} = subst (Sig* _) (isPropCube v₁ v₂)
+Sig*-subst {v₁ = v₁} v₂ = subst (Sig* _) (isPropCube v₁ v₂)
 
-Rec*-subst : ∀ {ℓ} → ∀ {n} → {v₁ v₂ : Vec Interval n}
+Rec*-subst : ∀ {ℓ} → ∀ {n} → (v₁ v₂ : Vec Interval n)
                    → {s : Sig* ℓ v₁}
                    → Rec* {v = v₁} s
-                   → Rec* {v = v₂} (Sig*-subst {v₁ = v₁} {v₂ = v₂} s)
-Rec*-subst {v₁ = v₁} {v₂ = v₂} {s = s} =
+                   → Rec* {v = v₂} (Sig*-subst v₂ s)
+Rec*-subst v₁ v₂ {s = s} =
      transport (λ i → snd (RI (isPropCube v₁ v₂ i))
        (coe0→i (λ i → Sig* _ ((isPropCube v₁ v₂ i))) i s)) 
 
-Rec*-subst⁻ : ∀ {ℓ} → ∀ {n} → {v₁ v₂ : Vec Interval n}
+Rec*-subst⁻ : ∀ {ℓ} → ∀ {n} → (v₁ v₂ : Vec Interval n)
                    → {s : Sig* ℓ v₁}
-                   → Rec* {v = v₂} (Sig*-subst {v₁ = v₁} {v₂ = v₂} s)
+                   → Rec* {v = v₂} (Sig*-subst v₂ s)
                    → Rec* {v = v₁} s 
-Rec*-subst⁻ {v₁ = v₁} {v₂ = v₂} {s = s} =
+Rec*-subst⁻ v₁ v₂ {s = s} =
      transport⁻ (λ i → snd (RI (isPropCube v₁ v₂ i))
        (coe0→i (λ i → Sig* _ ((isPropCube v₁ v₂ i))) i s)) 
 
@@ -160,9 +161,25 @@ prependTyₗ : ∀ {ℓ} → ∀ {n} → {A : Type ℓ} → (A → Sigₗ ℓ n)
 prependTyₗ {n = zero} {A} _ = A
 prependTyₗ {n = suc n} = _ ,_ 
 
+prependValₗ : ∀ {ℓ} → ∀ {n} → {A : Type ℓ}
+                → (s : A → Sigₗ ℓ n)
+                → (x : A)
+                → Recₗ {n = n} (s x)
+                → Recₗ {n = suc n} (prependTyₗ {n = n} s)
+prependValₗ {n = zero} s x _ = x
+prependValₗ {n = suc n} s = _,_
+
 appendTyᵣ : ∀ {ℓ} → ∀ {n} → (s : Sigᵣ ℓ n) → (Recᵣ {n = n} s → Type ℓ) → Sigᵣ ℓ (suc n)
 appendTyᵣ {n = zero}  s r = r _
 appendTyᵣ {n = suc n} = _,_
+
+appendValᵣ :  ∀ {ℓ} → ∀ {n} → (s : Sigᵣ ℓ n)
+             → (A : Recᵣ {n = n} s → Type ℓ)
+             → (r : Recᵣ {n = n} s)
+             → A r
+             → Recᵣ {n = (suc n)} (appendTyᵣ {n = n} s A)
+appendValᵣ {n = zero} s A r x = x
+appendValᵣ {n = suc n} s A = _,_
 
 Sig : ∀ ℓ → ∀ n →  Type (ℓ-suc ℓ)
 Sig ℓ n = Σ _ (fst ∘ RI {ℓ} {n})
@@ -176,40 +193,111 @@ prependTy : ∀ {ℓ} → ∀ {n} → {A : Type ℓ}
                 → Sig ℓ (suc n)
 prependTy {n = n} =
    (corner0  ,_) ∘ prependTyₗ {n = n} ∘
-     (λ a x → (Sig*-subst {v₁ = (fst (a x))} {v₂ = corner0} (snd (a x))))
+     (λ a x → (Sig*-subst {v₁ = fst (a x) } corner0 (snd (a x))))
 
+prependVal : ∀ {ℓ} → ∀ {n} → {A : Type ℓ}
+                → (s : A → Sig ℓ n)
+                → (x : A)
+                → Rec (s x)
+                → Rec (prependTy s)
+prependVal {n = n} s x r =
+  prependValₗ {n = n}
+          (λ a → (Sig*-subst {v₁ = fst (s a) } corner0 (snd (s a)))) x
+            (Rec*-subst (fst (s x)) corner0 r)
+  
 appendTy : ∀ {ℓ} → ∀ {n}
                 → (s : Sig ℓ n)
                 → (Rec {n = n} s → Type ℓ)
                 → Sig ℓ (suc n)
 appendTy {n = n} s x = corner1 ,
-              (appendTyᵣ {n = n} (Sig*-subst {v₁ = fst s } {v₂ = corner1 } (snd s))
-                    ( x ∘ (Rec*-subst⁻ {v₁ = fst s} {v₂ = corner1})))
+              (appendTyᵣ {n = n} (Sig*-subst {v₁ = fst s } corner1 (snd s))
+                    ( x ∘ (Rec*-subst⁻ (fst s) (corner1))))
+
+
+
+KindSig : ∀ ℓ → ∀ n → Sigᵣ (ℓ-suc ℓ) n
+
+fromKindRec : ∀ {ℓ} → ∀ {n} → Recᵣ {n = n} (KindSig ℓ n) → Sigᵣ ℓ n
+
+toKindRec : ∀ {ℓ} → ∀ {n} → Sigᵣ ℓ n → Recᵣ {n = n} (KindSig ℓ n)
+
+KindSig _ zero =  _
+KindSig _ (suc n) =
+  appendTyᵣ {n = n} (KindSig _ n)
+  (λ r → Recᵣ {n = n} (fromKindRec {n = n} r) → Type _)
+
+fromKindRec {n = zero} x = _
+fromKindRec {n = suc zero} x = x _
+fromKindRec {n = suc (suc n)} x =
+    appendTyᵣ {n = suc n} (fromKindRec {n = suc n} (fst x)) (snd x)
+
+tofromKindRec : ∀ {ℓ} → ∀ {n} → ∀ (s : Sigᵣ ℓ n) →
+                      Recᵣ {ℓ} {n = n} (fromKindRec {n = n} (toKindRec {ℓ} {n} s))
+                    → Recᵣ {ℓ} {n = n} s
+
+toKindRec {ℓ} {zero} x = _
+toKindRec {ℓ} {suc zero} x _ = x
+toKindRec {ℓ} {suc (suc n)} x =
+   appendValᵣ {n = suc n}  (KindSig ℓ ((suc n)))
+     (λ r → Recᵣ {n = suc n} (fromKindRec {n = (suc n)} r) → Type _)
+     (toKindRec {n = suc n} (fst x))
+     (λ x₁ → snd x (tofromKindRec {n = suc n} (fst x) x₁))
+
+tofromKindRec {n = zero} s x = _
+tofromKindRec {ℓ} {n = suc zero} s x = x
+tofromKindRec {ℓ} {n = suc (suc n)} s x = (tofromKindRec {n = suc n} (fst s) (fst x)) , snd x
+
+
+iso-Π-Π' : ∀ {ℓ ℓ'} {A : Type ℓ}
+               → (B : A → Type ℓ')
+               → Iso (Π B) (Π' B)
+iso-Π-Π' B = iso (λ x {y} → x y) (λ x y → x {y}) (λ b → refl) (λ b → refl)  
+
+fromSigTypeₗ : ∀ {ℓ} → ∀ n → Vec Interval n → Sigₗ ℓ n → Type ℓ → Type ℓ 
+fromSigTypeₗ zero _ _ Target = Target
+fromSigTypeₗ (suc zero) v s Target =
+    I-rec (isoToPath (iso-Π-Π' {A = s} λ x₂ → Target)) (head v) 
+fromSigTypeₗ (suc (suc n)) v s Target =
+   I-rec (isoToPath
+    (iso-Π-Π' {A = fst s} λ x → fromSigTypeₗ (suc n) (tail v) (snd s x) Target))
+      (head v)
+
+
+constructorTypeₗ : ∀ {ℓ} → ∀ n → Vec Interval n → Sigₗ ℓ n → Type ℓ 
+constructorTypeₗ n v s = fromSigTypeₗ n v s (Recₗ {n = n} s)
+
+testS : Sigₗ ℓ-zero 4 
+testS = ℕ , (λ x → ℕ , λ x₁ → ℕ , (λ x₂ → x + x₁ ≡ x₂))
+
+testSS : ((x x₁ x₂ : ℕ) (x₃ : x + x₁ ≡ x₂) → Recₗ {n = 4} testS) ≡
+         ((∀ {x x₁ x₂ : ℕ} (x₃ : x + x₁ ≡ x₂) → Recₗ {n = 4} testS))
+testSS i = constructorTypeₗ 4 (seg i ∷ seg i ∷ seg i ∷ zero ∷ []) testS
 
 
 
 
-SigSig : ∀ {ℓ} → ∀ {n} → Σ (Sig (ℓ-suc ℓ) n ) λ x → Rec x ≡ Sig ℓ n
-SigSig {n = zero} =
- ([] , lift tt) , isoToPath (iso (λ x → [] , _) (λ _ → lift tt)
-                            (λ {([] , _) → refl}) λ _ → refl)
 
-SigSig {n = suc zero} =
-  (zero ∷ [] , Type _) ,
-  isoToPath (iso (λ x → zero ∷ [] , x)
-     (λ { (zero ∷ [] , x) → x ; (seg i ∷ [] , x) → x ; (one ∷ [] , x) → x } )
-     ((λ { (zero ∷ [] , x) → refl
-         ; (seg i ∷ [] , x) j → seg (i ∧ j ) ∷ []  , x
-         ; (one ∷ [] , x) j → seg j ∷ [] , x } ))
-      λ a → refl)
-SigSig {ℓ} {n = suc (suc n)} =
-  let (prevSig , prevEq) = SigSig {ℓ} {n = suc n}
-  in  (appendTy prevSig) (const (Type _))
-      , isoToPath (iso
-                       {!!}
-                       {!!}
-                       {!!}
-                       {!!})
+
+-- SigSig : ∀ {ℓ} → ∀ {n} → Σ (Sig (ℓ-suc ℓ) n ) λ x → Iso (Rec x) (Sig ℓ n)
+-- SigSig {n = zero} =
+--  ([] , lift tt) , (iso (λ x → [] , _) (λ _ → lift tt)
+--                             (λ {([] , _) → refl}) λ _ → refl)
+
+-- SigSig {n = suc zero} =
+--   (zero ∷ [] , Type _) ,
+ --   (iso (λ x → zero ∷ [] , x)
+--      (λ { (zero ∷ [] , x) → x ; (seg i ∷ [] , x) → x ; (one ∷ [] , x) → x } )
+--      ((λ { (zero ∷ [] , x) → refl
+--          ; (seg i ∷ [] , x) j → seg (i ∧ j ) ∷ []  , x
+--          ; (one ∷ [] , x) j → seg j ∷ [] , x } ))
+--       λ a → refl)
+-- SigSig {ℓ} {n = suc (suc n)} =
+--   let (prevSig , iso to from lInv rInv) = SigSig {ℓ} {n = suc n}
+--   in  (appendTy prevSig) (const (Type _))
+--       ,  (iso (λ x → {!!})
+--               {!!}
+--               {!!}
+--               {!!})
 
 
 
