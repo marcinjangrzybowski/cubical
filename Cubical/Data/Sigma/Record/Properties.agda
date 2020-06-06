@@ -177,15 +177,23 @@ concat-split' n m i = isoToPath (concat-split-Sigₗ n m) i , concat-split n m i
 
 
 LR-Path : ∀ {ℓ} → ∀ n → Path (Σ (Type (ℓ-suc ℓ)) (λ x → x → Type ℓ))
-                           ((Sigₗ ℓ n) , Recₗ) ((Sigᵣ ℓ n) , Recᵣ)
-LR-Path zero = refl
-LR-Path (suc zero) = refl
-LR-Path {ℓ} (suc (suc n)) =
-     (λ i → (Sigₗ ℓ (+-comm 1 ((suc n)) i) , Recₗ))
-  ∙∙ concat-split' (suc n) 1
-  ∙∙
-  cong (λ a → (Σ (fst a) (λ x → snd a x → Type ℓ)) , λ x → Σ ((snd a) (fst x)) (snd x))
-   (LR-Path (suc n))
+                           ((Sigₗ ℓ (suc (suc n))) , Recₗ)
+                           ((Σ[ sₙ ∈ (Sigₗ ℓ (suc n)) ] (Recₗ sₙ → Sigₗ ℓ 1))
+                            , λ x → Σ[ rₙ ∈ (Recₗ (fst x)) ] (Recₗ (snd x rₙ)))
+LR-Path {ℓ} (n) = (λ i → (Sigₗ ℓ (+-comm 1 ((suc n)) i) , Recₗ)) ∙ concat-split' (suc n) 1
+
+
+
+-- LR-Path : ∀ {ℓ} → ∀ n → Path (Σ (Type (ℓ-suc ℓ)) (λ x → x → Type ℓ))
+--                            ((Sigₗ ℓ n) , Recₗ) ((Sigᵣ ℓ n) , Recᵣ)
+-- LR-Path zero = refl
+-- LR-Path (suc zero) = refl
+-- LR-Path {ℓ} (suc (suc n)) =
+--      (λ i → (Sigₗ ℓ (+-comm 1 ((suc n)) i) , Recₗ))
+--   ∙∙ concat-split' (suc n) 1
+--   ∙∙
+--   cong (λ a → (Σ (fst a) (λ x → snd a x → Type ℓ)) , λ x → Σ ((snd a) (fst x)) (snd x))
+--    (LR-Path (suc n))
 
 
 

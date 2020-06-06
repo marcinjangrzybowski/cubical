@@ -54,6 +54,6 @@ intervalEta f i zero    = f zero
 intervalEta f i one     = f one
 intervalEta f i (seg j) = f (seg j)
 
-end : Bool → Interval
-end true = one
-end false = zero
+endI : Bool → Interval
+endI true = one
+endI false = zero

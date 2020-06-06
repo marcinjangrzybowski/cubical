@@ -20,6 +20,8 @@ open import Cubical.Data.Sigma.Record.Base
 
 open import Cubical.Data.Sigma.Record.Properties
 
+import Cubical.HITs.NCube.IntervalPrim as IP
+
 
  
 
@@ -342,26 +344,77 @@ sigₗ-Ends-with-PathP'-Iso-Interval p =
 -- SR-law ℓ zero v = {!!}
 -- SR-law ℓ (suc n) v = {!!}
 
-SR : ∀ ℓ → ∀ n → Vec Interval n → Σ (Type (ℓ-suc ℓ)) λ x → x → Type ℓ
-
-SR-law : ∀ ℓ → ∀ n → (v : Vec Interval (suc n))
-             → (Σ-syntax (Type ℓ) (λ Ty → Ty → fst (SR ℓ (suc n) v)) ,
-                 (λ x → Σ (fst x) (λ x₁ → snd (SR ℓ (suc n) v) (snd x x₁)))) ≡
-               (Σ (fst (SR ℓ (suc n) v))
-                  (λ x → snd (SR ℓ (suc n) v) x → Type ℓ) ,
-                      λ x → Σ (snd (SR ℓ (suc n) v) (fst x)) (snd x))
-
-SR ℓ zero _ = Lift Unit , λ _ → Lift Unit
-SR ℓ (suc zero) _ = Type ℓ , λ x₂ → x₂
-SR ℓ (suc (suc n)) (zero ∷ v) =
-  (Σ[ Ty ∈ Type ℓ ]  (Ty → fst (SR ℓ (suc n) v)))
-  , λ x → Σ (fst x) (snd (SR ℓ (suc n) v) ∘ snd x) 
-SR ℓ (suc (suc n)) (one ∷ v) =
-  Σ (fst (SR ℓ (suc n) v)) (λ x → (snd (SR ℓ (suc n) v)) x → Type ℓ)
-  , λ x → Σ ((snd  (SR ℓ (suc n) v) (fst x))) (snd x) 
-SR ℓ (suc (suc n)) (seg i ∷ v) = SR-law ℓ n v i
 
 
-SR-law ℓ zero v = refl
-SR-law ℓ (suc n) v =
-   {!!}
+
+-- SR : ∀ ℓ → ∀ n → Vec Interval n → Σ (Type (ℓ-suc ℓ)) λ x → x → Type ℓ
+
+
+
+-- SR ℓ zero _ = Lift Unit , λ _ → Lift Unit
+-- SR ℓ (suc zero) _ = Type ℓ , λ x₂ → x₂
+-- SR ℓ (suc (suc n)) (zero ∷ v) =
+--   (Σ[ Ty ∈ Type ℓ ]  (Ty → fst (SR ℓ (suc n) v)))
+--   , λ x → Σ (fst x) (snd (SR ℓ (suc n) v) ∘ snd x) 
+-- SR ℓ (suc (suc n)) (one ∷ v) =
+--   Σ (fst (SR ℓ (suc n) v)) (λ x → (snd (SR ℓ (suc n) v)) x → Type ℓ)
+--   , λ x → Σ ((snd  (SR ℓ (suc n) v) (fst x))) (snd x) 
+-- SR ℓ (suc (suc zero)) (seg i ∷ x ∷ v) = Σ (Set ℓ) (λ x₁ → x₁ → Set ℓ) ,
+--                                         (λ x₁ → Σ (fst x₁) (snd x₁))
+-- SR ℓ (suc (suc (suc n))) (seg i ∷ x ∷ v) =
+--     ((λ i →  Σ-syntax (Type ℓ) (λ a → a → fst (SR ℓ (suc (suc n)) ((endT= x (~ i)) ∷ v))) ,
+--                (λ x₁ →
+--                Σ (fst x₁) (λ x₂ → snd (SR ℓ (suc (suc n)) ((endT= x (~ i)) ∷ v)) (snd x₁ x₂))) )
+--     ∙∙
+--     sigmaPath→pathSigma _ _ ((isoToPath zz) , {!!} )-- funExt (isoToPath ∘ ww))
+--     ∙∙
+--     λ i → Σ (fst (SR ℓ (suc (suc n)) ((endF= x (~ i)) ∷ v)))
+--               (λ x₁ → snd (SR ℓ (suc (suc n)) ((endF= x (~ i)) ∷ v)) x₁ → Set ℓ)
+--               , (λ x₁ → Σ (snd (SR ℓ (suc (suc n)) ((endF= x (~ i)) ∷ v)) (fst x₁)) (snd x₁))) i
+
+--   where
+--     zz : {!!}
+--     zz = {!!}
+
+--     -- zz : Iso _ _           
+--     -- Iso.fun zz x = (fst x , fst ∘ snd x) , λ x₂ → snd (snd x (fst x₂)) (snd x₂)
+--     -- Iso.inv zz x = (fst (fst x)) , λ x₂ → (snd (fst x) x₂) , snd x ∘ (x₂ ,_)
+--     -- Iso.rightInv zz b = refl
+--     -- Iso.leftInv zz b = refl
+
+--     ww : (x₂ : isoToPath zz i1) → Iso _ _           
+--     Iso.fun (ww x₂) x = ((fst x) , {!fst (snd x)!}) , {!!}
+--     Iso.inv (ww x₂) x = {!!}
+--     Iso.rightInv (ww x₂) = {!!}
+--     Iso.leftInv (ww x₂) = {!!}
+
+
+
+-- -- corner0 : ∀ {n} →  Vec Interval n
+-- -- corner0 {zero} = []
+-- -- corner0 {suc n} =  zero ∷ corner0
+
+-- -- corner1 : ∀ {n} →  Vec Interval n
+-- -- corner1 {zero} = []
+-- -- corner1 {suc n} =  one ∷ corner1
+
+
+-- -- SR≡ : ∀ ℓ → ∀ n → (v v' : Vec Interval n) → SR ℓ n v ≡ SR ℓ n v' 
+-- -- SR≡ ℓ n v v' = cong (SR ℓ n) {!IP.isPropCube !}
+
+-- -- SR≡0 : ∀ ℓ → ∀ n → (v : Vec Interval n) → SR ℓ n v ≡ SR ℓ n (corner0) 
+-- -- SR≡0 ℓ n v = {!!}
+
+-- -- SR≡1 : ∀ ℓ → ∀ n → (v : Vec Interval n) → SR ℓ n (corner1) ≡ SR ℓ n v 
+-- -- SR≡1 ℓ n v = {!!}
+
+-- -- SR-law ℓ zero v = refl
+-- -- SR-law ℓ (suc n) v =
+-- --     (λ i → (Σ-syntax (Type ℓ) (λ Ty → Ty → fst (SR ℓ (suc (suc n)) v i)) ,
+-- --       (λ x → Σ (fst x) (λ x₁ → snd (SR ℓ (suc (suc n)) v i) (snd x x₁)))))
+-- --    ∙∙
+-- --    {!!}
+-- --    ∙∙
+-- --    λ i → {! (Σ (fst (SR ℓ (suc (suc n)) v))
+-- --             (λ x → snd (SR ℓ (suc (suc n)) v) x → Type ℓ) ,
+-- --                 λ x → Σ (snd (SR ℓ (suc (suc n)) v) (fst x)) (snd x))!}

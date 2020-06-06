@@ -77,29 +77,29 @@ private
   proj' : {A : Pointed ℓ} {B : Pointed ℓ'} → typ A → typ B → A ⋀ B
   proj' a b = inr (a , b)
 
-module smashS1→susp {(A , pt) : Pointed ℓ} where
-  fun : (S₊ 1 , north) ⋀ (A , pt) → (Susp A)
-  fun (inl tt) = north
-  fun (inr (x , x₁)) = f' {a = pt} x₁ x
-  fun  (push (inl north) i) = north
-  fun (push (inl south) i) = north
-  fun (push (inl (merid a i₁)) i) = rCancel (merid pt) (~ i) i₁
-  fun (push (inr x) i) = north
-  fun (push (push tt i₁) i) = north
+-- module smashS1→susp {(A , pt) : Pointed ℓ} where
+--   fun : (S₊ 1 , north) ⋀ (A , pt) → (Susp A)
+--   fun (inl tt) = north
+--   fun (inr (x , x₁)) = f' {a = pt} x₁ x
+--   fun  (push (inl north) i) = north
+--   fun (push (inl south) i) = north
+--   fun (push (inl (merid a i₁)) i) = rCancel (merid pt) (~ i) i₁
+--   fun (push (inr x) i) = north
+--   fun (push (push tt i₁) i) = north
 
-  fun⁻ : Susp A → (S₊ 1 , north) ⋀ (A , pt)
-  fun⁻ north = inl tt
-  fun⁻ south = inl tt
-  fun⁻ (merid a i) =
-    (push (inr a) ∙∙ cong (λ x → proj' {A = S₊ 1 , north} {B = A , pt} x a) (merid south ∙ sym (merid north)) ∙∙ sym (push (inr a))) i
+--   fun⁻ : Susp A → (S₊ 1 , north) ⋀ (A , pt)
+--   fun⁻ north = inl tt
+--   fun⁻ south = inl tt
+--   fun⁻ (merid a i) =
+--     (push (inr a) ∙∙ cong (λ x → proj' {A = S₊ 1 , north} {B = A , pt} x a) (merid south ∙ sym (merid north)) ∙∙ sym (push (inr a))) i
 
-  {- TODO : Prove that they cancel out -}
+--   {- TODO : Prove that they cancel out -}
 
-{- Map used in definition of cup product. Maybe mover there later -}
-sphereSmashMap : (n m : ℕ) → (S₊ (suc n) , north) ⋀ (S₊ (suc m) , north) → S₊ (2 + n + m)
-sphereSmashMap zero m = smashS1→susp.fun
-sphereSmashMap (suc n) m =
-  smashS1→susp.fun ∘
-  (idfun∙ _ ⋀→ (sphereSmashMap n m , refl)) ∘
-  ⋀-associate ∘
-  ((smashS1→susp.fun⁻ , refl) ⋀→ idfun∙ _)
+-- {- Map used in definition of cup product. Maybe mover there later -}
+-- sphereSmashMap : (n m : ℕ) → (S₊ (suc n) , north) ⋀ (S₊ (suc m) , north) → S₊ (2 + n + m)
+-- sphereSmashMap zero m = smashS1→susp.fun
+-- sphereSmashMap (suc n) m =
+--   smashS1→susp.fun ∘
+--   (idfun∙ _ ⋀→ (sphereSmashMap n m , refl)) ∘
+--   ⋀-associate ∘
+--   ((smashS1→susp.fun⁻ , refl) ⋀→ idfun∙ _)
