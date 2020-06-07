@@ -20,8 +20,8 @@ open import Cubical.Data.Sigma.Record.Base
 
 
 
-v-subst : ∀ {ℓ} → ∀ n → Sigᵣ ℓ n → Sigₗ ℓ n
-v-subst = {!!}
+-- v-subst : ∀ {ℓ} → ∀ {n} →   Sig* ℓ n → Sig* ℓ n
+-- v-subst = {!!}
 
 -- ᵣtoₗ : ∀ {ℓ} → ∀ n → Sigᵣ ℓ n → Sigₗ ℓ n
 -- ᵣtoₗ zero x = _
