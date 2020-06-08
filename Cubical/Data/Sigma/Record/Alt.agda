@@ -97,7 +97,7 @@ RI-LR-0 : ∀ {ℓ} → (RI↑-L (Type ℓ , λ  Ty → Ty)) ≡ (RI↑-R (Type 
 RI-LR-0 = refl
 
 RI-LR : ∀ {ℓ} → ∀ ri → (RI↑-L {ℓ} ∘ RI↑-R) ri ≡ (RI↑-R {ℓ} ∘ RI↑-L) ri
-RI-LR {ℓ} ri = sigmaPath→pathSigma _ _
+RI-LR {ℓ} ri = ΣPathTransport→PathΣ _ _
                    ((isoToPath signatureIso) ,
                        funExt λ x → transportsRefls x ∙ isoToPath (recordIso x))
   where

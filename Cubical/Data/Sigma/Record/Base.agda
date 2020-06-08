@@ -7,7 +7,7 @@ open import Cubical.Data.Nat
 
 open import Cubical.Foundations.Equiv.Fiberwise
 
--- open import Cubical.Data.List
+open import Cubical.Data.List renaming (_++_ to _++L_)
 open import Cubical.Data.Vec
 open import Cubical.Data.Bool
 open import Cubical.Data.Sigma
@@ -90,363 +90,570 @@ RI-LR-0 : ∀ {ℓ} → (RI↑-L (Type ℓ , λ  Ty → Ty)) ≡ (RI↑-R (Type 
 RI-LR-0 = refl
 
 
-RI-LR' : ∀ {ℓ} → ∀ ri → (RI↑-L {ℓ} ∘ RI↑-R) ri ≡ (RI↑-R {ℓ} ∘ RI↑-L) ri
-RI-LR' {ℓ} ri = sigmaPath→pathSigma _ _
-                   ((isoToPath signatureIso) ,
-                       funExt λ x → isoToPath (recordIso x))
-  where
-
-    Sig = fst
-    Rec = snd
-
-    signatureIso : Iso (Σ (Type ℓ) (λ v → v → fst (RI↑-R ri)))
-                     (Σ (Σ (Type ℓ) (λ v → v → fst ri))
-                      (λ v → snd (RI↑-L ri) v → Type ℓ))
-    signatureIso =  (iso (λ x → (fst x , fst ∘ snd x) , λ x₂ → snd (snd x (fst x₂)) (snd x₂))
-                       (λ x → (fst (fst x)) , λ x₂ → (snd (fst x) x₂) , snd x ∘ (x₂ ,_))
-                       (λ _ → refl) (λ _ → refl)) 
-
-    recordIso : (a : Sig (RI↑-R (RI↑-L ri))) →
-                       Iso _ _
-    Iso.fun (recordIso a) x = {!!}
-    Iso.inv (recordIso a) = {!!}
-    Iso.rightInv (recordIso a) = {!!}
-    Iso.leftInv (recordIso a) = {!!}
-
-
-
--- RI-LR : ∀ {ℓ} → ∀ ri → (RI↑-L {ℓ} ∘ RI↑-R) ri ≡ (RI↑-R {ℓ} ∘ RI↑-L) ri
--- RI-LR {ℓ} ri = sigmaPath→pathSigma _ _
+-- RI-LR' : ∀ {ℓ} → ∀ ri → (RI↑-L {ℓ} ∘ RI↑-R) ri ≡ (RI↑-R {ℓ} ∘ RI↑-L) ri
+-- RI-LR' {ℓ} ri = ΣPathTransport→PathΣ _ _
 --                    ((isoToPath signatureIso) ,
---                        funExt λ x → transportsRefls x ∙ isoToPath (recordIso x))
+--                        funExt λ x → isoToPath (recordIso x))
 --   where
 
 --     Sig = fst
 --     Rec = snd
-    
 
+--     signatureIso : Iso (Σ (Type ℓ) (λ v → v → fst (RI↑-R ri)))
+--                      (Σ (Σ (Type ℓ) (λ v → v → fst ri))
+--                       (λ v → snd (RI↑-L ri) v → Type ℓ))
 --     signatureIso =  (iso (λ x → (fst x , fst ∘ snd x) , λ x₂ → snd (snd x (fst x₂)) (snd x₂))
 --                        (λ x → (fst (fst x)) , λ x₂ → (snd (fst x) x₂) , snd x ∘ (x₂ ,_))
 --                        (λ _ → refl) (λ _ → refl)) 
 
---     recordIso : (a : Sig (RI↑-R (RI↑-L ri))) → Iso _ _
---     recordIso a = iso (λ x → ((fst x) , fst (snd x)) , snd (snd x))
---                        (λ x → fst (fst x) , (snd (fst x) , snd x))
---                          (λ b → refl) λ a → refl
-
---     transportsRefls : (a : Sig (RI↑-R (RI↑-L ri))) →
---                             _ ≡ _
---     transportsRefls a = cong (Σ (fst (fst a)))
---               λ i x →
---                Σ (snd ri (transportRefl (snd (fst a)
---                       (transportRefl x i)) i))
---                   λ x₁ → snd a ((transportRefl x i) ,
---                          transp ((λ i₁ → snd ri (transp (λ i₂ → fst ri) (i₁ ∨ i)
---                           (snd (fst a) (transp (λ j → fst (fst a)) (i₁ ∨ i)
---                                         (transp (λ i₂ → fst (fst a)) ((~ i₁) ∨ i) x))))))
---                             i x₁)
-
-
--- RI : ∀ {ℓ} → ∀ {n} → Vec Interval n → RecordImplementation ℓ
--- RI {n = zero} _ = Lift Unit , λ _ → Lift Unit
--- RI (_ ∷ []) = Type _ , λ  Ty → Ty
--- RI (zero ∷ v) = RI↑-L (RI v)
--- RI (one ∷ v) =  RI↑-R (RI v)
--- RI {n = 2} (seg i ∷ i' ∷ []) = RI-LR-0 i
--- RI {n = suc (suc n)} (j' ∷ i' ∷ v ∷ vs) =
---        I-elim _ 
---       ((λ i → RI↑-L (RI (=one i' i ∷ v ∷ vs)))
---               ∙∙  RI-LR (RI (v ∷ vs))  ∙∙
---         λ i → RI↑-R (RI (zero= i' i ∷ v ∷ vs)))
---       j' 
+--     recordIso : (a : Sig (RI↑-R (RI↑-L ri))) →
+--                        Iso _ _
+--     Iso.fun (recordIso a) x = {!!}
+--     Iso.inv (recordIso a) = {!!}
+--     Iso.rightInv (recordIso a) = {!!}
+--     Iso.leftInv (recordIso a) = {!!}
 
 
 
+RI-LR : ∀ {ℓ} → ∀ ri → (RI↑-L {ℓ} ∘ RI↑-R) ri ≡ (RI↑-R {ℓ} ∘ RI↑-L) ri
+RI-LR {ℓ} ri = ΣPathTransport→PathΣ _ _
+                   ((isoToPath signatureIso) ,
+                       funExt λ x → transportsRefls x ∙ isoToPath (recordIso x))
+  where
 
--- Sig* : ∀ ℓ → ∀ {n} → Vec Interval n →  Type (ℓ-suc ℓ)
--- Sig* ℓ v = fst (RI {ℓ} v)
+    Sig = fst
+    Rec = snd
+    
 
--- Rec* : ∀ {ℓ} → ∀ {n} → {v : Vec Interval n} → Sig* ℓ v → Type ℓ
--- Rec* {v = v} = snd (RI {_} v)
+    signatureIso =  (iso (λ x → (fst x , fst ∘ snd x) , λ x₂ → snd (snd x (fst x₂)) (snd x₂))
+                       (λ x → (fst (fst x)) , λ x₂ → (snd (fst x) x₂) , snd x ∘ (x₂ ,_))
+                       (λ _ → refl) (λ _ → refl)) 
 
--- Sigₗ : ∀ ℓ → ∀ n →  Type (ℓ-suc ℓ)
--- Sigₗ ℓ n = Sig* ℓ {n} corner0
+    recordIso : (a : Sig (RI↑-R (RI↑-L ri))) → Iso _ _
+    recordIso a = iso (λ x → ((fst x) , fst (snd x)) , snd (snd x))
+                       (λ x → fst (fst x) , (snd (fst x) , snd x))
+                         (λ b → refl) λ a → refl
 
--- Recₗ : ∀ {ℓ} → ∀ {n} → Sigₗ ℓ n → Type ℓ
--- Recₗ {ℓ} {n} = snd (RI {ℓ} {n} corner0)
-
-
--- Sigᵣ : ∀ ℓ → ∀ n →  Type (ℓ-suc ℓ)
--- Sigᵣ ℓ n = Sig* ℓ {n} corner1
-
--- Recᵣ : ∀ {ℓ} → ∀ {n} → Sigᵣ ℓ n → Type ℓ
--- Recᵣ {ℓ} {n} = snd (RI {ℓ} {n} corner1)
-
--- Sig*-subst : ∀ {ℓ} → ∀ {n} → {v₁ : Vec Interval n}
---                    → (v₂ : Vec Interval n)
---                    → Sig* ℓ v₁ → Sig* ℓ v₂  
--- Sig*-subst {v₁ = v₁} v₂ = subst (Sig* _) (isPropCube v₁ v₂)
-
-
--- Rec*-subst : ∀ {ℓ} → ∀ {n} → (v₁ v₂ : Vec Interval n)
---                    → {s : Sig* ℓ v₁}
---                    → Rec* {v = v₁} s
---                    → Rec* {v = v₂} (Sig*-subst v₂ s)
--- Rec*-subst v₁ v₂ {s = s} =
---      transport (λ i → snd (RI (isPropCube v₁ v₂ i))
---        (coe0→i (λ i → Sig* _ ((isPropCube v₁ v₂ i))) i s)) 
-
--- Rec*-subst⁻ : ∀ {ℓ} → ∀ {n} → (v₁ v₂ : Vec Interval n)
---                    → {s : Sig* ℓ v₁}
---                    → Rec* {v = v₂} (Sig*-subst v₂ s)
---                    → Rec* {v = v₁} s 
--- Rec*-subst⁻ v₁ v₂ {s = s} =
---      transport⁻ (λ i → snd (RI (isPropCube v₁ v₂ i))
---        (coe0→i (λ i → Sig* _ ((isPropCube v₁ v₂ i))) i s)) 
+    transportsRefls : (a : Sig (RI↑-R (RI↑-L ri))) →
+                            _ ≡ _
+    transportsRefls a = cong (Σ (fst (fst a)))
+              λ i x →
+               Σ (snd ri (transportRefl (snd (fst a)
+                      (transportRefl x i)) i))
+                  λ x₁ → snd a ((transportRefl x i) ,
+                         transp ((λ i₁ → snd ri (transp (λ i₂ → fst ri) (i₁ ∨ i)
+                          (snd (fst a) (transp (λ j → fst (fst a)) (i₁ ∨ i)
+                                        (transp (λ i₂ → fst (fst a)) ((~ i₁) ∨ i) x))))))
+                            i x₁)
 
 
--- toₗ : ∀ {ℓ} → ∀ {n} → (v : Vec Interval n) → Sig* ℓ v → Sigₗ ℓ n 
--- toₗ v = Sig*-subst {v₁ = v} corner0
-
--- fromₗ : ∀ {ℓ} → ∀ {n} → (v : Vec Interval n) → Sigₗ ℓ n → Sig* ℓ v 
--- fromₗ = Sig*-subst {v₁ = corner0} 
-
--- toᵣ : ∀ {ℓ} → ∀ {n} → (v : Vec Interval n) → Sig* ℓ v → Sigᵣ ℓ n 
--- toᵣ v = Sig*-subst {v₁ = v} corner1
-
--- fromᵣ : ∀ {ℓ} → ∀ {n} → (v : Vec Interval n) → Sigᵣ ℓ n → Sig* ℓ v 
--- fromᵣ = Sig*-subst {v₁ = corner1} 
-
--- prependTyₗ : ∀ {ℓ} → ∀ {n} → {A : Type ℓ} → (A → Sigₗ ℓ n) → Sigₗ ℓ (suc n)
--- prependTyₗ {n = zero} {A} _ = A
--- prependTyₗ {n = suc n} = _ ,_ 
-
--- prependValₗ : ∀ {ℓ} → ∀ {n} → {A : Type ℓ}
---                 → (s : A → Sigₗ ℓ n)
---                 → (x : A)
---                 → Recₗ {n = n} (s x)
---                 → Recₗ {n = suc n} (prependTyₗ {n = n} s)
--- prependValₗ {n = zero} s x _ = x
--- prependValₗ {n = suc n} s = _,_
-
--- appendTyᵣ : ∀ {ℓ} → ∀ {n} → (s : Sigᵣ ℓ n) → (Recᵣ {n = n} s → Type ℓ) → Sigᵣ ℓ (suc n)
--- appendTyᵣ {n = zero}  s r = r _
--- appendTyᵣ {n = suc n} = _,_
-
--- appendValᵣ :  ∀ {ℓ} → ∀ {n} → (s : Sigᵣ ℓ n)
---              → (A : Recᵣ {n = n} s → Type ℓ)
---              → (r : Recᵣ {n = n} s)
---              → A r
---              → Recᵣ {n = (suc n)} (appendTyᵣ {n = n} s A)
--- appendValᵣ {n = zero} s A r x = x
--- appendValᵣ {n = suc n} s A = _,_
-
--- Sig : ∀ ℓ → ∀ n →  Type (ℓ-suc ℓ)
--- Sig ℓ n = Σ _ (fst ∘ RI {ℓ} {n})
+RI : ∀ {ℓ} → ∀ {n} → Vec Interval n → RecordImplementation ℓ
+RI {n = zero} _ = Lift Unit , λ _ → Lift Unit
+RI (_ ∷ []) = Type _ , λ  Ty → Ty
+RI (zero ∷ v) = RI↑-L (RI v)
+RI (one ∷ v) =  RI↑-R (RI v)
+RI {n = 2} (seg i ∷ i' ∷ []) = RI-LR-0 i
+RI {n = suc (suc n)} (j' ∷ i' ∷ v ∷ vs) =
+       I-elim _ 
+      ((λ i → RI↑-L (RI (=one i' i ∷ v ∷ vs)))
+              ∙∙  RI-LR (RI (v ∷ vs))  ∙∙
+        λ i → RI↑-R (RI (zero= i' i ∷ v ∷ vs)))
+      j' 
 
 
--- Rec : ∀ {ℓ} → ∀ {n} → Sig ℓ n → Type ℓ
--- Rec s = snd (RI (fst s)) (snd s)
 
 
--- prependTy : ∀ {ℓ} → ∀ {n} → {A : Type ℓ}
---                 → (A → Sig ℓ n)
---                 → Sig ℓ (suc n)
--- prependTy {n = n} =
---    (corner0  ,_) ∘ prependTyₗ {n = n} ∘
---      (λ a x → (Sig*-subst {v₁ = fst (a x) } corner0 (snd (a x))))
 
--- prependVal : ∀ {ℓ} → ∀ {n} → {A : Type ℓ}
---                 → (s : A → Sig ℓ n)
---                 → (x : A)
---                 → Rec (s x)
---                 → Rec (prependTy s)
--- prependVal {n = n} s x r =
---   prependValₗ {n = n}
---           (λ a → (Sig*-subst {v₁ = fst (s a) } corner0 (snd (s a)))) x
---             (Rec*-subst (fst (s x)) corner0 r)
+
+
+
+
+
+
+Sig* : ∀ ℓ → ∀ {n} → Vec Interval n →  Type (ℓ-suc ℓ)
+Sig* ℓ v = fst (RI {ℓ} v)
+
+Rec* : ∀ {ℓ} → ∀ {n} → {v : Vec Interval n} → Sig* ℓ v → Type ℓ
+Rec* {v = v} = snd (RI {_} v)
+
+Sigₗ : ∀ ℓ → ∀ n →  Type (ℓ-suc ℓ)
+Sigₗ ℓ n = Sig* ℓ {n} corner0
+
+Recₗ : ∀ {ℓ} → ∀ {n} → Sigₗ ℓ n → Type ℓ
+Recₗ {ℓ} {n} = snd (RI {ℓ} {n} corner0)
+
+
+Sigᵣ : ∀ ℓ → ∀ n →  Type (ℓ-suc ℓ)
+Sigᵣ ℓ n = Sig* ℓ {n} corner1
+
+Recᵣ : ∀ {ℓ} → ∀ {n} → Sigᵣ ℓ n → Type ℓ
+Recᵣ {ℓ} {n} = snd (RI {ℓ} {n} corner1)
+
+Sig*-subst : ∀ {ℓ} → ∀ {n} → {v₁ : Vec Interval n}
+                   → (v₂ : Vec Interval n)
+                   → Sig* ℓ v₁ → Sig* ℓ v₂  
+Sig*-subst {v₁ = v₁} v₂ = subst (Sig* _) (isPropCube v₁ v₂)
+
+
+Rec*-subst : ∀ {ℓ} → ∀ {n} → (v₁ v₂ : Vec Interval n)
+                   → {s : Sig* ℓ v₁}
+                   → Rec* {v = v₁} s
+                   → Rec* {v = v₂} (Sig*-subst v₂ s)
+Rec*-subst v₁ v₂ {s = s} =
+     transport (λ i → snd (RI (isPropCube v₁ v₂ i))
+       (coe0→i (λ i → Sig* _ ((isPropCube v₁ v₂ i))) i s)) 
+
+Rec*-subst⁻ : ∀ {ℓ} → ∀ {n} → (v₁ v₂ : Vec Interval n)
+                   → {s : Sig* ℓ v₁}
+                   → Rec* {v = v₂} (Sig*-subst v₂ s)
+                   → Rec* {v = v₁} s 
+Rec*-subst⁻ v₁ v₂ {s = s} =
+     transport⁻ (λ i → snd (RI (isPropCube v₁ v₂ i))
+       (coe0→i (λ i → Sig* _ ((isPropCube v₁ v₂ i))) i s)) 
+
+
+toₗ : ∀ {ℓ} → ∀ {n} → (v : Vec Interval n) → Sig* ℓ v → Sigₗ ℓ n 
+toₗ v = Sig*-subst {v₁ = v} corner0
+
+fromₗ : ∀ {ℓ} → ∀ {n} → (v : Vec Interval n) → Sigₗ ℓ n → Sig* ℓ v 
+fromₗ = Sig*-subst {v₁ = corner0} 
+
+toᵣ : ∀ {ℓ} → ∀ {n} → (v : Vec Interval n) → Sig* ℓ v → Sigᵣ ℓ n 
+toᵣ v = Sig*-subst {v₁ = v} corner1
+
+fromᵣ : ∀ {ℓ} → ∀ {n} → (v : Vec Interval n) → Sigᵣ ℓ n → Sig* ℓ v 
+fromᵣ = Sig*-subst {v₁ = corner1} 
+
+prependTyₗ : ∀ {ℓ} → ∀ {n} → {A : Type ℓ} → (A → Sigₗ ℓ n) → Sigₗ ℓ (suc n)
+prependTyₗ {n = zero} {A} _ = A
+prependTyₗ {n = suc n} = _ ,_ 
+
+prependValₗ : ∀ {ℓ} → ∀ {n} → {A : Type ℓ}
+                → (s : A → Sigₗ ℓ n)
+                → (x : A)
+                → Recₗ {n = n} (s x)
+                → Recₗ {n = suc n} (prependTyₗ {n = n} s)
+prependValₗ {n = zero} s x _ = x
+prependValₗ {n = suc n} s = _,_
+
+appendTyᵣ : ∀ {ℓ} → ∀ {n} → (s : Sigᵣ ℓ n) → (Recᵣ {n = n} s → Type ℓ) → Sigᵣ ℓ (suc n)
+appendTyᵣ {n = zero}  s r = r _
+appendTyᵣ {n = suc n} = _,_
+
+appendValᵣ :  ∀ {ℓ} → ∀ {n} → (s : Sigᵣ ℓ n)
+             → (A : Recᵣ {n = n} s → Type ℓ)
+             → (r : Recᵣ {n = n} s)
+             → A r
+             → Recᵣ {n = (suc n)} (appendTyᵣ {n = n} s A)
+appendValᵣ {n = zero} s A r x = x
+appendValᵣ {n = suc n} s A = _,_
+
+Sig : ∀ ℓ → ∀ n →  Type (ℓ-suc ℓ)
+Sig ℓ n = Σ _ (fst ∘ RI {ℓ} {n})
+
+
+Rec : ∀ {ℓ} → ∀ {n} → Sig ℓ n → Type ℓ
+Rec s = snd (RI (fst s)) (snd s)
+
+
+prependTy : ∀ {ℓ} → ∀ {n} → {A : Type ℓ}
+                → (A → Sig ℓ n)
+                → Sig ℓ (suc n)
+prependTy {n = n} =
+   (corner0  ,_) ∘ prependTyₗ {n = n} ∘
+     (λ a x → (Sig*-subst {v₁ = fst (a x) } corner0 (snd (a x))))
+
+prependVal : ∀ {ℓ} → ∀ {n} → {A : Type ℓ}
+                → (s : A → Sig ℓ n)
+                → (x : A)
+                → Rec (s x)
+                → Rec (prependTy s)
+prependVal {n = n} s x r =
+  prependValₗ {n = n}
+          (λ a → (Sig*-subst {v₁ = fst (s a) } corner0 (snd (s a)))) x
+            (Rec*-subst (fst (s x)) corner0 r)
   
--- appendTy : ∀ {ℓ} → ∀ {n}
---                 → (s : Sig ℓ n)
---                 → (Rec {n = n} s → Type ℓ)
---                 → Sig ℓ (suc n)
--- appendTy {n = n} s x = corner1 ,
---               (appendTyᵣ {n = n} (Sig*-subst {v₁ = fst s } corner1 (snd s))
---                     ( x ∘ (Rec*-subst⁻ (fst s) (corner1))))
+appendTy : ∀ {ℓ} → ∀ {n}
+                → (s : Sig ℓ n)
+                → (Rec {n = n} s → Type ℓ)
+                → Sig ℓ (suc n)
+appendTy {n = n} s x = corner1 ,
+              (appendTyᵣ {n = n} (Sig*-subst {v₁ = fst s } corner1 (snd s))
+                    ( x ∘ (Rec*-subst⁻ (fst s) (corner1))))
 
 
 
--- KindSig : ∀ ℓ → ∀ n → Sigᵣ (ℓ-suc ℓ) n
+KindSig : ∀ ℓ → ∀ n → Sigᵣ (ℓ-suc ℓ) n
 
--- fromKindRec : ∀ {ℓ} → ∀ {n} → Recᵣ {n = n} (KindSig ℓ n) → Sigᵣ ℓ n
+fromKindRec : ∀ {ℓ} → ∀ {n} → Recᵣ {n = n} (KindSig ℓ n) → Sigᵣ ℓ n
 
--- toKindRec : ∀ {ℓ} → ∀ {n} → Sigᵣ ℓ n → Recᵣ {n = n} (KindSig ℓ n)
+toKindRec : ∀ {ℓ} → ∀ {n} → Sigᵣ ℓ n → Recᵣ {n = n} (KindSig ℓ n)
 
--- KindSig _ zero =  _
--- KindSig _ (suc zero) = Type _
--- KindSig _ (suc (suc n)) = appendTyᵣ {n = (suc n)} (KindSig _ (suc n))
---   (λ r → Recᵣ {n = (suc n)} (fromKindRec {n = (suc n)} r) → Type _)
-
-
--- fromKindRec {n = zero} x = _
--- fromKindRec {n = suc zero} x = x
--- fromKindRec {n = suc (suc n)} x =
---     appendTyᵣ {n = suc n} (fromKindRec {n = suc n} (fst x)) (snd x)
-
--- tofromKindRec : ∀ {ℓ} → ∀ {n} → ∀ (s : Sigᵣ ℓ n) →
---                       Recᵣ {ℓ} {n = n} (fromKindRec {n = n} (toKindRec {ℓ} {n} s))
---                     → Recᵣ {ℓ} {n = n} s
-
--- toKindRec {ℓ} {zero} x = _
--- toKindRec {ℓ} {suc zero} x = x
--- toKindRec {ℓ} {suc (suc n)} x =
---    appendValᵣ {n = suc n}  (KindSig ℓ ((suc n)))
---      (λ r → Recᵣ {n = suc n} (fromKindRec {n = (suc n)} r) → Type _)
---      (toKindRec {n = suc n} (fst x))
---      (λ x₁ → snd x (tofromKindRec {n = suc n} (fst x) x₁))
-
--- tofromKindRec {n = zero} s x = _
--- tofromKindRec {ℓ} {n = suc zero} s x = x
--- tofromKindRec {ℓ} {n = suc (suc n)} s x = (tofromKindRec {n = suc n} (fst s) (fst x)) , snd x
+KindSig _ zero =  _
+KindSig _ (suc zero) = Type _
+KindSig _ (suc (suc n)) = appendTyᵣ {n = (suc n)} (KindSig _ (suc n))
+  (λ r → Recᵣ {n = (suc n)} (fromKindRec {n = (suc n)} r) → Type _)
 
 
--- iso-Π-Π' : ∀ {ℓ ℓ'} {A : Type ℓ}
---                → (B : A → Type ℓ')
+fromKindRec {n = zero} x = _
+fromKindRec {n = suc zero} x = x
+fromKindRec {n = suc (suc n)} x =
+    appendTyᵣ {n = suc n} (fromKindRec {n = suc n} (fst x)) (snd x)
+
+tofromKindRec : ∀ {ℓ} → ∀ {n} → ∀ (s : Sigᵣ ℓ n) →
+                      Recᵣ {ℓ} {n = n} (fromKindRec {n = n} (toKindRec {ℓ} {n} s))
+                    → Recᵣ {ℓ} {n = n} s
+
+toKindRec {ℓ} {zero} x = _
+toKindRec {ℓ} {suc zero} x = x
+toKindRec {ℓ} {suc (suc n)} x =
+   appendValᵣ {n = suc n}  (KindSig ℓ ((suc n)))
+     (λ r → Recᵣ {n = suc n} (fromKindRec {n = (suc n)} r) → Type _)
+     (toKindRec {n = suc n} (fst x))
+     (λ x₁ → snd x (tofromKindRec {n = suc n} (fst x) x₁))
+
+tofromKindRec {n = zero} s x = _
+tofromKindRec {ℓ} {n = suc zero} s x = x
+tofromKindRec {ℓ} {n = suc (suc n)} s x = (tofromKindRec {n = suc n} (fst s) (fst x)) , snd x
+
+
+iso-Π-Π' : ∀ {ℓ ℓ'} {A : Type ℓ}
+               → (B : A → Type ℓ')
+               → Iso (Π B) (Π' B)
+iso-Π-Π' B = iso (λ x {y} → x y) (λ x y → x {y}) (λ b → refl) (λ b → refl)
+
+
+
+iso-→-→' : ∀ {ℓ ℓ'} (A : Type ℓ) (B : Type ℓ')
+               → Iso (Π {A = A} (const B)) (Π' {A = A} (const B))
+iso-→-→' A B = iso-Π-Π' {A = A} (const B)
+
+λ' : ∀ {ℓ ℓ'} (A : Type ℓ)
+               → (B : A → Type ℓ')
+               → Π B → ∀ i → isoToPath (iso-Π-Π' B) i
+λ' A B x i = coe0→i (λ i → isoToPath (iso-Π-Π' B) i) i x
+
+-- idfun-≡-idfun' : ∀ {ℓ} (A : Type ℓ)
+--                → PathP (λ x → isoToPath (iso-→-→' A A) x) (idfun A) λ {x} → x
+-- idfun-≡-idfun' A i = {!!}
+
+-- iso-→-→'-id : ∀ {ℓ} {A : Type ℓ}
 --                → Iso (Π B) (Π' B)
--- iso-Π-Π' B = iso (λ x {y} → x y) (λ x y → x {y}) (λ b → refl) (λ b → refl)
+-- iso-→-→'-id B = {!!}
+
+fromSigTypeₗ : ∀ {ℓ} → ∀ n → Vec Interval n → Sigₗ ℓ n → Type ℓ → Type ℓ 
+fromSigTypeₗ zero _ _ Target = Target
+fromSigTypeₗ (suc zero) v s Target =
+    I-rec (isoToPath (iso-Π-Π' {A = s} λ x₂ → Target)) (head v) 
+fromSigTypeₗ (suc (suc n)) v s Target =
+   I-rec (isoToPath
+    (iso-Π-Π' {A = fst s} λ x → fromSigTypeₗ (suc n) (tail v) (snd s x) Target))
+      (head v)
+
+
+constructorTypeₗ : ∀ {ℓ} → ∀ n → Vec Interval n → Sigₗ ℓ n → Type ℓ 
+constructorTypeₗ n v s = fromSigTypeₗ n v s (Recₗ {n = n} s)
+
+mkPi : ∀ {ℓ} → ∀ n → (v : Vec Interval n) → (s : Sigₗ ℓ n) → (Target : Type ℓ)
+           → (Recₗ {n = n} s → Target)
+           → fromSigTypeₗ n v s Target
+mkPi zero v s Target x = x _
+mkPi (suc zero) (i' ∷ _) s Target x =
+  I-elim (I-rec (isoToPath (iso-Π-Π' {A = s} λ _ → Target))) (λ i → λ' s (λ z → Target) x i ) i'
+mkPi (suc (suc n)) v s Target x =
+  I-elim (I-rec (isoToPath (iso-Π-Π' _))) (λ i → λ' _ _
+    (λ x₁ → mkPi (suc n) (tail v) (snd s x₁) Target λ x₂ → x (x₁ , x₂))
+    i ) (head v)
+
+
+mkConstructor : ∀ {ℓ} → ∀ n → (v : Vec Interval n) → (s : Sigₗ ℓ n)
+                  → constructorTypeₗ n v s
+mkConstructor n v s = mkPi n v s (Recₗ {n = n} s) (idfun _) 
 
 
 
--- iso-→-→' : ∀ {ℓ ℓ'} (A : Type ℓ) (B : Type ℓ')
---                → Iso (Π {A = A} (const B)) (Π' {A = A} (const B))
--- iso-→-→' A B = iso-Π-Π' {A = A} (const B)
-
--- λ' : ∀ {ℓ ℓ'} (A : Type ℓ)
---                → (B : A → Type ℓ')
---                → Π B → ∀ i → isoToPath (iso-Π-Π' B) i
--- λ' A B x i = coe0→i (λ i → isoToPath (iso-Π-Π' B) i) i x
-
--- -- idfun-≡-idfun' : ∀ {ℓ} (A : Type ℓ)
--- --                → PathP (λ x → isoToPath (iso-→-→' A A) x) (idfun A) λ {x} → x
--- -- idfun-≡-idfun' A i = {!!}
-
--- -- iso-→-→'-id : ∀ {ℓ} {A : Type ℓ}
--- --                → Iso (Π B) (Π' B)
--- -- iso-→-→'-id B = {!!}
-
--- fromSigTypeₗ : ∀ {ℓ} → ∀ n → Vec Interval n → Sigₗ ℓ n → Type ℓ → Type ℓ 
--- fromSigTypeₗ zero _ _ Target = Target
--- fromSigTypeₗ (suc zero) v s Target =
---     I-rec (isoToPath (iso-Π-Π' {A = s} λ x₂ → Target)) (head v) 
--- fromSigTypeₗ (suc (suc n)) v s Target =
---    I-rec (isoToPath
---     (iso-Π-Π' {A = fst s} λ x → fromSigTypeₗ (suc n) (tail v) (snd s x) Target))
---       (head v)
+Sig*-concat : ∀ {ℓ} → ∀ {n m}
+           → (vₙ : Vec Interval n)
+           → (vₘ : Vec Interval m)
+           → Sig* ℓ vₙ → Sig* ℓ vₘ
+           → Sig* ℓ (vₙ ++ vₘ)
+Sig*-concat {n = .0} [] vₘ x x₁ = x₁
+Sig*-concat {n = .1} {m = m} (i' ∷ []) vₘ x x₁ =
+   fromₗ (i' ∷ vₘ) (prependTyₗ {n = m} {A = x} (const (toₗ vₘ x₁)))
+Sig*-concat {n = (suc (suc n))} {m} (x₂ ∷ x₃ ∷ vₙ) vₘ x x₁ =
+        fromₗ ((x₂ ∷ x₃ ∷ vₙ) ++ vₘ) (prependTyₗ {n = (suc n) + m} {A = fst (toₗ (x₂ ∷ x₃ ∷ vₙ) x)}
+           λ x₄ → toₗ ((corner0 {suc n}) ++ vₘ) (Sig*-concat {n = suc n} {m = m} corner0 vₘ
+                    ((snd (toₗ (x₂ ∷ x₃ ∷ vₙ) x) x₄)) x₁)) 
 
 
--- constructorTypeₗ : ∀ {ℓ} → ∀ n → Vec Interval n → Sigₗ ℓ n → Type ℓ 
--- constructorTypeₗ n v s = fromSigTypeₗ n v s (Recₗ {n = n} s)
+Sigₗ-section-from : ∀ {ℓ} → ∀ {n m}
+           → (sₙ : Sigₗ ℓ n)
+           → (sₘ : Recₗ {n = n} sₙ →  Sigₗ ℓ m)
+           → Sigₗ ℓ (n + m)
+Sigₗ-section-from {n = zero} sₙ sₘ = sₘ _
+Sigₗ-section-from {n = suc zero} {m} sₙ sₘ = prependTyₗ {n = m} {A = sₙ} sₘ
+Sigₗ-section-from {n = suc (suc n)} {m} sₙ sₘ =
+   prependTyₗ {n = (suc n) + m}
+     λ x → Sigₗ-section-from {n = suc n} {m} (snd sₙ x) (sₘ ∘ (x ,_)) 
 
--- mkPi : ∀ {ℓ} → ∀ n → (v : Vec Interval n) → (s : Sigₗ ℓ n) → (Target : Type ℓ)
---            → (Recₗ {n = n} s → Target)
---            → fromSigTypeₗ n v s Target
--- mkPi zero v s Target x = x _
--- mkPi (suc zero) (i' ∷ _) s Target x =
---   I-elim (I-rec (isoToPath (iso-Π-Π' {A = s} λ _ → Target))) (λ i → λ' s (λ z → Target) x i ) i'
--- mkPi (suc (suc n)) v s Target x =
---   I-elim (I-rec (isoToPath (iso-Π-Π' _))) (λ i → λ' _ _
---     (λ x₁ → mkPi (suc n) (tail v) (snd s x₁) Target λ x₂ → x (x₁ , x₂))
---     i ) (head v)
+Sigₗ-section-to : ∀ {ℓ} → ∀ {n m}
+           → Sigₗ ℓ (n + m)
+           → Σ[ sₙ ∈  Sigₗ ℓ n ] (Recₗ {n = n} sₙ → Sigₗ ℓ m)
+Sigₗ-section-to {n = zero} x = _ , const x
+Sigₗ-section-to {n = suc zero} {zero} = _, _
+Sigₗ-section-to {n = suc zero} {suc m} = idfun _
+Sigₗ-section-to {n = suc (suc n)} x =
+ let z = λ (y : fst x) → Sigₗ-section-to {n = suc n} (snd x y)
+ in (fst x , fst ∘ z) ,  uncurry (snd ∘ z)
 
+Sigₗ-section-to-from : ∀ {ℓ} → ∀ {n m}
+    → section (Sigₗ-section-to {ℓ} {n} {m}) (uncurry (Sigₗ-section-from {ℓ} {n} {m}))
+Sigₗ-section-to-from {n = zero} b = refl
+Sigₗ-section-to-from {n = suc zero} {zero} b = refl
+Sigₗ-section-to-from {n = suc zero} {suc m} b = refl
+Sigₗ-section-to-from {n = suc (suc n)} {m} b i =
+  let z = λ (y : fst (fst b)) →
+            Sigₗ-section-to-from {n = (suc n)} {m = m} (snd (fst b) y , snd b ∘ (y ,_)) i
+  in ((fst (fst b)) ,  fst ∘ z) , uncurry (snd ∘ z)
 
--- mkConstructor : ∀ {ℓ} → ∀ n → (v : Vec Interval n) → (s : Sigₗ ℓ n)
---                   → constructorTypeₗ n v s
--- mkConstructor n v s = mkPi n v s (Recₗ {n = n} s) (idfun _) 
+Sigₗ-section-from-to : ∀ {ℓ} → ∀ {n m}
+    → retract (Sigₗ-section-to {ℓ} {n} {m}) (uncurry (Sigₗ-section-from {ℓ} {n} {m}))
+Sigₗ-section-from-to {n = zero} a = refl
+Sigₗ-section-from-to {n = suc zero} {zero} a = refl
+Sigₗ-section-from-to {n = suc zero} {suc m} a = refl
+Sigₗ-section-from-to {n = suc (suc n)} {m} a i =
+  prependTyₗ {n = (suc n) + m} λ (y : fst a) → Sigₗ-section-from-to {n = suc n} {m} (snd a y) i
 
-
-
--- Sig*-concat : ∀ {ℓ} → ∀ {n m}
---            → (vₙ : Vec Interval n)
---            → (vₘ : Vec Interval m)
---            → Sig* ℓ vₙ → Sig* ℓ vₘ
---            → Sig* ℓ (vₙ ++ vₘ)
--- Sig*-concat {n = .0} [] vₘ x x₁ = x₁
--- Sig*-concat {n = .1} {m = m} (i' ∷ []) vₘ x x₁ =
---    fromₗ (i' ∷ vₘ) (prependTyₗ {n = m} {A = x} (const (toₗ vₘ x₁)))
--- Sig*-concat {n = (suc (suc n))} {m} (x₂ ∷ x₃ ∷ vₙ) vₘ x x₁ =
---         fromₗ ((x₂ ∷ x₃ ∷ vₙ) ++ vₘ) (prependTyₗ {n = (suc n) + m} {A = fst (toₗ (x₂ ∷ x₃ ∷ vₙ) x)}
---            λ x₄ → toₗ ((corner0 {suc n}) ++ vₘ) (Sig*-concat {n = suc n} {m = m} corner0 vₘ
---                     ((snd (toₗ (x₂ ∷ x₃ ∷ vₙ) x) x₄)) x₁)) 
-
-
--- Sigₗ-section-from : ∀ {ℓ} → ∀ {n m}
---            → (sₙ : Sigₗ ℓ n)
---            → (sₘ : Recₗ {n = n} sₙ →  Sigₗ ℓ m)
---            → Sigₗ ℓ (n + m)
--- Sigₗ-section-from {n = zero} sₙ sₘ = sₘ _
--- Sigₗ-section-from {n = suc zero} {m} sₙ sₘ = prependTyₗ {n = m} {A = sₙ} sₘ
--- Sigₗ-section-from {n = suc (suc n)} {m} sₙ sₘ =
---    prependTyₗ {n = (suc n) + m}
---      λ x → Sigₗ-section-from {n = suc n} {m} (snd sₙ x) (sₘ ∘ (x ,_)) 
-
--- Sigₗ-section-to : ∀ {ℓ} → ∀ {n m}
---            → Sigₗ ℓ (n + m)
---            → Σ[ sₙ ∈  Sigₗ ℓ n ] (Recₗ {n = n} sₙ → Sigₗ ℓ m)
--- Sigₗ-section-to {n = zero} x = _ , const x
--- Sigₗ-section-to {n = suc zero} {zero} = _, _
--- Sigₗ-section-to {n = suc zero} {suc m} = idfun _
--- Sigₗ-section-to {n = suc (suc n)} x =
---  let z = λ (y : fst x) → Sigₗ-section-to {n = suc n} (snd x y)
---  in (fst x , fst ∘ z) ,  uncurry (snd ∘ z)
-
--- Sigₗ-section-to-from : ∀ {ℓ} → ∀ {n m}
---     → section (Sigₗ-section-to {ℓ} {n} {m}) (uncurry (Sigₗ-section-from {ℓ} {n} {m}))
--- Sigₗ-section-to-from {n = zero} b = refl
--- Sigₗ-section-to-from {n = suc zero} {zero} b = refl
--- Sigₗ-section-to-from {n = suc zero} {suc m} b = refl
--- Sigₗ-section-to-from {n = suc (suc n)} {m} b i =
---   let z = λ (y : fst (fst b)) →
---             Sigₗ-section-to-from {n = (suc n)} {m = m} (snd (fst b) y , snd b ∘ (y ,_)) i
---   in ((fst (fst b)) ,  fst ∘ z) , uncurry (snd ∘ z)
-
--- Sigₗ-section-from-to : ∀ {ℓ} → ∀ {n m}
---     → retract (Sigₗ-section-to {ℓ} {n} {m}) (uncurry (Sigₗ-section-from {ℓ} {n} {m}))
--- Sigₗ-section-from-to {n = zero} a = refl
--- Sigₗ-section-from-to {n = suc zero} {zero} a = refl
--- Sigₗ-section-from-to {n = suc zero} {suc m} a = refl
--- Sigₗ-section-from-to {n = suc (suc n)} {m} a i =
---   prependTyₗ {n = (suc n) + m} λ (y : fst a) → Sigₗ-section-from-to {n = suc n} {m} (snd a y) i
-
--- Sigₗ-section-Iso : ∀ {ℓ} → ∀ {n m}
---                    → Iso (Sigₗ ℓ (n + m))
---                          (Σ[ sₙ ∈  Sigₗ ℓ n ] (Recₗ {n = n} sₙ → Sigₗ ℓ m))
--- Sigₗ-section-Iso {ℓ} {n} {m} =
---   iso (Sigₗ-section-to {n = n} {m}) (uncurry (Sigₗ-section-from {n = n} {m}))
---       (Sigₗ-section-to-from {ℓ} {n} {m}) (Sigₗ-section-from-to {ℓ} {n} {m})
+Sigₗ-section-Iso : ∀ {ℓ} → ∀ {n m}
+                   → Iso (Sigₗ ℓ (n + m))
+                         (Σ[ sₙ ∈  Sigₗ ℓ n ] (Recₗ {n = n} sₙ → Sigₗ ℓ m))
+Sigₗ-section-Iso {ℓ} {n} {m} =
+  iso (Sigₗ-section-to {n = n} {m}) (uncurry (Sigₗ-section-from {n = n} {m}))
+      (Sigₗ-section-to-from {ℓ} {n} {m}) (Sigₗ-section-from-to {ℓ} {n} {m})
 
 
--- Recₗ-section-to :  ∀ {ℓ} → ∀ {n m} 
+Recₗ-section-to :  ∀ {ℓ} → ∀ {n m} 
+                       → (s : Sigₗ ℓ (n + m))
+                       → Recₗ {n = n + m} s
+                       → Σ (Recₗ {n = n} (fst (Sigₗ-section-to {n = n} s)))
+                           (Recₗ {n = m} ∘ (snd (Sigₗ-section-to {n = n} {m = m} s))) 
+Recₗ-section-to {n = zero} s x = _ , x
+Recₗ-section-to {n = suc zero} {zero} s = _, _
+Recₗ-section-to {n = suc zero} {suc m} s x = x
+Recₗ-section-to {n = suc (suc n)} {m} s x =
+   _ , snd (Recₗ-section-to {n = suc n} ((snd s) (fst x)) (snd x))
+
+Recₗ-section-from :  ∀ {ℓ} → ∀ {n m} 
+                       → (sₙ : Sigₗ ℓ n)
+                       → (sₘ : Recₗ {n = n} sₙ →  Sigₗ ℓ m)
+                       → Σ (Recₗ {n = n} sₙ)
+                           (Recₗ {n = m} ∘ sₘ)
+                       → Recₗ {n = n + m} (Sigₗ-section-from {n = n} {m = m}  sₙ sₘ)
+Recₗ-section-from {n = zero} sₙ sₘ = snd
+Recₗ-section-from {n = suc zero} {m} sₙ sₘ = prependValₗ {n = m} {A = sₙ} sₘ _ ∘ snd
+Recₗ-section-from {n = suc (suc n)} {m} sₙ sₘ x =
+     prependValₗ {n = suc n + m} (_) _
+      (Recₗ-section-from {n = suc n} _ _ (_ , snd x))
+
+-- Recₗ-section-iso : ∀ {ℓ} → ∀ {n m} 
 --                        → (s : Sigₗ ℓ (n + m))
---                        → Recₗ {n = n + m} s
---                        → Σ (Recₗ {n = n} (fst (Sigₗ-section-to {n = n} s)))
---                            (Recₗ {n = m} ∘ (snd (Sigₗ-section-to {n = n} {m = m} s))) 
--- Recₗ-section-to {n = zero} s x = _ , x
--- Recₗ-section-to {n = suc zero} {zero} s = _, _
--- Recₗ-section-to {n = suc zero} {suc m} s x = x
--- Recₗ-section-to {n = suc (suc n)} {m} s x =
---    _ , snd (Recₗ-section-to {n = suc n} ((snd s) (fst x)) (snd x))
+--                        → Iso (Recₗ {n = n + m} s)
+--                          (Σ (Recₗ {n = n} (fst (Sigₗ-section-to {n = n} s)))
+--                            (Recₗ {n = m} ∘ (snd (Sigₗ-section-to {n = n} {m = m} s)))) 
+-- Recₗ-section-iso s = {!!}
 
--- Recₗ-section-from :  ∀ {ℓ} → ∀ {n m} 
---                        → (sₙ : Sigₗ ℓ n)
---                        → (sₘ : Recₗ {n = n} sₙ →  Sigₗ ℓ m)
---                        → Σ (Recₗ {n = n} sₙ)
---                            (Recₗ {n = m} ∘ sₘ)
---                        → Recₗ {n = n + m} (Sigₗ-section-from {n = n} {m = m}  sₙ sₘ)
--- Recₗ-section-from {n = zero} sₙ sₘ = snd
--- Recₗ-section-from {n = suc zero} {m} sₙ sₘ = prependValₗ {n = m} {A = sₙ} sₘ _ ∘ snd
--- Recₗ-section-from {n = suc (suc n)} {m} sₙ sₘ x =
---      prependValₗ {n = suc n + m} (_) _
---       (Recₗ-section-from {n = suc n} _ _ (_ , snd x))
+
+Sigₗ-n+1-split : ∀ {ℓ} → ∀ n → Sigₗ ℓ (suc n) → Σ (Sigₗ ℓ n) (λ sₙ → Recₗ {n = n} sₙ → Sigₗ ℓ 1)
+Sigₗ-n+1-split zero s =  _ , const s
+Sigₗ-n+1-split 1 s = s
+Sigₗ-n+1-split (suc (suc n)) s =
+  let z : (fst s) → Σ (Sigₗ _ (suc n)) (λ sₙ → Recₗ {n = (suc n)} sₙ → Sigₗ _ 1)
+      z x = Sigₗ-n+1-split (suc n) (snd s x)
+
+  in (fst s , fst ∘ z ) , λ x → snd (z (fst x)) (snd x)
+
+Recₗ-n+1-split-iso : ∀ {ℓ} → ∀ n → (s : Sigₗ ℓ (suc n)) →
+                         let (s- , r→Ty) = Sigₗ-n+1-split n s
+                         in
+                          Iso (Recₗ {n = suc n} s)
+                              (Σ _ r→Ty)
+Recₗ-n+1-split-iso zero s = iso (_ ,_) snd (λ b → refl) λ a → refl
+Recₗ-n+1-split-iso 1 s = idIso
+Iso.fun (Recₗ-n+1-split-iso (suc (suc n)) s) r =
+  let (fs , se) = Iso.fun (Recₗ-n+1-split-iso (suc n) ((snd s) (fst r))) (snd r)
+  in (fst r , fs) , se
+Iso.inv (Recₗ-n+1-split-iso (suc (suc n)) s) r =
+  fst (fst r) , Iso.inv (Recₗ-n+1-split-iso (suc n) ((snd s) (fst (fst r)))) (snd (fst r) , snd r)
+Iso.rightInv (Recₗ-n+1-split-iso (suc (suc n)) s) r i =
+  let (fs , se) =
+        Iso.rightInv (Recₗ-n+1-split-iso (suc n) ((snd s) (fst (fst r)))) (snd (fst r) , snd r) i
+  in (fst (fst r) , fs) , se
+
+
+Iso.leftInv (Recₗ-n+1-split-iso (suc (suc n)) s) r i =
+  let (fs , se) =
+        Iso.leftInv (Recₗ-n+1-split-iso (suc n) ((snd s) (fst r))) (snd r) i
+  in (fst r) , fs , se
+
+-- Record-impl : ∀ {ℓ} → ∀ n → (Σ[ Rec ∈ (Sigₗ ℓ (suc n) → Type ℓ) ]
+--                             (?)
+-- Record-impl = {!!}
+
+
+Recc : ∀ {ℓ} → ∀ n → (v : List Interval) → (s : Sigₗ ℓ (suc (suc (suc n)))) → Type ℓ
+
+Recc= : ∀ {ℓ} → ∀ n → (v : List Interval) → (s : Sigₗ ℓ (suc (suc (suc n)))) →
+                       Recₗ {n = 3 + n} s ≡ Recc n v s  
+
+
+
+
+Recc n [] s = Recₗ {n = 3 + n} s
+
+Recc zero (zero ∷ v) s = Recₗ {n = 3} s
+Recc (suc n) (zero ∷ v) s = Σ (fst s) (Recc n v ∘ snd s)
+    
+Recc zero (one ∷ v) s = Σ (Σ (fst s) (fst ∘ snd s)) λ x → snd (snd s (fst x)) (snd x)
+Recc (suc n) (one ∷ v) s =
+  let (s- , r→s) = Sigₗ-n+1-split (3 + n) s
+  in  Σ (Recc n v s-) (r→s ∘ transport⁻ (Recc= n v s-))
+Recc zero (seg i ∷ v) s =
+  ua (Σ-assoc {A = fst s} {B = fst ∘ (snd s)} {C = λ a b → snd (snd s a) b}) (~ i) 
+Recc (suc n) (seg i ∷ v) s =
+  let (s- , r→s) = Sigₗ-n+1-split (3 + n) s
+  in  
+
+    (
+        cong (Σ (fst s)) (funExt (λ x → sym (Recc= n v ((snd s) x)) ))
+     ∙∙ isoToPath (Recₗ-n+1-split-iso (3 + n) s )
+     ∙∙
+      λ i₁ →
+          Σ (Recc= n v s- i₁) (r→s ∘ 
+            transp ((λ i₂ → (Recc= n v s-) ((~ i₂) ∧ i₁))) (~ i₁)
+            )) i
+
+mapConst : List Interval → List Interval
+mapConst [] = []
+mapConst (x ∷ x₁) = zero ∷ mapConst x₁
+
+replic1 : ℕ → List Interval
+replic1 zero = []
+replic1 (suc x) = one ∷ replic1 x
+
+lem-rep : ∀ {ℓ} → {A : Type ℓ} → (f : List Interval → A) → ∀ l → f (mapConst l) ≡ f l
+lem-rep f [] = refl
+lem-rep f (w ∷ l) i = lem-rep (f ∘ (isProp-Interval' zero w i ∷_) ) l i
+
+Recc=0 : ∀ {ℓ} → ∀ n → (v : List Interval) → (s : Sigₗ ℓ (suc (suc (suc n)))) →
+                       Recₗ {n = 3 + n} s ≡ Recc n (mapConst v) s  
+Recc=0 zero [] s = refl
+Recc=0 zero (x ∷ v) s = refl
+Recc=0 (suc n) [] s = refl
+Recc=0 (suc n) (x ∷ v) s = cong (Σ (fst s)) (funExt (Recc=0 n v ∘ snd s))
+
+Recc= n v s = Recc=0 n v s ∙ lem-rep (λ x → Recc n x s) v
+
+
+Recₗᵣ : ∀ {ℓ} → ∀ n → (Sigₗ ℓ n) → Type ℓ
+Recₗᵣ zero = const (Lift Unit)
+Recₗᵣ (suc zero) = idfun _
+Recₗᵣ (suc (suc zero)) = (uncurry Σ)
+Recₗᵣ (suc (suc (suc n))) = Recc n (replic1 (suc n))
+
+-- teeest : {!!}
+-- teeest = {!Recₗᵣ {ℓ-zero} 4!}
+
+
+-- Recc= n [] s = refl
+-- Recc= zero (zero ∷ v) s = refl
+-- Recc= zero (one ∷ v) s i = Recc zero (seg i ∷ v) s
+-- Recc= zero (seg i ∷ v) s j = Recc zero (seg (j ∧ i) ∷ v) s
+-- Recc= (suc n) (zero ∷ v) s = cong (Σ (fst s)) (funExt (Recc= n v ∘ (snd s)))
+-- Recc= (suc n) (one ∷ v) s = 
+--   cong (Σ (fst s)) (funExt (Recc= n v ∘ (snd s)))
+--   ∙ λ i₁ → Recc (suc n) (seg i₁ ∷ v) s
+-- Recc= (suc n) (seg i ∷ v) s j =
+--     let (s- , r→s) = Sigₗ-n+1-split (3 + n) s
+--   in
+--   hcomp (λ k → λ {
+--        (i = i0) → {!!} --cong (Σ (fst s)) (funExt (Recc= n v ∘ (snd s))) (j ∧ k)
+--      ; (j = i0) → {!!}
+--      ; (i = i1) → {!!}
+--      ; (j = i1) → {!!}
+
+--      }) ({!!})
+
+
+-- i = i0 ⊢ Recc= (suc n) (zero ∷ v) s j
+-- i = i1 ⊢ Recc= (suc n) (one ∷ v) s j
+-- j = i0 ⊢ Recₗ s
+-- j = i1 ⊢ Recc (suc n) (seg i ∷ v) s
+
+
+
+
+--   let (s- , r→s) = Sigₗ-n+1-split (3 + n) s
+--   in  
+
+--     doubleCompPath-filler 
+--         (cong (Σ (fst s)) (funExt λ x → {!!})) -- (cong (Σ (fst s)) (funExt (λ x → sym (Recc= n v ((snd s) x)) )))
+--         {!!} --(isoToPath (Recₗ-n+1-split-iso (3 + n) s ))
+--         {!!}
+--           -- (λ i₁ → Σ (Recc= n v s- i₁) (r→s ∘ 
+--           --   transp ((λ i₂ → (Recc= n v s-) ((~ i₂) ∧ i₁))) (~ i₁)
+--           --  ))
+--            i1 (j ∧ i)
+
+-- Recₗ*-↑L :  ∀ {ℓ} → ∀ n → (s : Sigₗ ℓ (suc (suc (suc n))))
+--                → {!!} → Type ℓ
+-- Recₗ*-↑L n s Rec = {!!} --Σ (fst s) λ x → Rec ((snd s) x)
+
+-- Recₗ*-↑R :  ∀ {ℓ} → ∀ n → (s : Sigₗ ℓ (suc (suc (suc n))))
+--                → {!!} → Type ℓ
+-- Recₗ*-↑R n s Rec = {!!}
+--      -- let z = Sigₗ-n+1-split (suc (suc n)) s
+    
+--      -- in Σ (Rec (fst z)) λ x → (snd z) {! x!}
+
+
+-- Recₗ* : ∀ {ℓ} → ∀ n → (v : Vec Interval n) → (s : Sigₗ ℓ n)
+--                → Σ _ ((Recₗ {n = n} s) ≡_ ) 
+-- Recₗ* zero _ _ = Lift Unit , refl
+-- Recₗ* (suc zero) v s = s , refl
+-- Recₗ* (suc (suc zero)) (x₁ ∷ v) s = (uncurry Σ s) , refl
+-- Recₗ* (suc (suc (suc n))) (zero ∷ v) s =
+--   Σ (fst s) (λ x → fst (Recₗ* (suc (suc n)) v ( (snd s) x)))
+--    , cong (Σ (fst s)) (funExt λ x → snd (Recₗ* (suc (suc n)) v ( (snd s) x)))
+-- Recₗ* (suc (suc (suc n))) (one ∷ v) s =
+--   let zz = Sigₗ-n+1-split (suc (suc n)) s
+--       (Rec , eq)  = Recₗ* (suc (suc n)) v (fst zz)
+
+--       qq :  {!!} ≡ Σ
+--                      (fst
+--                       (Recₗ* (suc (suc n)) v (fst (Sigₗ-n+1-split (suc (suc n)) s))))
+--                      (λ x →
+--                         snd (Sigₗ-n+1-split (suc (suc n)) s)
+--                         (transport⁻
+--                          (snd
+--                           (Recₗ* (suc (suc n)) v (fst (Sigₗ-n+1-split (suc (suc n)) s))))
+--                          x))
+--       qq = {!!}
+      
+--       ww : Recₗ s ≡ {!!}
+--       ww i = Σ {!!} {!!}
+
+--   in Σ Rec (snd zz ∘ transport⁻ eq) , ww ∙ qq
+
+-- Recₗ* (suc (suc (suc n))) (seg i ∷ v) s = {!!}
+
+
+
+
+
+
+
+
+
 
 
 
