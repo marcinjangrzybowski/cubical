@@ -33,8 +33,8 @@ zzz : ∀ ℓ → ∀ n → Type (ℓ-suc ℓ)
 zzz ℓ n = fromSigTypeₗ n corner0 (toₗ {n = n} corner1 (KindSig ℓ n)) (Type ℓ)
 
 
-zzzTest : {!!} 
-zzzTest = {! (zzz ℓ-zero 5)!}
+-- zzzTest : {!!} 
+-- zzzTest = {! (zzz ℓ-zero 5)!}
 
 
 someSig-2 : Sigₗ ℓ-zero 9
@@ -55,9 +55,9 @@ someSig-3 = ℕ , λ n₁
           → Fin n₁ , λ _
           → Fin n₂ , (λ _ → Fin n₃ , (λ _ → Fin n₄))
 
-zzz2 : ∀ ℓ → ∀ n → fromSigTypeₗ n corner0 (toₗ corner1 (KindSig ℓ n))
-                     (Recₗ (toₗ corner1 (KindSig ℓ n)))
-zzz2 ℓ n = mkConstructor n corner0 (toₗ {n = n} corner1 (KindSig ℓ n))
+-- zzz2 : ∀ ℓ → ∀ n → fromSigTypeₗ n corner0 (toₗ corner1 (KindSig ℓ n))
+--                      (Recₗ (toₗ corner1 (KindSig ℓ n)))
+-- zzz2 ℓ n = mkConstructor n corner0 (toₗ {n = n} corner1 (KindSig ℓ n))
 
 someSigConstructor : constructorTypeₗ 9 corner0 someSig-2
 someSigConstructor = mkConstructor 9 corner0 someSig-2
