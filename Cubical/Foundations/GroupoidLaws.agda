@@ -81,9 +81,12 @@ rCancel' p j k = rCancel-filler' p i0 j k
 lCancel : (p : x ≡ y) → p ⁻¹ ∙ p ≡ refl
 lCancel p = rCancel (p ⁻¹)
 
+
+
+
 assoc : (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) →
   p ∙ q ∙ r ≡ (p ∙ q) ∙ r
-assoc p q r k = (compPath-filler p q k) ∙ compPath-filler' q r (~ k)
+assoc p q r k i = ((compPath-filler p q k) ∙ compPath-filler' q r (~ k)) i
 
 
 -- heterogeneous groupoid laws
@@ -470,3 +473,97 @@ pentagonIdentity {x = x} {y} p q r s =
     lemma₁₀ : ( i j : I) → _ ≡ _
     lemma₁₀ i j i₁ =
         (cube-comp₀₋₋ lemma₁₀-front (sym lemma₁₀-back')) i j i₁
+
+
+
+pentagonIdentityRHS : (p : x ≡ y) → (q : y ≡ z) → (r : z ≡ w) → (s : w ≡ v)
+                      → p ∙ q ∙ r ∙ s ≡ ((p ∙ q) ∙ r) ∙ s
+            
+pentagonIdentityRHS {x = x} {y} p q r s =
+ (cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)) 
+
+
+pentagonIdentityRHS' : (p : x ≡ y) → (q : y ≡ z) → (r : z ≡ w) → (s : w ≡ v)
+                      → p ∙ q ∙ r ∙ s ≡ ((p ∙ q) ∙ r) ∙ s  
+            
+pentagonIdentityRHS' {ℓ} {A} {x} {y} {z} {w} {v} p q r s i j =
+  hcomp {ℓ} {A} {(~ i ∨ i) ∨ ~ j ∨ j}
+   (λ i' →
+      primPOr {ℓ} (~ i ∨ i) (~ j ∨ j) {λ _ → A}
+      ( primPOr {ℓ} (~ i) i {λ _ → A}
+         (λ _ →
+            hcomp {ℓ} {A} {~ j ∨ j}
+            (λ j₁ →
+               primPOr {ℓ} (~ j) j {λ _ → A} (λ _ → x)
+               (λ _ →
+                  hcomp {ℓ} {A} {~ j₁ ∨ j₁}
+                  (λ j₂ →
+                     primPOr {ℓ} (~ j₁) j₁ {λ _ → A} (λ _ → y)
+                     (λ _ →
+                        hcomp {ℓ} {A} {~ j₂ ∨ j₂ ∨ ~ i'}
+                        (λ k →
+                           primPOr {ℓ} (~ j₂) (j₂ ∨ ~ i') {λ _ → A} (λ _ → r (~ i'))
+                           (primPOr {ℓ} j₂ (~ i') {λ _ → A} (λ _ → s k) (λ _ → s (j₂ ∧ k))))
+                        (r (j₂ ∨ ~ i'))))
+                  (hcomp {ℓ} {A} {~ j₁ ∨ j₁ ∨ i'}
+                   (λ k →
+                      primPOr {ℓ} (~ j₁) (j₁ ∨ i') {λ _ → A} (λ _ → y)
+                      (primPOr {ℓ} j₁ i' {λ _ → A} (λ _ → r (~ i' ∧ k)) (λ _ → q j₁)))
+                   (q j₁))))
+            (p j))
+         (λ _ →
+            hcomp {ℓ} {A} {~ j ∨ j}
+            (λ j₁ → primPOr {ℓ} (~ j) j {λ _ → A} (λ _ → x) (λ _ → s j₁))
+            (hcomp {ℓ} {A} {~ j ∨ j}
+             (λ j₁ →
+                primPOr {ℓ} (~ j) j {λ _ → A} (λ _ → x)
+                (λ _ →
+                   hcomp {ℓ} {A} {~ j₁ ∨ j₁ ∨ i'}
+                   (λ k →
+                      primPOr {ℓ} (~ j₁) (j₁ ∨ i') {λ _ → A} (λ _ → q i')
+                      (primPOr {ℓ} j₁ i' {λ _ → A} (λ _ → r k) (λ _ → r (j₁ ∧ k))))
+                   (q (j₁ ∨ i'))))
+             (hcomp {ℓ} {A} {~ j ∨ j ∨ ~ i'}
+              (λ k →
+                 primPOr {ℓ} (~ j) (j ∨ ~ i') {λ _ → A} (λ _ → x)
+                 (primPOr {ℓ} j (~ i') {λ _ → A} (λ _ → q (i' ∧ k)) (λ _ → p j)))
+              (p j))))
+         )
+      (primPOr {ℓ} (~ j) j {λ _ → A} (λ _ → x) (λ _ → v)))
+   (hcomp {ℓ} {A} {~ j ∨ j}
+    (λ j₁ →
+       primPOr {ℓ} (~ j) j {λ _ → A} (λ _ → x)
+       (λ _ →
+          hcomp {ℓ} {A} {~ j₁ ∨ j₁ ∨ i}
+          (λ k →
+             primPOr {ℓ} (~ j₁) (j₁ ∨ i) {λ _ → A}
+             (λ _ →
+                hcomp {ℓ} {A} {~ i ∨ i}
+                (λ j₂ → primPOr {ℓ} (~ i) i {λ _ → A} (λ _ → y) (λ _ → r j₂))
+                (q i))
+             (primPOr {ℓ} j₁ i {λ _ → A} (λ _ → s k) (λ _ → s (j₁ ∧ k))))
+          (hcomp {ℓ} {A} {(~ j₁ ∧ ~ i) ∨ j₁ ∨ i}
+           (λ j₂ →
+              primPOr {ℓ} (~ j₁ ∧ ~ i) (j₁ ∨ i) {λ _ → A} (λ _ → y) (λ _ → r j₂))
+           (q (j₁ ∨ i)))))
+    (hcomp {ℓ} {A} {~ j ∨ j ∨ ~ i}
+     (λ k →
+        primPOr {ℓ} (~ j) (j ∨ ~ i) {λ _ → A} (λ _ → x)
+        (primPOr {ℓ} j (~ i) {λ _ → A}
+         (λ _ →
+            hcomp {ℓ} {A} {(~ i ∨ ~ k) ∨ i ∧ k}
+            (λ j₁ →
+               primPOr {ℓ} (~ i ∨ ~ k) (i ∧ k) {λ _ → A} (λ _ → y) (λ _ → r j₁))
+            (q (i ∧ k)))
+         (λ _ → p j)))
+     (p j)))
+
+ -- {!(cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)) i j!}
+
+  -- (cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)) i j
+
+-- pentagonIdentity' : (p : x ≡ y) → (q : y ≡ z) → (r : z ≡ w) → (s : w ≡ v)
+--                       →  (assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s)
+--                                          ≡
+--            cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r) 
+-- pentagonIdentity' {x = x} {y} p q r s i j k = {!!}

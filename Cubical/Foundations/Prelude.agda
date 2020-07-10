@@ -81,16 +81,25 @@ cong₂ f p q i = f (p i) (q i)
 
 _∙∙_∙∙_ : w ≡ x → x ≡ y → y ≡ z → w ≡ z
 (p ∙∙ q ∙∙ r) i =
-  hcomp (λ j → λ { (i = i0) → p (~ j)
-                 ; (i = i1) → r j })
+  hcomp (λ j → primPOr (~ i) i (λ _ → p (~ j )) λ _ → r j
+                -- λ { (i = i0) → p (~ j)
+                --  ; (i = i1) → r j }
+                 )
         (q i)
 
 doubleCompPath-filler : (p : x ≡ y) (q : y ≡ z) (r : z ≡ w)
                       → PathP (λ j → p (~ j) ≡ r j) q (p ∙∙ q ∙∙ r)
 doubleCompPath-filler p q r j i =
-  hfill (λ j → λ { (i = i0) → p (~ j)
-                 ; (i = i1) → r j })
-        (inS (q i)) j
+  hcomp (λ k →
+      primPOr  (~ i) _ (λ _ → p (~ j ∨ ~ k))
+               (primPOr (i) (~ j)
+                        ((λ _ → r (j ∧ k))) λ _ → q i)
+      -- λ { (i = i0) → p (~ j ∨ ~ k)
+      --    ; (i = i1) → r (j ∧ k)  
+      --    ; (j = i0) → q i
+      --    }
+         )
+      (q i)
 
 -- any two definitions of double composition are equal
 compPath-unique : ∀ (p : x ≡ y) (q : y ≡ z) (r : z ≡ w)
@@ -135,9 +144,13 @@ compPath'-filler p q = doubleCompPath-filler p q refl
 -- It's easy to show that `p ∙ q` also has such a filler:
 compPath-filler' : (p : x ≡ y) (q : y ≡ z) → PathP (λ j → p (~ j) ≡ z) q (p ∙ q)
 compPath-filler' {z = z} p q j i =
-  hcomp (λ k → λ { (i = i0) → p (~ j)
-                 ; (i = i1) → q k
-                 ; (j = i0) → q (i ∧ k) })
+  hcomp (λ k → primPOr  (~ i) _ (λ _ → p (~ j))
+               (primPOr (i) (~ j)
+                        ((λ _ → q k)) λ _ → q (i ∧ k))
+               -- λ { (i = i0) → p (~ j)
+               --   ; (i = i1) → q k
+               --   ; (j = i0) → q (i ∧ k) }
+                 )
         (p (i ∨ ~ j))
 -- Note: We can omit a (j = i1) case here since when (j = i1), the whole expression is
 --  definitionally equal to `p ∙ q`. (Notice that `p ∙ q` is also an hcomp.) Nevertheless,
