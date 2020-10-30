@@ -80,6 +80,8 @@ IsoCub {A = A} (suc n) =
       _ Iso⟨ invIso (nestedΣᵣ-combine-iso λ _ → NCubeSig' n A) ⟩ _ ∎Iso
 
 
+
+
 -- ≃Border : {A : Type ℓ} → ∀ n →
 --                (Σ[ x₀ ∈  (Cubeⁿ n A)] Σ[ x₁ ∈ (Cubeⁿ n A) ]
 --                      Σ[ cyl ∈ cubeBd n A x₀ ≡ cubeBd n A x₁ ]

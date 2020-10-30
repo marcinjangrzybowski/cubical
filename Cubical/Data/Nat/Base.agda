@@ -37,3 +37,4 @@ elim : ∀ {ℓ} {A : ℕ → Type ℓ}
   → (n : ℕ) → A n
 elim a₀ _ zero = a₀
 elim a₀ f (suc n) = f n (elim a₀ f n)
+

@@ -155,3 +155,20 @@ zero∸ (suc _) = refl
 ∸-distribʳ m       zero    k = refl
 ∸-distribʳ zero    (suc n) k = sym (zero∸ (k + n * k))
 ∸-distribʳ (suc m) (suc n) k = ∸-distribʳ m n k ∙ sym (∸-cancelˡ k (m * k) (n * k))
+
+
+
+
+
+
+
+
+_─_ :  ℕ → ℕ → ℕ
+x ─ zero = x
+zero ─ suc x₁ = zero
+suc x ─ suc x₁ = x ─ x₁
+
+n─n≡0 : ∀ n → n ─ n ≡ zero
+n─n≡0 zero = refl
+n─n≡0 (suc n) = n─n≡0 n
+

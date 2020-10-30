@@ -118,15 +118,6 @@ trimFin {suc n} (suc x) = fsuc (trimFin x)
 
 
 
-_─_ :  ℕ → ℕ → ℕ
-x ─ zero = x
-zero ─ suc x₁ = zero
-suc x ─ suc x₁ = x ─ x₁
-
-n─n≡0 : ∀ n → n ─ n ≡ zero
-n─n≡0 zero = refl
-n─n≡0 (suc n) = n─n≡0 n
-
 ─+ : ∀ m n → ∀ k → m ≡ n ─ (toℕ {suc n} k) → m + (toℕ k) ≡ n
 ─+ m n (zero , snd₁) x = +-comm m zero ∙ x
 ─+ zero zero (suc fst₁ , snd₁) x = ⊥-rec (¬-<-zero (pred-≤-pred snd₁))

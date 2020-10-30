@@ -339,6 +339,9 @@ getLast {n = zero} = _
 getLast {n = suc n} s = snd ∘ Iso.fun (nestedΣᵣ-n+1.isom-to (n) s)
 
 
+
+
+
 -- this helper is provded, to avoid using subst, which sometimes
 -- introduces unwanted transp in NestedΣ depending on transported Sig
 
@@ -351,6 +354,19 @@ sig-subst-n {n₀ = suc zero} {suc (suc n₁)} x s = ⊥-rec (znots (injSuc x))
 sig-subst-n {n₀ = suc (suc n₀)} {suc zero} x s = ⊥-rec (snotz (injSuc x))
 sig-subst-n {n₀ = suc (suc n₀)} {suc (suc n₁)} x s =
   _ , sig-subst-n (injSuc x) ∘ (snd s)
+
+sig-subst-n-sec : ∀ {ℓ} → ∀ {n₀ n₁} → (p : n₀ ≡ n₁) → section (sig-subst-n {ℓ} p) (sig-subst-n (sym p))
+sig-subst-n-sec {n₀ = zero} {zero} x s = refl
+sig-subst-n-sec {n₀ = zero} {suc n₁} x s = ⊥-rec (znots x)
+sig-subst-n-sec {n₀ = suc n₀} {zero} x s = ⊥-rec (snotz x)
+sig-subst-n-sec {n₀ = suc zero} {suc zero} x s = refl
+sig-subst-n-sec {n₀ = suc zero} {suc (suc n₁)} x s = ⊥-rec (znots (injSuc x))
+sig-subst-n-sec {n₀ = suc (suc n₀)} {suc zero} x s = ⊥-rec (snotz (injSuc x))
+sig-subst-n-sec {n₀ = suc (suc n₀)} {suc (suc n₁)} x s i =
+  (fst s) , (λ x₁ → sig-subst-n-sec (injSuc x) (snd s x₁) i)
+
+sig-subst-n-iso : ∀ {ℓ} → ∀ {n₀ n₁} → n₀ ≡ n₁ → Iso (Sig ℓ n₀) (Sig ℓ n₁)
+sig-subst-n-iso p = iso (sig-subst-n p) (sig-subst-n (sym p)) (sig-subst-n-sec p) (sig-subst-n-sec (sym p))
 
 
 
@@ -366,3 +382,8 @@ getVal {n = zero} = _
 getVal {n = suc zero} x _ = x
 getVal {n = suc (suc n)} x zero = fst x
 getVal {n = suc (suc n)} x (suc k) = getVal {n = suc n} (snd x) k
+
+
+
+
+

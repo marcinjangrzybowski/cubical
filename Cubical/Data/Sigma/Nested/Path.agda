@@ -63,6 +63,16 @@ sig-PathP-withEnds {n = n} s =
      (fst ∘ uncurry (sig-PathP s) ∘ nestedΣᵣ-cs.split' (s i0) _)
 
 
+sig-PathP-withEnds-iso : ∀ {ℓ} → ∀ {n} → (p : I → Sig ℓ n)
+        → Iso (Σ (Σ (NestedΣᵣ (p i0)) (NestedΣᵣ ∘ (λ _ → p i1))) λ (e0 , e1) → NestedΣᵣ (fst (sig-PathP p e0 e1)))
+              (NestedΣᵣ (sig-PathP-withEnds p))
+
+sig-PathP-withEnds-iso {n = n} p = 
+                   _ Iso⟨ invIso (Σ-cong-iso-fst
+                             (invIso (nestedΣᵣ-cs.isom-concat {n = n} {m = n} _ _))) ⟩
+                   _ Iso⟨ nestedΣᵣ-cs.isom-concat {n = n + n} {m = n} _ _ ⟩ _ ∎Iso
+
+
 -- this verision is putting puting PathPs as early as it is possible
 --   (just after second end is defined)
 
@@ -132,7 +142,7 @@ withEnds'-Iso-withEnds {n = n} p =  _ Iso⟨ nestedΣᵣ-combine-iso p ⟩
 
 mkSigPath : ∀ {ℓ} → ∀ n → NestedΣᵣ (sig-PathP-withEnds' (λ _ → Sig-of-Sig n)) → (I → Sig ℓ n)
 mkSigPath {ℓ} n x i =
- equivFun NestedΣᵣ-≃-Sig (snd (snd (Iso.fun (nestedΣᵣ-combine-iso  {n = n} (λ _ → Sig-of-Sig n)) x)) i)
+  equivFun NestedΣᵣ-≃-Sig (snd (snd (Iso.fun (nestedΣᵣ-combine-iso  {n = n} (λ _ → Sig-of-Sig n)) x)) i)
 
 
 
@@ -148,6 +158,16 @@ mkSigPath {ℓ} n x i =
 
 3^-lem : ∀ n → 3^ n + 3^ n + 3^ n ≡ 3^ (suc n)
 3^-lem n = (λ i → +-assoc (3^ n) (3^ n) (+-zero (3^ n) (~ i)) (~ i)) ∙ *-comm 3 (3^ n)
+
+
+-- 3^n-lem2 : ∀ n → (3^ n * 3) ≡ suc (suc (suc ((3^ n * 3) ─ 3)))
+-- 3^n-lem2 zero = refl
+-- 3^n-lem2 (suc n) = 
+--    cong (_* 3) (3^n-lem2 n) ∙ cong (suc ∘ suc)
+--      ({!!}
+--       ∙
+--       {!!}
+--       )
 
 
 -- this function generates explcity description for definition of Pathⁿ
@@ -169,11 +189,19 @@ NCubeSig : ∀ {ℓ} → ∀ n → (A : Type ℓ) → Sig ℓ (3^ n)
 NCubeSig zero A = A
 NCubeSig (suc n) A = sig-subst-n (3^-lem n) (sig-PathP-withEnds (λ _ → NCubeSig n A))
 
+NCubeSig* : ∀ {ℓ} → ℕ → (A : Type ℓ) → Σ ℕ (Sig ℓ)
+NCubeSig* zero A = 1 , A
+NCubeSig* (suc n) A = _ , (sig-PathP-withEnds (λ _ → snd (NCubeSig* n A)))
+
+
 -- by dropping last field (the path of the highest dimension)
 -- we can create signature of boundary
 
 Boundaryⁿ : ∀ {ℓ} → ∀ n → (A : Type ℓ) → Type ℓ
 Boundaryⁿ n A = NestedΣᵣ (dropLast (NCubeSig n A))
+
+Boundaryⁿ* : ∀ {ℓ} → ∀ n → (A : Type ℓ) → Type ℓ
+Boundaryⁿ* n A = NestedΣᵣ (dropLast (snd (NCubeSig* n A)))
 
 InsideOfⁿ : ∀ {ℓ} → ∀ {n} → {A : Type ℓ} → Boundaryⁿ n A → Type ℓ
 InsideOfⁿ {n = n} {A} = lastTy (NCubeSig n A)
@@ -184,6 +212,7 @@ Pathⁿ n A = toTypeFam (pathⁿ-args-desc n) (NCubeSig n A)
 NCubeSig' : ∀ {ℓ} → ∀ n → (A : Type ℓ) → Sig ℓ (3^ n)
 NCubeSig' zero A = A
 NCubeSig' (suc n) A = sig-PathP-withEnds' λ _ → NCubeSig' n A
+
 
 Boundaryⁿ' : ∀ {ℓ} → ∀ n → (A : Type ℓ) → Type ℓ
 Boundaryⁿ' n A = NestedΣᵣ (dropLast (NCubeSig' n A))
@@ -233,8 +262,79 @@ record CubeR {ℓ} {bTy : Type ℓ} (cTy : bTy → Type ℓ) : Type ℓ where
 Cubeⁿ : ∀ {ℓ} → ℕ → (A : Type ℓ) → Type ℓ
 Cubeⁿ n A = NestedΣᵣ (NCubeSig' n A)
 
+Cubeⁿ* : ∀ {ℓ} → ℕ → (A : Type ℓ) → Type ℓ
+Cubeⁿ* n A = NestedΣᵣ (snd (NCubeSig* n A))
+
 cubeBd : ∀ {ℓ} → ∀ n → (A : Type ℓ) → Cubeⁿ n A → Boundaryⁿ' n A
 cubeBd n A = dropLastΣᵣ ( (NCubeSig' n A))
 
+cubeBd* : ∀ {ℓ} → ∀ n → (A : Type ℓ) → Cubeⁿ* n A → Boundaryⁿ* n A
+cubeBd* n A = dropLastΣᵣ (snd (NCubeSig* n A))
+
 cubeIns : ∀ {ℓ} → ∀ n → (A : Type ℓ) → (c : Cubeⁿ n A) → InsideOfⁿ' {n = n} {A} (cubeBd n A c)
 cubeIns n A c = getLast ((NCubeSig' n A)) c
+
+
+module BdIso where
+
+  spwe-drop : ∀ {ℓ} → ∀ {n} → (s : I → Sig ℓ (suc n))  → (x₀ : NestedΣᵣ (s i0)) → (x₁ : NestedΣᵣ (s i1)) →
+                             (dropLast (fst (sig-PathP (s) x₀ x₁)))
+                           ≡ (fst (sig-PathP (λ i → dropLast (s i)) (dropLastΣᵣ (s i0) x₀) (dropLastΣᵣ (s i1) x₁)))
+
+  spwe-drop {n = zero} s x₀ x₁ = refl
+  spwe-drop {n = suc zero} s x₀ x₁ = refl
+  spwe-drop {n = suc (suc n)} s x₀ x₁ =
+    cong (( PathP _ _ _ ) ,_ ) (funExt λ x → spwe-drop {n = suc n} _ _ _)
+
+
+  spwe-drop-iso : ∀ {ℓ} → ∀ {n} → (s : I → Sig ℓ n)  → (x₀ : NestedΣᵣ (s i0)) → (x₁ : NestedΣᵣ (s i1)) →
+                            Iso (NestedΣᵣ (dropLast (fst (sig-PathP (s) x₀ x₁))))
+                                (NestedΣᵣ (fst (sig-PathP (λ i → dropLast (s i)) (dropLastΣᵣ (s i0) x₀) (dropLastΣᵣ (s i1) x₁))))
+
+  spwe-drop-iso {n = 0} _ _ _ = idIso
+  spwe-drop-iso {n = 1} s x₀ x₁ = idIso
+  spwe-drop-iso {n = 2} s x₀ x₁ = idIso
+  spwe-drop-iso {n = suc (suc (suc n))} s x₀ x₁ =
+      Σ-cong-iso-snd λ x → spwe-drop-iso {n = suc (suc n)} _ _ _
+
+
+  concat-dropL-iso :  ∀ {ℓ} → ∀ {n m}
+                  → (sₙ : Sig ℓ n)
+                  → (sₘ : NestedΣᵣ sₙ → Sig ℓ (suc m))
+                  → Iso (NestedΣᵣ (dropLast (sig-cs.concat sₙ sₘ)))
+                        (NestedΣᵣ (sig-cs.concat sₙ (dropLast ∘ sₘ)))
+
+  concat-dropL-iso {n = 0} sₙ sₘ = idIso
+  concat-dropL-iso {n = 1} {0} sₙ sₘ = idIso
+  concat-dropL-iso {n = 1} {suc m} sₙ sₘ = idIso
+  concat-dropL-iso {n = (suc (suc zero))} (_ , sₙ) sₘ =
+     Σ-cong-iso-snd
+       λ x → concat-dropL-iso (sₙ x) (sₘ ∘ (x ,_))
+  concat-dropL-iso {n = suc (suc (suc n))} (_ , sₙ) sₘ =
+     Σ-cong-iso-snd
+       λ x → concat-dropL-iso (sₙ x) (sₘ ∘ (x ,_))
+
+
+  sig-PathP-withEnds-iso-dropL : ∀ {ℓ} → ∀ {n} → (p : I → Sig ℓ n)
+          → Iso (NestedΣᵣ (dropLast (sig-PathP-withEnds p)))
+                (Σ (Σ (NestedΣᵣ (p i0)) (NestedΣᵣ ∘ (λ _ → p i1))) λ e01 → NestedΣᵣ (dropLast (fst (sig-PathP p (fst e01) (snd e01)))))
+
+  Iso.fun (sig-PathP-withEnds-iso-dropL {n = 0} p) = λ _ → (_ , _) , _
+  Iso.inv (sig-PathP-withEnds-iso-dropL {n = 0} p) = λ _ → _
+  Iso.rightInv (sig-PathP-withEnds-iso-dropL {n = 0} p) b = refl
+  Iso.leftInv (sig-PathP-withEnds-iso-dropL {n = 0} p) a = refl
+
+  sig-PathP-withEnds-iso-dropL {n = n@(suc nn)} p =
+                     _ Iso⟨ concat-dropL-iso (sig-cs.concat (p i0) λ _ → p i1) _ ⟩
+                     _ Iso⟨ invIso ((nestedΣᵣ-cs.isom-concat {n = n + n} {m = predℕ n} _ _)) ⟩
+                     _ Iso⟨ Σ-cong-iso-fst (invIso (nestedΣᵣ-cs.isom-concat {n = n} {m = n} _ _)) ⟩ _ ∎Iso
+
+  IsoB : ∀ {ℓ} → {A : Type ℓ} → ∀ n →
+                 Iso (Boundaryⁿ* (suc n) A)
+                     (Σ ((Cubeⁿ* n A) × (Cubeⁿ* n A)) λ a → cubeBd* n A (fst a) ≡ cubeBd* n A (snd a) )
+                     
+  IsoB {A = A} n =
+      let s = snd (NCubeSig* n A)
+      in _ Iso⟨ sig-PathP-withEnds-iso-dropL (λ _ → s) ⟩
+         _ Iso⟨ Σ-cong-iso-snd (λ x → compIso ( spwe-drop-iso (λ _ → s) (fst x) (snd x))
+                (equivToIso (snd (sig-PathP (λ _ → dropLast s) (dropLastΣᵣ s (fst x)) (dropLastΣᵣ s (snd x))))) ) ⟩ _ ∎Iso
