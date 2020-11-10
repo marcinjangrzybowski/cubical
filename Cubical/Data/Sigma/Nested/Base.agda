@@ -324,9 +324,8 @@ dropLast {n = suc n} = fst ∘ sig-n+1.to n
 -- getLast {n = zero} = _
 -- getLast {n = suc n} = fst ∘ sig-n+1.to n
 
-dropLastΣᵣ : ∀ {ℓ} → ∀ {n} → (s : Sig ℓ n) → NestedΣᵣ s → NestedΣᵣ (dropLast s)
-dropLastΣᵣ {n = zero} = _
-dropLastΣᵣ {n = suc n} s = fst ∘ Iso.fun (nestedΣᵣ-n+1.isom-to (n) s)
+
+
 
 
 lastTy : ∀ {ℓ} → ∀ {n} → (s : Sig ℓ n)
@@ -334,12 +333,23 @@ lastTy : ∀ {ℓ} → ∀ {n} → (s : Sig ℓ n)
 lastTy {n = zero} _ = (const (Lift Unit))
 lastTy {n = suc n} _ = snd (sig-n+1.to n _)
 
+
+
+module nestedΣᵣ-dropLast where
+
+  isom-to : ∀ {ℓ} → ∀ n → (s : Sig ℓ n) →
+                          Iso (NestedΣᵣ s)
+                              (Σ _ (lastTy s))
+  isom-to zero s =
+    iso _ _ (λ _ → refl) (λ _ → refl)
+  isom-to (suc n) s = nestedΣᵣ-n+1.isom-to _ s
+
+
+dropLastΣᵣ : ∀ {ℓ} → ∀ {n} → (s : Sig ℓ n) → NestedΣᵣ s → NestedΣᵣ (dropLast s)
+dropLastΣᵣ {n = n} s = fst ∘ Iso.fun (nestedΣᵣ-dropLast.isom-to (n) s)
+
 getLast : ∀ {ℓ} → ∀ {n} → (s : Sig ℓ n) → (x : NestedΣᵣ s) → lastTy s (dropLastΣᵣ s x)
-getLast {n = zero} = _
-getLast {n = suc n} s = snd ∘ Iso.fun (nestedΣᵣ-n+1.isom-to (n) s)
-
-
-
+getLast {n = n} s = snd ∘ Iso.fun (nestedΣᵣ-dropLast.isom-to (n) s)
 
 
 -- this helper is provded, to avoid using subst, which sometimes

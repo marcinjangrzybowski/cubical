@@ -1,0 +1,160 @@
+
+
+{-# OPTIONS --cubical --safe #-}
+
+module Cubical.Data.Sigma.Nested.PathPIsoOmega where
+
+open import Cubical.Data.Nat
+
+open import Cubical.Data.Bool
+open import Cubical.Data.Sigma
+open import Cubical.Data.Vec
+
+open import Cubical.Foundations.Everything
+open import Cubical.Foundations.CartesianKanOps
+
+open import Cubical.Data.Sigma.Nested.Base
+open import Cubical.Data.Sigma.Nested.Nested
+open import Cubical.Data.Sigma.Nested.Currying
+
+open import Cubical.Data.Sigma.Nested.Path
+
+open import Cubical.HITs.NCube.IntervalPrim
+
+open import Cubical.Data.Sigma.Nested.PathP
+
+
+
+CubePⁿ'-Isomω : ∀ {ℓ} → ∀ n → (A : Cubeⁿ' n (Type ℓ)) →
+                                Isoω (CubePⁿ' n A)
+                                     (cu n (toCType n A))
+Isoω.to (CubePⁿ'-Isomω zero A) x x₁ = x
+Isoω.toω (CubePⁿ'-Isomω zero A) t₀ t₁ x x₁ = x
+Isoω.from (CubePⁿ'-Isomω zero A) x = x 1=1
+Isoω.sec (CubePⁿ'-Isomω zero A) b = refl
+Isoω.ret (CubePⁿ'-Isomω zero A) a _ = refl
+
+CubePⁿ'-Isomω (suc n) A = h
+  where
+
+    module ciso = Iso (CubePⁿ'-elim-iso n A)
+
+    h : Isoω (CubePⁿ' (suc n) A)
+          (cu (suc n) (toCType (suc n) A))
+
+    Isoω.to h x =
+      let ((e0 , e1) , p) = ciso.fun x
+      in λ i → Isoω.to (CubePⁿ'-Isomω n (Cubeⁿ'-elim n A i)) (p i)
+    Isoω.toω h t₀ t₁ x j =
+      let ((e0 , e1) , p) = ciso.fun (x j)
+      in {!!}
+    Isoω.from h x = ciso.inv (_ , λ i →  Isoω.from (CubePⁿ'-Isomω n (Cubeⁿ'-elim n A i)) (x i))
+    Isoω.sec h b = {!!}
+    Isoω.ret h = {!!}
+
+
+Cylω→Path : ∀ {ℓ} → ∀ n → (A : T[ CType ℓ (suc n) ]) → (e : Ie n)
+               → (x₀ : T[ cu n (A i0) ]) → (x₁ : T[ cu n (A i1) ]) → T[ Cylω n A e x₀ x₁ ]
+               → {B : I → Type ℓ} → (f : (i : I) → T[ Partialⁿ (n) e (A i) ] → B i )
+               → PathP B (f i0 (paⁿ n x₀)) (f i1 (paⁿ n x₁)) 
+Cylω→Path = {!!}
+
+
+mkCylω2 : ∀ {ℓ} → ∀ n → (A : Cubeⁿ' (suc n) (Type ℓ)) →
+            (c0 : (CubePⁿ' n (Cubeⁿ'-elim n A i0))) → 
+            (c1 : (CubePⁿ' n (Cubeⁿ'-elim n A i1))) → 
+            (PathP (λ i → BoundaryPⁿ' n (Cubeⁿ'-elim n A i))
+               (cubeBdP' n _ c0) 
+               (cubeBdP' n _ c1) ) →
+            T[ Cylω n (toCType (suc n) A)
+               (boundaryExpr n)
+               ((Isoω.to (CubePⁿ'-Isomω n (Cubeⁿ'-elim n A i0))) c0)
+               ((Isoω.to (CubePⁿ'-Isomω n (Cubeⁿ'-elim n A i1))) c1)  ]
+           
+
+mkCyl2 : ∀ {ℓ} → ∀ n → (A : Cubeⁿ' (suc n) (Type ℓ)) →
+            (c0 : T[ cu n (toCType (suc n) A i0) ]) → 
+            (c1 : T[ cu n (toCType (suc n) A i1) ]) → 
+            T[ Cylω n (λ z → toCType (suc n) A z) (boundaryExpr n) c0 c1 ] →
+            PathP (λ i → BoundaryPⁿ' n (Cubeⁿ'-elim n A i))
+                (cubeBdP' n (Cubeⁿ'-elim n A i0)
+                 (Isoω.from (CubePⁿ'-Isomω n (Cubeⁿ'-elim n A i0))
+                  c0))
+                (cubeBdP' n (Cubeⁿ'-elim n A i1)
+                 (Isoω.from (CubePⁿ'-Isomω n (Cubeⁿ'-elim n A i1))
+                  c1))
+                  
+
+
+
+BoundaryPⁿ'-Boundaryω-Isoω : ∀ {ℓ} → ∀ n → (A : Cubeⁿ' n (Type ℓ)) →
+                                Isoω (BoundaryPⁿ' n A) (Boundaryω n (toCType n A))
+
+
+
+
+
+BoundaryPⁿ'-Boundaryω-Isoω zero A =
+  record { to = λ x ()
+         ; toω = λ t₀ t₁ x ()
+         ; from = λ x → _
+         ; sec = λ b → refl
+         ; ret = λ a () }
+
+
+BoundaryPⁿ'-Boundaryω-Isoω (suc n) A = h
+
+  where
+
+
+   
+    module bIso = Iso (BoundaryPⁿ'-elim-iso n A) 
+
+    h : Isoω (BoundaryPⁿ' (suc n) A)
+          (Boundaryω (suc n) (toCType (suc n) A))
+    Isoω.to h bd =
+      let ((e0 , e1) , cy) = bIso.fun bd
+
+      in attachEndsToBrdω n _ _ _ (mkCylω2 n A _ _ cy)      
+    
+    Isoω.toω h bd = {!!}
+      
+    Isoω.from h bdω =
+      let (pairω e0 e1 ,ω pω) = deattachEndsFromBrdω n _ bdω
+          e0' = (Isoω.from (CubePⁿ'-Isomω n (Cubeⁿ'-elim n A i0))) e0
+          e1' = (Isoω.from (CubePⁿ'-Isomω n (Cubeⁿ'-elim n A i1))) e1
+          
+      in bIso.inv ((e0' , e1') , {!!})
+
+    
+    Isoω.sec h = {!!}
+    Isoω.ret h = {!!}
+
+
+
+mkCyl2 zero A c0 c1 x = refl
+mkCyl2 (suc n) A c0 c1 x =
+  let zz : PathP (λ i → BoundaryPⁿ' (suc n) (Cubeⁿ'-elim (suc n) A i))
+               (Isoω.from
+                 (BoundaryPⁿ'-Boundaryω-Isoω (suc n) (Cubeⁿ'-elim (suc n) A i0))
+                 (paⁿ (suc n) c0))
+               (Isoω.from
+                 (BoundaryPⁿ'-Boundaryω-Isoω (suc n) (Cubeⁿ'-elim (suc n) A i1))
+                 (paⁿ (suc n) c1))
+      zz = Cylω→Path (suc n) (toCType (suc (suc n)) A) (boundaryExpr (suc n)) c0 c1 x
+              {λ i → BoundaryPⁿ' (suc n) (Cubeⁿ'-elim (suc n) A i)}
+              λ i → Isoω.from (BoundaryPⁿ'-Boundaryω-Isoω (suc n) (Cubeⁿ'-elim (suc n) A i))
+
+
+      qq : PathP (λ i → BoundaryPⁿ' (suc n) (Cubeⁿ'-elim (suc n) A i))
+             (cubeBdP' (suc n) (Cubeⁿ'-elim (suc n) A i0)
+              (Isoω.from (CubePⁿ'-Isomω (suc n) (Cubeⁿ'-elim (suc n) A i0)) c0))
+             (cubeBdP' (suc n) (Cubeⁿ'-elim (suc n) A i1)
+              (Isoω.from (CubePⁿ'-Isomω (suc n) (Cubeⁿ'-elim (suc n) A i1)) c1))
+      qq = {!zz!}
+
+  in qq
+
+mkCylω2 zero A c0 c1 x i ()
+
+mkCylω2 (suc n) A c0 c1 x = {!!}

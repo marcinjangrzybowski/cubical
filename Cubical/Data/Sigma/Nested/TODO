@@ -1,0 +1,14 @@
+
+-- try to parametrise SigmaBoundaries by (NCube n -> A)
+
+-- implicit fields in records (for example for boundaries, where grat majpority of fileds could be infered
+-- same for Cube^n
+
+-- investiage origin of unwanted tranports
+
+
+-- constructor for boundaries with only 2*n arguments, where skelet of codim = 2 is infered from faces
+-- show that all fields can be infered from faces
+
+
+--reconstruct commented funcions in /Nested/Path.agda, but this time without introducing subt nor transport 

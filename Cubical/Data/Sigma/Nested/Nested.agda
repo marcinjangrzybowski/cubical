@@ -68,5 +68,12 @@ NestedΣ-NestedΣᵣ-Iso [- shL - shR -] s =
      _ Iso⟨ Σ-cong-iso-fst (NestedΣ-NestedΣᵣ-Iso shL sL) ⟩
      _ Iso⟨ nestedΣᵣ-cs.isom-split {n = len shL} {m = len shR} _ ⟩ _ ∎Iso
 
--- NestedΣₗ : {!!}
--- NestedΣₗ = {!!}
+
+-- NestedΣₗ : ∀ {ℓ} → ∀ n → (s : Sig ℓ n) → Type ℓ 
+-- NestedΣₗ zero s = {!!}
+-- NestedΣₗ (suc n) s = {!!}
+
+-- -- fromNestedΣₗ : ∀ {ℓ} → ∀ n → (s : Sig ℓ n) → Σ (Type ℓ) (λ x → (x → NestedΣᵣ s))
+-- -- fromNestedΣₗ zero s = (Lift Unit) , idfun _
+-- -- fromNestedΣₗ (suc zero) s = s , idfun _
+-- -- fromNestedΣₗ (suc (suc n)) s = {!!} , {!!}

@@ -1,5 +1,5 @@
 {-# OPTIONS --cubical --safe  #-}
-module Cubical.HITs.NCube.Sigma where
+module Cubical.HITs.NCube.SigmaHelp where
 
 
 import Agda.Primitive.Cubical
@@ -59,6 +59,14 @@ variable
 --                  (⊆'2-∧ (↑Expr 1 (boundaryExpr n)) (λ i → [ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)
 --                    ({!!}))  ]
 
+
+hlp-cu-Cu : ∀ {ℓ} → ∀ n → {A : Type ℓ} → T[ cu n Cu[ n , A ] ] →  T[ Cu A n ]
+hlp-cu-Cu zero x = x
+hlp-cu-Cu (suc n) x i = hlp-cu-Cu n (x i)
+
+hlp-Cu-cu : ∀ {ℓ} → ∀ n → {A : Type ℓ} →  T[ Cu A n ] → T[ cu n Cu[ n , A ] ]
+hlp-Cu-cu zero x = x
+hlp-Cu-cu (suc n) x i = hlp-Cu-cu n (x i)
 
 
 
@@ -182,6 +190,79 @@ Boundaryω-attach-Ends-Cu = {!!}
 --   Partialⁿ-attach-Ends (suc n) {A = λ x → A x i₁} {e = λ x → e i₁ x}
 --                      (λ x → y x i₁) (λ x → end0 i₁ x) (λ x → end1 i₁ x) i
 
+
+
+iso-NCube : ∀ {n} → ∀ {A : Type ℓ}
+              → Iso
+                (NCube (suc n) → A)
+                ((Σ[ (x₀ , x₁) ∈ (NCube n → A) × (NCube n → A) ] x₀ ≡ x₁))
+
+(Iso.fun (iso-NCube {n = n}) x) = (_ , _) , (λ i → x i∷ i)
+Iso.inv (iso-NCube {n = n}) ((_ , _) , snd₁) (x ∷ x₁) = Iapp= snd₁ x x₁
+Iso.rightInv (iso-NCube {n = n}) b = refl
+
+Iso.leftInv (iso-NCube {n = n}) a i (end false ∷ x₁) =  a (end false ∷ x₁)
+Iso.leftInv (iso-NCube {n = n}) a i (end true ∷ x₁) = a (end true ∷ x₁)
+Iso.leftInv (iso-NCube {n = n}) a i (inside i₁ ∷ x₁) = a (inside i₁ ∷ x₁)
+
+
+
+IsoCub' : {A : Type ℓ} → ∀ n → Iso (NCube n → A ) (Cubeⁿ' n A)
+
+Iso.fun (IsoCub' 0) x = x []
+Iso.inv (IsoCub' 0) x _ = x
+Iso.rightInv (IsoCub' 0) b = refl
+Iso.leftInv (IsoCub' 0) a i [] = a []
+
+IsoCub' {A = A} (suc n) = 
+      _ Iso⟨ iso-NCube  ⟩
+      _ Iso⟨ equivToIso
+              (cong≃ (λ T → (Σ[ (x₀ , x₁) ∈ T × T ] x₀ ≡ x₁)) (isoToEquiv (IsoCub' {A = A} n)))  ⟩
+      _ Iso⟨ invIso (Cube'-elim-iso n) ⟩ _ ∎Iso
+
+
+
+-- IsoCub* : {A : Type ℓ} → ∀ n → Iso (NCube n → A ) (Cubeⁿ* n A)
+
+-- Iso.fun (IsoCub* 0) x = x []
+-- Iso.inv (IsoCub* 0) x _ = x
+-- Iso.rightInv (IsoCub* 0) b = refl
+-- Iso.leftInv (IsoCub* 0) a i [] = a []
+
+-- IsoCub* {A = A} (suc n) =
+--       _ Iso⟨ iso-NCube  ⟩
+--       _ Iso⟨ equivToIso
+--               (cong≃ (λ T → (Σ[ (x₀ , x₁) ∈ T × T ] x₀ ≡ x₁)) (isoToEquiv (IsoCub* {A = A} n)))  ⟩
+--       _ Iso⟨ invIso (Cube*-elim-iso n)  ⟩ _ ∎Iso
+
+
+
+
+Isoω-CubeΣ-Cubeω : ∀ {ℓ} → {A : Type ℓ}
+                      → ∀ n → Isoω (Cubeⁿ' n A) (Cu A n)
+
+Isoω.to (Isoω-CubeΣ-Cubeω zero) x _ = x
+Isoω.toω (Isoω-CubeΣ-Cubeω zero) t₀ t₁ x _ i = lowerω (λ _ → x i) 
+Isoω.from (Isoω-CubeΣ-Cubeω zero) x = x 1=1
+-- Isoω.fromω (Isoω-CubeΣ-Cubeω zero) t₀ t₁ p = p 1=1
+Isoω.sec (Isoω-CubeΣ-Cubeω zero) b = refl
+Isoω.ret (Isoω-CubeΣ-Cubeω zero) a _ = refl
+
+Isoω-CubeΣ-Cubeω {A = A} (suc n) = Isoω.precomp ww (Cube'-elim-iso n)
+
+   where
+
+     module prev = Isoω (Isoω-CubeΣ-Cubeω {A = A} n)
+
+     ww : Isoω (Σ (Cubeⁿ' n _ × Cubeⁿ' n _) (λ a → fst a ≡ snd a))
+               (Cu _ (suc n))
+
+     Isoω.to ww x i = prev.to (snd x i) 
+     Isoω.toω ww t₀ t₁ x i = prev.toω (snd t₀ i) (snd t₁ i) λ j → snd (x j) i 
+     Isoω.from ww x = _ , (λ i → prev.from (x i))
+     -- Isoω.fromω ww t₀ t₁ p i = ({!prev.fromω _ _ (p i)!} , {!!}) , λ j → prev.from ({!p i!})
+     Isoω.sec ww ((e0 , e1) , p) i = ((prev.sec e0 i) , prev.sec e1 i) , λ j → prev.sec (p j) i
+     Isoω.ret ww a i = prev.ret (a i)
 
 
 

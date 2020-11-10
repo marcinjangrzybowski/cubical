@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical --safe #-}
+{-# OPTIONS --cubical --safe  #-}
 module Cubical.HITs.NCube.IntervalPrim where
 
 
@@ -216,19 +216,29 @@ I→ x = ωty (I → Tω) (λ x₁ x₂ → (∀ i → (x₁ i ≡ω x₂ i)))
   where open ωType
 
 
-
 record Isoω {ℓ : Level} (T : Type ℓ)
                 (t : ωType) : Typeω where
   open ωType t
 
   field
     to : T → Tω
+    toω : ∀ t₀ t₁ → t₀ ≡ t₁ → to t₀ ≡ω to t₁ 
     from : Tω → T
+    -- fromω : ∀ t₀ t₁ → t₀ ≡ω t₁ → from t₀ ≡ from t₁ 
     sec : (b : T) → from (to b) ≡ b
     ret : (a : Tω) → to (from a) ≡ω a
 
 
-
+  precomp : ∀ {ℓ'} → {T' : Type ℓ'} → Iso T' T → Isoω T' t 
+  precomp isom =
+     record { to = λ x →  to (fun x)
+            ; toω = λ t₀ t₁ x → toω _ _ (cong fun x)  
+            ; from = λ x → inv (from x)
+            -- ; fromω = λ t₀ t₁ x → cong inv (fromω t₀ t₁ x)
+            ; sec = λ b → cong inv (sec (fun b)) ∙ leftInv b
+            ; ret = λ a → toω _ _ (rightInv (from a)) transω ret a
+            }
+    where open Iso isom 
 
 Typeωⁿ : Typeω → ℕ → Typeω
 Typeωⁿ x zero = x
@@ -388,6 +398,22 @@ _b∷_ : ∀ {ℓ} → ∀ {n} → {A : NCube (suc n) → Type ℓ} →
           (∀ x → A x) → ∀ b → ∀ x → (A ∘ (end b ∷_)) x
 _b∷_ {ℓ} {n} {A} x b = x ∘ (end b ∷_)
 
+
+iso-NCube : ∀ {ℓ} → ∀ {n} → ∀ {A : Type ℓ}
+              → Iso
+                (NCube (suc n) → A)
+                ((Σ[ (x₀ , x₁) ∈ (NCube n → A) × (NCube n → A) ] x₀ ≡ x₁))
+
+(Iso.fun (iso-NCube {n = n}) x) = (_ , _) , (λ i → x i∷ i)
+Iso.inv (iso-NCube {n = n}) ((_ , _) , snd₁) (x ∷ x₁) = Iapp= snd₁ x x₁
+Iso.rightInv (iso-NCube {n = n}) b = refl
+
+Iso.leftInv (iso-NCube {n = n}) a i (end false ∷ x₁) =  a (end false ∷ x₁)
+Iso.leftInv (iso-NCube {n = n}) a i (end true ∷ x₁) = a (end true ∷ x₁)
+Iso.leftInv (iso-NCube {n = n}) a i (inside i₁ ∷ x₁) = a (inside i₁ ∷ x₁)
+
+
+
 Ct[_,_] : ∀ {ℓ}  → ∀ n → (A : NCube n → Type ℓ) → T[ CType ℓ n ]
 Ct[ zero , A ] = liftω (A [])
 Ct[ suc n , A ] i = Ct[ n , (A ∘ (inside i ∷_)) ]
@@ -488,13 +514,15 @@ lenNC (suc n) (inside i ∷ x₁) = loop i ∷ (lenNC _ x₁)
 
 
 
--- Cu-app : ∀ {ℓ} → ∀ {n} → ∀ {A  : Type ℓ} → Cu A n → NCube n → A
--- Cu-app {n = zero} x _ = Cuz x
--- Cu-app {n = suc n} x v = Iapp (λ i → Cu-app (x i) (tail v)) (head v)
+Cu-app : ∀ {ℓ} → ∀ {n} → ∀ {A  : Type ℓ} → T[ Cu A n ] → NCube n → A
+Cu-app {n = zero} x _ = Cuz x
+Cu-app {n = suc n} x v = Iapp (λ i → Cu-app (x i) (tail v)) (head v)
 
--- cu-app : ∀ {ℓ} → ∀ n → ∀ {A  : CType ℓ n} → cu n A → (cu : NCube n) → Cu-app A cu
--- cu-app {ℓ} zero {A} x cu = x  1=1
--- cu-app {ℓ} (suc n) {A} x cu = IappP (λ i → cu-app n (x i) (tail cu)) (head cu)
+
+
+cu-app : ∀ {ℓ} → ∀ n → ∀ {A  : T[ CType ℓ n ]} → T[ cu n A ] → (cu : NCube n) → Cu-app A cu
+cu-app {ℓ} zero {A} x cu = x  1=1
+cu-app {ℓ} (suc n) {A} x cu = IappP (λ i → cu-app n (x i) (tail cu)) (head cu)
 
 -- Cu-elim : ∀ {ℓ} → ∀ n → ∀ {A  : Type ℓ} → (NCube n → A) → Cu A n
 -- Cu-elim (zero) x _ = x []
@@ -544,26 +572,26 @@ c-mapΠ : ∀ {ℓ ℓ'} → ∀ n
 c-mapΠ zero f a _ = (f 1=1) (a 1=1)
 c-mapΠ (suc n) f a i = c-mapΠ n (f i) (a i)
 
+
+Cu-≡ : ∀ {ℓ} → ∀ n → {A : Type ℓ} → T[ Cu A n ] → T[ Cu A n ] → T[ CType ℓ n ]
+Cu-≡ zero x x₁ _ = x (1=1) ≡ x₁ (1=1)
+Cu-≡ (suc n) x x₁ i = Cu-≡ n (x i) (x₁ i)
+
+cu-PathP : ∀ {ℓ} → ∀ n → (A : T[ CType ℓ (suc n) ]) → T[ cu n (A i0) ] → T[ cu n (A i1) ] → T[ CType ℓ n ]
+cu-PathP zero A x x₁ _ = PathP (λ i → A i 1=1) (x (1=1)) (x₁ (1=1))
+cu-PathP (suc n) A x x₁ i = cu-PathP n (λ j → A j i) (x i ) (x₁ i)
+
+hlp-cu-Cu : ∀ {ℓ} → ∀ n → {A : Type ℓ} → T[ cu n Cu[ n , A ] ] →  T[ Cu A n ]
+hlp-cu-Cu zero x = x
+hlp-cu-Cu (suc n) x i = hlp-cu-Cu n (x i)
+
+hlp-Cu-cu : ∀ {ℓ} → ∀ n → {A : Type ℓ} →  T[ Cu A n ] → T[ cu n Cu[ n , A ] ]
+hlp-Cu-cu zero x = x
+hlp-Cu-cu (suc n) x i = hlp-Cu-cu n (x i)
+
+
 ---- conversions from and to functions of NCube
 
-
-CType-to-NC : ∀ {ℓ} → ∀ n → Isoω (NCube n → Type ℓ) (CType ℓ n)
-CType-to-NC zero =
-  record { to = λ x x₁ → x []
-         ; from = λ x x₁ → lowerω x
-         ; sec = λ b i x → b (isPropCube [] x i)
-         ; ret = λ a x i → a 1=1
-         }
-Isoω.to (CType-to-NC (suc n)) x i = Isoω.to (CType-to-NC n) (x ∘ (inside i ∷_))
-Isoω.from (CType-to-NC (suc n)) x (end x₁ ∷ x₂) = Isoω.from (CType-to-NC n) (x (Bool→I x₁)) x₂
-Isoω.from (CType-to-NC (suc n)) x (inside i ∷ x₂) = Isoω.from (CType-to-NC n) (x i) x₂
-Isoω.sec (CType-to-NC (suc n)) b i (end false ∷ x₁) =
-  Isoω.sec (CType-to-NC n) (λ x₂ → b (end false ∷ x₂)) i x₁
-Isoω.sec (CType-to-NC (suc n)) b i (end true ∷ x₁) =
-  Isoω.sec (CType-to-NC n) (λ x₂ → b (end true ∷ x₂)) i x₁
-Isoω.sec (CType-to-NC (suc n)) b i (inside i₁ ∷ x₁) =
-  Isoω.sec (CType-to-NC n) (b ∘ (inside i₁ ∷_)) i x₁
-Isoω.ret (CType-to-NC (suc n)) a i = Isoω.ret (CType-to-NC (n)) (a i)
 
 CType-ev : ∀ {ℓ} → ∀ n → T[ CType ℓ n ] → NCube n → Type ℓ
 CType-ev zero x x₁ = x 1=1
@@ -591,6 +619,40 @@ from-cu' {n = suc n} {A} x (end x₁ ∷ c) = from-cu' {n = n} {A} (x (Bool→I 
 from-cu' {n = suc n} {A} x (inside i ∷ c) = from-cu' {n = n} {A} (x i) c
 
 
+
+NCube→-to-cu : ∀ {ℓ} → {A : Type ℓ} → ∀ n → Isoω (NCube n → A) (Cu A n)
+NCube→-to-cu zero =
+  record { to = λ x x₁ → x []
+         ; toω = λ t₀ t₁ x x₁ i → x i []
+         ; from = λ x x₁ → lowerω x
+         ; sec = λ b i x → b (isPropCube [] x i)
+         ; ret = λ a x i → a 1=1
+         }
+Isoω.to (NCube→-to-cu (suc n)) x i = Isoω.to (NCube→-to-cu n) (x ∘ (inside i ∷_))
+Isoω.toω (NCube→-to-cu (suc n)) t₀ t₁ x i = Isoω.toω (NCube→-to-cu n) _ _  λ i₁ x₁ → x i₁ (inside i ∷ x₁)
+Isoω.from (NCube→-to-cu (suc n)) x (end x₁ ∷ x₂) = Isoω.from (NCube→-to-cu n) (x (Bool→I x₁)) x₂
+Isoω.from (NCube→-to-cu (suc n)) x (inside i ∷ x₂) = Isoω.from (NCube→-to-cu n) (x i) x₂
+Isoω.sec (NCube→-to-cu (suc n)) b i (end false ∷ x₁) =
+  Isoω.sec (NCube→-to-cu n) (λ x₂ → b (end false ∷ x₂)) i x₁
+Isoω.sec (NCube→-to-cu (suc n)) b i (end true ∷ x₁) =
+  Isoω.sec (NCube→-to-cu n) (λ x₂ → b (end true ∷ x₂)) i x₁
+Isoω.sec (NCube→-to-cu (suc n)) b i (inside i₁ ∷ x₁) =
+  Isoω.sec (NCube→-to-cu n) (b ∘ (inside i₁ ∷_)) i x₁
+Isoω.ret (NCube→-to-cu (suc n)) a i = Isoω.ret (NCube→-to-cu (n)) (a i)
+
+CType-to-NC-Isoω : ∀ {ℓ} → ∀ n → Isoω (NCube n → Type ℓ) (CType ℓ n)
+CType-to-NC-Isoω {ℓ} = NCube→-to-cu {A = Type ℓ}
+
+
+CType-to-NC : ∀ {ℓ} → ∀ n → (NCube n → Type ℓ) → T[ iterω I→ ω[ Type ℓ ] n ]
+CType-to-NC {ℓ} n = Isoω.to (CType-to-NC-Isoω {ℓ} n)
+
+NC-to-CType : ∀ {ℓ} → ∀ n → T[ iterω I→ ω[ Type ℓ ] n ] → (NCube n → Type ℓ)
+NC-to-CType {ℓ} n = Isoω.from (CType-to-NC-Isoω {ℓ} n)
+
+cu-intro : ∀ {ℓ} → ∀ n → ∀ {A  : T[ CType ℓ n ]} → (Π (NC-to-CType n A)) → T[ cu n A ]
+cu-intro zero x _ = x []
+cu-intro (suc n) x i = cu-intro n (x i∷ i)
 
 -- ---------
 
@@ -763,6 +825,12 @@ paⁿ : ∀ {ℓ} → ∀ n → {A : T[ CType ℓ n ]} → {e : Ie n}
 paⁿ zero x x₁ = x 1=1
 paⁿ (suc n) x i = paⁿ n (x i)
 
+paⁿ-Cu : ∀ {ℓ} → ∀ n → {A : Type ℓ } → {e : Ie n}
+     →  T[ Cu A n ] → T[ Partialⁿ n e Cu[ n , A ] ]
+paⁿ-Cu zero x x₁ = x 1=1
+paⁿ-Cu (suc n) x i = paⁿ-Cu n (x i)
+
+
 -- paPⁿ : ∀ {ℓ} → ∀ n → {A : T[ CTypeP ℓ n ]} → {e : Ie n}
 --      →  T[ cu n A ] → T[ Partialⁿ n e A ]
 -- paPⁿ = ?
@@ -816,6 +884,32 @@ PartialPⁿ-mapΠ : ∀ {ℓ ℓ'} → ∀ n → {e : Ie n}
                       (fromCuc n (PartialPⁿ-map→ n B a)) ]
 PartialPⁿ-mapΠ zero x a p =  (x p) (a p)
 PartialPⁿ-mapΠ (suc n) x a i = PartialPⁿ-mapΠ n (x i) (a i)
+
+
+
+Partialⁿ-pathApp : ∀ {ℓ} → ∀ n → {e : Ie n}
+               → {A : NCube (suc n) → Type ℓ}
+               → {x0 : Π (A i∷ i0)}
+               → {x1 : Π (A i∷ i1)}
+               → T[ Partialⁿ n e
+                    (Ct[ n , (λ c → PathP (λ i → (A i∷ i) c ) (x0 c) (x1 c)) ]) ]
+               → ∀ i → T[ Partialⁿ n e Ct[ n , A i∷ i ] ]
+Partialⁿ-pathApp zero x i 1=1 = x 1=1 i
+Partialⁿ-pathApp (suc n) {A = A} x i i₁ = Partialⁿ-pathApp n {A = λ x₁ → A (head x₁ ∷ inside i₁ ∷ tail x₁)} (x i₁) i
+
+Partialⁿ-mapInsPathP : ∀ {ℓ} → ∀ n → {e : Ie n}
+               → {A : NCube (suc n) → Type ℓ}
+               → {B : NCube (suc n) → Type ℓ}
+               → {x0 : Π (A i∷ i0)}
+               → {x1 : Π (A i∷ i1)}
+               → (f : ∀ c → A c → B c)
+               → T[ Partialⁿ n e
+                    (Ct[ n , (λ c → PathP (λ i → (A i∷ i) c ) (x0 c) (x1 c)) ]) ]
+               → T[ Partialⁿ n e
+                    (Ct[ n , (λ c → PathP (λ i → (B i∷ i) c ) (f (end false ∷ c) (x0 c)) (f (end true ∷ c) (x1 c))) ]) ]
+Partialⁿ-mapInsPathP n f = Partialⁿ-map→ n (paⁿ n cu→[ n , (λ c x i → f (inside i ∷ c) (x i)) ])
+
+
 
 Partialⁿ-i1-elim : ∀ {ℓ} → ∀ n → {A : T[ CType ℓ n ]}
                    → T[ Partialⁿ n i1ⁿ A ]
@@ -974,6 +1068,7 @@ Partialⁿ∨  :  ∀ {ℓ}  → ∀ n → {A : T[ CType ℓ n ]}
 Partialⁿ∨ zero i j ∩a ai aj = primPOr i j (λ p → outS (ai p)) (λ p → outS (aj p))
 Partialⁿ∨ (suc n) i j ∩a ai aj i' = Partialⁿ∨ n (i i') (j i') (∩a i') (ai i') (aj i')
 
+
 -- -------
 
 inSⁿ→-const : ∀ {ℓ ℓ'} → ∀ n → (e : Ie n) → (A : NCube n → Type ℓ) → (B : NCube n → Type ℓ')
@@ -1069,11 +1164,84 @@ inSⁿ→i0 : ∀ {ℓ} → ∀ n → {A : T[ CType ℓ n ]}
         → T[ cu n A ]  →  T[ Subⁿ n i0ⁿ pa ]
 inSⁿ→i0 zero a = inS (lowerω a)
 inSⁿ→i0 (suc n) a i = inSⁿ→i0 n (a i)
+
+--------
+
+mkPartialEnds : ∀ {ℓ} → ∀ n → {A : T[ CType ℓ (suc n) ]} → {e : Ie n}
+               → (x₀ : T[ cu n (A i0) ]) → (x₁ : T[ cu n (A i1) ])
+               → T[ Partialⁿ (suc n) (λ i → [ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) A ]
+mkPartialEnds zero {A} x₀ x₁ i = zz
+  where
+    zz : _
+    zz (i = i0) = x₀ 1=1
+    zz (i = i1) = x₁ 1=1
+    
+mkPartialEnds (suc n) {A} {e} x₀ x₁ i j = mkPartialEnds n {λ l → A l j} {e = e j} (x₀ j) (x₁ j) i 
+
+
+mkCylEnds : ∀ {ℓ} → ∀ n → {A : T[ CType ℓ (suc n) ]} → {e : Ie n}
+               → (x₀ : T[ cu n (A i0) ]) → (x₁ : T[ cu n (A i1) ])
+               → T[ Partialⁿ (suc n) (↑Expr 1 e ∧ⁿ (λ i → [ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)) A ]
+mkCylEnds n {A} {e = e} x₀ x₁ = ⊆'2-∧ (↑Expr 1 e) (λ i → [ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) (mkPartialEnds n {A} {e = e} x₀ x₁)
+
+Cylω : ∀ {ℓ} → ∀ n → (A : T[ CType ℓ (suc n) ]) → (e : Ie n)
+               → (x₀ : T[ cu n (A i0) ]) → (x₁ : T[ cu n (A i1) ])
+               → ωType 
+Cylω n A e x₀ x₁ = Partialⁿ-Sub (suc n) {A = A}
+                        {i = ↑Expr 1 e}
+                        {j = (λ i → [ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)}
+                        (mkCylEnds n x₀ x₁) 
+
+attachEndsToCylω : ∀ {ℓ} → ∀ n → (A : T[ CType ℓ (suc n) ]) → (e : Ie n)
+               → (x₀ : T[ cu n (A i0) ]) → (x₁ : T[ cu n (A i1) ]) → T[ Cylω n A e x₀ x₁ ]
+                → T[ Partialⁿ (suc n) ((λ i → [ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) ∨ⁿ (↑Expr 1 e)  ) A ]
+attachEndsToCylω zero _ e x₀ x₁ x i = zz 
+  where
+    zz : _
+    zz (i = i0) = x₀ 1=1
+    zz (i = i1) = x₁ 1=1
+    zz (e = i1) = outS (x i 1=1)
+attachEndsToCylω (suc n) A e x₀ x₁ x i j =
+  attachEndsToCylω n (λ l → A l j) (e j) (x₀ j) (x₁ j) (λ l → x l j) i
+
+
+
+deattachEndsFromCylω : ∀ {ℓ} → ∀ n → (A : T[ CType ℓ (suc n) ]) → (e : Ie n)               
+                → T[ Partialⁿ (suc n) ((λ i → [ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) ∨ⁿ (↑Expr 1 e)  ) A ]
+                → Σω (T[ cu n (A i0) ] ×ω  T[ cu n (A i1) ] ) λ a → T[ Cylω n A e (proj₁ω a) (proj₂ω a)  ] 
+deattachEndsFromCylω zero A e x = (pairω (x i0) (x i1)) ,ω ww
+
+  where
+    ww : T[ Cylω zero A e (x i0) (x i1) ]
+    ww i i=1 = inS ((⊆I→⊆'I 1 (⊆I-∨2 {1} ((λ i → [ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)) (↑Expr 1 e) ) x) i i=1)
+
+deattachEndsFromCylω (suc n) A e x =
+    (pairω (λ i → proj₁ω (fstω (pp i))) (λ i → proj₂ω (fstω (pp i)))) ,ω
+      λ i j → sndω (pp j) i
+  where
+    pp : (j : I) → _
+    pp j = deattachEndsFromCylω n (λ l → A l j) (e j) (λ l → x l j) 
+
+
+
 -- -----
 
 Boundaryω : ∀ {ℓ} → ∀ n → (A : T[ CType ℓ n ]) → ωType
 Boundaryω n A = Partialⁿ n (boundaryExpr n) A
 
+
+attachEndsToBrdω : ∀ {ℓ} → ∀ n → (A : T[ CType ℓ (suc n) ]) 
+                    → (x₀ : T[ cu n (A i0) ]) → (x₁ : T[ cu n (A i1) ])
+                    → T[ Cylω n A (boundaryExpr n) x₀ x₁ ]
+                    → T[ Boundaryω (suc n) A ]
+attachEndsToBrdω zero A = attachEndsToCylω zero A (boundaryExpr zero)
+attachEndsToBrdω (suc n) A = attachEndsToCylω (suc n) A (boundaryExpr (suc n))
+
+deattachEndsFromBrdω : ∀ {ℓ} → ∀ n → (A : T[ CType ℓ (suc n) ]) 
+                    → T[ Boundaryω (suc n) A ]
+                    → Σω (T[ cu n (A i0) ] ×ω  T[ cu n (A i1) ] ) λ a → T[ Cylω n A (boundaryExpr n) (proj₁ω a) (proj₂ω a)  ]
+deattachEndsFromBrdω zero A = deattachEndsFromCylω zero A (boundaryExpr zero)
+deattachEndsFromBrdω (suc n) A = deattachEndsFromCylω (suc n) A (boundaryExpr (suc n))
 
 Boundaryω-getFace : ∀ {ℓ} → ∀ n → ∀ k → ∀ b → (A : T[ CType ℓ (suc n) ])
           → T[ Boundaryω (suc n) A ]
@@ -1146,11 +1314,49 @@ Partialⁿ-getLid (suc n) e true A x =
  in Partialⁿ-i1-elim (suc n) z
 
 
+
+
+Cu-help : ∀ {ℓ} → ∀ n → {A : Type ℓ} → ∀ i
+               → T[ cu (suc n) (λ z₁ → Cu[ suc (suc n) , A ] i z₁) ]
+               → T[ Cu A (suc n) ]
+Cu-help zero _ x i _ = x i 1=1
+Cu-help (suc n) y x i j = Cu-help n y (x j) i
+
+
+
+
+Partialⁿ-getLid-Cu : ∀ {ℓ} → ∀ n → (e : Ie n) → Bool → (A : Type ℓ)
+          → T[ Partialⁿ (suc n) ((λ i → ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)) ∨ⁿ (↑Expr 1 e)) Cu[ suc n , A ] ]
+          → T[ (Cu A n)  ]
+Partialⁿ-getLid-Cu zero e false A x = x i0
+Partialⁿ-getLid-Cu zero e true A x = x i1
+Partialⁿ-getLid-Cu (suc n) e false A x =
+     let z = (⊆I→⊆'I (suc n)
+             ( ⊆I-trans (suc n) ((⊆I-∨2 {n = suc n} i0ⁿ i1ⁿ))
+                   (⊆I-∨1 (i0ⁿ ∨ⁿ i1ⁿ) (e))
+                    )) (x i0)
+ in Cu-help n i0 (Partialⁿ-i1-elim (suc n) z)
+Partialⁿ-getLid-Cu (suc n) e true A x =
+     let z = (⊆I→⊆'I (suc n)
+             ( ⊆I-trans (suc n) ((⊆I-∨1 {n = suc n} i1ⁿ i0ⁿ))
+                   (⊆I-∨1 (i1ⁿ ∨ⁿ i0ⁿ) (e))
+                    )) (x i1)
+ in Cu-help n i1 (Partialⁿ-i1-elim (suc n) z)
+
+
 Boundaryω-getLid : ∀ {ℓ} → ∀ n → ∀ b → (A : T[ CType ℓ (suc n) ])
           → T[ Boundaryω (suc n) A ]
           → T[ cu n (A (Bool→I b))  ]
 Boundaryω-getLid zero b A = Partialⁿ-getLid zero (boundaryExpr zero) b A
 Boundaryω-getLid (suc n) b A = Partialⁿ-getLid (suc n) (boundaryExpr (suc n)) b A
+
+
+
+Boundaryω-getLid' : ∀ {ℓ} → ∀ n → Bool → (A : Type ℓ)
+          → T[ Boundaryω (suc n) (Cu[ suc n , A ]) ]
+          → T[ (Cu A n)  ]
+Boundaryω-getLid' zero b A = Partialⁿ-getLid zero (boundaryExpr zero) b (Cu[ suc zero , A ])
+Boundaryω-getLid' (suc n) b A i = (Partialⁿ-getLid-Cu (suc n) (boundaryExpr (suc n)) b A i)
 
 InsideOfω : ∀ {ℓ} → ∀ n → {A : T[ CType ℓ n ]}
              → (x : T[ Boundaryω n A ]) → ωType
@@ -1207,29 +1413,68 @@ Partial-SidesPath zero {e = e} a e=1 i = a i (IsOne2 (i ∨ ~ i) e e=1)
 Partial-SidesPath (suc n) a i = Partial-SidesPath n λ i₁ → a i₁ i
 
 
+
 sidesPath : ∀ {ℓ} → ∀ n → {e :  Ie n} → {A : T[ CType ℓ (suc n) ]}
                    → (a : T[ Partialⁿ (suc n) ((λ i → ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)) ∨ⁿ ↑Expr 1 e) A ])
                    → T[ Partialⁿ {ℓ} n e
-                          Ct[ n ,
-                             (λ c → PathP (λ i → ((CType-ev (suc n) A) i∷ i) c)
-                                     (from-cu (Partialⁿ-getLid n _ false A a) c)
-                                     (from-cu (Partialⁿ-getLid n _ true A a) c))
-                             ] ]
+                          (cu-PathP n A
+                            (Partialⁿ-getLid n _ false A a)
+                            (Partialⁿ-getLid n _ true A a))
+                              ]
 sidesPath zero {e = e} a e=1 i = a i (IsOne2 (i ∨ ~ i) e e=1)
 sidesPath (suc zero) a i = sidesPath zero λ i₁ → a i₁ i
 sidesPath (suc (suc n)) a i =  sidesPath (suc n) λ i₁ → a i₁ i
 
-Boundaryω-getCyl : ∀ {ℓ} → ∀ n
-          → {A : T[ CType ℓ (suc n) ]}
-          → (x : T[ Boundaryω (suc n) A ])
-          → T[ Boundaryω n
-                Ct[ n ,
-                   (λ c → PathP (λ i → ((CType-ev (suc n) A) i∷ i) c)
-                           (from-cu (Boundaryω-getLid n false A x) c)
-                           (from-cu (Boundaryω-getLid n true A x) c))
-                   ] ]
-Boundaryω-getCyl zero x ()
-Boundaryω-getCyl (suc n) x = sidesPath (suc n) x
+
+
+Partialⁿ-cu-pathApp : ∀ {ℓ} → ∀ n → {e : Ie n}
+               → {A : T[ CType ℓ (suc n) ]}  
+               → ∀ {x0 : T[ cu n (A i0) ]} → ∀ {x1 : T[ cu n (A i1) ]}
+               → T[ Partialⁿ n e (cu-PathP n A x0 x1) ]
+               → ∀ i → T[ Partialⁿ n e (A i) ]
+Partialⁿ-cu-pathApp zero x i x₁ = x x₁ i
+Partialⁿ-cu-pathApp (suc n) x i j = Partialⁿ-cu-pathApp n (x j) i
+
+
+-- sidesPath : ∀ {ℓ} → ∀ n → {e :  Ie n} → {A : T[ CType ℓ (suc n) ]}
+--                    → (a : T[ Partialⁿ (suc n) ((λ i → ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)) ∨ⁿ ↑Expr 1 e) A ])
+--                    → T[ Partialⁿ {ℓ} n e
+--                           Ct[ n ,
+--                              (λ c → PathP (λ i → ((CType-ev (suc n) A) i∷ i) c)
+--                                      (from-cu (Partialⁿ-getLid n _ false A a) c)
+--                                      (from-cu (Partialⁿ-getLid n _ true A a) c))
+--                              ] ]
+-- sidesPath zero {e = e} a e=1 i = a i (IsOne2 (i ∨ ~ i) e e=1)
+-- sidesPath (suc zero) a i = sidesPath zero λ i₁ → a i₁ i
+-- sidesPath (suc (suc n)) a i =  sidesPath (suc n) λ i₁ → a i₁ i
+
+
+-- sidesPath' : ∀ {ℓ} → ∀ n → {e :  Ie n} → {A : Type ℓ}
+--                    → (a : T[ Partialⁿ (suc n) ((λ i → ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)) ∨ⁿ ↑Expr 1 e)
+--                                 Ct[ suc n , (λ _ → A) ] ])
+--                    → T[ Partialⁿ {ℓ} n e
+--                           Ct[ n ,
+--                              (λ c →    Cu-app (Cu-help n (Partialⁿ-getLid n _ false Ct[ suc n , (λ _ → A) ] a)) c
+--                                     ≡  Cu-app (Cu-help n (Partialⁿ-getLid n _ true  Ct[ suc n , (λ _ → A) ] a)) c)
+--                              ] ]
+-- sidesPath' zero {e = e} a e=1 i = a i (IsOne2 (i ∨ ~ i) e e=1)
+-- sidesPath' (suc zero) a i = sidesPath' zero λ i₁ → a i₁ i
+-- sidesPath' (suc (suc n)) a i = sidesPath' (suc n) λ i₁ → a i₁ i
+
+-- Boundaryω-getCyl : ∀ {ℓ} → ∀ n
+--           → {A : T[ CType ℓ (suc n) ]}
+--           → (x : T[ Boundaryω (suc n) A ])
+--           → T[ Boundaryω n
+--                 Ct[ n ,
+--                    (λ c → PathP (λ i → ((CType-ev (suc n) A) i∷ i) c)
+--                            (from-cu (Boundaryω-getLid n false A x) c)
+--                            (from-cu (Boundaryω-getLid n true A x) c))
+--                    ] ]
+-- Boundaryω-getCyl zero x ()
+-- Boundaryω-getCyl (suc n) x = sidesPath (suc n) x
+
+
+
 
 
 
@@ -1290,6 +1535,20 @@ Iso.leftInv IsoInterval' b i (end x) = b (end x)
 Iso.leftInv IsoInterval' b i (inside i₁) = b (inside i₁)
 
 
+-- IsoInterval' : ∀ {ℓ}
+--            → {A : Type ℓ}
+--            → Iso (Interval' → A)
+--                  (Σ[ y ∈ (Bool → A) ]
+--                      (y false) ≡ (y true) )
+-- Iso.fun IsoInterval' x = (λ b → x (end b)) , (λ i → x (inside i))
+-- Iso.inv IsoInterval' x (end x₁) = fst x x₁
+-- Iso.inv IsoInterval' x (inside i) = snd x i
+-- fst (Iso.rightInv IsoInterval' b i) b₁ = fst b b₁
+-- snd (Iso.rightInv IsoInterval' b i) = snd b
+-- Iso.leftInv IsoInterval' b i (end x) = b (end x)
+-- Iso.leftInv IsoInterval' b i (inside i₁) = b (inside i₁)
+
+
 IsoIntervalP' : ∀ {ℓ}
            → {A : Interval' → Type ℓ}
            → Iso (∀ x → A x)
@@ -1331,4 +1590,6 @@ subst-removeLast {n = suc n} {B = B} f (x ∷ x₁) =
 
 -- Iso.rightInv iso-pop b i x a = {!!}
 -- Iso.leftInv iso-pop a i x = {!  !}
+
+
 

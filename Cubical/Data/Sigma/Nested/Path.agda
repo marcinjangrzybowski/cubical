@@ -63,14 +63,29 @@ sig-PathP-withEnds {n = n} s =
      (fst ∘ uncurry (sig-PathP s) ∘ nestedΣᵣ-cs.split' (s i0) _)
 
 
-sig-PathP-withEnds-iso : ∀ {ℓ} → ∀ {n} → (p : I → Sig ℓ n)
-        → Iso (Σ (Σ (NestedΣᵣ (p i0)) (NestedΣᵣ ∘ (λ _ → p i1))) λ (e0 , e1) → NestedΣᵣ (fst (sig-PathP p e0 e1)))
-              (NestedΣᵣ (sig-PathP-withEnds p))
 
-sig-PathP-withEnds-iso {n = n} p = 
-                   _ Iso⟨ invIso (Σ-cong-iso-fst
-                             (invIso (nestedΣᵣ-cs.isom-concat {n = n} {m = n} _ _))) ⟩
-                   _ Iso⟨ nestedΣᵣ-cs.isom-concat {n = n + n} {m = n} _ _ ⟩ _ ∎Iso
+-- sig-PathP-withEnds-iso-lem :  ∀ {ℓ} → ∀ {n} → (s₀ s₁ : Sig ℓ n) → (p : NestedΣᵣ s₀ →  NestedΣᵣ s₁ → Sig ℓ n) →
+--      Iso ((Σ ((NestedΣᵣ (s₀)) × (NestedΣᵣ (s₁))) λ (e01) → NestedΣᵣ ((p (fst e01) (snd e01)))))
+--           (Σ (NestedΣᵣ (sig-cs.concat (s₀) (λ _ → s₁)))
+--             (
+
+--             λ x → NestedΣᵣ (
+--                 ((p) (fst (nestedΣᵣ-cs.split' (s₀) (λ _ → s₁) x)) (snd (nestedΣᵣ-cs.split' (s₀) (λ _ → s₁) x))   ))
+
+--                  ))
+
+-- sig-PathP-withEnds-iso-lem = {!!}
+
+-- sig-PathP-withEnds-iso : ∀ {ℓ} → ∀ {n} → (p : I → Sig ℓ n)
+--         → Iso (Σ ((NestedΣᵣ (p i0)) × (NestedΣᵣ (p i1))) λ (e01) → NestedΣᵣ (fst (sig-PathP p (fst e01) (snd e01))))
+--               (NestedΣᵣ (sig-PathP-withEnds p))
+
+-- sig-PathP-withEnds-iso {n = n} p = 
+--                    -- _ Iso⟨ invIso (Σ-cong-iso-fst
+--                    --           (invIso (nestedΣᵣ-cs.isom-concat {n = n} {m = n} _ _))) ⟩
+--                    _ Iso⟨ sig-PathP-withEnds-iso-lem (p i0) (p i1) (λ x x₁ → fst (sig-PathP p x x₁)) ⟩
+--                    _ Iso⟨ nestedΣᵣ-cs.isom-concat {n = n + n} {m = n} _ _ ⟩ _ ∎Iso
+
 
 
 -- this verision is putting puting PathPs as early as it is possible
@@ -107,42 +122,41 @@ nestedΣᵣ-combine-from {ℓ} {suc (suc n)} p x =
 
 nestedΣᵣ-combine-iso : ∀ {ℓ} → ∀ {n} → (p : I → Sig ℓ n)
                   → Iso (NestedΣᵣ (sig-PathP-withEnds' p))
-                        (Σ[ x₀ ∈ _ ] Σ[ x₁ ∈ _ ] PathP (λ i → NestedΣᵣ (p i)) x₀ x₁)
+                        (Σ[ (x₀ , x₁) ∈ NestedΣᵣ (p i0) × NestedΣᵣ (p i1) ] PathP (λ i → NestedΣᵣ (p i)) x₀ x₁)
 
-Iso.fun (nestedΣᵣ-combine-iso p) = (λ x → _ , _ , λ _ → nestedΣᵣ-combine-to p x _)
-Iso.inv (nestedΣᵣ-combine-iso p) = (λ x → nestedΣᵣ-combine-from p λ _ → (snd (snd x)) _)
+Iso.fun (nestedΣᵣ-combine-iso p) = λ x → _ , λ i → nestedΣᵣ-combine-to p x i
+Iso.inv (nestedΣᵣ-combine-iso p) = (λ x → nestedΣᵣ-combine-from p λ _ → (snd x) _)
 Iso.rightInv (nestedΣᵣ-combine-iso {n = 0} p) b = refl
 Iso.rightInv (nestedΣᵣ-combine-iso {n = 1} p) b = refl
-Iso.rightInv (nestedΣᵣ-combine-iso {n = suc (suc n)} p) (_ , b) i =
-  let z = Iso.rightInv (nestedΣᵣ-combine-iso λ _ → snd (p _) _)
-                 (_ ,  _ , λ _ → snd (snd b _)) i
-  in _ , (_ , (λ i₁ → _ , snd (snd z) i₁))
+Iso.rightInv (nestedΣᵣ-combine-iso {n = suc (suc n)} p) ((e0 , e1) , b) i = 
+  let ((ee0 , ee1) , bb) = Iso.rightInv (nestedΣᵣ-combine-iso {n = suc n} _ )
+                 (_ , (λ j → snd (b j))) i
+  in ((_ , ee0) , (_ , ee1)) , (λ i₁ → _ , bb i₁)
 
 Iso.leftInv (nestedΣᵣ-combine-iso {n = 0} p) a = refl
 Iso.leftInv (nestedΣᵣ-combine-iso {n = 1} p) a = refl
 Iso.leftInv (nestedΣᵣ-combine-iso {n = suc (suc n)} p) a i =
- _ , _ , _ , Iso.leftInv (nestedΣᵣ-combine-iso {n = suc n} _) (snd (snd (snd a))) i
+  _ , _ , _ , Iso.leftInv (nestedΣᵣ-combine-iso {n = suc n} _) (snd (snd (snd a))) i
 
 
 
-withEnds'-Iso-withEnds : ∀ {ℓ} → ∀ {n} → (p : I → Sig ℓ n)
-        → Iso (NestedΣᵣ (sig-PathP-withEnds' p))
-              (NestedΣᵣ (sig-PathP-withEnds p))
 
-withEnds'-Iso-withEnds {n = n} p =  _ Iso⟨ nestedΣᵣ-combine-iso p ⟩
-                   _ Iso⟨ (Σ-cong-iso-snd
-                           λ x₀ → Σ-cong-iso-snd
-                           λ x₁ → equivToIso (invEquiv (snd (sig-PathP p _ _)))) ⟩
-                   _ Iso⟨ invIso Σ-assoc-Iso ⟩
-                   _ Iso⟨ invIso (Σ-cong-iso-fst
-                             (invIso (nestedΣᵣ-cs.isom-concat {n = n} {m = n} _ _))) ⟩
-                   _ Iso⟨ nestedΣᵣ-cs.isom-concat {n = n + n} {m = n} _ _ ⟩ _ ∎Iso
+-- withEnds'-Iso-withEnds : ∀ {ℓ} → ∀ {n} → (p : I → Sig ℓ n)
+--         → Iso (NestedΣᵣ (sig-PathP-withEnds' p))
+--               (NestedΣᵣ (sig-PathP-withEnds p))
+
+-- withEnds'-Iso-withEnds {n = n} p =  _ Iso⟨ nestedΣᵣ-combine-iso p ⟩
+--                    _ Iso⟨ (Σ-cong-iso-snd
+--                            λ (x₀ , x₁) → equivToIso (invEquiv (snd (sig-PathP p _ _)))) ⟩
+--                    _ Iso⟨ invIso (Σ-cong-iso-fst
+--                              (invIso (nestedΣᵣ-cs.isom-concat {n = n} {m = n} _ _))) ⟩
+--                    _ Iso⟨ nestedΣᵣ-cs.isom-concat {n = n + n} {m = n} _ _ ⟩ _ ∎Iso
 
 
 
 mkSigPath : ∀ {ℓ} → ∀ n → NestedΣᵣ (sig-PathP-withEnds' (λ _ → Sig-of-Sig n)) → (I → Sig ℓ n)
 mkSigPath {ℓ} n x i =
-  equivFun NestedΣᵣ-≃-Sig (snd (snd (Iso.fun (nestedΣᵣ-combine-iso  {n = n} (λ _ → Sig-of-Sig n)) x)) i)
+  equivFun NestedΣᵣ-≃-Sig (snd (snd (Iso.fun Σ-assoc-Iso (Iso.fun (nestedΣᵣ-combine-iso  {n = n} (λ _ → Sig-of-Sig n)) x))) i)
 
 
 
@@ -158,6 +172,12 @@ mkSigPath {ℓ} n x i =
 
 3^-lem : ∀ n → 3^ n + 3^ n + 3^ n ≡ 3^ (suc n)
 3^-lem n = (λ i → +-assoc (3^ n) (3^ n) (+-zero (3^ n) (~ i)) (~ i)) ∙ *-comm 3 (3^ n)
+
+
+
+-- 3^-lem' : ∀ n →  suc (predℕ (3^ n)) ≡ 3^ n
+-- 3^-lem' zero = refl
+-- 3^-lem' (suc n) = {!!}
 
 
 -- 3^n-lem2 : ∀ n → (3^ n * 3) ≡ suc (suc (suc ((3^ n * 3) ─ 3)))
@@ -206,8 +226,14 @@ Boundaryⁿ* n A = NestedΣᵣ (dropLast (snd (NCubeSig* n A)))
 InsideOfⁿ : ∀ {ℓ} → ∀ {n} → {A : Type ℓ} → Boundaryⁿ n A → Type ℓ
 InsideOfⁿ {n = n} {A} = lastTy (NCubeSig n A)
 
+InsideOfⁿ* : ∀ {ℓ} → ∀ {n} → {A : Type ℓ} → Boundaryⁿ* n A → Type ℓ
+InsideOfⁿ* {n = n} {A} = lastTy (snd (NCubeSig* n A))
+
 Pathⁿ : ∀ {ℓ} → (n : ℕ) → (A : Type ℓ) → _
 Pathⁿ n A = toTypeFam (pathⁿ-args-desc n) (NCubeSig n A)
+
+Pathⁿ* : ∀ {ℓ} → (n : ℕ) → (A : Type ℓ) → _
+Pathⁿ* n A = toTypeFam (castImpex (pathⁿ-args-desc n)) (snd (NCubeSig* n A))
 
 NCubeSig' : ∀ {ℓ} → ∀ n → (A : Type ℓ) → Sig ℓ (3^ n)
 NCubeSig' zero A = A
@@ -222,6 +248,7 @@ InsideOfⁿ' {n = n} {A} = lastTy (NCubeSig' n A)
 
 Pathⁿ' : ∀ {ℓ} → (n : ℕ) → (A : Type ℓ) → _
 Pathⁿ' n A = toTypeFam (pathⁿ-args-desc n) (NCubeSig' n A)
+
 
 -- NCubeSig properly describes type of Path , Cube and Square from Prelude
 -- this is _not_ the case for NCubeSig' because of diferent order of arguments
@@ -258,24 +285,26 @@ record CubeR {ℓ} {bTy : Type ℓ} (cTy : bTy → Type ℓ) : Type ℓ where
     side0 side1 : bTy
 
 
-
 Cubeⁿ : ∀ {ℓ} → ℕ → (A : Type ℓ) → Type ℓ
-Cubeⁿ n A = NestedΣᵣ (NCubeSig' n A)
+Cubeⁿ n A = NestedΣᵣ (NCubeSig n A)
+
+Cubeⁿ' : ∀ {ℓ} → ℕ → (A : Type ℓ) → Type ℓ
+Cubeⁿ' n A = NestedΣᵣ (NCubeSig' n A)
 
 Cubeⁿ* : ∀ {ℓ} → ℕ → (A : Type ℓ) → Type ℓ
 Cubeⁿ* n A = NestedΣᵣ (snd (NCubeSig* n A))
 
-cubeBd : ∀ {ℓ} → ∀ n → (A : Type ℓ) → Cubeⁿ n A → Boundaryⁿ' n A
-cubeBd n A = dropLastΣᵣ ( (NCubeSig' n A))
+cubeBd' : ∀ {ℓ} → ∀ n → (A : Type ℓ) → Cubeⁿ' n A → Boundaryⁿ' n A
+cubeBd' n A = dropLastΣᵣ ( (NCubeSig' n A))
 
 cubeBd* : ∀ {ℓ} → ∀ n → (A : Type ℓ) → Cubeⁿ* n A → Boundaryⁿ* n A
 cubeBd* n A = dropLastΣᵣ (snd (NCubeSig* n A))
 
-cubeIns : ∀ {ℓ} → ∀ n → (A : Type ℓ) → (c : Cubeⁿ n A) → InsideOfⁿ' {n = n} {A} (cubeBd n A c)
-cubeIns n A c = getLast ((NCubeSig' n A)) c
+cubeIns' : ∀ {ℓ} → ∀ n → (A : Type ℓ) → (c : Cubeⁿ' n A) → InsideOfⁿ' {n = n} {A} (cubeBd' n A c)
+cubeIns' n A c = getLast ((NCubeSig' n A)) c
 
 
-module BdIso where
+module Boundary*-elim-iso-lemmas where
 
   spwe-drop : ∀ {ℓ} → ∀ {n} → (s : I → Sig ℓ (suc n))  → (x₀ : NestedΣᵣ (s i0)) → (x₁ : NestedΣᵣ (s i1)) →
                              (dropLast (fst (sig-PathP (s) x₀ x₁)))
@@ -315,26 +344,242 @@ module BdIso where
        λ x → concat-dropL-iso (sₙ x) (sₘ ∘ (x ,_))
 
 
-  sig-PathP-withEnds-iso-dropL : ∀ {ℓ} → ∀ {n} → (p : I → Sig ℓ n)
-          → Iso (NestedΣᵣ (dropLast (sig-PathP-withEnds p)))
-                (Σ (Σ (NestedΣᵣ (p i0)) (NestedΣᵣ ∘ (λ _ → p i1))) λ e01 → NestedΣᵣ (dropLast (fst (sig-PathP p (fst e01) (snd e01)))))
+  sig-PathP-withEnds'-iso-dropL : ∀ {ℓ} → ∀ {n} → (p : I → Sig ℓ n)
+          → Iso (NestedΣᵣ (dropLast (sig-PathP-withEnds' p)))
+                (Σ (Σ (NestedΣᵣ (p i0)) (NestedΣᵣ ∘ (λ _ → p i1)))
+                   λ e01 → PathP (λ i → NestedΣᵣ (dropLast (p i)))
+                              (dropLastΣᵣ (p i0) (fst e01))
+                              (dropLastΣᵣ (p i1) (snd e01))
+                )
 
-  Iso.fun (sig-PathP-withEnds-iso-dropL {n = 0} p) = λ _ → (_ , _) , _
-  Iso.inv (sig-PathP-withEnds-iso-dropL {n = 0} p) = λ _ → _
-  Iso.rightInv (sig-PathP-withEnds-iso-dropL {n = 0} p) b = refl
-  Iso.leftInv (sig-PathP-withEnds-iso-dropL {n = 0} p) a = refl
+  Iso.fun (sig-PathP-withEnds'-iso-dropL {n = 0} _) = λ x → (_ , _) , (λ i → _)
+  Iso.inv (sig-PathP-withEnds'-iso-dropL {n = 0} _) = λ _ → _
+  Iso.rightInv (sig-PathP-withEnds'-iso-dropL {n = 0} _) _ = refl
+  Iso.leftInv (sig-PathP-withEnds'-iso-dropL {n = 0} _) _ = refl
 
-  sig-PathP-withEnds-iso-dropL {n = n@(suc nn)} p =
-                     _ Iso⟨ concat-dropL-iso (sig-cs.concat (p i0) λ _ → p i1) _ ⟩
-                     _ Iso⟨ invIso ((nestedΣᵣ-cs.isom-concat {n = n + n} {m = predℕ n} _ _)) ⟩
-                     _ Iso⟨ Σ-cong-iso-fst (invIso (nestedΣᵣ-cs.isom-concat {n = n} {m = n} _ _)) ⟩ _ ∎Iso
+  Iso.fun (sig-PathP-withEnds'-iso-dropL {n = n@(suc zero)} _) = _, refl
+  Iso.inv (sig-PathP-withEnds'-iso-dropL {n = n@(suc zero)} _) = fst
+  Iso.rightInv (sig-PathP-withEnds'-iso-dropL {n = n@(suc zero)} _) _ = refl
+  Iso.leftInv (sig-PathP-withEnds'-iso-dropL {n = n@(suc zero)} _) _ = refl
 
-  IsoB : ∀ {ℓ} → {A : Type ℓ} → ∀ n →
-                 Iso (Boundaryⁿ* (suc n) A)
-                     (Σ ((Cubeⁿ* n A) × (Cubeⁿ* n A)) λ a → cubeBd* n A (fst a) ≡ cubeBd* n A (snd a) )
-                     
-  IsoB {A = A} n =
-      let s = snd (NCubeSig* n A)
-      in _ Iso⟨ sig-PathP-withEnds-iso-dropL (λ _ → s) ⟩
-         _ Iso⟨ Σ-cong-iso-snd (λ x → compIso ( spwe-drop-iso (λ _ → s) (fst x) (snd x))
-                (equivToIso (snd (sig-PathP (λ _ → dropLast s) (dropLastΣᵣ s (fst x)) (dropLastΣᵣ s (snd x))))) ) ⟩ _ ∎Iso
+  Iso.fun (sig-PathP-withEnds'-iso-dropL {n = n@(suc (suc zero))} _) (_ , _ , p , e0 , e1) =
+       ((_ , e0) , (_ , e1)) , p
+  Iso.inv (sig-PathP-withEnds'-iso-dropL {n = n@(suc (suc zero))} _) (((_ , e0) , (_ , e1)) , p) =
+       (_ , _ , p , e0 , e1)
+       
+  Iso.rightInv (sig-PathP-withEnds'-iso-dropL {n = n@(suc (suc zero))} _) _ = refl
+  Iso.leftInv (sig-PathP-withEnds'-iso-dropL {n = n@(suc (suc zero))} _) _ = refl
+  
+  Iso.fun (sig-PathP-withEnds'-iso-dropL {n = n@(suc (suc (suc nn)))} _) (_ , _ , _ , x) =
+    let (e0' , e1') , p' = Iso.fun (sig-PathP-withEnds'-iso-dropL {n = (suc (suc nn))} _) x           
+    in  ((_ , e0') , _ , e1') , λ i → _ , p' i
+
+  Iso.inv (sig-PathP-withEnds'-iso-dropL {n = n@(suc (suc (suc nn)))} _) (((_ , e0') , _ , e1') , pp') =
+    let (e0 , e1 , p) = Iso.inv (sig-PathP-withEnds'-iso-dropL {n = (suc (suc nn))} _) ((e0' , e1') , λ i → snd (pp' i))           
+    in  ( _ , _ , _ , e0 , e1 , p)
+
+  Iso.rightInv (sig-PathP-withEnds'-iso-dropL {n = n@(suc (suc (suc nn)))} _) (((_ , e0') , _ , e1') , pp') i =
+    let (e0'' , e1'') , p'' = Iso.rightInv (sig-PathP-withEnds'-iso-dropL {n = (suc (suc nn))} _) ((e0' , e1') , λ i → snd (pp' i)) i           
+    in ((_ , e0'') , _ , e1'') , λ j → _ , p'' j
+
+
+  Iso.leftInv (sig-PathP-withEnds'-iso-dropL {n = n@(suc (suc (suc nn)))} s) (_ , _ , p' , x) i = 
+    let (e0 , e1 , p) = Iso.leftInv (sig-PathP-withEnds'-iso-dropL {n = (suc (suc nn))} λ j → snd (s j) (p' j)) x i           
+    in  ( _ , _ , _ , e0 , e1 , p)
+
+
+
+
+Boundaryⁿ'-elim-iso : ∀ {ℓ} → {A : Type ℓ} → ∀ n →
+               Iso (Boundaryⁿ' (suc n) A)
+                   (Σ ((Cubeⁿ' n A) × (Cubeⁿ' n A)) λ a → cubeBd' n A (fst a) ≡ cubeBd' n A (snd a) )
+
+Boundaryⁿ'-elim-iso {A = A} n = sig-PathP-withEnds'-iso-dropL λ _ → (NCubeSig' n A)
+  where open Boundary*-elim-iso-lemmas 
+
+
+
+
+
+
+-- module debugTransp where
+
+--   A = Type
+
+--   zz : (Σ ((Cubeⁿ' 4 A) × (Cubeⁿ' 4 A)) λ a → cubeBd' 4 A (fst a) ≡ cubeBd' 4 A (snd a) ) → {!!}
+--   zz x = {!getLast (dropLast (NCubeSig' 4 A)) (Iso.inv (Boundary'-elim-iso 4) x) !}
+
+
+Cubeⁿ'-elim-iso : ∀ {ℓ} → {A : Type ℓ} → ∀ n →
+               Iso (Cubeⁿ' (suc n) A)
+                   (Σ ((Cubeⁿ' n A) × (Cubeⁿ' n A)) λ a → (fst a) ≡ (snd a) )
+
+Cubeⁿ'-elim-iso {A = A} n = nestedΣᵣ-combine-iso (λ _ → NCubeSig' n A)
+
+Cubeⁿ'-elim :  ∀ {ℓ} → {A : Type ℓ} → ∀ n → (Cubeⁿ' (suc n) A) → I → (Cubeⁿ' n A)                
+Cubeⁿ'-elim n x i = snd (Iso.fun (Cubeⁿ'-elim-iso n) x) i
+
+
+Cubeⁿ'-ΣInsideⁿ'-iso : ∀ {ℓ} → {A : Type ℓ} → ∀ n →
+                         Iso
+                          (Cubeⁿ' n A)
+                          (Σ (Boundaryⁿ' n A) (InsideOfⁿ' {n = n} {A}) )
+                          
+Cubeⁿ'-ΣInsideⁿ'-iso {A = A} n = nestedΣᵣ-dropLast.isom-to (3^ n) (NCubeSig' n A)
+
+
+
+-- Cube'-split-iso : ∀ {ℓ} → ∀ {A : Type ℓ} → ∀ n m → Iso {!Cubeⁿ' n !} {!!}
+-- Cube'-split-iso = {!!}
+
+-- maybe imprve (check?) performance on this, isomorphism should be avoidable
+Cubeⁿ'-map : ∀ {ℓ ℓb} → {A : Type ℓ} → {B : Type ℓb} → ∀ n → (A → B) → Cubeⁿ' n A → Cubeⁿ' n B
+Cubeⁿ'-map zero f x = f x
+Cubeⁿ'-map (suc zero) f (_ , _ , p) = _ , _ , cong f p
+Cubeⁿ'-map {A = A} {B = B} (suc (suc n)) f = 
+     IsoB.inv ∘ (λ x → _ , cong (Cubeⁿ'-map (suc n) f) (snd x)) ∘ IsoA.fun
+  where
+    module IsoA = Iso (Cubeⁿ'-elim-iso {A = A} (suc n))
+    module IsoB = Iso (Cubeⁿ'-elim-iso {A = B} (suc n))
+
+
+
+Cubeⁿ'-map2 : ∀ {ℓ ℓb} → {A A' : Type ℓ} → {B : Type ℓb} → ∀ n → (A → A' → B) → Cubeⁿ' n A → Cubeⁿ' n A' → Cubeⁿ' n B
+Cubeⁿ'-map2 zero f x₁ x₂ = f x₁ x₂
+-- Cubeⁿ'-map2 (suc zero) f (_ , _ , p₁) (_ , _ , p₂) =  _ , _ , λ i → f (p₁ i) (p₂ i) 
+Cubeⁿ'-map2 {A = A} {A'} {B} (suc n) f x₁ x₂ = 
+    IsoB.inv (_ , λ i → Cubeⁿ'-map2 {A = A} {A' = A'} {B = B} n f (snd (IsoA.fun x₁) i) (snd (IsoA'.fun x₂) i))
+   where
+    module IsoA = Iso (Cubeⁿ'-elim-iso {A = A} n)
+    module IsoA' = Iso (Cubeⁿ'-elim-iso {A = A'} n)
+    module IsoB = Iso (Cubeⁿ'-elim-iso {A = B} n)
+
+-- Cubeⁿ'-absorbDim : ∀ {ℓ} → {A : Type ℓ} → ∀ n → {!(I →  Cubeⁿ' n A)!}
+-- Cubeⁿ'-absorbDim = {!!}
+
+
+-- module map-Test where
+
+--   n = 4
+
+--   map-test : ∀ {ℓ ℓb} → {A : Type ℓ} → {B : Type ℓb} → (A → B) → Cubeⁿ' n A → {!!} 
+--   map-test {A = A} {B} f x =
+--     let z = getLast (NCubeSig' n B) ((Cubeⁿ'-map n f) x)  
+--     in {!z!}
+
+
+
+
+
+
+-- mapPath : ∀ {ℓ} → {A B C : Type ℓ} → (g : A → C) (A → B) → (Σ[ (x₀ , x₁) ∈ A × A ] x₀ ≡ x₁) → (Σ[ (x₀ , x₁) ∈ B × B ] x₀ ≡ x₁)
+-- mapPath = {!!}
+
+
+-- {-# TERMINATING #-}
+-- Boundaryⁿ'-map : ∀ {ℓ} → {A B : Type ℓ} → ∀ n → (A → B) → Boundaryⁿ' n A → Boundaryⁿ' n B
+-- Boundaryⁿ'-map zero _ x = x
+-- Boundaryⁿ'-map (suc zero) f = map-× f f
+-- -- Boundaryⁿ'-map {A = A} {B = B} (suc (suc zero)) f (_ , _ , a , _ , _ , c , d , e)  =
+-- --   _ , (_ , ((cong f a) , (_ , (_ , (cong f c , (cong f d , cong f e))))))
+-- -- Boundaryⁿ'-map {A = A} {B = B} (suc (suc (suc n))) f x = {!!}
+-- Boundaryⁿ'-map {A = A} {B = B} (suc (suc n)) f =
+--      IsoB.inv ∘ zz ∘ IsoA.fun
+--   where
+--     module IsoA = Iso (Boundary'-elim-iso {A = A} (suc n))
+--     module IsoB = Iso (Boundary'-elim-iso {A = B} (suc n))
+
+--     zz : (b
+--             : Σ (Cubeⁿ' (suc n) A × Cubeⁿ' (suc n) A)
+--               (λ a → cubeBd' (suc n) A (fst a) ≡ cubeBd' (suc n) A (snd a))) →
+--            Σ (Cubeⁿ' (suc n) B × Cubeⁿ' (suc n) B)
+--            (λ a → cubeBd' (suc n) B (fst a) ≡ cubeBd' (suc n) B (snd a))
+--     zz ((x₀ , x₁) , p) = ({!!} , {!!}) , {!cong!}
+--      --({!!} ∙∙ (λ i → Boundaryⁿ'-map (suc n) f (snd₁ i)) ∙∙ {!!})
+
+
+
+
+
+
+
+
+-- module Boundary*-elim-iso-lemmas where
+
+--   spwe-drop : ∀ {ℓ} → ∀ {n} → (s : I → Sig ℓ (suc n))  → (x₀ : NestedΣᵣ (s i0)) → (x₁ : NestedΣᵣ (s i1)) →
+--                              (dropLast (fst (sig-PathP (s) x₀ x₁)))
+--                            ≡ (fst (sig-PathP (λ i → dropLast (s i)) (dropLastΣᵣ (s i0) x₀) (dropLastΣᵣ (s i1) x₁)))
+
+--   spwe-drop {n = zero} s x₀ x₁ = refl
+--   spwe-drop {n = suc zero} s x₀ x₁ = refl
+--   spwe-drop {n = suc (suc n)} s x₀ x₁ =
+--     cong (( PathP _ _ _ ) ,_ ) (funExt λ x → spwe-drop {n = suc n} _ _ _)
+
+
+--   spwe-drop-iso : ∀ {ℓ} → ∀ {n} → (s : I → Sig ℓ n)  → (x₀ : NestedΣᵣ (s i0)) → (x₁ : NestedΣᵣ (s i1)) →
+--                             Iso (NestedΣᵣ (dropLast (fst (sig-PathP (s) x₀ x₁))))
+--                                 (NestedΣᵣ (fst (sig-PathP (λ i → dropLast (s i)) (dropLastΣᵣ (s i0) x₀) (dropLastΣᵣ (s i1) x₁))))
+
+--   spwe-drop-iso {n = 0} _ _ _ = idIso
+--   spwe-drop-iso {n = 1} s x₀ x₁ = idIso
+--   spwe-drop-iso {n = 2} s x₀ x₁ = idIso
+--   spwe-drop-iso {n = suc (suc (suc n))} s x₀ x₁ =
+--       Σ-cong-iso-snd λ x → spwe-drop-iso {n = suc (suc n)} _ _ _
+
+
+--   concat-dropL-iso :  ∀ {ℓ} → ∀ {n m}
+--                   → (sₙ : Sig ℓ n)
+--                   → (sₘ : NestedΣᵣ sₙ → Sig ℓ (suc m))
+--                   → Iso (NestedΣᵣ (dropLast (sig-cs.concat sₙ sₘ)))
+--                         (NestedΣᵣ (sig-cs.concat sₙ (dropLast ∘ sₘ)))
+
+--   concat-dropL-iso {n = 0} sₙ sₘ = idIso
+--   concat-dropL-iso {n = 1} {0} sₙ sₘ = idIso
+--   concat-dropL-iso {n = 1} {suc m} sₙ sₘ = idIso
+--   concat-dropL-iso {n = (suc (suc zero))} (_ , sₙ) sₘ =
+--      Σ-cong-iso-snd
+--        λ x → concat-dropL-iso (sₙ x) (sₘ ∘ (x ,_))
+--   concat-dropL-iso {n = suc (suc (suc n))} (_ , sₙ) sₘ =
+--      Σ-cong-iso-snd
+--        λ x → concat-dropL-iso (sₙ x) (sₘ ∘ (x ,_))
+
+
+--   -- sig-PathP-withEnds-iso-dropL : ∀ {ℓ} → ∀ {n} → (p : I → Sig ℓ n)
+--   --         → Iso (NestedΣᵣ (dropLast (sig-PathP-withEnds p)))
+--   --               (Σ (Σ (NestedΣᵣ (p i0)) (NestedΣᵣ ∘ (λ _ → p i1))) λ e01 → NestedΣᵣ (dropLast (fst (sig-PathP p (fst e01) (snd e01)))))
+
+--   -- Iso.fun (sig-PathP-withEnds-iso-dropL {n = 0} p) = λ _ → (_ , _) , _
+--   -- Iso.inv (sig-PathP-withEnds-iso-dropL {n = 0} p) = λ _ → _
+--   -- Iso.rightInv (sig-PathP-withEnds-iso-dropL {n = 0} p) b = refl
+--   -- Iso.leftInv (sig-PathP-withEnds-iso-dropL {n = 0} p) a = refl
+
+--   -- sig-PathP-withEnds-iso-dropL {n = n@(suc nn)} p =
+--   --                    _ Iso⟨ concat-dropL-iso (sig-cs.concat (p i0) λ _ → p i1) _ ⟩
+--   --                    _ Iso⟨ invIso ((nestedΣᵣ-cs.isom-concat {n = n + n} {m = predℕ n} _ _)) ⟩
+--   --                    _ Iso⟨ Σ-cong-iso-fst (invIso (nestedΣᵣ-cs.isom-concat {n = n} {m = n} _ _)) ⟩ _ ∎Iso
+
+-- -- Boundary*-elim-iso : ∀ {ℓ} → {A : Type ℓ} → ∀ n →
+-- --                Iso (Boundaryⁿ* (suc n) A)
+-- --                    (Σ ((Cubeⁿ* n A) × (Cubeⁿ* n A)) λ a → cubeBd* n A (fst a) ≡ cubeBd* n A (snd a) )
+
+-- -- Boundary*-elim-iso {A = A} n =
+-- --     let s = snd (NCubeSig* n A)
+-- --     in _ Iso⟨ sig-PathP-withEnds-iso-dropL (λ _ → s) ⟩
+-- --        _ Iso⟨ Σ-cong-iso-snd (λ x → compIso ( spwe-drop-iso (λ _ → s) (fst x) (snd x))
+-- --               (equivToIso (snd (sig-PathP (λ _ → dropLast s) (dropLastΣᵣ s (fst x)) (dropLastΣᵣ s (snd x))))) ) ⟩ _ ∎Iso
+-- --   where open Boundary*-elim-iso-lemmas 
+    
+-- -- Cube*-elim-iso : ∀ {ℓ} → {A : Type ℓ} → ∀ n →
+-- --                Iso (Cubeⁿ* (suc n) A)
+-- --                    (Σ ((Cubeⁿ* n A) × (Cubeⁿ* n A)) λ a → (fst a) ≡ (snd a) )
+
+-- -- Cube*-elim-iso {A = A} n =
+-- --     let s = λ _ → snd (NCubeSig* n A)
+-- --     in _ Iso⟨ {!!} ⟩ -- invIso (sig-PathP-withEnds-iso s)
+-- --        _ Iso⟨ Σ-cong-iso-snd (λ x → equivToIso (snd (sig-PathP s (fst x) (snd x)))) ⟩ _ ∎Iso
+-- --        -- _ Iso⟨ {!!} ⟩ _ ∎Iso
+-- -- module Cube*-elim-iso-test (A : Type₀) (x : Cubeⁿ* (1) A) (y : (Σ ((Cubeⁿ* 0 A) × (Cubeⁿ* 0 A)) λ a → (fst a) ≡ (snd a) ))where
+
+  
+
+-- --   test1 = {!Iso.inv (Cube*-elim-iso 0) y !}
