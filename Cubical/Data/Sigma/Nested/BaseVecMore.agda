@@ -60,18 +60,17 @@ NBoundary-Boundaryω-Isoω : ∀ {ℓ} → ∀ n → (A : NCube n → Type ℓ) 
 
 
 
-
 CylΣ-squashedTy : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
                      (c1 : (x : Vec Interval' n) → (A b∷ true) x) → 
                      Type ℓ
 CylΣ-squashedTy n A c0 c1 = ∀ x → (PathCu A c0 c1) (boundaryInj x)
 
-Cylω-squashedTy : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
+BdCylω-squashedTy : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
                      (c1 : (x : Vec Interval' n) → (A b∷ true) x) →  
                      ωType
-Cylω-squashedTy n A c0 c1 = Boundaryω n (Ct[ _ , (PathCu A c0 c1)])
+BdCylω-squashedTy n A c0 c1 = Cylω-squashedTy n A (boundaryExpr n) c0 c1
 
 
 CylΣ-squash : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
@@ -96,70 +95,91 @@ CylΣ-unsquash n A c0 c1 x i z = x z i
 
 
 
-mkCylEndsΣ : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
-                     (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
-                     (c1 : (x : Vec Interval' n) → (A b∷ true) x) → 
-                T[ Partialⁿ (suc n)
-                     (↑Expr 1 (boundaryExpr n) ∧ⁿ (λ i → [ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr))
-                       Ct[ _ , A ] ]
-mkCylEndsΣ {ℓ} n A c0 c1 =
-  mkCylEnds n
-   (Isoω.to (NCubeP-Isomω _ _) c0)
-   (Isoω.to (NCubeP-Isomω _ _) c1)
 
-CylωΣ : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
+BdCylω : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
                      (c1 : (x : Vec Interval' n) → (A b∷ true) x) → 
                      ωType 
-CylωΣ n A c0 c1 = Partialⁿ-Sub (suc n) {A = Ct[ _ ,  A ]}
-                        {i = ↑Expr 1 (boundaryExpr n)}
-                        {j = (λ i → [ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)}
-                        (mkCylEndsΣ n A c0 c1) 
+BdCylω n A c0 c1 = Cylω n (Ct[ _ ,  A ]) (boundaryExpr n) ct[ _ , c0 ] ct[ _ , c1 ]
 
-Cylω-squash : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
+-- Partialⁿ-Sub (suc n) {A = Ct[ _ ,  A ]}
+--                         {i = ↑Expr 1 (boundaryExpr n)}
+--                         {j = (λ i → [ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)}
+--                         (mkCylEndsΣ n A c0 c1) 
+
+BdCylω-squash : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
                      (c1 : (x : Vec Interval' n) → (A b∷ true) x) →
-                     T[ CylωΣ n A c0 c1 ]
-                     → T[ Cylω-squashedTy n A c0 c1 ] 
-Cylω-squash {ℓ} zero A c0 c1 x ()
--- Cylω-squash {ℓ} (suc zero) A c0 c1 x i = zz
---   where
---     zz : T[ Partialⁿ zero (boundaryExpr 1 i) (Ct[ 1 , PathCu A c0 c1 ] i) ]
---     zz (i = i0) = λ i₁ → outS (x i₁ i 1=1)
---     zz (i = i1) = λ i₁ → outS (x i₁ i 1=1)
+                     T[ BdCylω n A c0 c1 ]
+                     → T[ BdCylω-squashedTy n A c0 c1 ] 
+BdCylω-squash n A c0 c1 = Cylω-squash n A (boundaryExpr n) c0 c1
+-- BdCylω-squash {ℓ} zero A c0 c1 x ()
+-- -- Cylω-squash {ℓ} (suc zero) A c0 c1 x i = zz
+-- --   where
+-- --     zz : T[ Partialⁿ zero (boundaryExpr 1 i) (Ct[ 1 , PathCu A c0 c1 ] i) ]
+-- --     zz (i = i0) = λ i₁ → outS (x i₁ i 1=1)
+-- --     zz (i = i1) = λ i₁ → outS (x i₁ i 1=1)
     
-Cylω-squash {ℓ} (suc n) A c0 c1 x i =
- {!deattachEndsFromCylω ? ?!}
+-- BdCylω-squash {ℓ} (suc zero) A c0 c1 x i = zz
+--    where
+--      zz : _
+--      zz (i = i1) = λ i₁ → outS (x i₁ i1 1=1)
+--      zz (i = i0) = λ i₁ → outS (x i₁ i0 1=1)
+-- BdCylω-squash {ℓ} (suc (suc n)) A c0 c1 x i i₁ = {!!}
+
+
+  -- let zz : (i j : I) →
+  --             T[ Partialⁿ-Sub n (mkCylEndsΣ (suc n) A c0 c1 j i) ]
+  --     zz i j = x j i
+  -- in {!zz!}
 
 
 
-Cylω-unsquash : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
+BdCylω-unsquash : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
                      (c1 : (x : Vec Interval' n) → (A b∷ true) x) →
-                     T[ Cylω-squashedTy n A c0 c1 ]
-                     → T[ CylωΣ n A c0 c1 ] 
-Cylω-unsquash zero A c0 c1 x i ()
-Cylω-unsquash (suc n) A c0 c1 x i i₁ = {!!}
+                     T[ BdCylω-squashedTy n A c0 c1 ]
+                     → T[ BdCylω n A c0 c1 ] 
+BdCylω-unsquash n A c0 c1 = Cylω-unsquash n A (boundaryExpr n) c0 c1
+-- BdCylω-unsquash zero A c0 c1 x i ()
+-- BdCylω-unsquash (suc zero) A c0 c1 x i i₁ = {!!}
+
+-- BdCylω-unsquash (suc (suc n)) A c0 c1 x i i₁ = {!!}
 
 fromωCyl : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
                      (c1 : (x : Vec Interval' n) → (A b∷ true) x) →
-                     T[ CylωΣ n A c0 c1 ]
+                     T[ BdCylω n A c0 c1 ]
                      → T[ Boundaryω (suc n) Ct[ _ , A ] ]
-fromωCyl {ℓ} n A c0 c1 x i = {!deattachEndsFromBrdω!}
+fromωCyl {ℓ} n@zero A c0 c1 x = attachEndsToCylω n Ct[ _ , A ] (boundaryExpr n) ct[ zero , c0 ] ct[ zero , c1 ] x
+fromωCyl {ℓ} n@(suc _) A c0 c1 x = attachEndsToCylω n Ct[ _ , A ] (boundaryExpr n) _ _ x
 
-toωCyl : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
-                     (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
-                     (c1 : (x : Vec Interval' n) → (A b∷ true) x) →
-                      T[ Boundaryω (suc n) Ct[ _ , A ] ]
-                     → T[ CylωΣ n A c0 c1 ]
 
-toωCyl zero A c0 c1 x i ()
-toωCyl (suc n) A c0 c1 x = λ i i₁ → {!pp i₁ i!} 
-   where
-    pp : (j : I) → {!!}
-    pp j = toωCyl n (λ x₁ → A (head x₁ ∷ inside j ∷ tail x₁))
-                (c0 i∷ j) ((c1 i∷ j)) λ i → {!x i j!} 
+
+toωCyl : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) → (e : Ie n)
+                      (bdω : T[ Partialⁿ (suc n) (((λ i → [ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr) ∨ⁿ (↑Expr 1 e))) Ct[ _ , A ] ])
+                     → T[ Cylω n (Ct[ _ , A ]) e
+                            ct[ _ , ((Isoω.from (NCubeP-Isomω n (_))
+                              (Partialⁿ-getLid n e false _ bdω))) ]
+                            ct[ _ , ((Isoω.from (NCubeP-Isomω n (_))
+                              (Partialⁿ-getLid n e true _ bdω))) ] ]
+
+toωCyl zero A e bdω i i=1 = inS ((⊆I→⊆'I 1 (⊆I-∨2 {1} ((λ i → [ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)) (↑Expr 1 e) ) bdω) i i=1)
+toωCyl (suc zero) A e bdω l l₁ i=1 = toωCyl zero (λ x → A (head x ∷ inside l₁ ∷ [])) (e l₁) ((λ i → bdω i  l₁)) l i=1
+toωCyl (suc (suc n)) A e bdω l l₁ = (toωCyl (suc n) (λ c → A (head c ∷ inside  l₁ ∷ tail c)) (e  l₁) (λ i → bdω i  l₁)) l
+ 
+
+toωCylBd : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
+                      (bdω : T[ Boundaryω (suc n) Ct[ _ , A ] ])
+                     → T[ BdCylω n A
+                            ((Isoω.from (NCubeP-Isomω n (_))
+                              (Boundaryω-getLid n false (Ct[ _ , A ]) bdω)))
+                            ((Isoω.from (NCubeP-Isomω n (_))
+                              (Boundaryω-getLid n true (Ct[ _ , A ]) bdω))) ]
+
+toωCylBd zero A bdω i ()
+toωCylBd (suc n) A bdω = toωCyl (suc n) A (boundaryExpr (suc n)) bdω
+
 
 
 
@@ -192,20 +212,25 @@ NBoundary-Boundaryω-Isoω (suc n) A = h
       let ((e0 , e1) , cy) = bIso.fun bd
           w = Isoω.to (NBoundary-Boundaryω-Isoω n _) (CylΣ-squash n A e0 e1 cy)
 
-      in fromωCyl n A e0 e1 (Cylω-unsquash n A e0 e1 w)       
+      in fromωCyl n A e0 e1 (BdCylω-unsquash n A e0 e1 w)       
 
     
     Isoω.toω h bd = {!!}
       
     Isoω.from h bdω =
-       let c0 = (Isoω.from (NCubeP-Isomω n (_))
+       let c0 : (x : NCube n) → A (inside (Bool→I false) ∷ x)
+           c0 = (Isoω.from (NCubeP-Isomω n (_))
                    (Boundaryω-getLid n false (Ct[ _ , A ]) bdω))
+
+           c1 : (x : NCube n) → A (inside (Bool→I true) ∷ x)
            c1 = (Isoω.from (NCubeP-Isomω n (_))
                     (Boundaryω-getLid n true (Ct[ _ , A ]) bdω))
 
-           z = Cylω-squash n A
+           z = BdCylω-squash n A
                     c0 c1
-                  (toωCyl n A c0 c1 bdω)
+                  (toωCylBd n A bdω)
+
+
            w = Isoω.from (NBoundary-Boundaryω-Isoω n _) z
        in bIso.inv ((c0 , c1) ,
                     CylΣ-unsquash n A
@@ -216,6 +241,14 @@ NBoundary-Boundaryω-Isoω (suc n) A = h
     
     Isoω.sec h = {!!}
     Isoω.ret h = {!!}
+
+
+
+
+
+
+Boundaryω-Boundary : ∀ n → T[ Boundaryω n Ct[ n , (λ _ → NBoundary n) ] ] 
+Boundaryω-Boundary n = Isoω.to (NBoundary-Boundaryω-Isoω n (λ _ → NBoundary n)) (idfun _)
 
 
 

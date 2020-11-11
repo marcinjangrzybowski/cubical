@@ -412,6 +412,12 @@ Iso.leftInv (iso-NCube {n = n}) a i (end false ∷ x₁) =  a (end false ∷ x�
 Iso.leftInv (iso-NCube {n = n}) a i (end true ∷ x₁) = a (end true ∷ x₁)
 Iso.leftInv (iso-NCube {n = n}) a i (inside i₁ ∷ x₁) = a (inside i₁ ∷ x₁)
 
+PathCu : ∀ {ℓ} → ∀ {n} → (A : NCube (suc n) → (Type ℓ)) →
+                     (c0 : ∀ x → (A b∷ false) x) →
+                     (c1 : ∀ x → (A b∷ true) x) →
+                     NCube n → (Type ℓ)
+PathCu {n} A c0 c1 x = PathP (λ i → (A i∷ i) x) (c0 x) (c1 x)
+
 
 
 Ct[_,_] : ∀ {ℓ}  → ∀ n → (A : NCube n → Type ℓ) → T[ CType ℓ n ]
@@ -1476,6 +1482,36 @@ Partialⁿ-cu-pathApp (suc n) x i j = Partialⁿ-cu-pathApp n (x j) i
 
 
 
+Cylω-squashedTy : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) → (e : Ie n)
+                     (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
+                     (c1 : (x : Vec Interval' n) → (A b∷ true) x) →  
+                     ωType
+Cylω-squashedTy n A e c0 c1 = Partialⁿ n e (Ct[ _ , (PathCu A c0 c1)])
+
+
+Cylω-squash : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ)  → (e : Ie n) →
+                     (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
+                     (c1 : (x : Vec Interval' n) → (A b∷ true) x) →
+                     T[ Cylω n Ct[ _ ,  A ] e ct[ _ , c0 ] ct[ _ , c1 ] ]
+                     → T[ Cylω-squashedTy n A e c0 c1 ] 
+Cylω-squash zero A e c0 c1 x = λ { (e = i1) → λ i → outS (x i 1=1) }    
+Cylω-squash (suc n) A e c0 c1 x i =
+  Cylω-squash n (λ x₂ → A (head x₂ ∷ inside i ∷ tail x₂)) (e i)
+     (c0 i∷ i) (c1 i∷ i)  λ i₁ → x i₁ i
+
+
+
+Cylω-unsquash : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ)  → (e : Ie n) →
+                     (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
+                     (c1 : (x : Vec Interval' n) → (A b∷ true) x) →
+                      T[ Cylω-squashedTy n A e c0 c1 ] 
+                     → T[ Cylω n Ct[ _ ,  A ] e ct[ _ , c0 ] ct[ _ , c1 ] ] 
+Cylω-unsquash zero A e c0 c1 x i i=1 = inS (x i=1 i)
+Cylω-unsquash (suc n) A e c0 c1 x i₁ i =
+    Cylω-unsquash n (λ x₂ → A (head x₂ ∷ inside i ∷ tail x₂)) (e i)
+     (c0 i∷ i) (c1 i∷ i) (x i) i₁
+
+
 
 
 InsideOfBω : ∀ {ℓ} → ∀ n → {A : T[ CType ℓ n ]}
@@ -1503,6 +1539,9 @@ Boundaryω-map : ∀ {ℓ ℓ'} → ∀ n
                    → T[ Boundaryω n (A) ]
                    → T[ Boundaryω n (B) ]
 Boundaryω-map n f = Partialⁿ-map→ n (paⁿ n f)
+
+
+
 
 
 

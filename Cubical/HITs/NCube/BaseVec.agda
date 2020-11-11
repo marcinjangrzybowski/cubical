@@ -391,11 +391,6 @@ Iso.leftInv (NBoundaryP-rec-Iso {n = suc n} {A}) a = funExt z
     z (cyl x i) = refl
 
 
-PathCu : ∀ {ℓ} → ∀ {n} → (A : NCube (suc n) → (Type ℓ)) →
-                     (c0 : ∀ x → (A b∷ false) x) →
-                     (c1 : ∀ x → (A b∷ true) x) →
-                     NCube n → (Type ℓ)
-PathCu {n} A c0 c1 x = PathP (λ i → (A i∷ i) x) (c0 x) (c1 x)
 
 
 
