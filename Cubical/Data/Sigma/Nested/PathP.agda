@@ -87,6 +87,83 @@ CubePⁿ'-elim-iso n A = nestedΣᵣ-combine-iso (λ i → NCubePSig' n (Cubeⁿ
 
 
 
+BoundaryPⁿ'-elim-iso2 : ∀ {ℓ} → ∀ n → {A : Cubeⁿ' (suc n) (Type ℓ)}  →
+               Iso (BoundaryPⁿ' (suc n) A)
+                   ((Σ (Σ ((BoundaryPⁿ' n _) × (BoundaryPⁿ' n _))
+                           λ a → PathP (λ i → BoundaryPⁿ' n (Cubeⁿ'-elim n A i)) (fst a) (snd a) ))
+                     λ x → InsideOfPⁿ' {n = n} {_} (fst (fst x)) × InsideOfPⁿ' {n = n} {_} (snd (fst x)) )
+
+BoundaryPⁿ'-elim-iso2 n = {!!}
+
+
+InsideOfPⁿ'-elim-iso :  ∀ {ℓ} → ∀ n → {A : Cubeⁿ' (suc n) (Type ℓ)} →
+                         (bd : (BoundaryPⁿ' (suc n) A))
+                       → Iso (InsideOfPⁿ' {n = suc n} bd)
+                             (PathP (λ i → InsideOfPⁿ' {n = n} (snd (fst (Iso.fun (BoundaryPⁿ'-elim-iso2 n) bd)) i))
+                                (fst (snd (Iso.fun (BoundaryPⁿ'-elim-iso2 n) bd)))
+                                (snd (snd (Iso.fun (BoundaryPⁿ'-elim-iso2 n) bd))))
+                       
+InsideOfPⁿ'-elim-iso zero bd = {!!}
+InsideOfPⁿ'-elim-iso (suc n) bd = {!!}
+
+
+
+slice-fun : ∀ {ℓ} → ∀ n → {A : Cubeⁿ' (suc n) (Type ℓ)} → {B : Cubeⁿ' (suc n) (Type ℓ)}
+                 → (CubePⁿ' (suc n) (Cubeⁿ'-map2 (suc n) (λ x x₁ → x → x₁) A B))
+                 → (i : I) → CubePⁿ' n
+                              (Cubeⁿ'-map2 n (λ x x₁ → x → x₁) (Cubeⁿ'-elim n A i)
+                              (Cubeⁿ'-elim n B i))
+slice-fun = {!!}
+--TODO fix to hanel diferent levels
+BoundaryPⁿ'-map : ∀ {ℓ} → ∀ n → {A : Cubeⁿ' n (Type ℓ)} → {B : Cubeⁿ' n (Type ℓ)}
+                 → (CubePⁿ' n (Cubeⁿ'-map2 n (λ x x₁ → x → x₁) A B))
+                 → BoundaryPⁿ' n A
+                 → BoundaryPⁿ' n B
+
+InsideOfPⁿ'-map : ∀ {ℓ} → ∀ n → {A : Cubeⁿ' n (Type ℓ)} → {B : Cubeⁿ' n (Type ℓ)}
+                 → (f : CubePⁿ' n (Cubeⁿ'-map2 n (λ x x₁ → x → x₁) A B))
+                 → (bd : BoundaryPⁿ' n A)
+                 → InsideOfPⁿ' {n = n} bd 
+                 → InsideOfPⁿ' {n = n} (BoundaryPⁿ'-map n f bd)
+
+BoundaryPⁿ'-map zero _ _ = _
+BoundaryPⁿ'-map (suc n) {A = A} {B = B} f bd = 
+  let ( (_ , bdP) , (lid0 , lid1 ) ) = Iso.fun (BoundaryPⁿ'-elim-iso2 n) bd
+      f' : (i : I) → CubePⁿ' n
+              (Cubeⁿ'-map2 n (λ x x₁ → x → x₁) (Cubeⁿ'-elim n A i)
+                (Cubeⁿ'-elim n B i))
+      f' = slice-fun n f
+  in Iso.inv (BoundaryPⁿ'-elim-iso2 n)
+              (( (_ , λ i → BoundaryPⁿ'-map n (f' i) (bdP i))
+                                 , (InsideOfPⁿ'-map n (f' i0) _ lid0 , InsideOfPⁿ'-map n (f' i1) _ lid1) ))
+
+InsideOfPⁿ'-map zero f bd x = f x
+InsideOfPⁿ'-map (suc n) {A = A} {B = B} f bd x =
+   let ( (_ , bdP) , (lid0 , lid1 ) ) = Iso.fun (BoundaryPⁿ'-elim-iso2 n) bd
+
+       z = Iso.fun (InsideOfPⁿ'-elim-iso n bd) x
+
+       z' = Iso.inv (InsideOfPⁿ'-elim-iso n _)
+                λ i → InsideOfPⁿ'-map n (slice-fun n f i) (bdP i) (z i)
+   in z'
+
+-- InsideOfⁿ'-map zero f bd x = f x
+
+-- InsideOfⁿ'-map (suc zero) f bd x = cong f x
+-- InsideOfⁿ'-map (suc (suc zero)) f bd x i j =
+--    {! (x i)!}
+-- InsideOfⁿ'-map (suc (suc (suc n))) f bd x = {!!}
+
+
+
+
+
+
+
+
+
+
+
 
 -- Cubeⁿ'-map-elim-isoP : ∀ {ℓ ℓb} → {A : Type ℓ} → {B : A → Type ℓb} → ∀ n →  (cA : Cubeⁿ' (suc n) A)
 --                            →  (i : I) → 

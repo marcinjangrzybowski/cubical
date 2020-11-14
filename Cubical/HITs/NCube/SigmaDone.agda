@@ -48,6 +48,7 @@ open import Cubical.Data.Sigma.Nested.Base
 open import Cubical.Data.Sigma.Nested.Nested
 open import Cubical.Data.Sigma.Nested.Currying
 open import Cubical.Data.Sigma.Nested.Path
+open import Cubical.Data.Sigma.Nested.PathP
 
 variable
   ℓ : Level
@@ -134,7 +135,6 @@ Isoω-CubeΣ-Cubeω {A = A} (suc n) = Isoω.precomp ww (Cubeⁿ'-elim-iso n)
      Isoω.to ww x i = prev.to (snd x i) 
      Isoω.toω ww t₀ t₁ x i = prev.toω (snd t₀ i) (snd t₁ i) λ j → snd (x j) i 
      Isoω.from ww x = _ , (λ i → prev.from (x i))
-     -- Isoω.fromω ww t₀ t₁ p i = ({!prev.fromω _ _ (p i)!} , {!!}) , λ j → prev.from ({!p i!})
      Isoω.sec ww ((e0 , e1) , p) i = ((prev.sec e0 i) , prev.sec e1 i) , λ j → prev.sec (p j) i
      Isoω.ret ww a i = prev.ret (a i)
 
@@ -142,45 +142,31 @@ Isoω-CubeΣ-Cubeω {A = A} (suc n) = Isoω.precomp ww (Cubeⁿ'-elim-iso n)
 
 
 
--- Iso-hlp-g : {A B C : Type ℓ} → (isom : Iso A B) → (g : A → C) →
---                          Iso (Σ[ (x₀ , x₁) ∈ A × A ] (g x₀ ≡ g x₁) )
---                              (Σ[ (x₀ , x₁) ∈ B × B ]
---                                 (g (Iso.inv isom x₀) ≡ g (Iso.inv isom x₁)) )
--- Iso-hlp-g {A} {B} isom g =
---     iso fn iv secc retr
---   where
-
---     open Iso isom
-
---     fn : _
---     fn ((x0 , x1) , p) = (fun x0 , fun x1) , 
---              (cong g (leftInv x0) ∙∙ p ∙∙ sym (cong g (leftInv x1)))
-
---     iv : _
---     iv ((x0 , x1) , p) = (inv x0 , inv x1) , p
-
---     secc : _
---     secc ((x0 , x1) , p) i =
---        ((rightInv x0 i , rightInv x1 i) ,
---          λ j → {!!})
-
---     retr : _
---     retr ((x0 , x1) , p) i = ((leftInv x0 i , leftInv x1 i) ,
---          doubleCompPath-filler (cong g (leftInv x0)) p (sym (cong g (leftInv x1))) (~ i))
 
 
+CubePⁿ'-Isomω : ∀ {ℓ} → ∀ n → (A : Cubeⁿ' n (Type ℓ)) →
+                                Isoω (CubePⁿ' n A)
+                                     (cu n (toCType n A))
+Isoω.to (CubePⁿ'-Isomω zero A) x x₁ = x
+Isoω.toω (CubePⁿ'-Isomω zero A) t₀ t₁ x x₁ = x
+Isoω.from (CubePⁿ'-Isomω zero A) x = x 1=1
+Isoω.sec (CubePⁿ'-Isomω zero A) b = refl
+Isoω.ret (CubePⁿ'-Isomω zero A) a _ = refl
 
+CubePⁿ'-Isomω (suc n) A = h
+  where
 
--- BoundaryωΣ : ∀ {ℓ} → ℕ → (A : Type ℓ) → ωType
--- BoundaryωΣ n A = Boundaryω n Ct[ n , const A ] 
+    module ciso = Iso (CubePⁿ'-elim-iso n A)
 
+    h : Isoω (CubePⁿ' (suc n) A)
+          (cu (suc n) (toCType (suc n) A))
 
-
--- Isoω-BdΣ-Boundaryω : ∀ {ℓ} → {A : Type ℓ}
---                       → ∀ n → Isoω (Boundaryⁿ' n A) (Boundaryω n Ct[ n , const A ])
-
--- Isoω-BdΣ-Boundaryω zero = {!!}
-
--- Isoω-BdΣ-Boundaryω (suc zero) = {!!}
-
--- Isoω-BdΣ-Boundaryω (suc (suc n)) = {!!}
+    Isoω.to h x =
+      let ((e0 , e1) , p) = ciso.fun x
+      in λ i → Isoω.to (CubePⁿ'-Isomω n (Cubeⁿ'-elim n A i)) (p i)
+    Isoω.toω h t₀ t₁ x j =
+      let ((e0 , e1) , p) = ciso.fun (x j)
+      in {!!}
+    Isoω.from h x = ciso.inv (_ , λ i →  Isoω.from (CubePⁿ'-Isomω n (Cubeⁿ'-elim n A i)) (x i))
+    Isoω.sec h b = {!!}
+    Isoω.ret h = {!!}

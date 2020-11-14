@@ -1473,42 +1473,19 @@ Partialⁿ-cu-pathApp zero x i x₁ = x x₁ i
 Partialⁿ-cu-pathApp (suc n) x i j = Partialⁿ-cu-pathApp n (x j) i
 
 
--- sidesPath : ∀ {ℓ} → ∀ n → {e :  Ie n} → {A : T[ CType ℓ (suc n) ]}
---                    → (a : T[ Partialⁿ (suc n) ((λ i → ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)) ∨ⁿ ↑Expr 1 e) A ])
---                    → T[ Partialⁿ {ℓ} n e
---                           Ct[ n ,
---                              (λ c → PathP (λ i → ((CType-ev (suc n) A) i∷ i) c)
---                                      (from-cu (Partialⁿ-getLid n _ false A a) c)
---                                      (from-cu (Partialⁿ-getLid n _ true A a) c))
---                              ] ]
--- sidesPath zero {e = e} a e=1 i = a i (IsOne2 (i ∨ ~ i) e e=1)
--- sidesPath (suc zero) a i = sidesPath zero λ i₁ → a i₁ i
--- sidesPath (suc (suc n)) a i =  sidesPath (suc n) λ i₁ → a i₁ i
+sidesPath'' : ∀ {ℓ} → ∀ n → {e :  Ie n} → {A : T[ CType ℓ (suc n) ]}
+                   → (a : T[ Partialⁿ (suc n) ((λ i → ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)) ∨ⁿ ↑Expr 1 e) A ])
+                   → T[ Partialⁿ {ℓ} n e
+                          Ct[ n ,
+                             (λ c → PathP (λ i → ((CType-ev (suc n) A) i∷ i) c)
+                                     (from-cu (Partialⁿ-getLid n _ false A a) c)
+                                     (from-cu (Partialⁿ-getLid n _ true A a) c))
+                             ] ]
+sidesPath'' zero {e = e} a e=1 i = a i (IsOne2 (i ∨ ~ i) e e=1)
+sidesPath'' (suc zero) a i = sidesPath'' zero λ i₁ → a i₁ i
+sidesPath'' (suc (suc n)) a i =  sidesPath'' (suc n) λ i₁ → a i₁ i
 
 
--- sidesPath' : ∀ {ℓ} → ∀ n → {e :  Ie n} → {A : Type ℓ}
---                    → (a : T[ Partialⁿ (suc n) ((λ i → ([ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)) ∨ⁿ ↑Expr 1 e)
---                                 Ct[ suc n , (λ _ → A) ] ])
---                    → T[ Partialⁿ {ℓ} n e
---                           Ct[ n ,
---                              (λ c →    Cu-app (Cu-help n (Partialⁿ-getLid n _ false Ct[ suc n , (λ _ → A) ] a)) c
---                                     ≡  Cu-app (Cu-help n (Partialⁿ-getLid n _ true  Ct[ suc n , (λ _ → A) ] a)) c)
---                              ] ]
--- sidesPath' zero {e = e} a e=1 i = a i (IsOne2 (i ∨ ~ i) e e=1)
--- sidesPath' (suc zero) a i = sidesPath' zero λ i₁ → a i₁ i
--- sidesPath' (suc (suc n)) a i = sidesPath' (suc n) λ i₁ → a i₁ i
-
--- Boundaryω-getCyl : ∀ {ℓ} → ∀ n
---           → {A : T[ CType ℓ (suc n) ]}
---           → (x : T[ Boundaryω (suc n) A ])
---           → T[ Boundaryω n
---                 Ct[ n ,
---                    (λ c → PathP (λ i → ((CType-ev (suc n) A) i∷ i) c)
---                            (from-cu (Boundaryω-getLid n false A x) c)
---                            (from-cu (Boundaryω-getLid n true A x) c))
---                    ] ]
--- Boundaryω-getCyl zero x ()
--- Boundaryω-getCyl (suc n) x = sidesPath (suc n) x
 
 
 
