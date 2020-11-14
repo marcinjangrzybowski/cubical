@@ -393,6 +393,31 @@ Iso.leftInv (NBoundaryP-rec-Iso {n = suc n} {A}) a = funExt z
 
 
 
+NInsideP-map : ∀ {ℓ} → ∀ n → {A : NCube n → Type ℓ} → {B : NCube n → Type ℓ}
+                      → (f : ∀ cu → A cu → B cu)
+                      → (bd : ∀ x → A (boundaryInj x))
+                      → InsideOfP A bd
+                      → Σ ((x : NBoundary n) → B (boundaryInj x)) (InsideOfP B )
+NInsideP-map zero f bd x = (λ ()) , f [] x
+-- NInsideP-map (suc zero) {A = A} {B} f bd x = {!!}
+NInsideP-map (suc n) {A = A} {B} f bd x = 
+  let  z : (i : I) → Σ ((x₁ : NBoundary n) → B (inside i ∷ boundaryInj x₁))
+                       (InsideOfP (λ z → B (inside i ∷ z)))
+       z i = NInsideP-map n {A = A i∷ i} (λ cu₁ x₁ → f (inside i ∷ cu₁) x₁) (λ x₁ → bd (cylEx i x₁)) (x i)  
+
+  in -- NBoundaryP-rec  {A = B} {! !} {!!} (λ i x₁ → fst (z i) x₁)  , (λ i → snd (z i))
+      NBoundaryP-rec  {A = B} (toCubicalP (snd (z i0))) (toCubicalP (snd (z i1))) (λ i x₁ → {!fst (z i) x₁!}) , {!!}
+
+
+
+
+
+-- NInsideP-rec-Iso : ∀ {ℓ} → ∀ {n} → {A : NCube (suc n) → Type ℓ}
+--                   → (bd : ∀ x → A (boundaryInj x))
+--                   → Iso
+--                      (InsideOfP A bd)
+--                      (PathP {!!} {!!} {!!})
+-- NInsideP-rec-Iso = {!!}
 
 -- -- OnBoundary : ∀ {n} → NCube n → Type₀
 -- -- OnBoundary c = Σ[ bd ∈ NBoundary _ ] (c ≡ boundaryInj bd)

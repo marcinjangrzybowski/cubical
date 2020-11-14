@@ -660,6 +660,34 @@ cu-intro : ∀ {ℓ} → ∀ n → ∀ {A  : T[ CType ℓ n ]} → (Π (NC-to-CT
 cu-intro zero x _ = x []
 cu-intro (suc n) x i = cu-intro n (x i∷ i)
 
+
+
+NCubeP-Isomω : ∀ {ℓ} → ∀ n → (A : NCube n → (Type ℓ)) →
+                                Isoω (∀ x → A x)
+                                     (cu n (Ct[ n , A ]))
+Isoω.to (NCubeP-Isomω zero A) x x₁ = x []
+Isoω.toω (NCubeP-Isomω zero A) t₀ t₁ x x₁ i = x i []
+Isoω.from (NCubeP-Isomω zero A) x [] = x 1=1
+Isoω.sec (NCubeP-Isomω zero A) b i [] = b []
+Isoω.ret (NCubeP-Isomω zero A) a x i = a 1=1
+
+Isoω.to (NCubeP-Isomω (suc n) A) x i = Isoω.to (NCubeP-Isomω n _) (x i∷ i)
+Isoω.toω (NCubeP-Isomω (suc n) A) t₀ t₁ x i =
+  Isoω.toω (NCubeP-Isomω n _) _ _ (cong (_i∷ i) x)
+Isoω.from (NCubeP-Isomω (suc n) A) x (end false ∷ x₂) =
+    (Isoω.from (NCubeP-Isomω n _) (x i0)) x₂
+Isoω.from (NCubeP-Isomω (suc n) A) x (end true ∷ x₂) =
+   (Isoω.from (NCubeP-Isomω n _) (x i1)) x₂
+Isoω.from (NCubeP-Isomω (suc n) A) x (inside i ∷ x₂) =
+  (Isoω.from (NCubeP-Isomω n _) (x i)) x₂
+Isoω.sec (NCubeP-Isomω (suc n) A) b i (end false ∷ x₁) =
+  Isoω.sec (NCubeP-Isomω (n) _) (λ x → b (end false ∷ x)) i x₁
+Isoω.sec (NCubeP-Isomω (suc n) A) b i (end true ∷ x₁) =
+  Isoω.sec (NCubeP-Isomω (n) _) (λ x → b (end true ∷ x)) i x₁
+Isoω.sec (NCubeP-Isomω (suc n) A) b i (inside i₁ ∷ x₁) =
+  Isoω.sec (NCubeP-Isomω (n) _) (λ x → b (inside i₁ ∷ x)) i x₁
+Isoω.ret (NCubeP-Isomω (suc n) A) a i = Isoω.ret (NCubeP-Isomω (n) _) (a i)
+
 -- ---------
 
 Ie-fromFoldL : (I → I → I) → I → ∀ n → Ie n
@@ -1197,6 +1225,9 @@ Cylω n A e x₀ x₁ = Partialⁿ-Sub (suc n) {A = A}
                         {i = ↑Expr 1 e}
                         {j = (λ i → [ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)}
                         (mkCylEnds n x₀ x₁) 
+
+
+
 
 attachEndsToCylω : ∀ {ℓ} → ∀ n → (A : T[ CType ℓ (suc n) ]) → (e : Ie n)
                → (x₀ : T[ cu n (A i0) ]) → (x₁ : T[ cu n (A i1) ]) → T[ Cylω n A e x₀ x₁ ]
