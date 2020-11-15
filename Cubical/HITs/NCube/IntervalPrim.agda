@@ -412,6 +412,23 @@ Iso.leftInv (iso-NCube {n = n}) a i (end false ∷ x₁) =  a (end false ∷ x�
 Iso.leftInv (iso-NCube {n = n}) a i (end true ∷ x₁) = a (end true ∷ x₁)
 Iso.leftInv (iso-NCube {n = n}) a i (inside i₁ ∷ x₁) = a (inside i₁ ∷ x₁)
 
+
+iso-NCubeP : ∀ {ℓ} → ∀ {n} → ∀ (A : NCube (suc n) → Type ℓ)
+              → Iso
+                (∀ x → A x)
+                ((Σ[ (x₀ , x₁) ∈ (∀ x → (A b∷ false) x) × (∀ x → (A b∷ true) x) ]
+                   (PathP  (λ i → (∀ x → (A i∷ i) x)) x₀ x₁)))
+(Iso.fun (iso-NCubeP {n = n} A) x) = (_ , _) , (λ i → x i∷ i)
+Iso.inv (iso-NCubeP {n = n} A) ((_ , _) , snd₁) (end false ∷ x₁) = snd₁ i0 x₁
+Iso.inv (iso-NCubeP {n = n} A) ((_ , _) , snd₁) (end true ∷ x₁) = snd₁ i1 x₁
+Iso.inv (iso-NCubeP {n = n} A) ((_ , _) , snd₁) (inside i ∷ x₁) = snd₁ i x₁
+Iso.rightInv (iso-NCubeP {n = n} A) b = refl
+
+Iso.leftInv (iso-NCubeP {n = n} A) a i (end false ∷ x₁) =  a (end false ∷ x₁)
+Iso.leftInv (iso-NCubeP {n = n} A) a i (end true ∷ x₁) = a (end true ∷ x₁)
+Iso.leftInv (iso-NCubeP {n = n} A) a i (inside i₁ ∷ x₁) = a (inside i₁ ∷ x₁)
+
+
 PathCu : ∀ {ℓ} → ∀ {n} → (A : NCube (suc n) → (Type ℓ)) →
                      (c0 : ∀ x → (A b∷ false) x) →
                      (c1 : ∀ x → (A b∷ true) x) →
@@ -1490,33 +1507,33 @@ sidesPath'' (suc (suc n)) a i =  sidesPath'' (suc n) λ i₁ → a i₁ i
 
 
 
-Cylω-squashedTy : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) → (e : Ie n)
+Cylω-flattenedTy : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) → (e : Ie n)
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
                      (c1 : (x : Vec Interval' n) → (A b∷ true) x) →  
                      ωType
-Cylω-squashedTy n A e c0 c1 = Partialⁿ n e (Ct[ _ , (PathCu A c0 c1)])
+Cylω-flattenedTy n A e c0 c1 = Partialⁿ n e (Ct[ _ , (PathCu A c0 c1)])
 
 
-Cylω-squash : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ)  → (e : Ie n) →
+Cylω-flatten : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ)  → (e : Ie n) →
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
                      (c1 : (x : Vec Interval' n) → (A b∷ true) x) →
                      T[ Cylω n Ct[ _ ,  A ] e ct[ _ , c0 ] ct[ _ , c1 ] ]
-                     → T[ Cylω-squashedTy n A e c0 c1 ] 
-Cylω-squash zero A e c0 c1 x = λ { (e = i1) → λ i → outS (x i 1=1) }    
-Cylω-squash (suc n) A e c0 c1 x i =
-  Cylω-squash n (λ x₂ → A (head x₂ ∷ inside i ∷ tail x₂)) (e i)
+                     → T[ Cylω-flattenedTy n A e c0 c1 ] 
+Cylω-flatten zero A e c0 c1 x = λ { (e = i1) → λ i → outS (x i 1=1) }    
+Cylω-flatten (suc n) A e c0 c1 x i =
+  Cylω-flatten n (λ x₂ → A (head x₂ ∷ inside i ∷ tail x₂)) (e i)
      (c0 i∷ i) (c1 i∷ i)  λ i₁ → x i₁ i
 
 
 
-Cylω-unsquash : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ)  → (e : Ie n) →
+Cylω-unflatten : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ)  → (e : Ie n) →
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
                      (c1 : (x : Vec Interval' n) → (A b∷ true) x) →
-                      T[ Cylω-squashedTy n A e c0 c1 ] 
+                      T[ Cylω-flattenedTy n A e c0 c1 ] 
                      → T[ Cylω n Ct[ _ ,  A ] e ct[ _ , c0 ] ct[ _ , c1 ] ] 
-Cylω-unsquash zero A e c0 c1 x i i=1 = inS (x i=1 i)
-Cylω-unsquash (suc n) A e c0 c1 x i₁ i =
-    Cylω-unsquash n (λ x₂ → A (head x₂ ∷ inside i ∷ tail x₂)) (e i)
+Cylω-unflatten zero A e c0 c1 x i i=1 = inS (x i=1 i)
+Cylω-unflatten (suc n) A e c0 c1 x i₁ i =
+    Cylω-unflatten n (λ x₂ → A (head x₂ ∷ inside i ∷ tail x₂)) (e i)
      (c0 i∷ i) (c1 i∷ i) (x i) i₁
 
 

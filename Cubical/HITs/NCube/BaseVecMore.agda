@@ -1,6 +1,6 @@
 
 
-{-# OPTIONS --cubical --safe #-}
+{-# OPTIONS --cubical #-}
 
 module Cubical.HITs.NCube.BaseVecMore where
 
@@ -17,13 +17,10 @@ open import Cubical.Foundations.CartesianKanOps
 
 open import Cubical.HITs.NCube.IntervalPrim
 
-open import Cubical.Data.Sigma.Nested.PathP
 
 open import Cubical.HITs.NCube.BaseVec
 
-
-
-
+open import Cubical.Foundations.Equiv.HalfAdjoint
 
 
 
@@ -37,38 +34,38 @@ NBoundary←Boundaryω : ∀ {ℓ} → ∀ n → (A : NCube n → Type ℓ) →
 
 
 
-CylΣ-squashedTy : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
+CylΣ-flattenedTy : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
                      (c1 : (x : Vec Interval' n) → (A b∷ true) x) → 
                      Type ℓ
-CylΣ-squashedTy n A c0 c1 = ∀ x → (PathCu A c0 c1) (boundaryInj x)
+CylΣ-flattenedTy n A c0 c1 = ∀ x → (PathCu A c0 c1) (boundaryInj x)
 
-BdCylω-squashedTy : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
+BdCylω-flattenedTy : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
                      (c1 : (x : Vec Interval' n) → (A b∷ true) x) →  
                      ωType
-BdCylω-squashedTy n A c0 c1 = Cylω-squashedTy n A (boundaryExpr n) c0 c1
+BdCylω-flattenedTy n A c0 c1 = Cylω-flattenedTy n A (boundaryExpr n) c0 c1
 
 
-CylΣ-squash : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
+CylΣ-flatten : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
                      (c1 : (x : Vec Interval' n) → (A b∷ true) x) →
                      (PathP (λ i → ∀ x → (A i∷ i) (boundaryInj x))
                                     (c0 ∘ boundaryInj) 
                                     (c1 ∘ boundaryInj))
-                     → CylΣ-squashedTy n A c0 c1
-CylΣ-squash (suc n) A c0 c1 x z i = x i z
+                     → CylΣ-flattenedTy n A c0 c1
+CylΣ-flatten (suc n) A c0 c1 x z i = x i z
 
 
-CylΣ-unsquash : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
+CylΣ-unflatten : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
                      (c1 : (x : Vec Interval' n) → (A b∷ true) x) 
-                     → CylΣ-squashedTy n A c0 c1
+                     → CylΣ-flattenedTy n A c0 c1
                      → (PathP (λ i → ∀ x → (A i∷ i) (boundaryInj x))
                                     (c0 ∘ boundaryInj) 
                                     (c1 ∘ boundaryInj))
                      
-CylΣ-unsquash n A c0 c1 x i z = x z i
+CylΣ-unflatten n A c0 c1 x i z = x z i
 
 
 
@@ -79,49 +76,21 @@ BdCylω : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
                      ωType 
 BdCylω n A c0 c1 = Cylω n (Ct[ _ ,  A ]) (boundaryExpr n) ct[ _ , c0 ] ct[ _ , c1 ]
 
--- Partialⁿ-Sub (suc n) {A = Ct[ _ ,  A ]}
---                         {i = ↑Expr 1 (boundaryExpr n)}
---                         {j = (λ i → [ i ]Iexpr ∨ⁿ [ ~ i ]Iexpr)}
---                         (mkCylEndsΣ n A c0 c1) 
-
-BdCylω-squash : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
+BdCylω-flatten : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
                      (c1 : (x : Vec Interval' n) → (A b∷ true) x) →
                      T[ BdCylω n A c0 c1 ]
-                     → T[ BdCylω-squashedTy n A c0 c1 ] 
-BdCylω-squash n A c0 c1 = Cylω-squash n A (boundaryExpr n) c0 c1
--- BdCylω-squash {ℓ} zero A c0 c1 x ()
--- -- Cylω-squash {ℓ} (suc zero) A c0 c1 x i = zz
--- --   where
--- --     zz : T[ Partialⁿ zero (boundaryExpr 1 i) (Ct[ 1 , PathCu A c0 c1 ] i) ]
--- --     zz (i = i0) = λ i₁ → outS (x i₁ i 1=1)
--- --     zz (i = i1) = λ i₁ → outS (x i₁ i 1=1)
-    
--- BdCylω-squash {ℓ} (suc zero) A c0 c1 x i = zz
---    where
---      zz : _
---      zz (i = i1) = λ i₁ → outS (x i₁ i1 1=1)
---      zz (i = i0) = λ i₁ → outS (x i₁ i0 1=1)
--- BdCylω-squash {ℓ} (suc (suc n)) A c0 c1 x i i₁ = {!!}
-
-
-  -- let zz : (i j : I) →
-  --             T[ Partialⁿ-Sub n (mkCylEndsΣ (suc n) A c0 c1 j i) ]
-  --     zz i j = x j i
-  -- in {!zz!}
+                     → T[ BdCylω-flattenedTy n A c0 c1 ] 
+BdCylω-flatten n A c0 c1 = Cylω-flatten n A (boundaryExpr n) c0 c1
 
 
 
-BdCylω-unsquash : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
+BdCylω-unflatten : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
                      (c1 : (x : Vec Interval' n) → (A b∷ true) x) →
-                     T[ BdCylω-squashedTy n A c0 c1 ]
+                     T[ BdCylω-flattenedTy n A c0 c1 ]
                      → T[ BdCylω n A c0 c1 ] 
-BdCylω-unsquash n A c0 c1 = Cylω-unsquash n A (boundaryExpr n) c0 c1
--- BdCylω-unsquash zero A c0 c1 x i ()
--- BdCylω-unsquash (suc zero) A c0 c1 x i i₁ = {!!}
-
--- BdCylω-unsquash (suc (suc n)) A c0 c1 x i i₁ = {!!}
+BdCylω-unflatten n A c0 c1 = Cylω-unflatten n A (boundaryExpr n) c0 c1
 
 fromωCyl : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ) →
                      (c0 : (x : Vec Interval' n) → (A b∷ false) x) →
@@ -162,9 +131,9 @@ toωCylBd (suc n) A bdω = toωCyl (suc n) A (boundaryExpr (suc n)) bdω
 NBoundary→Boundaryω zero A x ()
 NBoundary→Boundaryω (suc n) A bd = 
       let ((e0 , e1) , cy) = Iso.fun (NBoundaryP-rec-Iso {A = A}) bd
-          w = (NBoundary→Boundaryω n _) (CylΣ-squash n A e0 e1 cy)
+          w = (NBoundary→Boundaryω n _) (CylΣ-flatten n A e0 e1 cy)
 
-      in fromωCyl n A e0 e1 (BdCylω-unsquash n A e0 e1 w)       
+      in fromωCyl n A e0 e1 (BdCylω-unflatten n A e0 e1 w)       
 
 NBoundary←Boundaryω zero A x ()
 NBoundary←Boundaryω (suc n) A bdω =
@@ -176,18 +145,175 @@ NBoundary←Boundaryω (suc n) A bdω =
            c1 = (Isoω.from (NCubeP-Isomω n (_))
                     (Boundaryω-getLid n true (Ct[ _ , A ]) bdω))
 
-           z = BdCylω-squash n A
+           z = BdCylω-flatten n A
                     c0 c1
                   (toωCylBd n A bdω)
 
        in Iso.inv (NBoundaryP-rec-Iso {A = A}) ((c0 , c1) ,
-                    CylΣ-unsquash n A c0 c1
+                    CylΣ-unflatten n A c0 c1
                     ((NBoundary←Boundaryω n _) z))
 
 
 
 Boundaryω-Boundary : ∀ n → T[ Boundaryω n Ct[ n , (λ _ → NBoundary n) ] ] 
 Boundaryω-Boundary n = (NBoundary→Boundaryω n (λ _ → NBoundary n)) (idfun _)
+
+
+
+NCubeP-ΣInsideOfP-section : ∀ {ℓ} → ∀ n → (A : NCube n → Type ℓ) →
+                             section {A = Σ (∀ x → A (boundaryInj x)) (InsideOfP A)} {∀ x → A x}
+                                          (toCubicalP {n = n} {A = A} ∘ snd) ((_ ,_) ∘ insideOfP)
+NCubeP-ΣInsideOfP-section zero A b i [] = b []
+NCubeP-ΣInsideOfP-section (suc n) A b i (end false ∷ x₁) =
+  NCubeP-ΣInsideOfP-section (n) (A i∷ i0) (b i∷ i0) i x₁
+NCubeP-ΣInsideOfP-section (suc n) A b i (end true ∷ x₁) =
+  NCubeP-ΣInsideOfP-section (n) (A i∷ i1) (b i∷ i1) i x₁
+NCubeP-ΣInsideOfP-section (suc n) A b i (inside i₁ ∷ x₁) =
+  NCubeP-ΣInsideOfP-section (n) (A i∷ i₁) (b i∷ i₁) i x₁
+
+                          
+BoundaryP-elim-iso2 : ∀ {ℓ} → ∀ n → (A : NCube (suc n) → Type ℓ)
+               --   →
+               -- (retract {A = Σ (∀ x → A (boundaryInj x)) (InsideOfP A)} {∀ x → A x}
+               --                            (toCubicalP {n = n} {A = A} ∘ snd) ((_ ,_) ∘ insideOfP))
+               →
+               Iso  (∀ x → A (boundaryInj x))
+                   ((Σ (Σ ((∀ x → (A i∷ i0) (boundaryInj x)) × (∀ x → (A i∷ i1) (boundaryInj x)))
+                           λ a → PathP (λ i → ∀ x → (A i∷ i) (boundaryInj x)) (fst a) (snd a) ))
+                     λ x → InsideOfP {n = n} (A b∷ false)  (fst (fst x))
+                           × InsideOfP {n = n} (A b∷ true) (snd (fst x)) )
+
+
+
+-- NCubeP-ΣInsideOfP-iso (suc n) A =
+--                       compIso (iso-NCubeP A) (compIso h h1)
+--   where
+--     h1 : Iso
+--            (Σ ((Σ (Σ ((∀ x → (A i∷ i0) (boundaryInj x)) × (∀ x → (A i∷ i1) (boundaryInj x)))
+--                            λ a → PathP (λ i → ∀ x → (A i∷ i) (boundaryInj x)) (fst a) (snd a) ))
+--                      λ x → InsideOfP {n = n} (A b∷ false)  (fst (fst x))
+--                            × InsideOfP {n = n} (A b∷ true) (snd (fst x)) )
+--               λ x → PathP (λ i → InsideOfP {n = n} (A i∷ i) (snd (fst x) i))
+--                       (fst (snd x)) (snd (snd x)))
+--            (Σ ((x : NBoundary (suc n)) → A (boundaryInj x)) (InsideOfP A))
+--     fst (Iso.fun h1 (x , y)) =
+--       let z : (x₁ : NBoundary (suc n)) → A (boundaryInj x₁)
+--           z = Iso.inv (BoundaryP-elim-iso2 n A) x
+--       in z
+--     snd (Iso.fun h1 (x , y)) i =
+--        hcompIns= {bd0 = snd (fst x) i} {bd1 = Iso.inv (BoundaryP-elim-iso2 n A) x ∘ cylEx i}
+--                    {!!} (y i)
+
+--     fst (fst (fst (fst (Iso.inv h1 (x , snd₁))))) = (λ i₁ → x (cyl i₁ i0))
+--     snd (fst (fst (fst (Iso.inv h1 (x , snd₁))))) = (λ i₁ → x (cyl i₁ i1))
+--     snd (fst (fst (Iso.inv h1 (x , snd₁)))) i = (λ i₁ → x (cyl i₁ i))    
+--     snd (fst (Iso.inv h1 (x , snd₁))) = (snd₁ i0) , (snd₁ i1)    
+--     snd (Iso.inv h1 (x , snd₁)) i = snd₁ i
+             
+--     Iso.rightInv h1 = {!!}
+--     Iso.leftInv h1 = {!!}
+
+  
+--     h : Iso (Σ-syntax
+--               (((x : Vec Interval' n) → (A b∷ false) x) × ((x : Vec Interval' n) → (A b∷ true) x))
+--               (λ xx →
+--                  PathP (λ i → (x : Vec Interval' n) → (A i∷ i) x)
+--                  (fst xx) (snd xx)))
+--               (Σ
+--                 (Σ
+--                  (Σ
+--                   (((x : NBoundary n) → (A i∷ i0) (boundaryInj x)) ×
+--                    ((x : NBoundary n) → (A i∷ i1) (boundaryInj x)))
+--                   (λ a →
+--                      PathP (λ i → (x : NBoundary n) → (A i∷ i) (boundaryInj x)) (fst a)
+--                      (snd a)))
+--                  (λ x →
+--                     InsideOfP (A b∷ false) (fst (fst x)) ×
+--                     InsideOfP (A b∷ true) (snd (fst x))))
+--                 (λ x →
+--                    PathP (λ i → InsideOfP (A i∷ i) (snd (fst x) i)) (fst (snd x))
+--                    (snd (snd x))))
+--     fst (fst (fst (fst (Iso.fun h x)))) = fst (Iso.fun (NCubeP-ΣInsideOfP-iso n λ z → (A i∷ i0) z) (snd x i0))
+--     snd (fst (fst (fst (Iso.fun h x)))) = fst (Iso.fun (NCubeP-ΣInsideOfP-iso n λ z → (A i∷ i1) z) (snd x i1))
+--     snd (fst (fst (Iso.fun h x))) i = fst (Iso.fun (NCubeP-ΣInsideOfP-iso n λ z → (A i∷ i) z) (snd x i))
+--     fst (snd (fst (Iso.fun h x))) = snd (Iso.fun (NCubeP-ΣInsideOfP-iso n λ z → (A i∷ i0) z) (snd x i0))
+--     snd (snd (fst (Iso.fun h x))) = snd (Iso.fun (NCubeP-ΣInsideOfP-iso n λ z → (A i∷ i1) z) (snd x i1))
+--     snd (Iso.fun h x) i = snd (Iso.fun (NCubeP-ΣInsideOfP-iso n λ z → (A i∷ i) z) (snd x i))
+    
+--     fst (fst (Iso.inv h x)) = Iso.inv (NCubeP-ΣInsideOfP-iso n λ z → (A i∷ i0) z) (snd (fst (fst x)) i0 , (snd x i0))
+--     snd (fst (Iso.inv h x)) = Iso.inv (NCubeP-ΣInsideOfP-iso n λ z → (A i∷ i1) z) (snd (fst (fst x)) i1 , (snd x i1))
+--     snd (Iso.inv h x) i = Iso.inv (NCubeP-ΣInsideOfP-iso n λ z → (A i∷ i) z) (snd (fst (fst x)) i , (snd x i))
+    
+--     Iso.rightInv h = {!!}
+--     Iso.leftInv h = {!!}
+
+
+
+
+
+Iso.fun (BoundaryP-elim-iso2 zero A) x = (((λ ()) , λ ()) , λ i ()) , (x (lid false [])) , (x (lid true []))
+Iso.inv (BoundaryP-elim-iso2 zero A) x (lid false []) = fst (snd x)
+Iso.inv (BoundaryP-elim-iso2 zero A) x (lid true []) = snd (snd x)
+fst (fst (fst (Iso.rightInv (BoundaryP-elim-iso2 zero A) ((fst₂ , snd₂) , fst₁ , snd₁) i))) ()
+snd (fst (fst (Iso.rightInv (BoundaryP-elim-iso2 zero A) ((fst₂ , snd₂) , fst₁ , snd₁) i))) ()
+snd (fst (Iso.rightInv (BoundaryP-elim-iso2 zero A) ((fst₂ , snd₂) , fst₁ , snd₁) i)) i₁ ()
+snd (Iso.rightInv (BoundaryP-elim-iso2 zero A) ((fst₂ , snd₂) , fst₁ , snd₁) i) = fst₁ , snd₁
+Iso.leftInv (BoundaryP-elim-iso2 zero A) a i (lid false []) = a (lid false [])
+Iso.leftInv (BoundaryP-elim-iso2 zero A) a i (lid true []) = a (lid true [])
+
+-- BoundaryP-elim-iso2 (suc zero) A = {!!}
+
+BoundaryP-elim-iso2 (suc n) A = compIso (NBoundaryP-rec-Iso {n = suc n} {A = A}) h
+
+  where
+
+    cuIso : (i : I) → _
+    cuIso = λ i → (isHAEquiv→Iso (snd (iso→HAEquiv (
+                       iso
+                         (((_ ,_) ∘ insideOfP))
+                         ((toCubicalP {n = suc n} {A = A i∷ i} ∘ snd))
+                         {!!}
+
+                         (NCubeP-ΣInsideOfP-section (suc n) (A i∷ i)) ))))
+   
+    h : Iso _ _
+    fst (fst (Iso.fun h ((c0 , c1) , bp))) = _ , _
+    snd (fst (Iso.fun h ((c0 , c1) , bp))) = bp
+    fst (snd (Iso.fun h ((c0 , c1) , bp))) = snd (Iso.fun (cuIso i0) c0)
+    snd (snd (Iso.fun h ((c0 , c1) , bp))) = snd (Iso.fun (cuIso i1) c1)
+
+     --snd (Iso.fun (cuIso i0) c0) , snd (Iso.fun (cuIso i1) c1)
+
+    fst (fst (Iso.inv h (((bd0 , bd1) , bp) , ins0 , ins1))) = Iso.inv (cuIso i0) (bd0 , ins0)
+    snd (fst (Iso.inv h (((bd0 , bd1) , bp) , ins0 , ins1))) = Iso.inv (cuIso i1) (bd1 , ins1)
+    snd (Iso.inv h (((bd0 , bd1) , bp) , ins0 , ins1)) i =  
+        hcomp (λ j →
+                  λ { (i = i0) → cong fst (Iso.rightInv (cuIso i0) (bd0 , ins0)) (~ j)
+                    ; (i = i1) → cong fst (Iso.rightInv (cuIso i1) (bd1 , ins1)) (~ j)}  )
+                    (bp i)
+
+
+    fst (fst (Iso.rightInv h (((bd0 , bd1) , bp) , ins0 , ins1) i)) =
+      fst (Iso.rightInv (cuIso i0) (bd0 , ins0) i) , fst (Iso.rightInv (cuIso i1) (bd1 , ins1) i) 
+    snd (fst (Iso.rightInv h (((bd0 , bd1) , bp) , ins0 , ins1) i)) =
+      λ i₁ → hfill 
+                   ((λ j →  λ { (i₁ = i0) → (cong fst (Iso.rightInv (cuIso i0) (bd0 , ins0))) (~ j)
+                              ; (i₁ = i1) → (cong fst (Iso.rightInv (cuIso i1) (bd1 , ins1))) (~ j)}  ))
+                   (inS (bp i₁))
+                   (~ i)
+                    
+    snd (Iso.rightInv h (((bd0 , bd1) , bp) , ins0 , ins1) i) =
+       snd (Iso.rightInv (cuIso i0) (bd0 , ins0) i) , snd (Iso.rightInv (cuIso i1) (bd1 , ins1) i) 
+    
+    fst (Iso.leftInv h ((c0 , c1) , bp) i) = Iso.leftInv (cuIso i0) c0 i , Iso.leftInv (cuIso i1) c1 i
+    snd (Iso.leftInv h ((c0 , c1) , bp) i) i₁ =
+               hcomp
+                 (λ k → λ { (i = i0) → {!!} i₁ 
+                          ; (i = i1) → bp i₁
+                          ; (i₁ = i0) → {!!} k i
+                          ; (i₁ = i1) → {!!} k i
+                     })
+                ( bp i₁)
 
 
 
@@ -447,7 +573,7 @@ Boundaryω-Boundary n = (NBoundary→Boundaryω n (λ _ → NBoundary n)) (idfun
 -- -- --                           (fst (fst (Iso.fun (NBoundaryP-rec-Iso {A = A}) bd)))
 -- -- --                           (snd (fst (Iso.fun (NBoundaryP-rec-Iso {A = A}) bd)))
 -- -- --                             )
--- -- --                           (CylΣ-squash n A
+-- -- --                           (CylΣ-flatten n A
 -- -- --                               (fst (fst (Iso.fun (NBoundaryP-rec-Iso {A = A}) bd)))
 -- -- --                               ((snd (fst (Iso.fun (NBoundaryP-rec-Iso {A = A}) bd))))
 -- -- --                               ((snd (Iso.fun (NBoundaryP-rec-Iso {A = A}) bd))))
@@ -482,7 +608,7 @@ Boundaryω-Boundary n = (NBoundary→Boundaryω n (λ _ → NBoundary n)) (idfun
 -- --                           (fst (fst (Iso.fun (NBoundaryP-rec-Iso {A = A}) bd)))
 -- --                           (snd (fst (Iso.fun (NBoundaryP-rec-Iso {A = A}) bd)))
 -- --                           )
--- --                           (CylΣ-squash n A
+-- --                           (CylΣ-flatten n A
 -- --                               (fst (fst (Iso.fun (NBoundaryP-rec-Iso {A = A}) bd)))
 -- --                               ((snd (fst (Iso.fun (NBoundaryP-rec-Iso {A = A}) bd))))
 -- --                               ((snd (Iso.fun (NBoundaryP-rec-Iso {A = A}) bd))))
@@ -515,21 +641,21 @@ Boundaryω-Boundary n = (NBoundary→Boundaryω n (λ _ → NBoundary n)) (idfun
 -- --   --                    (snd (fst (Iso.fun NBoundaryP-rec-Iso (λ x → _))))
 -- --   --                    i∷ z)
 -- --   --                   (λ x →
--- --   --                      CylΣ-squash (suc n) (λ x₁ → _)
+-- --   --                      CylΣ-flatten (suc n) (λ x₁ → _)
 -- --   --                      (fst (fst (Iso.fun NBoundaryP-rec-Iso (λ x₁ → _))))
 -- --   --                      (snd (fst (Iso.fun NBoundaryP-rec-Iso (λ x₁ → _))))
 -- --   --                      (snd (Iso.fun NBoundaryP-rec-Iso (λ x₁ → _))) (cylEx z x)))
 
 -- --   --                          ((insideOfP
 -- --   --                           (λ x →
--- --   --                              CylΣ-squash (suc (suc n)) A
+-- --   --                              CylΣ-flatten (suc (suc n)) A
 -- --   --                              (fst (fst (Iso.fun NBoundaryP-rec-Iso bd)))
 -- --   --                              (snd (fst (Iso.fun NBoundaryP-rec-Iso bd)))
 -- --   --                              (snd (Iso.fun NBoundaryP-rec-Iso bd)) (cylEx i (lid false x)))))
 
 -- --   --                          (insideOfP
 -- --   --                           (λ x →
--- --   --                              CylΣ-squash (suc (suc n)) A
+-- --   --                              CylΣ-flatten (suc (suc n)) A
 -- --   --                              (fst (fst (Iso.fun NBoundaryP-rec-Iso bd)))
 -- --   --                              (snd (fst (Iso.fun NBoundaryP-rec-Iso bd)))
 -- --   --                              (snd (Iso.fun NBoundaryP-rec-Iso bd)) (cylEx i (lid true x))))
@@ -546,7 +672,7 @@ Boundaryω-Boundary n = (NBoundary→Boundaryω n (λ _ → NBoundary n)) (idfun
 -- --                               (fst (fst (Iso.fun (NBoundaryP-rec-Iso {A = A}) bd)))
 -- --                               (snd (fst (Iso.fun (NBoundaryP-rec-Iso {A = A}) bd)))
 -- --                             )
--- --                             ) ((CylΣ-squash n A
+-- --                             ) ((CylΣ-flatten n A
 -- --                               (fst (fst (Iso.fun (NBoundaryP-rec-Iso {A = A}) bd)))
 -- --                               ((snd (fst (Iso.fun (NBoundaryP-rec-Iso {A = A}) bd))))
 -- --                               ((snd (Iso.fun (NBoundaryP-rec-Iso {A = A}) bd)))))
@@ -580,7 +706,7 @@ Boundaryω-Boundary n = (NBoundary→Boundaryω n (λ _ → NBoundary n)) (idfun
 
 -- -- -- InsideOf→InsideOfω {n = (suc (suc n))} {A = A} bd x i = 
 -- -- --  let z = InsideOf→InsideOfω {n = (suc n)} {A = A i∷ i} (bd ∘ cylEx i) (x i) 
--- -- --  in {!Subⁿ-squash-Bd (suc n) A!}
+-- -- --  in {!Subⁿ-flatten-Bd (suc n) A!}
 -- -- -- -- InsideOf→InsideOfω {n = suc (suc n)} bd x i = {!x!}
 
 
@@ -597,7 +723,7 @@ Boundaryω-Boundary n = (NBoundary→Boundaryω n (λ _ → NBoundary n)) (idfun
 -- -- -- -- InsideOfω→InsideOf {n = suc (suc (suc (suc n)))} {A = A} bd x i i₁ = {!!}
 -- -- -- InsideOfω→InsideOf {n = suc (suc n)} {A = A} bd x =
 -- -- --   let z : (i : I) → {!!}
--- -- --       z i = Subⁿ-squash-Bd (suc n) A {!!} {!!} {!!} {!x i!}
+-- -- --       z i = Subⁿ-flatten-Bd (suc n) A {!!} {!!} {!!} {!x i!}
 
 -- -- -- --InsideOfω→InsideOf {n = suc n} {A = λ v → {!!}} (bd ∘ cylEx i) {!x i!}
   

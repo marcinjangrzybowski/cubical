@@ -432,27 +432,27 @@ Cubeⁿ'-ΣInsideⁿ'-iso {A = A} n = nestedΣᵣ-dropLast.isom-to (3^ n) (NCube
 -- Cube'-split-iso : ∀ {ℓ} → ∀ {A : Type ℓ} → ∀ n m → Iso {!Cubeⁿ' n !} {!!}
 -- Cube'-split-iso = {!!}
 
--- maybe imprve (check?) performance on this, isomorphism should be avoidable
-Cubeⁿ'-map : ∀ {ℓ ℓb} → {A : Type ℓ} → {B : Type ℓb} → ∀ n → (A → B) → Cubeⁿ' n A → Cubeⁿ' n B
-Cubeⁿ'-map zero f x = f x
-Cubeⁿ'-map (suc zero) f (_ , _ , p) = _ , _ , cong f p
-Cubeⁿ'-map {A = A} {B = B} (suc (suc n)) f = 
-     IsoB.inv ∘ (λ x → _ , cong (Cubeⁿ'-map (suc n) f) (snd x)) ∘ IsoA.fun
-  where
-    module IsoA = Iso (Cubeⁿ'-elim-iso {A = A} (suc n))
-    module IsoB = Iso (Cubeⁿ'-elim-iso {A = B} (suc n))
+-- -- maybe imprve (check?) performance on this, isomorphism should be avoidable
+-- Cubeⁿ'-map : ∀ {ℓ ℓb} → {A : Type ℓ} → {B : Type ℓb} → ∀ n → (A → B) → Cubeⁿ' n A → Cubeⁿ' n B
+-- Cubeⁿ'-map zero f x = f x
+-- Cubeⁿ'-map (suc zero) f (_ , _ , p) = _ , _ , cong f p
+-- Cubeⁿ'-map {A = A} {B = B} (suc (suc n)) f = 
+--      IsoB.inv ∘ (λ x → _ , cong (Cubeⁿ'-map (suc n) f) (snd x)) ∘ IsoA.fun
+--   where
+--     module IsoA = Iso (Cubeⁿ'-elim-iso {A = A} (suc n))
+--     module IsoB = Iso (Cubeⁿ'-elim-iso {A = B} (suc n))
 
 
 
-Cubeⁿ'-map2 : ∀ {ℓ ℓb} → {A A' : Type ℓ} → {B : Type ℓb} → ∀ n → (A → A' → B) → Cubeⁿ' n A → Cubeⁿ' n A' → Cubeⁿ' n B
-Cubeⁿ'-map2 zero f x₁ x₂ = f x₁ x₂
--- Cubeⁿ'-map2 (suc zero) f (_ , _ , p₁) (_ , _ , p₂) =  _ , _ , λ i → f (p₁ i) (p₂ i) 
-Cubeⁿ'-map2 {A = A} {A'} {B} (suc n) f x₁ x₂ = 
-    IsoB.inv (_ , λ i → Cubeⁿ'-map2 {A = A} {A' = A'} {B = B} n f (snd (IsoA.fun x₁) i) (snd (IsoA'.fun x₂) i))
-   where
-    module IsoA = Iso (Cubeⁿ'-elim-iso {A = A} n)
-    module IsoA' = Iso (Cubeⁿ'-elim-iso {A = A'} n)
-    module IsoB = Iso (Cubeⁿ'-elim-iso {A = B} n)
+-- Cubeⁿ'-map2 : ∀ {ℓ ℓb} → {A A' : Type ℓ} → {B : Type ℓb} → ∀ n → (A → A' → B) → Cubeⁿ' n A → Cubeⁿ' n A' → Cubeⁿ' n B
+-- Cubeⁿ'-map2 zero f x₁ x₂ = f x₁ x₂
+-- -- Cubeⁿ'-map2 (suc zero) f (_ , _ , p₁) (_ , _ , p₂) =  _ , _ , λ i → f (p₁ i) (p₂ i) 
+-- Cubeⁿ'-map2 {A = A} {A'} {B} (suc n) f x₁ x₂ = 
+--     IsoB.inv (_ , λ i → Cubeⁿ'-map2 {A = A} {A' = A'} {B = B} n f (snd (IsoA.fun x₁) i) (snd (IsoA'.fun x₂) i))
+--    where
+--     module IsoA = Iso (Cubeⁿ'-elim-iso {A = A} n)
+--     module IsoA' = Iso (Cubeⁿ'-elim-iso {A = A'} n)
+--     module IsoB = Iso (Cubeⁿ'-elim-iso {A = B} n)
 
 
 

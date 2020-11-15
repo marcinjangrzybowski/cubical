@@ -144,29 +144,29 @@ Isoω-CubeΣ-Cubeω {A = A} (suc n) = Isoω.precomp ww (Cubeⁿ'-elim-iso n)
 
 
 
-CubePⁿ'-Isomω : ∀ {ℓ} → ∀ n → (A : Cubeⁿ' n (Type ℓ)) →
-                                Isoω (CubePⁿ' n A)
-                                     (cu n (toCType n A))
-Isoω.to (CubePⁿ'-Isomω zero A) x x₁ = x
-Isoω.toω (CubePⁿ'-Isomω zero A) t₀ t₁ x x₁ = x
-Isoω.from (CubePⁿ'-Isomω zero A) x = x 1=1
-Isoω.sec (CubePⁿ'-Isomω zero A) b = refl
-Isoω.ret (CubePⁿ'-Isomω zero A) a _ = refl
+-- Isoω-CubePΣ-Cubeω : ∀ {ℓ} → ∀ n → (A : Cubeⁿ' n (Type ℓ)) →
+--                                 Isoω (CubePⁿ' n A)
+--                                      (cu n (toCType n A))
+-- Isoω.to (Isoω-CubePΣ-Cubeω zero A) x x₁ = x
+-- Isoω.toω (Isoω-CubePΣ-Cubeω zero A) t₀ t₁ x x₁ = x
+-- Isoω.from (Isoω-CubePΣ-Cubeω zero A) x = x 1=1
+-- Isoω.sec (Isoω-CubePΣ-Cubeω zero A) b = refl
+-- Isoω.ret (Isoω-CubePΣ-Cubeω zero A) a _ = refl
 
-CubePⁿ'-Isomω (suc n) A = h
-  where
+-- Isoω-CubePΣ-Cubeω (suc n) A = h
+--   where
 
-    module ciso = Iso (CubePⁿ'-elim-iso n A)
+--     module ciso = Iso (CubePⁿ'-elim-iso n A)
 
-    h : Isoω (CubePⁿ' (suc n) A)
-          (cu (suc n) (toCType (suc n) A))
+--     h : Isoω (CubePⁿ' (suc n) A)
+--           (cu (suc n) (toCType (suc n) A))
 
-    Isoω.to h x =
-      let ((e0 , e1) , p) = ciso.fun x
-      in λ i → Isoω.to (CubePⁿ'-Isomω n (Cubeⁿ'-elim n A i)) (p i)
-    Isoω.toω h t₀ t₁ x j =
-      let ((e0 , e1) , p) = ciso.fun (x j)
-      in {!!}
-    Isoω.from h x = ciso.inv (_ , λ i →  Isoω.from (CubePⁿ'-Isomω n (Cubeⁿ'-elim n A i)) (x i))
-    Isoω.sec h b = {!!}
-    Isoω.ret h = {!!}
+--     Isoω.to h x =
+--       let ((e0 , e1) , p) = ciso.fun x
+--       in λ i → Isoω.to (Isoω-CubePΣ-Cubeω n (Cubeⁿ'-elim n A i)) (p i)
+--     Isoω.toω h t₀ t₁ x j =
+--       let ((e0 , e1) , p) = ciso.fun (x j)
+--       in {!!}
+--     Isoω.from h x = ciso.inv (_ , λ i →  Isoω.from (Isoω-CubePΣ-Cubeω n (Cubeⁿ'-elim n A i)) (x i))
+--     Isoω.sec h b = {!!}
+--     Isoω.ret h a i = {!!}
