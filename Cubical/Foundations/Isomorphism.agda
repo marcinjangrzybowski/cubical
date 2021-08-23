@@ -18,6 +18,10 @@ open import Cubical.Foundations.Equiv.Base
 
 open import Cubical.Foundations.Function
 
+open import Cubical.Foundations.GroupoidLaws
+
+open import Cubical.Foundations.CartesianKanOps
+
 private
   variable
     ℓ ℓ' : Level
@@ -178,3 +182,116 @@ Iso.fun (codomainIso is) f a = Iso.fun is (f a)
 Iso.inv (codomainIso is) f a = Iso.inv is (f a)
 Iso.rightInv (codomainIso is) f = funExt λ a → Iso.rightInv is (f a)
 Iso.leftInv (codomainIso is) f = funExt λ a → Iso.leftInv is (f a)
+
+
+
+
+----
+
+rotateSquare :
+  {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
+  {a₁₀ a₁₁ : A} {a₁₋ : a₁₀ ≡ a₁₁}
+  {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁}
+  → (Square a₀₋ a₁₋ a₋₀ a₋₁) → (Square (sym a₋₀) (sym a₋₁) a₁₋ a₀₋)
+
+rotateSquare x i j = x (~ j) i
+
+rotateSquareIso :
+  {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
+  {a₁₀ a₁₁ : A} {a₁₋ : a₁₀ ≡ a₁₁}
+  {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁}
+  → Iso (Square a₀₋ a₁₋ a₋₀ a₋₁)
+        (Square (sym a₋₀) (sym a₋₁) a₁₋ a₀₋)
+fun rotateSquareIso x i j = x (~ j) i
+inv rotateSquareIso x i j = x j (~ i)
+rightInv rotateSquareIso b = refl
+leftInv rotateSquareIso a = refl
+
+
+
+
+
+
+-- rotateSquare' :
+--   {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
+--   {a₁₀ a₁₁ : A} {a₁₋ : a₁₀ ≡ a₁₁}
+--   {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁}
+--   → (x : Square a₀₋ a₁₋ a₋₀ a₋₁)
+--     → (transport  ≡rotateSquare x) ≡ (λ i j → x (~ j) i)
+-- rotateSquare' x k i j = {!!}
+--   -- hcomp
+--   --  (λ l →
+--   --    λ { (k = i1) → {!!} 
+--   --      ; (i = i1) → {!!}
+--   --      ; (i = i0) → {!!}
+--   --      ; (j = i1) → {!!}
+--   --      ; (j = i0) → {!!}
+--   --      })
+--   --  {!!}
+
+
+-- rotateSquare'' :
+--   {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
+--   {a₁₀ a₁₁ : A} {a₁₋ : a₁₀ ≡ a₁₁}
+--   {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁}
+--   → ≡rotateSquare {a₀₋ = a₀₋} {a₁₋ = a₁₋} {a₋₀ = a₋₀} {a₋₁ = a₋₁}
+--      ≡ isoToPath (rotateSquareIso {a₀₋ = a₀₋} {a₁₋ = a₁₋} {a₋₀ = a₋₀} {a₋₁ = a₋₁})
+-- rotateSquare'' {a₀₋ = a₀₋} {a₁₋ = a₁₋} {a₋₀ = a₋₀} {a₋₁ = a₋₁} i j =
+--   let rsi = (rotateSquareIso {a₀₋ = a₀₋} {a₁₋ = a₁₋} {a₋₀ = a₋₀} {a₋₁ = a₋₁})
+--       tyA = (Square a₀₋ a₁₋ a₋₀ a₋₁)
+--       tyB = (Square (sym a₋₀) (sym a₋₁) a₁₋ a₀₋)
+
+--   in
+--        hcomp (λ l →
+--               λ { 
+--                (i = i1) →  Glue tyB {(~ j) ∨ (j) ∨ }
+--                                            (λ { (j = i0) → (tyA , isoToEquiv rsi)
+--                                               ; (j = i1) → (tyB , idEquiv tyB) })
+--              ; (i = i0) → {!!}
+--              ; (j = i1) → {!!}
+--              ; (j = i0) → {!!}
+--              }
+--                 )
+--                 ({!!})
+
+
+
+
+
+twistedCube' :
+  {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
+  {a₁₀ a₁₁ : A} {a₁₋ : a₁₀ ≡ a₁₁}
+  {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁}
+  → (x : Square a₀₋ a₁₋ a₋₀ a₋₁)
+  → PathP (λ x₁ → (isoToPath (rotateSquareIso {a₀₋ = a₀₋} {a₁₋ = a₁₋} {a₋₀ = a₋₀} {a₋₁ = a₋₁})) x₁)
+      x (λ i j → x (~ j) i)
+
+twistedCube' {a₀₋ = a₀₋} {a₁₋ = a₁₋} {a₋₀ = a₋₀} {a₋₁ = a₋₁} x k  =
+   glue {φ = k ∨ (~ k)}
+       (λ { (k = i0) → x ; (k = i1) → (λ i j → x (~ j) i)})
+        (λ i j → x (~ j) i)
+
+
+twistedCube :
+  {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
+  {a₁₀ a₁₁ : A} {a₁₋ : a₁₀ ≡ a₁₁}
+  {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁}
+  → (x : Square a₀₋ a₁₋ a₋₀ a₋₁)
+  → Cube x (λ i j → x (~ j) i)
+         (invSides-filler a₀₋ a₋₀)
+         (λ i → (invSides-filler (sym a₋₁) (sym a₁₋) (~ i)))
+         (λ i → (invSides-filler a₁₋ (sym a₋₀) (~ i)))
+         (invSides-filler a₋₁ (sym a₀₋))
+twistedCube x k i j =
+    hcomp (λ l →
+             λ {
+         (k = i1) → x ((~ j) ∧ l) (i ∧ l)
+       ; (k = i0) → x (i ∧ l) (j ∧ l)           
+       ; (i = i1) → {!!}
+       ; (i = i0) → {!!}
+       ; (j = i1) → {!!}
+       ; (j = i0) → {!!}
+       }
+
+          )
+          (x i0 i0)
