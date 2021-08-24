@@ -15,6 +15,9 @@ various consequences of univalence
 {-# OPTIONS --safe #-}
 module Cubical.Foundations.Univalence where
 
+
+open import Cubical.Core.Everything
+
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Isomorphism

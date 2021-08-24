@@ -474,15 +474,3 @@ pentagonIdentity {x = x} {y} p q r s =
         (cube-comp₀₋₋ lemma₁₀-front (sym lemma₁₀-back')) i j i₁
 
 
-
-≡rotateSquare :  {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
-  {a₁₀ a₁₁ : A} {a₁₋ : a₁₀ ≡ a₁₁}
-  {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁}
-  → (Square a₀₋ a₁₋ a₋₀ a₋₁) ≡ (Square (sym a₋₀) (sym a₋₁) a₁₋ a₀₋)
-≡rotateSquare {a₀₋ = a₀₋} {a₁₋ = a₁₋} {a₋₀ = a₋₀} {a₋₁ = a₋₁} i =
-  Square (invSides-filler a₀₋ a₋₀ i)
-         (invSides-filler (sym a₋₁) (sym a₁₋) (~ i))
-         (invSides-filler a₁₋ (sym a₋₀) (~ i))
-         (invSides-filler a₋₁ (sym a₀₋) i)
-
-
