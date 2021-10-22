@@ -23,3 +23,8 @@ map-Maybe f (just x) = just (f x)
 rec : B → (A → B) → Maybe A → B
 rec n j nothing = n
 rec n j (just a) = j a
+
+elim : ∀ {ℓ'} → {B : Maybe A → Type ℓ'} → (B nothing) → ((x : A) → B (just x)) → (x : Maybe A) → B x
+elim x _ nothing = x
+elim _ x₁ (just x₂) = x₁ x₂
+

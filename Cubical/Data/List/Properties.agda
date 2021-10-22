@@ -109,10 +109,61 @@ module ListPath {ℓ} {A : Type ℓ} where
     isOfHLevelΣ (suc n) (p x y) (\ _ → isOfHLevelCover n p xs ys)
 
 
+
 count-m-iter : ∀ {ℓ} → {A : Type ℓ} → (A → Maybe A) → A → ℕ → Type ℓ 
 count-m-iter f a zero = f a ≡ nothing
 count-m-iter f a (suc n) = Cubical.Data.Maybe.rec (Lift ⊥) (λ x → count-m-iter f x n) (f a)
 
+frow-wit-count-m-iter-zero :
+           ∀ {ℓ} → {A : Type ℓ}
+          → (f : A → Maybe A) → (a : A)
+          → count-m-iter f a zero → f a ≡ nothing
+frow-wit-count-m-iter-zero f a x = x
+
+frow-wit-count-m-iter-suc :
+           ∀ {ℓ} → {A : Type ℓ}
+          → (f : A → Maybe A) → (a : A) → (k : ℕ)
+          → count-m-iter f a (suc k)
+          → Σ A λ a' → f a ≡ just a'
+frow-wit-count-m-iter-suc {A = A} f a k x with f a
+... | just x₁ = x₁ , refl
+
+list-frow-wit-count-m-iter-suc :
+           ∀ {ℓ} → {A : Type ℓ}
+          → (f : A → Maybe A) → (a : A) → (k : ℕ)
+          → count-m-iter f a k → List A
+list-frow-wit-count-m-iter-suc {A = A} f a zero x = []
+list-frow-wit-count-m-iter-suc {A = A} f a (suc k) x with f a
+... | just x₁ = x₁ ∷ list-frow-wit-count-m-iter-suc f x₁ k x
+
+
+
+
+
+maybe-pop-count :
+           ∀ {ℓ ℓ'} → {A : Type ℓ} → {B : Type ℓ'}
+          → (f : A → Maybe (B × A)) → A → ℕ → Type₀
+maybe-pop-count f a _ with f a
+maybe-pop-count f a zero | nothing = Unit
+maybe-pop-count f a zero | just _ = ⊥
+maybe-pop-count f a (suc n) | nothing = ⊥
+maybe-pop-count f a (suc n) | just (_ , a') = maybe-pop-count f a' n
+
+maybe-pop-count? : ∀ {ℓ ℓ'} → {A : Type ℓ} → {B : Type ℓ'}
+          → (f : A → Maybe (B × A)) → ∀ a → ∀ k → Dec (maybe-pop-count f a k)
+maybe-pop-count? f a k with f a
+maybe-pop-count? f a zero | nothing = yes _ 
+maybe-pop-count? f a zero | just _ = no (idfun _)
+maybe-pop-count? f a (suc k) | nothing = no (idfun _)
+maybe-pop-count? f _ (suc k) | just (_ , a) = maybe-pop-count? f a k 
+
+maybe-pop-count-fold :
+           ∀ {ℓ ℓ'} → {A : Type ℓ} → {B : Type ℓ'}
+          → (f : A → Maybe (B × A)) → (a : A) → ∀ k 
+          → maybe-pop-count f a k → List B 
+maybe-pop-count-fold f a zero x = []
+maybe-pop-count-fold f a (suc k) x  with f a
+... | just (b , a') = b ∷ maybe-pop-count-fold f a' k x
 
 
 
@@ -125,171 +176,216 @@ record IsList {ℓ} (F : Type ℓ -> Type ℓ) : Type (ℓ-suc ℓ) where
    tail' = map-Maybe snd ∘ (equivFun (isL≃ _))
 
    field
-     isData : {A : Type ℓ} → (x : F A) → Σ _ (count-m-iter tail' x)
+     isData : {A : Type ℓ} → (x : F A) → Σ _ (maybe-pop-count (equivFun (isL≃ _)) x)   
+
+   length' : {A : Type ℓ} → F A → ℕ 
+   length' x = fst (isData x)
+
+   toL : {A : Type ℓ} → (x : F A) → List A
+   toL {A} x =
+     let (k , y) = isData x
+     in maybe-pop-count-fold (equivFun (isL≃ _)) x k y
+
+   fromL : {A : Type ℓ} → List A → F A
+   fromL {A} [] = equivFun (invEquiv (isL≃ _)) nothing
+   fromL {A} (x ∷ x₁) = equivFun (invEquiv (isL≃ _)) (just (x , fromL x₁))
+
+   len0-lem : {A : Type ℓ} → (x : F A) → maybe-pop-count (equivFun (isL≃ A)) x 0 → equivFun (isL≃ A) x ≡ nothing
+   len0-lem x p with fst (isL≃ _) x
+   ... | nothing = refl
 
 
-   -- toL' : {A : Type ℓ} → (k : ℕ) → (x : F A) → (k ≡ fst (isData x)) → List A
-   -- toL' {A} zero x x₁ = []
-   -- toL' {A} (suc k) x x₁ with (isData x) | equivFun (isL≃ A) x
-   -- ... | zero , snd₁ | nothing = {!!}
-   -- ... | zero , snd₁ | just x₂ = {!!}
-   -- ... | suc fst₁ , snd₁ | nothing = {!!}
-   -- ... | suc fst₁ , snd₁ | just (fst₂ , snd₂) = fst₂ ∷ toL' k snd₂ {!!}
+   lenS-lem : {A : Type ℓ} → (x : F A) → ∀ k → maybe-pop-count (equivFun (isL≃ A)) x (suc k)
+                   → Cubical.Data.Maybe.rec ⊥ (flip (maybe-pop-count (equivFun (isL≃ A))) k  ∘ snd) (equivFun (isL≃ A) x) 
 
-isList-List : ∀ {ℓ} → IsList {ℓ} List 
-isList-List = isList (λ A → isoToEquiv (h {A})) λ x → (length x) , hh x
-   where
-     h : ∀ {A} → Iso (List A) (Maybe (A × List A))
-     Iso.fun h [] = nothing
-     Iso.fun h (x ∷ x₁) = just (x , x₁)
-     Iso.inv h nothing = []
-     Iso.inv h (just x) = fst x ∷ snd x
-     Iso.rightInv h nothing = refl
-     Iso.rightInv h (just _) = refl
-     Iso.leftInv h [] = refl
-     Iso.leftInv h (x ∷ a) = refl
-
-     hh : ∀ {A} → (x : List A) → _
-     hh [] = refl
-     hh (x ∷ x₁) = hh x₁
-
--- isList≡ : ∀ {ℓ} F → IsList {ℓ} F → F ≡ (List {ℓ})
--- isList≡ {ℓ} F (isList isL≃ isData) = 
---   funExt (ua ∘ h)
---   where
---     h : (A : Type ℓ) → (F A) ≃ (List A)
---     h A = 
---       compEquiv (isL≃ A)
---        (compEquiv {!!}
---          (invEquiv ({!!})))
+   lenS-lem x _ p with (equivFun (isL≃ _) x)
+   ... | just (_ , y) with fst (isL≃ _) y
+   ... | nothing = p
+   ... | just _ = p
 
 
-isList≡ : ∀ {ℓ} F → IsList {ℓ} F → F ≡ (List {ℓ})
-isList≡ {ℓ} F (isList isL≃ isData) = 
-  funExt (isoToPath ∘ h)
-  where
-    h : (A : Type ℓ) → Iso (F A) (List A)
-    h A = h'
-     where
-       p' = isL≃ A
+-- IsList-Struct : ∀ {ℓ} → (F F' : Type ℓ -> Type ℓ) → IsList F → IsList F' → ∀ A → F A ≃ F' A 
+-- IsList-Struct = {!!}
 
-       i' = equivToIso p'
+--    Iso-FA-List-A' : {A : Type ℓ} → ∀ k →  Iso (Σ (F A) λ x → length' x ≡ k) (Σ (List A) λ x → length x ≡ k)
+--    Iso.fun (Iso-FA-List-A' zero) _ = {!!}
+   
+--    Iso.inv (Iso-FA-List-A' {A = A} zero) ([] , _) with (equivFun (isL≃ A) (equivFun (invEquiv (isL≃ A)) nothing)) | isData ((equivFun (invEquiv (isL≃ A)) nothing))
+--    ... | nothing | zero , snd₁ = {!(equivFun (invEquiv (isL≃ A)) nothing) , ?!}
+--    ... | nothing | suc fst₁ , snd₁ = {!!}
+--    ... | just x | zero , snd₁ = {!!}
+--    ... | just x | suc fst₁ , snd₁ = {!!}
+--    Iso.inv (Iso-FA-List-A' {A = A} zero) (x ∷ xs , _) = {!!}
 
-       f : Maybe (A × F A) → List A
-       f nothing = []
-       f (just x) = {!x!}
+-- --(equivFun (invEquiv (isL≃ _)) nothing) , {!!}
 
-       g : List A → F A
-       g [] = Iso.inv i' nothing
-       g (x ∷ x₁) = Iso.inv i' (just (x , (g x₁)))
+--    Iso.rightInv (Iso-FA-List-A' zero) = {!!}
+--    Iso.leftInv (Iso-FA-List-A' zero) = {!!}
+--    Iso-FA-List-A' (suc k) = {!!}
 
-       h' : Iso (F A) (List A)
-       Iso.fun h' = f  ∘ Iso.fun i'
-       Iso.inv h' = g
-       Iso.rightInv h' = {!!}
-       Iso.leftInv h' = {!!}
+   -- Iso-FA-List-A : {A : Type ℓ} → Iso (F A) (List A)
+   -- Iso.fun Iso-FA-List-A = toL
+   -- Iso.inv Iso-FA-List-A = fromL
+   -- Iso.rightInv (Iso-FA-List-A {A}) [] = {!!}
+   -- -- ... | suc fst₁ , snd₁ = {!!}
+   -- Iso.rightInv Iso-FA-List-A (x ∷ b) = {!!}
+   -- Iso.leftInv Iso-FA-List-A a = {!!}
+
+
+-- isList-List : ∀ {ℓ} → IsList {ℓ} List 
+-- isList-List = isList (λ A → isoToEquiv (h {A})) λ x → (length x) , hh x
+--    where
+--      h : ∀ {A} → Iso (List A) (Maybe (A × List A))
+--      Iso.fun h [] = nothing
+--      Iso.fun h (x ∷ x₁) = just (x , x₁)
+--      Iso.inv h nothing = []
+--      Iso.inv h (just x) = fst x ∷ snd x
+--      Iso.rightInv h nothing = refl
+--      Iso.rightInv h (just _) = refl
+--      Iso.leftInv h [] = refl
+--      Iso.leftInv h (x ∷ a) = refl
+
+--      hh : ∀ {A} → (x : List A) → _
+--      hh [] = refl
+--      hh (x ∷ x₁) = hh x₁
+
+-- -- -- isList≡ : ∀ {ℓ} F → IsList {ℓ} F → F ≡ (List {ℓ})
+-- -- -- isList≡ {ℓ} F (isList isL≃ isData) = 
+-- -- --   funExt (ua ∘ h)
+-- -- --   where
+-- -- --     h : (A : Type ℓ) → (F A) ≃ (List A)
+-- -- --     h A = 
+-- -- --       compEquiv (isL≃ A)
+-- -- --        (compEquiv {!!}
+-- -- --          (invEquiv ({!!})))
+
+
+-- -- isList≡ : ∀ {ℓ} F → IsList {ℓ} F → F ≡ (List {ℓ})
+-- -- isList≡ {ℓ} F (isList isL≃ isData) = 
+-- --   funExt (isoToPath ∘ h)
+-- --   where
+-- --     h : (A : Type ℓ) → Iso (F A) (List A)
+-- --     h A = h'
+-- --      where
+-- --        p' = isL≃ A
+
+-- --        i' = equivToIso p'
+
+-- --        f : Maybe (A × F A) → List A
+-- --        f nothing = []
+-- --        f (just x) = {!x!}
+
+-- --        g : List A → F A
+-- --        g [] = Iso.inv i' nothing
+-- --        g (x ∷ x₁) = Iso.inv i' (just (x , (g x₁)))
+
+-- --        h' : Iso (F A) (List A)
+-- --        Iso.fun h' = f  ∘ Iso.fun i'
+-- --        Iso.inv h' = g
+-- --        Iso.rightInv h' = {!!}
+-- --        Iso.leftInv h' = {!!}
        
--- isList≡ : ∀ {ℓ} F → isList {ℓ} F → F ≡ (List {ℓ})
--- isList≡ {ℓ} F p = funExt (isoToPath ∘ h)
---   where
---     h : (A : Type ℓ) → Iso (F A) (List A)
---     h A = h'
---      where
---        p' = p A
+-- -- -- isList≡ : ∀ {ℓ} F → isList {ℓ} F → F ≡ (List {ℓ})
+-- -- -- isList≡ {ℓ} F p = funExt (isoToPath ∘ h)
+-- -- --   where
+-- -- --     h : (A : Type ℓ) → Iso (F A) (List A)
+-- -- --     h A = h'
+-- -- --      where
+-- -- --        p' = p A
 
---        i' = equivToIso p'
+-- -- --        i' = equivToIso p'
 
---        length-F : Maybe (A × F A) → {!!}
---        length-F = {!!} 
+-- -- --        length-F : Maybe (A × F A) → {!!}
+-- -- --        length-F = {!!} 
 
---        -- length-F : F A → ℕ
---        -- length-F x = (Iso.fun i' x)
+-- -- --        -- length-F : F A → ℕ
+-- -- --        -- length-F x = (Iso.fun i' x)
        
        
---        f : Maybe (A × F A) → List A
---        f = {!!}
+-- -- --        f : Maybe (A × F A) → List A
+-- -- --        f = {!!}
 
---        g : List A → F A
---        g [] = Iso.inv i' nothing
---        g (x ∷ x₁) = Iso.inv i' (just (x , (g x₁)))
+-- -- --        g : List A → F A
+-- -- --        g [] = Iso.inv i' nothing
+-- -- --        g (x ∷ x₁) = Iso.inv i' (just (x , (g x₁)))
 
---        h' : Iso (F A) (List A)
---        Iso.fun h' = f ∘ Iso.fun i'
---        Iso.inv h' = g
---        Iso.rightInv h' = {!!}
---        Iso.leftInv h' = {!!}
-
-
-       -- Cubical.Data.Maybe.rec [] {!_∷_!} (Iso.fun i' x)
+-- -- --        h' : Iso (F A) (List A)
+-- -- --        Iso.fun h' = f ∘ Iso.fun i'
+-- -- --        Iso.inv h' = g
+-- -- --        Iso.rightInv h' = {!!}
+-- -- --        Iso.leftInv h' = {!!}
 
 
--- isOfHLevelList : ∀ {ℓ} (n : HLevel) {A : Type ℓ}
---   → isOfHLevel (suc (suc n)) A → isOfHLevel (suc (suc n)) (List A)
--- isOfHLevelList n ofLevel xs ys =
---   isOfHLevelRetract (suc n)
---     (ListPath.encode xs ys)
---     (ListPath.decode xs ys)
---     (ListPath.decodeEncode xs ys)
---     (ListPath.isOfHLevelCover n ofLevel xs ys)
+-- --        -- Cubical.Data.Maybe.rec [] {!_∷_!} (Iso.fun i' x)
 
--- private
---   variable
---     ℓ : Level
---     A : Type ℓ
 
---   caseList : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → (n c : B) → List A → B
---   caseList n _ []      = n
---   caseList _ c (_ ∷ _) = c
+-- -- -- isOfHLevelList : ∀ {ℓ} (n : HLevel) {A : Type ℓ}
+-- -- --   → isOfHLevel (suc (suc n)) A → isOfHLevel (suc (suc n)) (List A)
+-- -- -- isOfHLevelList n ofLevel xs ys =
+-- -- --   isOfHLevelRetract (suc n)
+-- -- --     (ListPath.encode xs ys)
+-- -- --     (ListPath.decode xs ys)
+-- -- --     (ListPath.decodeEncode xs ys)
+-- -- --     (ListPath.isOfHLevelCover n ofLevel xs ys)
 
---   safe-head : A → List A → A
---   safe-head x []      = x
---   safe-head _ (x ∷ _) = x
+-- -- -- private
+-- -- --   variable
+-- -- --     ℓ : Level
+-- -- --     A : Type ℓ
 
---   safe-tail : List A → List A
---   safe-tail []       = []
---   safe-tail (_ ∷ xs) = xs
+-- -- --   caseList : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → (n c : B) → List A → B
+-- -- --   caseList n _ []      = n
+-- -- --   caseList _ c (_ ∷ _) = c
 
--- cons-inj₁ : ∀ {x y : A} {xs ys} → x ∷ xs ≡ y ∷ ys → x ≡ y
--- cons-inj₁ {x = x} p = cong (safe-head x) p
+-- -- --   safe-head : A → List A → A
+-- -- --   safe-head x []      = x
+-- -- --   safe-head _ (x ∷ _) = x
 
--- cons-inj₂ : ∀ {x y : A} {xs ys} → x ∷ xs ≡ y ∷ ys → xs ≡ ys
--- cons-inj₂ = cong safe-tail
+-- -- --   safe-tail : List A → List A
+-- -- --   safe-tail []       = []
+-- -- --   safe-tail (_ ∷ xs) = xs
 
--- ¬cons≡nil : ∀ {x : A} {xs} → ¬ (x ∷ xs ≡ [])
--- ¬cons≡nil {A = A} p = lower (subst (caseList (Lift ⊥) (List A)) p [])
+-- -- -- cons-inj₁ : ∀ {x y : A} {xs ys} → x ∷ xs ≡ y ∷ ys → x ≡ y
+-- -- -- cons-inj₁ {x = x} p = cong (safe-head x) p
 
--- ¬nil≡cons : ∀ {x : A} {xs} → ¬ ([] ≡ x ∷ xs)
--- ¬nil≡cons {A = A} p = lower (subst (caseList (List A) (Lift ⊥)) p [])
+-- -- -- cons-inj₂ : ∀ {x y : A} {xs ys} → x ∷ xs ≡ y ∷ ys → xs ≡ ys
+-- -- -- cons-inj₂ = cong safe-tail
 
--- ¬snoc≡nil : ∀ {x : A} {xs} → ¬ (xs ∷ʳ x ≡ [])
--- ¬snoc≡nil {xs = []} contra = ¬cons≡nil contra
--- ¬snoc≡nil {xs = x ∷ xs} contra = ¬cons≡nil contra
+-- -- -- ¬cons≡nil : ∀ {x : A} {xs} → ¬ (x ∷ xs ≡ [])
+-- -- -- ¬cons≡nil {A = A} p = lower (subst (caseList (Lift ⊥) (List A)) p [])
 
--- ¬nil≡snoc : ∀ {x : A} {xs} → ¬ ([] ≡ xs ∷ʳ x)
--- ¬nil≡snoc contra = ¬snoc≡nil (sym contra)
+-- -- -- ¬nil≡cons : ∀ {x : A} {xs} → ¬ ([] ≡ x ∷ xs)
+-- -- -- ¬nil≡cons {A = A} p = lower (subst (caseList (List A) (Lift ⊥)) p [])
 
--- cons≡rev-snoc : (x : A) → (xs : List A) → x ∷ rev xs ≡ rev (xs ∷ʳ x)
--- cons≡rev-snoc _ [] = refl
--- cons≡rev-snoc x (y ∷ ys) = λ i → cons≡rev-snoc x ys i ++ y ∷ []
+-- -- -- ¬snoc≡nil : ∀ {x : A} {xs} → ¬ (xs ∷ʳ x ≡ [])
+-- -- -- ¬snoc≡nil {xs = []} contra = ¬cons≡nil contra
+-- -- -- ¬snoc≡nil {xs = x ∷ xs} contra = ¬cons≡nil contra
 
--- isContr[]≡[] : isContr (Path (List A) [] [])
--- isContr[]≡[] = refl , ListPath.decodeEncode [] []
+-- -- -- ¬nil≡snoc : ∀ {x : A} {xs} → ¬ ([] ≡ xs ∷ʳ x)
+-- -- -- ¬nil≡snoc contra = ¬snoc≡nil (sym contra)
 
--- isPropXs≡[] : {xs : List A} → isProp (xs ≡ [])
--- isPropXs≡[] {xs = []} = isOfHLevelSuc 0 isContr[]≡[]
--- isPropXs≡[] {xs = x ∷ xs} = λ p _ → ⊥.rec (¬cons≡nil p)
+-- -- -- cons≡rev-snoc : (x : A) → (xs : List A) → x ∷ rev xs ≡ rev (xs ∷ʳ x)
+-- -- -- cons≡rev-snoc _ [] = refl
+-- -- -- cons≡rev-snoc x (y ∷ ys) = λ i → cons≡rev-snoc x ys i ++ y ∷ []
 
--- discreteList : Discrete A → Discrete (List A)
--- discreteList eqA []       []       = yes refl
--- discreteList eqA []       (y ∷ ys) = no ¬nil≡cons
--- discreteList eqA (x ∷ xs) []       = no ¬cons≡nil
--- discreteList eqA (x ∷ xs) (y ∷ ys) with eqA x y | discreteList eqA xs ys
--- ... | yes p | yes q = yes (λ i → p i ∷ q i)
--- ... | yes _ | no ¬q = no (λ p → ¬q (cons-inj₂ p))
--- ... | no ¬p | _     = no (λ q → ¬p (cons-inj₁ q))
+-- -- -- isContr[]≡[] : isContr (Path (List A) [] [])
+-- -- -- isContr[]≡[] = refl , ListPath.decodeEncode [] []
 
--- foldrCons : (xs : List A) → foldr _∷_ [] xs ≡ xs
--- foldrCons [] = refl
--- foldrCons (x ∷ xs) = cong (x ∷_) (foldrCons xs)
+-- -- -- isPropXs≡[] : {xs : List A} → isProp (xs ≡ [])
+-- -- -- isPropXs≡[] {xs = []} = isOfHLevelSuc 0 isContr[]≡[]
+-- -- -- isPropXs≡[] {xs = x ∷ xs} = λ p _ → ⊥.rec (¬cons≡nil p)
+
+-- -- -- discreteList : Discrete A → Discrete (List A)
+-- -- -- discreteList eqA []       []       = yes refl
+-- -- -- discreteList eqA []       (y ∷ ys) = no ¬nil≡cons
+-- -- -- discreteList eqA (x ∷ xs) []       = no ¬cons≡nil
+-- -- -- discreteList eqA (x ∷ xs) (y ∷ ys) with eqA x y | discreteList eqA xs ys
+-- -- -- ... | yes p | yes q = yes (λ i → p i ∷ q i)
+-- -- -- ... | yes _ | no ¬q = no (λ p → ¬q (cons-inj₂ p))
+-- -- -- ... | no ¬p | _     = no (λ q → ¬p (cons-inj₁ q))
+
+-- -- -- foldrCons : (xs : List A) → foldr _∷_ [] xs ≡ xs
+-- -- -- foldrCons [] = refl
+-- -- -- foldrCons (x ∷ xs) = cong (x ∷_) (foldrCons xs)
 
 
