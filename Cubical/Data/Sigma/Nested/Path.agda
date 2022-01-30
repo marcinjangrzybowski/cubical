@@ -118,27 +118,13 @@ sig-PathP-withEnds {n = n} s =
      (fst ∘ uncurry (sig-PathP s) ∘ nestedΣᵣ-cs.split' (s i0) _)
 
 
--- sig-PathP-withEnds-iso-lem :  ∀ {ℓ} → ∀ {n} → (s₀ s₁ : Sig ℓ n) → (p : NestedΣᵣ s₀ →  NestedΣᵣ s₁ → Sig ℓ n) →
---      Iso ((Σ ((NestedΣᵣ (s₀)) × (NestedΣᵣ (s₁))) λ (e01) → NestedΣᵣ ((p (fst e01) (snd e01)))))
---           (Σ (NestedΣᵣ (sig-cs.concat (s₀) (λ _ → s₁)))
---             (
-
---             λ x → NestedΣᵣ (
---                 ((p) (fst (nestedΣᵣ-cs.split' (s₀) (λ _ → s₁) x)) (snd (nestedΣᵣ-cs.split' (s₀) (λ _ → s₁) x))   ))
-
---                  ))
-
--- sig-PathP-withEnds-iso-lem = {!!}
-
 sig-PathP-withEnds-iso : ∀ {ℓ} → ∀ {n} → (p : I → Sig ℓ n)
         → Iso (Σ ((NestedΣᵣ (p i0)) × (NestedΣᵣ (p i1))) λ (e01) → NestedΣᵣ (fst (sig-PathP p (fst e01) (snd e01))))
               (NestedΣᵣ (sig-PathP-withEnds p))
 
 sig-PathP-withEnds-iso {n = n} p = 
-                   _ Iso⟨ invIso (Σ-cong-iso-fst
-                             (invIso (nestedΣᵣ-cs.isom-concat {n = n} {m = n} _ _))) ⟩
-                   -- _ Iso⟨ sig-PathP-withEnds-iso-lem (p i0) (p i1) (λ x x₁ → fst (sig-PathP p x x₁)) ⟩
-                   _ Iso⟨ nestedΣᵣ-cs.isom-concat {n = n + n} {m = n} _ _ ⟩ _ ∎Iso
+    _ Iso⟨ invIso (Σ-cong-iso-fst (invIso (nestedΣᵣ-cs.isom-concat {n = n} {m = n} _ _))) ⟩
+    _ Iso⟨ nestedΣᵣ-cs.isom-concat {n = n + n} {m = n} _ _ ⟩ _ ∎Iso
 
 
 
