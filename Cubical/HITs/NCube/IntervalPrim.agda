@@ -1,7 +1,7 @@
 {-# OPTIONS --cubical --safe  #-}
 module Cubical.HITs.NCube.IntervalPrim where
 
-import Agda.Primitive
+
 import Agda.Primitive.Cubical
 
 open import Cubical.Data.Empty renaming (rec to ⊥-rec ; elim to ⊥-elim)
@@ -22,7 +22,6 @@ open import Cubical.HITs.Sn
 open import Cubical.HITs.S1
 open import Cubical.HITs.Susp
 open import Cubical.Data.NatMinusOne
-
 
 
 open import Cubical.Foundations.Prelude
@@ -54,6 +53,9 @@ dichotomy≤ b n
   ; (gt (m , p)) → inr (suc m , sym p ∙ +-suc m b ∙ +-comm (suc m) b)
   }
 
+
+data Unitω : Typeω where
+  ttω : Unitω
 
 replaceAt : ∀ {ℓ} → ∀ {A  : Type ℓ} → ∀ {n} → ℕ → A → Vec A n → Vec A n
 replaceAt {n = zero} _ _ _ = []
@@ -128,122 +130,20 @@ trimFin {suc n} (suc x) = fsuc (trimFin x)
  cong suc (+-suc m fst₁) ∙ cong suc (─+ (suc m) n (fst₁ , (pred-≤-pred snd₁)) x)
 
 
+I→ : ∀ {ℓ} → Type ℓ → Type ℓ 
+I→ A = I → A
+
+∀I : ∀ {ℓ} →  (A : I → Type ℓ) → Type ℓ
+∀I {ℓ} A = ∀ i → A i
+
+Iⁿ→  : ∀ {ℓ} → ℕ → Type ℓ → Type ℓ
+Iⁿ→ zero A = A
+Iⁿ→ (suc n) A = I → Iⁿ→ n A
+
+Typeⁿ : ∀ ℓ → ℕ → Type (ℓ-suc ℓ)
+Typeⁿ ℓ n = Iⁿ→ n (Type ℓ)
 
 
-
-
-
-
-
-
-ifω : Typeω → Typeω → Bool → Typeω
-ifω x y false = x
-ifω x y true = y
-
--- ⊥-recω : {A : Agda.Primitive.SSet ?} → ⊥ → A
--- ⊥-recω ()
-
-
--- record _×ω_ (A : Agda.Primitive.SSet ?) (B : Agda.Primitive.SSet ?) : Agda.Primitive.SSet ? where
---   constructor pairω
---   field
---      proj₁ω : A
---      proj₂ω : B
-
--- open _×ω_ public
-
--- record Σω (A : Agda.Primitive.SSet ?) (B : A → Agda.Primitive.SSet ?) : Agda.Primitive.SSet ? where
---   constructor _,ω_
---   field
---      fstω : A
---      sndω : B fstω
-
--- open Σω public
-
--- indω : (x : ℕ → Agda.Primitive.SSet ?) → (x 0) → (∀ n → x n → x (suc n)) → ∀ n → x n
--- indω x x₁ x₂ zero = x₁
--- indω x x₁ x₂ (suc n) = x₂ n (indω x x₁ x₂ n)
-
--- _↔ω_ : ∀ {ℓ} → Type ℓ → Agda.Primitive.SSet ? → Agda.Primitive.SSet ?
--- T ↔ω Tω = (T → Tω) ×ω (Tω → T)
-
--- ↔ω-section : {ℓ : Level} {T : Type ℓ} {Tω : Agda.Primitive.SSet ?} →
---                 T ↔ω Tω → Type ℓ
--- ↔ω-section {ℓ} {T} {Tω} x = (b : T) → proj₂ω x (proj₁ω x b) ≡ b
-
-
--- Liftω : ∀ {ℓ} (A : Type ℓ) → Agda.Primitive.SSet ℓ
--- Liftω A = .(IsOne i1) → A -- .(IsOne i1) → A
-
--- liftω : ∀ {ℓ} {A : Type ℓ} → A → Liftω A
--- liftω a = λ _ → a
-
--- lowerω : ∀ {ℓ} {A : Type ℓ} → Liftω A → A
--- lowerω x = x 1=1
-
--- record ωType : Agda.Primitive.SSet ? where
---   constructor ωty
---   field
---     Tω : Agda.Primitive.SSet ?
---     _≡ω_ : (Tω → (Tω → Agda.Primitive.SSet ?))
---     symω : {a b : Tω} → a ≡ω b → b ≡ω a
---     _transω_ : {a b c : Tω} → a ≡ω b → b ≡ω c → a ≡ω c
-
--- open ωType using () renaming (Tω to T[_]) public
-
--- record Morω (A B : ωType) : Agda.Primitive.SSet ? where
---   constructor morω
-
---   field
---     f : T[ A ] → T[ B ]
---     f= : (x y : T[ A ]) → (A ωType.≡ω x) y → (B ωType.≡ω (f x)) (f y)
-
--- ω[_] : ∀ {ℓ} → Type ℓ → ωType
--- ω[ A ] = ωty (Liftω A) (λ x x₁ → Liftω (lowerω x ≡ lowerω x₁))
---              (λ x x₁ → sym (lowerω x))
---               λ x x₁ → liftω ( (lowerω x) ∙ (lowerω x₁) )
-
--- I→ : ωType → ωType
--- I→ x = ωty (I → Tω) (λ x₁ x₂ → (∀ i → (x₁ i ≡ω x₂ i)))
---            (λ x₁ i → symω (x₁ i))
---            λ x₁ x₂ i → (x₁ i) transω (x₂ i)
---   where open ωType x
-
--- ∀I : (A : I → ωType) → ωType
--- ∀I A = ωty (∀ i → Tω (A i))
---            (λ x x₁ → ∀ (i : I) → _≡ω_ (A i) (x i) (x₁ i))
---            (λ x i → symω (A i) (x i))
---            λ x x₁ i → _transω_ (A i) (x i) (x₁ i)
---   where open ωType
-
-
--- record Isoω {ℓ : Level} (T : Type ℓ)
---                 (t : ωType) : Agda.Primitive.SSet ? where
---   open ωType t
-
---   field
---     to : T → Tω
---     toω : ∀ t₀ t₁ → t₀ ≡ t₁ → to t₀ ≡ω to t₁ 
---     from : Tω → T
---     -- fromω : ∀ t₀ t₁ → t₀ ≡ω t₁ → from t₀ ≡ from t₁ 
---     sec : (b : T) → from (to b) ≡ b
---     ret : (a : Tω) → to (from a) ≡ω a
-
-
---   precomp : ∀ {ℓ'} → {T' : Type ℓ'} → Iso T' T → Isoω T' t 
---   precomp isom =
---      record { to = λ x →  to (fun x)
---             ; toω = λ t₀ t₁ x → toω _ _ (cong fun x)  
---             ; from = λ x → inv (from x)
---             -- ; fromω = λ t₀ t₁ x → cong inv (fromω t₀ t₁ x)
---             ; sec = λ b → cong inv (sec (fun b)) ∙ leftInv b
---             ; ret = λ a → toω _ _ (rightInv (from a)) transω ret a
---             }
---     where open Iso isom 
-
--- Typeωⁿ : Agda.Primitive.SSet ? → ℕ → Agda.Primitive.SSet ?
--- Typeωⁿ x zero = x
--- Typeωⁿ x (suc x₁) = I → Typeωⁿ x x₁
 
 
 -- iterω : (ωType → ωType) → ωType → ℕ → ωType
@@ -306,10 +206,10 @@ ifω x y true = y
 -- -- proj₁ω ((Ieω' ωType.transω x) x₁ ℓ A) x₂ x₃ = {!!}
 -- -- proj₂ω ((Ieω' ωType.transω x) x₁ ℓ A) = {!!}
 
--- Ie' : ℕ → Agda.Primitive.SSet ?
+-- Ie' : ℕ → Typeω
 -- Ie' n = T[ iterω I→ Ieω n ]
 
--- Ie : ℕ → Agda.Primitive.SSet ?
+-- Ie : ℕ → Typeω
 -- Ie zero = I
 -- Ie (suc n) = I → Ie n
 
@@ -325,9 +225,22 @@ ifω x y true = y
 -- -- this version of Interval will let us handle both ends in single case
 -- -- the convention of i0 ↔ false , i1 ↔ true is used everywhere in this module
 
--- data Interval' : Type₀ where
---    end : Bool → Interval'
---    inside : end false ≡ end true
+data Interval' : Type₀ where
+   end : Bool → Interval'
+   inside : end false ≡ end true
+
+~'_ : Interval' → Interval'
+~' (end x) = end (not x)
+~' (inside i) = inside (~ i)
+
+isEquiv-~' : isEquiv ~'_
+isEquiv-~' = snd (isoToEquiv (iso ~'_ ~'_ w w))
+ where
+   w : _
+   w (end false) = refl
+   w (end true) = refl
+   w (inside i) = refl
+
 
 -- Bool→I : Bool → I
 -- Bool→I false = i0
@@ -337,37 +250,40 @@ ifω x y true = y
 -- isOne-∨B false = 1=1
 -- isOne-∨B true = 1=1
 
--- bool-elimω : ∀ {A : Agda.Primitive.SSet ?} → Bool → A → A → A
+-- bool-elimω : ∀ {A : Typeω} → Bool → A → A → A
 -- bool-elimω false f _ = f
 -- bool-elimω true _ t = t
 
 -- negIf : Bool → I → I
 -- negIf b i = bool-elimω b (~ i) i
 
--- self∨ : I → I
--- self∨ x = x ∨ (~ x)
+self∨ : I → I
+self∨ x = x ∨ (~ x)
 
--- Iapp : ∀ {ℓ} → {A : Type ℓ}
---          → (I → A) → Interval' → A
--- Iapp x (end x₁) = x (Bool→I x₁)
--- Iapp x (inside i) = x i
+Iapp : ∀ {ℓ} → {A : Type ℓ}
+         → (I → A) → Interval' → A
+Iapp x (end false) = x i0
+Iapp x (end true) = x i1
+Iapp x (inside i) = x i
 
--- caseBool : ∀ {ℓ} → {A : Type ℓ} → (a0 aS : A) → Bool → A
--- caseBool att aff true  = att
--- caseBool att aff false = aff
+caseBool : ∀ {ℓ} → {A : Type ℓ} → (a0 aS : A) → Bool → A
+caseBool att aff true  = att
+caseBool att aff false = aff
 
--- Iapp= : ∀ {ℓ} → {A : Type ℓ} → {a₀ a₁ : A}
---          → a₀ ≡ a₁ → Interval' → A
--- Iapp= {a₀ = a₀} {a₁} x (end x₁) = caseBool a₁ a₀ x₁
--- Iapp= x (inside i) = x i
+Iapp= : ∀ {ℓ} → {A : Type ℓ} → {a₀ a₁ : A}
+         → a₀ ≡ a₁ → Interval' → A
+Iapp= {a₀ = a₀} {a₁} x (end x₁) = caseBool a₁ a₀ x₁
+Iapp= x (inside i) = x i
 
--- IappP : ∀ {ℓ} → {A : I → Type ℓ} → {a₀ : A i0} → {a₁ : A i1}
---       → PathP (λ i → A i) a₀ a₁
---       → ∀ i' →  Iapp (λ i → A i) i'
--- IappP {a₀ = a₀} x (end false) = a₀
--- IappP {a₁ = a₁} x (end true) = a₁
--- IappP x (inside i) = x i
+IappP : ∀ {ℓ} → {A : I → Type ℓ} → {a₀ : A i0} → {a₁ : A i1}
+      → PathP (λ i → A i) a₀ a₁
+      → ∀ i' →  Iapp (λ i → A i) i'
+IappP {a₀ = a₀} x (end false) = a₀
+IappP {a₁ = a₁} x (end true) = a₁
+IappP x (inside i) = x i
 
+
+   
 
 -- iterω-I→-face :  ∀ (A  : ωType) → (n : ℕ) → ℕ → Bool
 --                   → T[ iterω I→ A (suc n) ]
@@ -388,46 +304,106 @@ ifω x y true = y
 -- Ie-face (suc n) (suc k) b x i = Ie-face n k b (x i)
 
 
--- NCube : ℕ -> Type₀
--- NCube = Vec Interval'
+NCube : ℕ -> Type₀
+NCube = Vec Interval'
 
--- _i∷_ : ∀ {ℓ} → ∀ {n} → {A : NCube (suc n) → Type ℓ} →
---           (∀ x → A x) → ∀ i → ∀ x → (A ∘ (inside i ∷_)) x
--- _i∷_ {ℓ} {n} {A} x i = x ∘ (inside i ∷_)
+_i∷_ : ∀ {ℓ} → ∀ {n} → {A : NCube (suc n) → Type ℓ} →
+          (∀ x → A x) → ∀ i → ∀ x → (A ∘ (inside i ∷_)) x
+_i∷_ {ℓ} {n} {A} x i = x ∘ (inside i ∷_)
 
--- _b∷_ : ∀ {ℓ} → ∀ {n} → {A : NCube (suc n) → Type ℓ} →
---           (∀ x → A x) → ∀ b → ∀ x → (A ∘ (end b ∷_)) x
--- _b∷_ {ℓ} {n} {A} x b = x ∘ (end b ∷_)
-
-
--- iso-NCube : ∀ {ℓ} → ∀ {n} → ∀ {A : Type ℓ}
---               → Iso
---                 (NCube (suc n) → A)
---                 ((Σ[ (x₀ , x₁) ∈ (NCube n → A) × (NCube n → A) ] x₀ ≡ x₁))
-
--- (Iso.fun (iso-NCube {n = n}) x) = (_ , _) , (λ i → x i∷ i)
--- Iso.inv (iso-NCube {n = n}) ((_ , _) , snd₁) (x ∷ x₁) = Iapp= snd₁ x x₁
--- Iso.rightInv (iso-NCube {n = n}) b = refl
-
--- Iso.leftInv (iso-NCube {n = n}) a i (end false ∷ x₁) =  a (end false ∷ x₁)
--- Iso.leftInv (iso-NCube {n = n}) a i (end true ∷ x₁) = a (end true ∷ x₁)
--- Iso.leftInv (iso-NCube {n = n}) a i (inside i₁ ∷ x₁) = a (inside i₁ ∷ x₁)
+_b∷_ : ∀ {ℓ} → ∀ {n} → {A : NCube (suc n) → Type ℓ} →
+          (∀ x → A x) → ∀ b → ∀ x → (A ∘ (end b ∷_)) x
+_b∷_ {ℓ} {n} {A} x b = x ∘ (end b ∷_)
 
 
--- iso-NCubeP : ∀ {ℓ} → ∀ {n} → ∀ (A : NCube (suc n) → Type ℓ)
---               → Iso
---                 (∀ x → A x)
---                 ((Σ[ (x₀ , x₁) ∈ (∀ x → (A b∷ false) x) × (∀ x → (A b∷ true) x) ]
---                    (PathP  (λ i → (∀ x → (A i∷ i) x)) x₀ x₁)))
--- (Iso.fun (iso-NCubeP {n = n} A) x) = (_ , _) , (λ i → x i∷ i)
--- Iso.inv (iso-NCubeP {n = n} A) ((_ , _) , snd₁) (end false ∷ x₁) = snd₁ i0 x₁
--- Iso.inv (iso-NCubeP {n = n} A) ((_ , _) , snd₁) (end true ∷ x₁) = snd₁ i1 x₁
--- Iso.inv (iso-NCubeP {n = n} A) ((_ , _) , snd₁) (inside i ∷ x₁) = snd₁ i x₁
--- Iso.rightInv (iso-NCubeP {n = n} A) b = refl
 
--- Iso.leftInv (iso-NCubeP {n = n} A) a i (end false ∷ x₁) =  a (end false ∷ x₁)
--- Iso.leftInv (iso-NCubeP {n = n} A) a i (end true ∷ x₁) = a (end true ∷ x₁)
--- Iso.leftInv (iso-NCubeP {n = n} A) a i (inside i₁ ∷ x₁) = a (inside i₁ ∷ x₁)
+
+iso-NCube : ∀ {ℓ} → ∀ {n} → ∀ {A : Type ℓ}
+              → Iso
+                (NCube (suc n) → A)
+                ((Σ[ (x₀ , x₁) ∈ (NCube n → A) × (NCube n → A) ] x₀ ≡ x₁))
+
+(Iso.fun (iso-NCube {n = n}) x) = (_ , _) , (λ i → x i∷ i)
+Iso.inv (iso-NCube {n = n}) ((_ , _) , snd₁) (x ∷ x₁) = Iapp= snd₁ x x₁
+Iso.rightInv (iso-NCube {n = n}) b = refl
+
+Iso.leftInv (iso-NCube {n = n}) a i (end false ∷ x₁) =  a (end false ∷ x₁)
+Iso.leftInv (iso-NCube {n = n}) a i (end true ∷ x₁) = a (end true ∷ x₁)
+Iso.leftInv (iso-NCube {n = n}) a i (inside i₁ ∷ x₁) = a (inside i₁ ∷ x₁)
+
+
+iso-NCubeP : ∀ {ℓ} → ∀ {n} → ∀ (A : NCube (suc n) → Type ℓ)
+              → Iso
+                (∀ x → A x)
+                ((Σ[ (x₀ , x₁) ∈ (∀ x → (A b∷ false) x) × (∀ x → (A b∷ true) x) ]
+                   (PathP  (λ i → (∀ x → (A i∷ i) x)) x₀ x₁)))
+(Iso.fun (iso-NCubeP {n = n} A) x) = (_ , _) , (λ i → x i∷ i)
+Iso.inv (iso-NCubeP {n = n} A) ((_ , _) , snd₁) (end false ∷ x₁) = snd₁ i0 x₁
+Iso.inv (iso-NCubeP {n = n} A) ((_ , _) , snd₁) (end true ∷ x₁) = snd₁ i1 x₁
+Iso.inv (iso-NCubeP {n = n} A) ((_ , _) , snd₁) (inside i ∷ x₁) = snd₁ i x₁
+Iso.rightInv (iso-NCubeP {n = n} A) b = refl
+
+Iso.leftInv (iso-NCubeP {n = n} A) a i (end false ∷ x₁) =  a (end false ∷ x₁)
+Iso.leftInv (iso-NCubeP {n = n} A) a i (end true ∷ x₁) = a (end true ∷ x₁)
+Iso.leftInv (iso-NCubeP {n = n} A) a i (inside i₁ ∷ x₁) = a (inside i₁ ∷ x₁)
+
+
+isoIⁿ : ∀ {ℓ} {A : Type ℓ} → ∀ n → Iso (NCube n → A) (Iⁿ→ n A)
+Iso.fun (isoIⁿ zero) x = x []
+Iso.inv (isoIⁿ zero) x _ = x
+Iso.rightInv (isoIⁿ zero) b = refl
+Iso.leftInv (isoIⁿ zero) a i [] = a []
+Iso.fun (isoIⁿ (suc n)) x i = Iso.fun (isoIⁿ n) (x i∷ i) 
+Iso.inv (isoIⁿ (suc n)) x (end false ∷ y) = Iso.inv (isoIⁿ n) (x i0) y
+Iso.inv (isoIⁿ (suc n)) x (end true ∷ y) = Iso.inv (isoIⁿ n) (x i1) y
+Iso.inv (isoIⁿ (suc n)) x (inside i ∷ y) = Iso.inv (isoIⁿ n) (x i) y
+Iso.rightInv (isoIⁿ (suc n)) b i x = Iso.rightInv (isoIⁿ (n)) (b x) i
+Iso.leftInv (isoIⁿ (suc n)) a i (end false ∷ x₁) = Iso.leftInv (isoIⁿ n) (a i∷ i0) i x₁
+Iso.leftInv (isoIⁿ (suc n)) a i (end true ∷ x₁) = Iso.leftInv (isoIⁿ n) (a i∷ i1) i x₁
+Iso.leftInv (isoIⁿ (suc n)) a i (inside i₁ ∷ x₁) = Iso.leftInv (isoIⁿ n) (a i∷ i₁) i x₁
+
+isoTyⁿ : ∀ {ℓ} → ∀ {n} → Iso (NCube n → Type ℓ) (Typeⁿ ℓ n)
+isoTyⁿ = isoIⁿ _
+
+
+∀Iⁿ'  : ∀ {ℓ} → ∀ {n} → (NCube n → Type ℓ) → Type ℓ
+∀Iⁿ' {n = zero} A = A []
+∀Iⁿ' {n = suc n} A = ∀I λ i → ∀Iⁿ' (A i∷ i) 
+
+∀Iⁿ  : ∀ {ℓ} → ∀ {n} → Typeⁿ ℓ n → Type ℓ
+∀Iⁿ {n = n} A = ∀Iⁿ' (Iso.inv isoTyⁿ A)
+
+
+∀Iⁿ-cu : ∀ {ℓ} → ∀ {n} → (A : NCube n → Type ℓ) → ∀Iⁿ' A →
+                 ∀ x →  A x
+∀Iⁿ-cu {n = zero} A x [] = x
+∀Iⁿ-cu {n = suc n} A x (end false ∷ x₂) = ∀Iⁿ-cu _ (x i0) x₂
+∀Iⁿ-cu {n = suc n} A x (end true ∷ x₂) = ∀Iⁿ-cu _ (x i1) x₂
+∀Iⁿ-cu {n = suc n} A x (inside i ∷ x₂) = ∀Iⁿ-cu _ (x i) x₂
+
+∀Iⁿ-cu← : ∀ {ℓ} → ∀ {n} → (A : NCube n → Type ℓ) →
+                 (∀ x →  A x)  → ∀Iⁿ' A
+∀Iⁿ-cu← {n = zero} A x = x []
+∀Iⁿ-cu← {n = suc n} A x i = ∀Iⁿ-cu← _ (x i∷ i)
+
+
+∀Iⁿ-cu-iso : ∀ {ℓ} → ∀ {n} → (A : NCube n → Type ℓ) →
+                 Iso (∀Iⁿ' A) (∀ x →  A x)
+Iso.fun (∀Iⁿ-cu-iso A) = ∀Iⁿ-cu A
+Iso.inv (∀Iⁿ-cu-iso A) = ∀Iⁿ-cu← A
+Iso.rightInv (∀Iⁿ-cu-iso {n = .zero} A) b i [] = b []
+Iso.rightInv (∀Iⁿ-cu-iso {ℓ} {n = .(suc n)} A) b i (_∷_ {n = n} (end false) x₁) =
+      Iso.rightInv (∀Iⁿ-cu-iso {ℓ} {n = n} (A i∷ i0) ) (b i∷ i0) i x₁
+Iso.rightInv (∀Iⁿ-cu-iso {ℓ} {n = .(suc n)} A) b i (_∷_ {n = n} (end true) x₁) =
+      Iso.rightInv (∀Iⁿ-cu-iso {ℓ} {n = n} (A i∷ i1) ) (b i∷ i1) i x₁
+Iso.rightInv (∀Iⁿ-cu-iso {ℓ} {n = .(suc n)} A) b i (_∷_ {n = n} (inside i₁) x₁) =
+      Iso.rightInv (∀Iⁿ-cu-iso {ℓ} {n = n} (A i∷ i₁) ) (b i∷ i₁) i x₁
+Iso.leftInv (∀Iⁿ-cu-iso {n = zero} A) a i = a
+Iso.leftInv (∀Iⁿ-cu-iso {n = suc n} A) a i i₁ =
+   Iso.leftInv (∀Iⁿ-cu-iso {n = n} (A i∷ i₁)) (a i₁) i
+
+-- iso∀Iⁿ : ∀ {ℓ} {A : Type ℓ} → ∀ n → Iso (NCube n → A) (Iⁿ→ n A)
+-- iso∀Iⁿ = {!!}
 
 
 -- PathCu : ∀ {ℓ} → ∀ {n} → (A : NCube (suc n) → (Type ℓ)) →
@@ -449,74 +425,74 @@ ifω x y true = y
 
 
 
--- isContr-Inrerval' : isContr Interval'
--- fst isContr-Inrerval' = end false
--- snd isContr-Inrerval' (end false) = refl
--- snd isContr-Inrerval' (end true) = inside
--- snd isContr-Inrerval' (inside i) j = inside (i ∧ j)
+isContr-Inrerval' : isContr Interval'
+fst isContr-Inrerval' = end false
+snd isContr-Inrerval' (end false) = refl
+snd isContr-Inrerval' (end true) = inside
+snd isContr-Inrerval' (inside i) j = inside (i ∧ j)
 
--- isProp-Inrerval' = (isContr→isProp isContr-Inrerval')
+isProp-Inrerval' = (isContr→isProp isContr-Inrerval')
 
--- endT= : ∀ i' → end true ≡ i'
--- endT= (end false) = sym inside
--- endT= (end true) = refl
--- endT= (inside i) i₁ = inside (i ∨ ~ i₁)
+endT= : ∀ i' → end true ≡ i'
+endT= (end false) = sym inside
+endT= (end true) = refl
+endT= (inside i) i₁ = inside (i ∨ ~ i₁)
 
--- endF= : ∀ i' → i' ≡ end false
--- endF= (end false) = refl
--- endF= (end true) = sym inside
--- endF= (inside i) i₁ = inside (i ∧ ~ i₁)
+endF= : ∀ i' → i' ≡ end false
+endF= (end false) = refl
+endF= (end true) = sym inside
+endF= (inside i) i₁ = inside (i ∧ ~ i₁)
 
 -- ----------
 -- ----------
 
--- corner0 : ∀ {n} → NCube n
--- corner0 {zero} = []
--- corner0 {suc n} =  end false ∷ corner0
+corner0 : ∀ {n} → NCube n
+corner0 {zero} = []
+corner0 {suc n} =  end false ∷ corner0
 
--- corner1 : ∀ {n} → NCube n
--- corner1 {zero} = []
--- corner1 {suc n} =  end true ∷ corner1
+corner1 : ∀ {n} → NCube n
+corner1 {zero} = []
+corner1 {suc n} =  end true ∷ corner1
 
--- corner0-≡ : ∀ {n} → ∀ (a : NCube n) → _≡_ {A = NCube n} (corner0) a
--- corner0-≡ {zero} [] = refl
--- corner0-≡ {suc n} (end false ∷ x₁) i = end false ∷ corner0-≡ x₁ i
--- corner0-≡ {suc n} (end true ∷ x₁) i = inside i ∷ corner0-≡ x₁ i
--- corner0-≡ {suc n} (inside i ∷ x₁) j = inside (i ∧ j) ∷ corner0-≡ x₁ j
+corner0-≡ : ∀ {n} → ∀ (a : NCube n) → _≡_ {A = NCube n} (corner0) a
+corner0-≡ {zero} [] = refl
+corner0-≡ {suc n} (end false ∷ x₁) i = end false ∷ corner0-≡ x₁ i
+corner0-≡ {suc n} (end true ∷ x₁) i = inside i ∷ corner0-≡ x₁ i
+corner0-≡ {suc n} (inside i ∷ x₁) j = inside (i ∧ j) ∷ corner0-≡ x₁ j
 
--- ≡-corner1 : ∀ {n} → ∀ (a : NCube n) → _≡_ {A = NCube n}  a (corner1)
--- ≡-corner1 {zero} [] = refl
--- ≡-corner1 {suc n} (end true ∷ x₁) i = end true ∷ ≡-corner1 x₁ i
--- ≡-corner1 {suc n} (end false ∷ x₁) i = inside i ∷ ≡-corner1 x₁ i
--- ≡-corner1 {suc n} (inside i ∷ x₁) j = inside (i ∨ j) ∷ ≡-corner1 x₁ j
+≡-corner1 : ∀ {n} → ∀ (a : NCube n) → _≡_ {A = NCube n}  a (corner1)
+≡-corner1 {zero} [] = refl
+≡-corner1 {suc n} (end true ∷ x₁) i = end true ∷ ≡-corner1 x₁ i
+≡-corner1 {suc n} (end false ∷ x₁) i = inside i ∷ ≡-corner1 x₁ i
+≡-corner1 {suc n} (inside i ∷ x₁) j = inside (i ∨ j) ∷ ≡-corner1 x₁ j
 
--- corner0-≡-corner1 : ∀ {n} → _≡_ {A = NCube n}  corner0 corner1
--- corner0-≡-corner1 {zero} = refl
--- corner0-≡-corner1 {suc n} i = (inside i) ∷ corner0-≡-corner1 i
+corner0-≡-corner1 : ∀ {n} → _≡_ {A = NCube n}  corner0 corner1
+corner0-≡-corner1 {zero} = refl
+corner0-≡-corner1 {suc n} i = (inside i) ∷ corner0-≡-corner1 i
 
 
--- isPropCube : ∀ {n} → isProp (NCube n)
--- isPropCube {zero} [] [] i = []
--- isPropCube {suc n} (x ∷ x₁) (x₂ ∷ x₃) i =
---     (isContr→isProp isContr-Inrerval') x x₂ i ∷ (isPropCube x₁ x₃ i)
+isPropCube : ∀ {n} → isProp (NCube n)
+isPropCube {zero} [] [] i = []
+isPropCube {suc n} (x ∷ x₁) (x₂ ∷ x₃) i =
+    (isContr→isProp isContr-Inrerval') x x₂ i ∷ (isPropCube x₁ x₃ i)
 
--- inside≡ : ∀ i j → inside i ≡ inside j
--- inside≡ i j i' = inside ( (i ∧ (~ i'))  ∨ (j ∧ i') )
+inside≡ : ∀ i j → inside i ≡ inside j
+inside≡ i j i' = inside ( (i ∧ (~ i'))  ∨ (j ∧ i') )
 
 
 -- --------------
 -- --------------
 
--- Interval'-≡-∥Bool∥  : Interval' → Interval' ≡ ∥ Bool ∥
--- Interval'-≡-∥Bool∥ i' i = fst (Lo.⇔toPath {P = Interval' , isProp-Inrerval'}
---                                           {Q = Lo.∥ Bool ∥ₚ } f g i)
---   where
---     f : _
---     f (end x) = ∣ x ∣
---     f (inside i) = squash  ∣ false ∣  ∣ true ∣  i
+Interval'-≡-∥Bool∥  : Interval' → Interval' ≡ ∥ Bool ∥
+Interval'-≡-∥Bool∥ i' i = fst (Lo.⇔toPath {P = Interval' , isProp-Inrerval'}
+                                          {Q = Lo.∥ Bool ∥ₚ } f g i)
+  where
+    f : _
+    f (end x) = ∣ x ∣
+    f (inside i) = squash  ∣ false ∣  ∣ true ∣  i
 
---     g : _
---     g x = i'
+    g : _
+    g x = i'
 
 
 
@@ -773,14 +749,14 @@ ifω x y true = y
 
 -- --- POSET of expresions
 
--- record ωPOSET : Agda.Primitive.SSet ? where
+-- record ωPOSET : Typeω₁ where
 --   field
---     Carrier : Agda.Primitive.SSet ?
---     _⊆_ : Carrier → Carrier → Agda.Primitive.SSet ?
+--     Carrier : Typeω
+--     _⊆_ : Carrier → Carrier → Typeω
 --     PO-trans : {a b c : Carrier} → a ⊆ b → b ⊆ c
 
 
--- ⊆I : ∀ {n} → Ie n → Ie n → (Agda.Primitive.SSet ?)
+-- ⊆I : ∀ {n} → Ie n → Ie n → (Typeω)
 -- ⊆I {zero} x x₁ = (IsOne x) → (IsOne x₁)
 -- ⊆I {suc n} x x₁ = (i : I) → ⊆I (x i) (x₁ i)
 
@@ -788,7 +764,7 @@ ifω x y true = y
 -- ⊆I-trans zero x x₁ x₂ = x₁ (x x₂)
 -- ⊆I-trans (suc n) x x₁ i = ⊆I-trans n (x i) (x₁ i)
 
--- -- ⊆'I : ∀ {n} → Ie n → Ie n → (Agda.Primitive.SSet ?)
+-- -- ⊆'I : ∀ {n} → Ie n → Ie n → (Typeω)
 -- -- ⊆'I {zero} x x₁ = ∀ {ℓ} → {A : Type ℓ} → ((.(IsOne x₁) → A) → (.(IsOne x) → A))
 -- -- ⊆'I {suc n} x x₁ = (i : I) → ⊆'I (x i) (x₁ i)
 
@@ -1054,10 +1030,18 @@ ifω x y true = y
 -- outSⁿ (suc n) x i = outSⁿ n (x i)
 
 
--- ⊆'I : ∀ {n} → Ie n → Ie n → (Agda.Primitive.SSet ?)
+-- ⊆'I : ∀ {n} → Ie n → Ie n → (Typeω)
 -- ⊆'I {n} e₁ e₂ = ∀ {ℓ} → {A : T[ CType ℓ n ]}
 --                      → T[ Partialⁿ n e₂ A ]
 --                      → T[ Partialⁿ n e₁ A ]
+
+-- -- ⊆'I* : ∀ {n} → ∀ {ℓ} → (e₁ e₂ : Ie n ) → (r :  ⊆'I e₁ e₂)
+-- --                      → {A : T[ CTypeP ℓ n e₂ ]}
+-- --                      → T[ PartialPⁿ n e₂ A ]
+-- --                      → T[ PartialPⁿ n e₁ (r A) ]
+
+-- -- ⊆'I* {zero} {ℓ} e₁ e₂ r {A} x 1=1 = {!x ?!}
+-- -- ⊆'I* {suc n} e₁ e₂ = {!!}
 
 -- ⊆I→⊆'I :  ∀ n → {x y : Ie n} → .(⊆I x y) → ⊆'I x y
 -- ⊆I→⊆'I zero x x₁ x₃ = x₁ (x x₃)
@@ -1090,6 +1074,25 @@ ifω x y true = y
 -- (Partialⁿ-Sub zero {A} {i} {j} x ωType.transω x₁) x₂ i=1 = x₁ i=1 ∙ x₂ i=1
 
 -- Partialⁿ-Sub (suc n) x = ∀I λ i → Partialⁿ-Sub n (x i)
+
+
+
+
+-- PartialPⁿ-Sub : ∀ {ℓ} → ∀ n
+--                → {i j : Ie n}
+--                → {A : T[ CTypeP ℓ n i ]}               
+--                → T[ PartialPⁿ n (j ∧ⁿ i) (⊆'2-∧ j i A) ] → ωType
+
+-- T[_] (PartialPⁿ-Sub zero {i} {j} {A} x) = 
+--     .(i=1 : (IsOne i)) → Sub (A i=1) (i ∧ j) λ { (i = i1)(j = i1) → x 1=1}
+-- (PartialPⁿ-Sub zero {i} {j} {A} x ωType.≡ω x₁) x₂ = 
+--    .(i=1 : (IsOne i)) → outS (x₁ i=1) ≡ outS (x₂ i=1)
+-- ωType.symω (PartialPⁿ-Sub zero {i} {j} {A} x) x₁ i=1 = 
+--   sym (x₁ i=1)
+-- (PartialPⁿ-Sub zero {i} {j} {A} x ωType.transω x₁) x₂ i=1 = x₁ i=1 ∙ x₂ i=1
+
+-- PartialPⁿ-Sub (suc n) x = ∀I λ i → PartialPⁿ-Sub n (x i)
+
 
 
 -- inPartialⁿ-Sub : ∀ {ℓ} → ∀ n
@@ -1283,6 +1286,11 @@ ifω x y true = y
 
 -- Boundaryω : ∀ {ℓ} → ∀ n → (A : T[ CType ℓ n ]) → ωType
 -- Boundaryω n A = Partialⁿ n (boundaryExpr n) A
+
+-- BoundaryPω : ∀ {ℓ} → ∀ n → (A : T[ CTypeP ℓ n (boundaryExpr n) ]) → ωType
+-- BoundaryPω n A = PartialPⁿ n (boundaryExpr n) A
+
+
 
 
 -- attachEndsToBrdω : ∀ {ℓ} → ∀ n → (A : T[ CType ℓ (suc n) ]) 
@@ -1585,19 +1593,29 @@ ifω x y true = y
 -- appLast {ℓ} {zero} {A} a i c = a (inside i ∷ c)
 -- appLast {ℓ} {suc n} {A} a i c = appLast {n = n} (a ∘ ((head c) ∷_)) i (tail c)
 
+-- PathWithEnds :  ∀ {ℓ} → (A : Type ℓ) → Type ℓ 
+-- PathWithEnds A = (Σ[ (e0 , e1) ∈ (A × A) ] (e0) ≡ (e1))
 
 -- IsoInterval' : ∀ {ℓ}
 --            → {A : Type ℓ}
 --            → Iso (Interval' → A)
---                  (Σ[ y ∈ (Bool → A) ]
---                      (y false) ≡ (y true) )
--- Iso.fun IsoInterval' x = (λ b → x (end b)) , (λ i → x (inside i))
--- Iso.inv IsoInterval' x (end x₁) = fst x x₁
+--                  (PathWithEnds A)
+-- Iso.fun IsoInterval' x = (x (end false) , x (end true)) , (λ i → x (inside i))
+-- Iso.inv IsoInterval' x (end b) = snd x (Bool→I b)
+
 -- Iso.inv IsoInterval' x (inside i) = snd x i
--- fst (Iso.rightInv IsoInterval' b i) b₁ = fst b b₁
+-- fst (Iso.rightInv IsoInterval' b i) = _
 -- snd (Iso.rightInv IsoInterval' b i) = snd b
--- Iso.leftInv IsoInterval' b i (end x) = b (end x)
+-- Iso.leftInv IsoInterval' b i (end false) = b (end false)
+-- Iso.leftInv IsoInterval' b i (end true) = b (end true)
 -- Iso.leftInv IsoInterval' b i (inside i₁) = b (inside i₁)
+
+-- equivInterval' : ∀ {ℓ}
+--            → {A : Type ℓ}
+--            →     (Interval' → A) ≃
+--                  (PathWithEnds A) 
+-- equivInterval' = isoToEquiv IsoInterval' 
+
 
 
 -- -- IsoInterval' : ∀ {ℓ}
@@ -1626,6 +1644,9 @@ ifω x y true = y
 -- snd (Iso.rightInv IsoIntervalP' b i) = snd b
 -- Iso.leftInv IsoIntervalP' b i (end x) = b (end x)
 -- Iso.leftInv IsoIntervalP' b i (inside i₁) = b (inside i₁)
+
+
+
 
 -- -- fromVecIso : ∀ ℓ ℓ' → {A : Type ℓ} → {B : Type ℓ'}
 -- --               →  ∀ n m
@@ -1657,4 +1678,67 @@ ifω x y true = y
 -- -- Iso.leftInv iso-pop a i x = {!  !}
 
 
+-- --Partialⁿ : ∀ {ℓ} → ∀ n → Ie n → (T[ CType ℓ n ]) → ωType
 
+-- Glued-ty-curr : ∀ {ℓ} {ℓ'} → ∀ n →  T[ CType ℓ n ] → (e : Ie n) → T[ CTypeP ℓ' n e ] → T[ CTypeP (ℓ-max ℓ ℓ') n e ]
+-- Glued-ty-curr zero A e T e=1 = T e=1 ≃ A 1=1
+-- Glued-ty-curr (suc n) A e T i = Glued-ty-curr n (A i) (e i) (T i)
+
+
+-- Glued-ty-app-equiv : ∀ {ℓ} {ℓ'} → ∀ n →  (A : T[ CType ℓ n ]) → (e : Ie n)
+--                  → (T : T[ CTypeP ℓ' n e ])
+--                  → T[ PartialPⁿ n e (Glued-ty-curr n A e T) ]
+--                  → T[ PartialPⁿ n e T ]
+--                  → T[ Partialⁿ n e A ]
+-- Glued-ty-app-equiv zero A e T x x₁ e=1 = fst (x e=1) (x₁ e=1)
+-- Glued-ty-app-equiv (suc n) A e T x x₁ i = Glued-ty-app-equiv n (A i) (e i) (T i) (x i) (x₁ i)
+
+-- primGlueⁿ : ∀ {ℓ ℓ'} → ∀ n → (e : Ie n) → (A : T[ CType ℓ n ])
+--              → (T : T[ CTypeP ℓ' n e ])  
+--              → (T[ PartialPⁿ n e (Glued-ty-curr n A e T) ])
+--              → T[ CType ℓ' n ]
+-- primGlueⁿ zero e A T x _ = Glue (A 1=1) {e} λ x₂ → T x₂  , x x₂
+-- primGlueⁿ (suc n) e A T x i = primGlueⁿ n (e i) (A i) (T i) (x i)
+
+
+-- Glued-ty : ∀ {ℓ} ℓ' → ∀ n → T[ CType ℓ n ] → T[ CType (ℓ-max ℓ (ℓ-suc ℓ')) n ]
+-- Glued-ty ℓ' zero A _ = Σ (Type ℓ') λ T → T ≃ A 1=1
+-- Glued-ty ℓ' (suc n) A i = Glued-ty ℓ' n (A i)
+
+-- Glueⁿ : ∀ {ℓ ℓ'} → ∀ n → (e : Ie n) → (A : T[ CType ℓ n ])
+--             → (T[ Partialⁿ n e (Glued-ty ℓ' n A) ]) → T[ CType ℓ' n ]
+-- Glueⁿ zero e A T _ = Glue (A 1=1) {e} T 
+-- Glueⁿ (suc n) e A T i = Glueⁿ n (e i) (A i) (T i)
+
+
+-- glueⁿ : ∀ {ℓ ℓ'} → ∀ n → {e : Ie n} → {A : T[ CType ℓ n ]}
+--            → {T : T[ CTypeP ℓ' n e ]}
+--            → {𝓮 : T[ PartialPⁿ n e (Glued-ty-curr n A e T) ]}
+--            → (t : T[ PartialPⁿ n e T ])
+--            → T[ Subⁿ n e (Glued-ty-app-equiv n A e T 𝓮 t) ]
+--            → T[ cu n (primGlueⁿ n e A T 𝓮) ]   
+-- glueⁿ zero x x₁ _ = glue x (outS x₁)
+-- glueⁿ (suc n) x x₁ i = glueⁿ n (x i) (x₁ i)
+
+-- coeT→Gⁿ : ∀ {ℓ ℓ'} → ∀ n → {e : Ie n} → {A : T[ CType ℓ n ]}
+--             → {T : T[ CTypeP ℓ' n e ]}
+--             → {te : T[ PartialPⁿ n e (Glued-ty-curr n A e T) ]}
+--              → (t : T[ PartialPⁿ n e T ])
+--             → T[ Partialⁿ n e (primGlueⁿ n e A T te) ]
+-- coeT→Gⁿ zero {e} t = w
+--   where
+--     w : _
+--     w (e = i1) = t 1=1
+
+-- coeT→Gⁿ (suc n) t i = coeT→Gⁿ n (t i)
+
+
+
+-- glue-Sⁿ : ∀ {ℓ ℓ'} → ∀ n → {e : Ie n} → {A : T[ CType ℓ n ]}
+--            → {T : T[ CTypeP ℓ' n e ]}
+--            → {𝓮 : T[ PartialPⁿ n e (Glued-ty-curr n A e T) ]}
+--            → (t : T[ PartialPⁿ n e T ])
+--            → T[ Subⁿ n e (Glued-ty-app-equiv n A e T 𝓮 t) ]
+--            → T[ Subⁿ n e (coeT→Gⁿ n {te = 𝓮} t) ]
+-- glue-Sⁿ zero x x₁ = inS (glue x (outS x₁))
+-- glue-Sⁿ (suc n) x x₁ i = (glue-Sⁿ n (x i) (x₁ i))
