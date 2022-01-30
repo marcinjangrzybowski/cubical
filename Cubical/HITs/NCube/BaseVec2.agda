@@ -464,49 +464,31 @@ module XX2 where
     ((Iso.rightInv (∀Iⁿ-cu-iso {n = (suc n)} (A ∘ lid false) )) (b ∘ lid false)) i x₁
   Iso.rightInv (mkBd-iso {n = suc n} {A}) b i (lid true x₁) =
     ((Iso.rightInv (∀Iⁿ-cu-iso {n = (suc n)} (A ∘ lid true) )) (b ∘ lid true)) i x₁
-  Iso.rightInv (mkBd-iso {n = suc n} {A}) b i (cyl x i₁) = 
-    hcomp
-       (λ l → λ { (i = i0) → 
-                                mkBd (mkBd← (λ x₁ → (transport-filler
-                                     (   (λ i₂ →  PathP (λ i₃ → A (cyl x₁ i₃))
-                                             (Iso.rightInv (∀Iⁿ-cu-iso (λ x₂ → A (lid false x₂)))
-                                              (λ x₂ → b (lid false x₂)) (~ i₂) (boundaryInj x₁))
-                                             (Iso.rightInv (∀Iⁿ-cu-iso (λ x₂ → A (lid true x₂)))
-                                              (λ x₂ → b (lid true x₂)) (~ i₂) (boundaryInj x₁)))))
-                                      (λ i₂ → b (cyl x₁ i₂)) l )) x i₁ 
-                ; (i = i1) → b (cyl x i₁)
-                ; (i₁ = i0) → Iso.rightInv (∀Iⁿ-cu-iso (λ x₁ → A (lid false x₁)))
-                                   (λ x₁ → b (lid false x₁)) (i ∨ ~ l) (boundaryInj x)
-                ; (i₁ = i1) → Iso.rightInv (∀Iⁿ-cu-iso (λ x₂ → A (lid true x₂)))
-                                      (λ x₂ → b (lid true x₂)) (i ∨ ~ l) (boundaryInj x)
-                      })
-                   {!!}
-                    -- (mkBd (mkBd←  (λ x₁ i₂ → b (cyl x₁ i₂))) x i₁)
-            -- (funExt (λ x₁ i₂ → Iso.rightInv (mkBd-iso {n = n} {A = λ v → {!PathP (λ v → A (cyl x₁ v)) (b (cyl x₁ i0)) (b (cyl x₁ i1))!}} ) {!!} i₂ x₁) i (x))
-         -- (Iso.rightInv (mkBd-iso {n = n} {A = λ x₁ → {!PathP (λ v → A (cyl x₁ v)) (b (cyl x₁ i0)) (b (cyl x₁ i1))!}})
-         --                          ( (λ x₁ i₂ → b (cyl x₁ i₂))) i x)
-       -- (mkBd {A = λ x₁ → {!!}} (mkBd← (λ x₁ i₂ → b (cyl x₁ i₂))) x i₁)
+  Iso.rightInv (mkBd-iso {n = suc n} {A}) b i (cyl x i₁) =
+   let zz : PathP (λ i₁ → ∀ x → _≡_ {A = A (cyl x i₁)}
+                             ({!!}) (b (cyl x i₁)) )
+                        (λ x₁ i → Iso.rightInv (∀Iⁿ-cu-iso (λ x₁ → A (lid false x₁)))
+                                      (λ x₁ → b (lid false x₁)) (i) (boundaryInj x₁))
+                        (λ x₁ i → Iso.rightInv (∀Iⁿ-cu-iso (λ x₁ → A (lid true x₁)))
+                                      (λ x₁ → b (lid true x₁)) (i) (boundaryInj x₁))
+       zz = {!!}
+   in  hcomp
+          (λ l → λ { (i = i0) → 
+                                   mkBd (mkBd← (λ x₁ → (transport-filler
+                                        (   (λ i₂ →  PathP (λ i₃ → A (cyl x₁ i₃))
+                                                (Iso.rightInv (∀Iⁿ-cu-iso (λ x₂ → A (lid false x₂)))
+                                                 (λ x₂ → b (lid false x₂)) (~ i₂) (boundaryInj x₁))
+                                                (Iso.rightInv (∀Iⁿ-cu-iso (λ x₂ → A (lid true x₂)))
+                                                 (λ x₂ → b (lid true x₂)) (~ i₂) (boundaryInj x₁)))))
+                                         (λ i₂ → b (cyl x₁ i₂)) l )) x i₁ 
+                   ; (i = i1) → b (cyl x i₁)
+                   ; (i₁ = i0) → Iso.rightInv (∀Iⁿ-cu-iso (λ x₁ → A (lid false x₁)))
+                                      (λ x₁ → b (lid false x₁)) (i ∨ ~ l) (boundaryInj x)
+                   ; (i₁ = i1) → Iso.rightInv (∀Iⁿ-cu-iso (λ x₂ → A (lid true x₂)))
+                                         (λ x₂ → b (lid true x₂)) (i ∨ ~ l) (boundaryInj x)
+                         })
+                      (?)
 
-
--- Goal: A (cyl x i₁)
--- ———— Boundary ——————————————————————————————————————————————
--- i = i0 ⊢ mkBd
-         -- (mkBd←
-         --  (λ x₁ →
-         --     transp
-         --     (λ i₂ →
-         --        PathP (λ i₃ → A (cyl x₁ i₃))
-         --        (Iso.rightInv (∀Iⁿ-cu-iso (λ x₂ → A (lid false x₂)))
-         --         (λ x₂ → b (lid false x₂)) (~ i₂) (boundaryInj x₁))
-         --        (Iso.rightInv (∀Iⁿ-cu-iso (λ x₂ → A (lid true x₂)))
-         --         (λ x₂ → b (lid true x₂)) (~ i₂) (boundaryInj x₁)))
-         --     i0 (λ i₂ → b (cyl x₁ i₂))))
---          x i₁
--- i = i1 ⊢ b (cyl x i₁)
--- i₁ = i0 ⊢ Iso.rightInv (∀Iⁿ-cu-iso (λ x₁ → A (lid false x₁)))
---           (λ x₁ → b (lid false x₁)) i (boundaryInj x)
--- i₁ = i1 ⊢ Iso.rightInv (∀Iⁿ-cu-iso (λ x₁ → A (lid true x₁)))
---           (λ x₁ → b (lid true x₁)) i (boundaryInj x)
 
   BdPS.lid0 (Iso.leftInv (mkBd-iso {n = zero}) a i) = BdPS.lid0 a
   BdPS.lid1 (Iso.leftInv (mkBd-iso {n = zero}) a i) = BdPS.lid1 a
