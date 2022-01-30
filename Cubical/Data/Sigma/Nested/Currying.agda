@@ -142,35 +142,35 @@ Iso.leftInv (n-curryᵣ-uncurryᵣ-conf-Iso {n = suc (suc n)} v s) a =
 
 n-curriedᵣ : ∀ {ℓ ℓ'} → ∀ {n} → (s : Sig ℓ n)
                      → ((NestedΣᵣ s → Type ℓ')) → Type (ℓ-max ℓ ℓ')
-n-curriedᵣ = n-curriedᵣ-conf (repeat false)
+n-curriedᵣ = n-curriedᵣ-conf (replicate false)
 
 
 n-curryᵣ :  ∀ {ℓ ℓ'} → ∀ {n} → (s : Sig ℓ n)
                      → {Target : NestedΣᵣ s → Type ℓ'}
-                     → Π Target → n-curriedᵣ-conf (repeat false) s Target
-n-curryᵣ = n-curryᵣ-conf (repeat false)
+                     → Π Target → n-curriedᵣ-conf (replicate false) s Target
+n-curryᵣ = n-curryᵣ-conf (replicate false)
 
 n-uncurryᵣ :  ∀ {ℓ ℓ'} → ∀ {n} → (s : Sig ℓ n)
                      → {Target : NestedΣᵣ s → Type ℓ'}
-                     → n-curriedᵣ-conf (repeat false) s Target → Π Target
-n-uncurryᵣ = n-uncurryᵣ-conf (repeat false)
+                     → n-curriedᵣ-conf (replicate false) s Target → Π Target
+n-uncurryᵣ = n-uncurryᵣ-conf (replicate false)
 
 n-curryᵣ-uncurryᵣ-Iso : ∀ {ℓ ℓ'} → ∀ {n} → (s : Sig ℓ n)
                   → {Target : NestedΣᵣ s → Type ℓ'}
                   → Iso (Π Target) (n-curriedᵣ s Target)
-n-curryᵣ-uncurryᵣ-Iso = n-curryᵣ-uncurryᵣ-conf-Iso (repeat false)
+n-curryᵣ-uncurryᵣ-Iso = n-curryᵣ-uncurryᵣ-conf-Iso (replicate false)
 
 -- and all implicit arguments
 
 
 n-curriedᵣ-implicit :  ∀ {ℓ ℓ'} → ∀ {n} → (s : Sig ℓ n)
                      → ((NestedΣᵣ s → Type ℓ')) → Type (ℓ-max ℓ ℓ')
-n-curriedᵣ-implicit = n-curriedᵣ-conf (repeat false)
+n-curriedᵣ-implicit = n-curriedᵣ-conf (replicate false)
 
 n-curryᵣ-implicit :  ∀ {ℓ ℓ'} → ∀ {n} → (s : Sig ℓ n)
                      → {Target : NestedΣᵣ s → Type ℓ'}
-                     → Π Target → n-curriedᵣ-conf (repeat true) s Target
-n-curryᵣ-implicit = n-curryᵣ-conf (repeat true)
+                     → Π Target → n-curriedᵣ-conf (replicate true) s Target
+n-curryᵣ-implicit = n-curryᵣ-conf (replicate true)
 
 ----------
 
@@ -236,7 +236,7 @@ impex = snd ∘ impex' false
 -- force casting vectors to diferent length (trimming or padding with false)
 
 castImpex : ∀ {n₁ n₂} → Vec Bool n₁ → Vec Bool n₂
-castImpex {zero} _ = repeat false
+castImpex {zero} _ = replicate false
 castImpex {suc n₁} {zero} _ = []
 castImpex {suc n₁} {suc n₂} x = head x ∷ castImpex (tail x)
 

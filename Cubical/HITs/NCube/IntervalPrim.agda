@@ -1,7 +1,7 @@
 {-# OPTIONS --cubical --safe  #-}
 module Cubical.HITs.NCube.IntervalPrim where
 
-
+import Agda.Primitive
 import Agda.Primitive.Cubical
 
 open import Cubical.Data.Empty renaming (rec to ⊥-rec ; elim to ⊥-elim)
@@ -19,9 +19,10 @@ open import Cubical.Data.Sum
 open import Cubical.HITs.Interval
 open import Cubical.HITs.PropositionalTruncation renaming (map to mapₚ)
 open import Cubical.HITs.Sn
-open import Cubical.HITs.S1 hiding (_*_)
+open import Cubical.HITs.S1
 open import Cubical.HITs.Susp
 open import Cubical.Data.NatMinusOne
+
 
 
 open import Cubical.Foundations.Prelude
@@ -100,7 +101,7 @@ head-tail : ∀ {ℓ} → {A : Type ℓ} → ∀ {n}
 head-tail {n = n} (x ∷ x₁) = refl
 
 padWithFirst : ∀ {ℓ} → ∀ {A  : Type ℓ} → ∀ {n} → ∀ k → Vec A (suc n) → Vec A (k + suc n)
-padWithFirst k x = repeat {n = k} (head x) ++ x
+padWithFirst k x = replicate {n = k} (head x) ++ x
 
 padWithFirst< : ∀ {ℓ} → ∀ {A  : Type ℓ} → ∀ {n}
                 → ∀ m → (suc n ≤ m)
@@ -135,15 +136,15 @@ trimFin {suc n} (suc x) = fsuc (trimFin x)
 
 
 
-ifω : Typeω → Typeω → Bool → Typeω
+ifω : Agda.Primitive.SSet  → Agda.Primitive.SSet ? → Bool → Agda.Primitive.SSet ?
 ifω x y false = x
 ifω x y true = y
 
-⊥-recω : {A : Typeω} → ⊥ → A
+⊥-recω : {A : Agda.Primitive.SSet ?} → ⊥ → A
 ⊥-recω ()
 
 
-record _×ω_ (A : Typeω) (B : Typeω) : Typeω where
+record _×ω_ (A : Agda.Primitive.SSet ?) (B : Agda.Primitive.SSet ?) : Agda.Primitive.SSet ? where
   constructor pairω
   field
      proj₁ω : A
@@ -151,7 +152,7 @@ record _×ω_ (A : Typeω) (B : Typeω) : Typeω where
 
 open _×ω_ public
 
-record Σω (A : Typeω) (B : A → Typeω) : Typeω where
+record Σω (A : Agda.Primitive.SSet ?) (B : A → Agda.Primitive.SSet ?) : Agda.Primitive.SSet ? where
   constructor _,ω_
   field
      fstω : A
@@ -159,20 +160,20 @@ record Σω (A : Typeω) (B : A → Typeω) : Typeω where
 
 open Σω public
 
-indω : (x : ℕ → Typeω) → (x 0) → (∀ n → x n → x (suc n)) → ∀ n → x n
+indω : (x : ℕ → Agda.Primitive.SSet ?) → (x 0) → (∀ n → x n → x (suc n)) → ∀ n → x n
 indω x x₁ x₂ zero = x₁
 indω x x₁ x₂ (suc n) = x₂ n (indω x x₁ x₂ n)
 
-_↔ω_ : ∀ {ℓ} → Type ℓ → Typeω → Typeω
+_↔ω_ : ∀ {ℓ} → Type ℓ → Agda.Primitive.SSet ? → Agda.Primitive.SSet ?
 T ↔ω Tω = (T → Tω) ×ω (Tω → T)
 
-↔ω-section : {ℓ : Level} {T : Type ℓ} {Tω : Typeω} →
+↔ω-section : {ℓ : Level} {T : Type ℓ} {Tω : Agda.Primitive.SSet ?} →
                 T ↔ω Tω → Type ℓ
 ↔ω-section {ℓ} {T} {Tω} x = (b : T) → proj₂ω x (proj₁ω x b) ≡ b
 
 
-Liftω : ∀ {ℓ} (A : Type ℓ) → Typeω
-Liftω A = .(IsOne i1) → A
+Liftω : ∀ {ℓ} (A : Type ℓ) → Agda.Primitive.SSet ℓ
+Liftω A = .(IsOne i1) → A -- .(IsOne i1) → A
 
 liftω : ∀ {ℓ} {A : Type ℓ} → A → Liftω A
 liftω a = λ _ → a
@@ -180,17 +181,17 @@ liftω a = λ _ → a
 lowerω : ∀ {ℓ} {A : Type ℓ} → Liftω A → A
 lowerω x = x 1=1
 
-record ωType : Typeω₁ where
+record ωType : Agda.Primitive.SSet ? where
   constructor ωty
   field
-    Tω : Typeω
-    _≡ω_ : (Tω → (Tω → Typeω))
+    Tω : Agda.Primitive.SSet ?
+    _≡ω_ : (Tω → (Tω → Agda.Primitive.SSet ?))
     symω : {a b : Tω} → a ≡ω b → b ≡ω a
     _transω_ : {a b c : Tω} → a ≡ω b → b ≡ω c → a ≡ω c
 
 open ωType using () renaming (Tω to T[_]) public
 
-record Morω (A B : ωType) : Typeω where
+record Morω (A B : ωType) : Agda.Primitive.SSet ? where
   constructor morω
 
   field
@@ -217,7 +218,7 @@ I→ x = ωty (I → Tω) (λ x₁ x₂ → (∀ i → (x₁ i ≡ω x₂ i)))
 
 
 record Isoω {ℓ : Level} (T : Type ℓ)
-                (t : ωType) : Typeω where
+                (t : ωType) : Agda.Primitive.SSet ? where
   open ωType t
 
   field
@@ -240,7 +241,7 @@ record Isoω {ℓ : Level} (T : Type ℓ)
             }
     where open Iso isom 
 
-Typeωⁿ : Typeω → ℕ → Typeω
+Typeωⁿ : Agda.Primitive.SSet ? → ℕ → Agda.Primitive.SSet ?
 Typeωⁿ x zero = x
 Typeωⁿ x (suc x₁) = I → Typeωⁿ x x₁
 
@@ -305,10 +306,10 @@ proj₂ω (ωType.symω Ieω x) = proj₁ω x
 -- proj₁ω ((Ieω' ωType.transω x) x₁ ℓ A) x₂ x₃ = {!!}
 -- proj₂ω ((Ieω' ωType.transω x) x₁ ℓ A) = {!!}
 
-Ie' : ℕ → Typeω
+Ie' : ℕ → Agda.Primitive.SSet ?
 Ie' n = T[ iterω I→ Ieω n ]
 
-Ie : ℕ → Typeω
+Ie : ℕ → Agda.Primitive.SSet ?
 Ie zero = I
 Ie (suc n) = I → Ie n
 
@@ -336,7 +337,7 @@ isOne-∨B : ∀ b → IsOne (Bool→I b ∨ ~ Bool→I b)
 isOne-∨B false = 1=1
 isOne-∨B true = 1=1
 
-bool-elimω : ∀ {A : Typeω} → Bool → A → A → A
+bool-elimω : ∀ {A : Agda.Primitive.SSet ?} → Bool → A → A → A
 bool-elimω false f _ = f
 bool-elimω true _ t = t
 
@@ -772,14 +773,14 @@ faceExpr {suc n} (suc x) x₁ _ = faceExpr {n} x x₁
 
 --- POSET of expresions
 
-record ωPOSET : Typeω₁ where
+record ωPOSET : Agda.Primitive.SSet ? where
   field
-    Carrier : Typeω
-    _⊆_ : Carrier → Carrier → Typeω
+    Carrier : Agda.Primitive.SSet ?
+    _⊆_ : Carrier → Carrier → Agda.Primitive.SSet ?
     PO-trans : {a b c : Carrier} → a ⊆ b → b ⊆ c
 
 
-⊆I : ∀ {n} → Ie n → Ie n → (Typeω)
+⊆I : ∀ {n} → Ie n → Ie n → (Agda.Primitive.SSet ?)
 ⊆I {zero} x x₁ = (IsOne x) → (IsOne x₁)
 ⊆I {suc n} x x₁ = (i : I) → ⊆I (x i) (x₁ i)
 
@@ -787,7 +788,7 @@ record ωPOSET : Typeω₁ where
 ⊆I-trans zero x x₁ x₂ = x₁ (x x₂)
 ⊆I-trans (suc n) x x₁ i = ⊆I-trans n (x i) (x₁ i)
 
--- ⊆'I : ∀ {n} → Ie n → Ie n → (Typeω)
+-- ⊆'I : ∀ {n} → Ie n → Ie n → (Agda.Primitive.SSet ?)
 -- ⊆'I {zero} x x₁ = ∀ {ℓ} → {A : Type ℓ} → ((.(IsOne x₁) → A) → (.(IsOne x) → A))
 -- ⊆'I {suc n} x x₁ = (i : I) → ⊆'I (x i) (x₁ i)
 
@@ -1053,7 +1054,7 @@ outSⁿ zero x = liftω (outS x)
 outSⁿ (suc n) x i = outSⁿ n (x i)
 
 
-⊆'I : ∀ {n} → Ie n → Ie n → (Typeω)
+⊆'I : ∀ {n} → Ie n → Ie n → (Agda.Primitive.SSet ?)
 ⊆'I {n} e₁ e₂ = ∀ {ℓ} → {A : T[ CType ℓ n ]}
                      → T[ Partialⁿ n e₂ A ]
                      → T[ Partialⁿ n e₁ A ]

@@ -10,7 +10,7 @@ Every subfinite set is guaranteed to be a set and discrete.
 
 -}
 
-{-# OPTIONS --cubical --no-import-sorts --safe #-}
+{-# OPTIONS --safe #-}
 
 module Cubical.Data.SubFinSet where
 
@@ -35,7 +35,7 @@ isSubFinSet A = ∃[ n ∈ ℕ ] A ↪ Fin n
 isFinSet→isSubFinSet : isFinSet A → isSubFinSet A
 isFinSet→isSubFinSet = PT.map
   λ (n , f , isEquiv-f) →
-    n , f , isEmbedding→hasPropFibers (isEquiv→isEmbedding isEquiv-f)
+    n , f , isEquiv→isEmbedding isEquiv-f
 
 isSubFinSet→isSet : isSubFinSet A → isSet A
 isSubFinSet→isSet = PT.rec

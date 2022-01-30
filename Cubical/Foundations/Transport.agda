@@ -4,7 +4,7 @@
 - transport is an equivalence ([transportEquiv])
 
 -}
-{-# OPTIONS --cubical --no-import-sorts --safe #-}
+{-# OPTIONS --safe #-}
 module Cubical.Foundations.Transport where
 
 open import Cubical.Foundations.Prelude
@@ -12,6 +12,7 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.GroupoidLaws
+open import Cubical.Foundations.Function using (_∘_)
 
 -- Direct definition of transport filler, note that we have to
 -- explicitly tell Agda that the type is constant (like in CHM)
@@ -66,7 +67,7 @@ isEquivTransport {A = A} {B = B} p =
 transportEquiv : ∀ {ℓ} {A B : Type ℓ} → A ≡ B → A ≃ B
 transportEquiv p = (transport p , isEquivTransport p)
 
-substEquiv : ∀ {ℓ ℓ'} {A B : Type ℓ} (P : Type ℓ → Type ℓ') (p : A ≡ B) → P A ≃ P B
+substEquiv : ∀ {ℓ ℓ'} {A : Type ℓ} {a a' : A} (P : A → Type ℓ') (p : a ≡ a') → P a ≃ P a'
 substEquiv P p = (subst P p , isEquivTransport (λ i → P (p i)))
 
 liftEquiv : ∀ {ℓ ℓ'} {A B : Type ℓ} (P : Type ℓ → Type ℓ') (e : A ≃ B) → P A ≃ P B
@@ -86,20 +87,29 @@ uaTransportη P i j
       (j = i1) → P i1 , idEquiv (P i1)
 
 pathToIso : ∀ {ℓ} {A B : Type ℓ} → A ≡ B → Iso A B
-pathToIso x = iso (transport x) (transport⁻ x) (transportTransport⁻ x) (transport⁻Transport x)
+Iso.fun (pathToIso x) = transport x
+Iso.inv (pathToIso x) = transport⁻ x
+Iso.rightInv (pathToIso x) = transportTransport⁻ x
+Iso.leftInv (pathToIso x) = transport⁻Transport x
 
 isInjectiveTransport : ∀ {ℓ : Level} {A B : Type ℓ} {p q : A ≡ B}
   → transport p ≡ transport q → p ≡ q
 isInjectiveTransport {p = p} {q} α i =
   hcomp
     (λ j → λ
-      { (i = i0) → secEq univalence p j
-      ; (i = i1) → secEq univalence q j
+      { (i = i0) → retEq univalence p j
+      ; (i = i1) → retEq univalence q j
       })
     (invEq univalence ((λ a → α i a) , t i))
   where
   t : PathP (λ i → isEquiv (λ a → α i a)) (pathToEquiv p .snd) (pathToEquiv q .snd)
   t = isProp→PathP (λ i → isPropIsEquiv (λ a → α i a)) _ _
+
+transportUaInv : ∀ {ℓ} {A B : Type ℓ} (e : A ≃ B) → transport (ua (invEquiv e)) ≡ transport (sym (ua e))
+transportUaInv e = cong transport (uaInvEquiv e)
+-- notice that transport (ua e) would reduce, thus an alternative definition using EquivJ can give
+-- refl for the case of idEquiv:
+-- transportUaInv e = EquivJ (λ _ e → transport (ua (invEquiv e)) ≡ transport (sym (ua e))) refl e
 
 isSet-subst : ∀ {ℓ ℓ′} {A : Type ℓ} {B : A → Type ℓ′}
                 → (isSet-A : isSet A)
@@ -114,6 +124,11 @@ substComposite : ∀ {ℓ ℓ′} {A : Type ℓ} → (B : A → Type ℓ′)
 substComposite B p q Bx i =
   transport (cong B (compPath-filler' p q (~ i))) (transport-fillerExt (cong B p) i Bx)
 
+-- transporting along a composite path is equivalent to transporting twice
+transportComposite : ∀ {ℓ} {A B C : Type ℓ} (p : A ≡ B) (q : B ≡ C) (x : A)
+                 → transport (p ∙ q) x ≡ transport q (transport p x)
+transportComposite = substComposite (λ D → D)
+
 -- substitution commutes with morphisms in slices
 substCommSlice : ∀ {ℓ ℓ′} {A : Type ℓ}
                    → (B C : A → Type ℓ′)
@@ -123,6 +138,12 @@ substCommSlice : ∀ {ℓ ℓ′} {A : Type ℓ}
 substCommSlice B C F p Bx i =
   transport-fillerExt⁻ (cong C p) i (F _ (transport-fillerExt (cong B p) i Bx))
 
+-- transporting over (λ i → B (p i) → C (p i)) divides the transport into
+-- transports over (λ i → C (p i)) and (λ i → B (p (~ i)))
+funTypeTransp : ∀ {ℓ ℓ'} {A : Type ℓ} (B C : A → Type ℓ') {x y : A} (p : x ≡ y) (f : B x → C x)
+         → PathP (λ i → B (p i) → C (p i)) f (subst C p ∘ f ∘ subst B (sym p))
+funTypeTransp B C {x = x} p f i b =
+  transp (λ j → C (p (j ∧ i))) (~ i) (f (transp (λ j → B (p (i ∧ ~ j))) (~ i) b))
 
 -- transports between loop spaces preserve path composition
 overPathFunct : ∀ {ℓ} {A : Type ℓ} {x y : A} (p q : x ≡ x) (P : x ≡ y)

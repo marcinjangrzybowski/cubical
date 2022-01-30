@@ -378,20 +378,30 @@ sig-subst-n-sec {n₀ = suc (suc n₀)} {suc (suc n₁)} x s i =
 sig-subst-n-iso : ∀ {ℓ} → ∀ {n₀ n₁} → n₀ ≡ n₁ → Iso (Sig ℓ n₀) (Sig ℓ n₁)
 sig-subst-n-iso p = iso (sig-subst-n p) (sig-subst-n (sym p)) (sig-subst-n-sec p) (sig-subst-n-sec (sym p))
 
+sig-rec-n-≡ : ∀ {ℓ} → ∀ {n₀ n₁} → (p : n₀ ≡ n₁) → ∀ (s : Sig ℓ n₀) → NestedΣᵣ s ≡ NestedΣᵣ (sig-subst-n p s)
+sig-rec-n-≡ {n₀ = zero} {zero} p s = refl
+sig-rec-n-≡ {n₀ = zero} {suc n₁} p s = ⊥-rec (znots p)
+sig-rec-n-≡ {n₀ = suc n₀} {zero} p s = ⊥-rec (snotz p)
+sig-rec-n-≡ {n₀ = suc zero} {suc zero} p s = refl
+sig-rec-n-≡ {n₀ = suc zero} {suc (suc n₁)} p s =  ⊥-rec (znots (injSuc p))
+sig-rec-n-≡ {n₀ = suc (suc n₀)} {suc zero} p s =  ⊥-rec (snotz (injSuc p))
+sig-rec-n-≡ {n₀ = suc (suc n₀)} {suc (suc n₁)} p s =
+   cong (Σ (fst s)) (funExt λ x → sig-rec-n-≡ (injSuc p) _)
 
 
-getTy : ∀ {ℓ} → ∀ {n} → {s : Sig ℓ n} → NestedΣᵣ s → ℕ → Type ℓ
-getTy {n = zero} x x₁ = Lift Unit
-getTy {n = suc zero} {s} x x₁ = s
-getTy {n = suc (suc n)} {s} x zero = fst s
-getTy {n = suc (suc n)} x (suc x₁) = getTy { n = suc n} (snd x) x₁
 
-getVal : ∀ {ℓ} → ∀ {n} → {s : Sig ℓ n} → (x : NestedΣᵣ s) → ∀ k
-            → getTy {n = n} x k
-getVal {n = zero} = _
-getVal {n = suc zero} x _ = x
-getVal {n = suc (suc n)} x zero = fst x
-getVal {n = suc (suc n)} x (suc k) = getVal {n = suc n} (snd x) k
+-- getTy : ∀ {ℓ} → ∀ {n} → {s : Sig ℓ n} → NestedΣᵣ s → ℕ → Type ℓ
+-- getTy {n = zero} x x₁ = Lift Unit
+-- getTy {n = suc zero} {s} x x₁ = s
+-- getTy {n = suc (suc n)} {s} x zero = fst s
+-- getTy {n = suc (suc n)} x (suc x₁) = getTy { n = suc n} (snd x) x₁
+
+-- getVal : ∀ {ℓ} → ∀ {n} → {s : Sig ℓ n} → (x : NestedΣᵣ s) → ∀ k
+--             → getTy {n = n} x k
+-- getVal {n = zero} = _
+-- getVal {n = suc zero} x _ = x
+-- getVal {n = suc (suc n)} x zero = fst x
+-- getVal {n = suc (suc n)} x (suc k) = getVal {n = suc n} (snd x) k
 
 
 
