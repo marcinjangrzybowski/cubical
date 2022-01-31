@@ -402,6 +402,27 @@ Iso.leftInv (∀Iⁿ-cu-iso {n = zero} A) a i = a
 Iso.leftInv (∀Iⁿ-cu-iso {n = suc n} A) a i i₁ =
    Iso.leftInv (∀Iⁿ-cu-iso {n = n} (A i∷ i₁)) (a i₁) i
 
+∀Iⁿ-cu-hequiv : ∀ {ℓ} → ∀ {n} → (A : NCube n → Type ℓ) →
+                 HAEquiv (∀Iⁿ' A) (∀ x →  A x)
+∀Iⁿ-cu-hequiv A = iso→HAEquiv  (∀Iⁿ-cu-iso A)
+
+∀Iⁿ-cu←' : ∀ {ℓ} → ∀ {n} → (A : NCube n → Type ℓ) →
+                 (∀ x →  A x)  → ∀Iⁿ' A
+∀Iⁿ-cu←' A = isHAEquiv.g (snd (∀Iⁿ-cu-hequiv A))
+
+∀Iⁿ-cu-iso' : ∀ {ℓ} → ∀ {n} → (A : NCube n → Type ℓ) →
+                 Iso (∀Iⁿ' A) (∀ x →  A x)
+∀Iⁿ-cu-iso' = isHAEquiv→Iso ∘ snd ∘ ∀Iⁿ-cu-hequiv
+
+∀Iⁿ-cu-iso'-com : ∀ {ℓ} → ∀ {n} → (A : NCube n → Type ℓ) →
+                         (a : ∀Iⁿ' A) →
+                           cong (∀Iⁿ-cu A)
+                             (Iso.leftInv (∀Iⁿ-cu-iso' A) a)
+                           ≡
+                           Iso.rightInv (∀Iⁿ-cu-iso' A) ((∀Iⁿ-cu A) a)
+∀Iⁿ-cu-iso'-com = isHAEquiv.com ∘ snd ∘ ∀Iⁿ-cu-hequiv
+
+
 -- iso∀Iⁿ : ∀ {ℓ} {A : Type ℓ} → ∀ n → Iso (NCube n → A) (Iⁿ→ n A)
 -- iso∀Iⁿ = {!!}
 
