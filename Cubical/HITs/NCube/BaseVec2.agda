@@ -496,50 +496,37 @@ module XX2 where
     ((Iso.leftInv (∀Iⁿ-cu-iso' {n = (suc n)} (A ∘ lid true) )) (BdPS.lid1 a)) i 
   BdPS.pa (Iso.leftInv (mkBd-iso {n = suc n} {A}) a i) = 
      let
-         w' : mkBd← (mkBd (BdPS.pa a)) ≡ BdPS.pa a
-         w' = (Iso.leftInv (mkBd-iso {n = n} {λ bd →
-                                                  PathP (λ i₁ → A (cyl bd i₁))
-                                                  ((∀Iⁿ-cu (A ∘ lid false) (BdPS.lid0 a) ∘ boundaryInj) bd)
-                                                  ((∀Iⁿ-cu (A ∘ lid true) (BdPS.lid1 a) ∘ boundaryInj) bd)}) (BdPS.pa a))
  
-         pp : _
-         pp = _
 
-         wq : (x : _) → _ ≡ _
-         wq = λ x ii i₁ → (Iso.leftInv (∀Iⁿ-cu-iso'(λ x₁ → A (lid false (inside i₁ ∷ x₁)))) (BdPS.lid0 a i₁)) (~ ii)
 
-         wq' : (x : _) →  _ ≡ _ 
-         wq' = λ x ii i₁ → (Iso.leftInv (∀Iⁿ-cu-iso'(λ x₁ → A (lid true (inside i₁ ∷ x₁)))) (BdPS.lid1 a i₁)) (~ ii)
+         wq : (_ : _) → _ ≡ _
+         wq = λ x ii i₁ → (Iso.leftInv (∀Iⁿ-cu-iso' (A ∘ (lid false) i∷ i₁)) (BdPS.lid0 a i₁)) (~ ii)
+
+         wq' : (_ : _) →  _ ≡ _ 
+         wq' = λ x ii i₁ → (Iso.leftInv (∀Iⁿ-cu-iso' (A ∘ (lid true) i∷ i₁)) (BdPS.lid1 a i₁)) (~ ii)
 
 
          waa : _
          waa = λ i₁ → mkBd←
-            ((λ x → (transport-filler
-                      
-                          (cong₂ (PathP (λ i₂ → A (cyl x i₂)))
-                             (λ i₂ → (∀Iⁿ-cu (λ x₁ → A (lid false x₁))
-                                     (wq x i₂)
-                                 ) (boundaryInj x))
-                             (λ i₂ → (∀Iⁿ-cu (λ x₁ → A (lid true x₁))
-                                  (wq' x i₂)) (boundaryInj x))
-                             )
-                            (
-                              (mkBd (BdPS.pa a) x)
-                              )) (~ i₁))) 
+                 λ x → (transport-filler                      
+                               (cong₂ (PathP (λ i₂ → A (cyl x i₂)))
+                                  (λ i₂ → (∀Iⁿ-cu (A ∘ lid false) (wq x i₂)) (boundaryInj x))
+                                  (λ i₂ → (∀Iⁿ-cu (A ∘ lid true) (wq' x i₂)) (boundaryInj x))
+                                  ) (mkBd (BdPS.pa a) x)) (~ i₁) 
 
+         Ap : _
+         Ap = _
 
-
-     in toPathP {A = pp} ((cong (transport (λ _ → BdPS _))
+     in toPathP {A = Ap} ((cong (transport (λ _ → BdPS _))
                    ( λ i' → mkBd← (λ x₁ →
                           transport
                           (λ i₁ →
                              PathP (λ i₂ → A (cyl x₁ i₂))
-                             ((∀Iⁿ-cu-iso'-com (λ x₂ → A (lid false x₂)) (BdPS.lid0 a)) (~ i') (~ i₁) _)
-                             ((∀Iⁿ-cu-iso'-com (λ x₂ → A (lid true x₂)) (BdPS.lid1 a)) (~ i') (~ i₁) _)
-                              )
-                             (mkBd (BdPS.pa a) x₁)))
+                             (∀Iⁿ-cu-iso'-com (λ x₂ → A (lid false x₂)) (BdPS.lid0 a) (~ i') (~ i₁) _)
+                             (∀Iⁿ-cu-iso'-com (λ x₂ → A (lid true x₂)) (BdPS.lid1 a) (~ i') (~ i₁) _)
+                              ) (mkBd (BdPS.pa a) x₁)))
 
-              )  ∙∙ (fromPathP {A = pp} waa) ∙∙ w') i
+              )  ∙∙ (fromPathP {A = Ap} waa) ∙∙ (Iso.leftInv (mkBd-iso {n = n}) (BdPS.pa a))) i
     
  
 
