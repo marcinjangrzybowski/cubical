@@ -70,13 +70,30 @@ elim2 Cset f (squash₂ x y p q i j) z =
 -- elim2 Cset f = elim (λ _ → isSetΠ (λ _ → Cset _ _))
 --                     (λ a → elim (λ _ → Cset _ _) (f a))
 
--- TODO: generalize
-elim3 : {B : (x y z : ∥ A ∥₂) → Type ℓ}
-        (Bset : ((x y z : ∥ A ∥₂) → isSet (B x y z)))
-        (g : (a b c : A) → B ∣ a ∣₂ ∣ b ∣₂ ∣ c ∣₂)
-        (x y z : ∥ A ∥₂) → B x y z
-elim3 Bset g = elim2 (λ _ _ → isSetΠ (λ _ → Bset _ _ _))
-                     (λ a b → elim (λ _ → Bset _ _ _) (g a b))
+elim2ᵗ : {C : ∥ A ∥₂ → ∥ B ∥₂ → Type ℓ}
+        (f : (a : A) (b : B) → C ∣ a ∣₂ ∣ b ∣₂)
+        (x : ∥ A ∥₂) (y : ∥ B ∥₂) → ∥ C x y ∥₂
+elim2ᵗ f = elim2 (λ _ _ → squash₂) (λ a b → ∣ f a b ∣₂) 
+
+elim3 : {D : ∥ A ∥₂ → ∥ B ∥₂ → ∥ C ∥₂ → Type ℓ}
+        (Dset : ((x : ∥ A ∥₂) (y : ∥ B ∥₂) (z : ∥ C ∥₂) → isSet (D x y z)))
+        (f : (a : A) (b : B) (c : C) → D ∣ a ∣₂ ∣ b ∣₂ ∣ c ∣₂)
+        (x : ∥ A ∥₂) (y : ∥ B ∥₂) (z : ∥ C ∥₂) → D x y z
+elim3 Dset f ∣ x ∣₂ ∣ x₁ ∣₂ ∣ x₂ ∣₂ = f x x₁ x₂
+elim3 Dset f ∣ x ∣₂ ∣ x₁ ∣₂ (squash₂ z z₁ p q i j) =
+   isOfHLevel→isOfHLevelDep 2 (λ a → Dset ∣ x ∣₂ ∣ x₁ ∣₂ a) _ _
+      (cong (elim3 Dset f ∣ x ∣₂ ∣ x₁ ∣₂) p) (cong (elim3 Dset f ∣ x ∣₂ ∣ x₁ ∣₂) q) (squash₂ _ _ _ _) i j
+elim3 Dset f ∣ x ∣₂ (squash₂ y y₁ p q i j) z =
+   isOfHLevel→isOfHLevelDep 2 (λ a → Dset ∣ x ∣₂ a z) _ _
+    (cong (λ a → elim3 Dset f ∣ x ∣₂ a z) p) (cong (λ a → elim3 Dset f ∣ x ∣₂ a z) q) (squash₂ _ _ _ _) i j
+elim3 Dset f (squash₂ x x₁ p q i j) y z =
+   isOfHLevel→isOfHLevelDep 2 (λ a → Dset a y z) _ _
+    (cong (λ a → elim3 Dset f a y z) p) (cong (λ a → elim3 Dset f a y z) q) (squash₂ _ _ _ _) i j
+
+elim3ᵗ : {D : ∥ A ∥₂ → ∥ B ∥₂ → ∥ C ∥₂  → Type ℓ}
+        (f : (a : A) (b : B) (c : C) → D ∣ a ∣₂ ∣ b ∣₂ ∣ c ∣₂)
+        (x : ∥ A ∥₂) (y : ∥ B ∥₂) (z : ∥ C ∥₂)  → ∥ D x y z ∥₂
+elim3ᵗ f = elim3 (λ _ _ _ → squash₂) (λ a b c → ∣ f a b c ∣₂) 
 
 
 -- the recursor for maps into groupoids following the "HIT proof" in:
@@ -242,6 +259,9 @@ Iso.rightInv (setTruncIso is) =
 Iso.leftInv (setTruncIso is) =
   elim (λ _ → isOfHLevelPath 2 isSetSetTrunc _ _)
         λ a → cong ∣_∣₂ (Iso.leftInv is a)
+
+setTruncΠ : {B : A → Type ℓ} → ∥ (∀ a → B a) ∥₂ → (∀ a → ∥ B a ∥₂) 
+setTruncΠ = elim (λ _ → isSetΠ λ _ → squash₂) (∣_∣₂ ∘_)
 
 setSigmaIso : {B : A → Type ℓ} → Iso ∥ Σ A B ∥₂ ∥ Σ A (λ x → ∥ B x ∥₂) ∥₂
 setSigmaIso {A = A} {B = B} = iso fun funinv sect retr

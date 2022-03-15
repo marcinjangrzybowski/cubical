@@ -117,6 +117,12 @@ isSet-subst : ∀ {ℓ ℓ′} {A : Type ℓ} {B : A → Type ℓ′}
                 → (p : a ≡ a) → (x : B a) → subst B p x ≡ x
 isSet-subst {B = B} isSet-A p x = subst (λ p′ → subst B p′ x ≡ x) (isSet-A _ _ refl p) (substRefl {B = B} x)
 
+isSet-cong-subst : ∀ {ℓ ℓ′} {A : Type ℓ} (B : A → Type ℓ′)
+                → (isSet-A : isSet A)
+                → ∀ {a a' : A}
+                → (p q : a ≡ a') → (x : B a) → subst B p x ≡ subst B q x
+isSet-cong-subst B isSet-A p q x = cong (λ a → subst B a x) (isSet-A _ _ _ _)
+
 -- substituting along a composite path is equivalent to substituting twice
 substComposite : ∀ {ℓ ℓ′} {A : Type ℓ} → (B : A → Type ℓ′)
                  → {x y z : A} (p : x ≡ y) (q : y ≡ z) (u : B x)

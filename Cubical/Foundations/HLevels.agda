@@ -30,7 +30,7 @@ HLevel = ℕ
 private
   variable
     ℓ ℓ' ℓ'' ℓ''' ℓ'''' ℓ''''' : Level
-    A : Type ℓ
+    A A' : Type ℓ
     B : A → Type ℓ
     C : (x : A) → B x → Type ℓ
     D : (x : A) (y : B x) → C x y → Type ℓ
@@ -554,6 +554,10 @@ isOfHLevelTypeOfHLevel (suc n) (X , a) (Y , b) =
 
 isSetHProp : isSet (hProp ℓ)
 isSetHProp = isOfHLevelTypeOfHLevel 1
+
+isGroupoidHSet : isGroupoid (hSet ℓ)
+isGroupoidHSet = isOfHLevelTypeOfHLevel 2
+
 
 -- h-level of lifted type
 

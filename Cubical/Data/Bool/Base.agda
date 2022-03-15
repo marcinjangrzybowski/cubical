@@ -35,10 +35,10 @@ true  or false = true
 true  or true  = true
 
 _and_ : Bool → Bool → Bool
+true  and true  = true
 false and false = false
 false and true  = false
 true  and false = false
-true  and true  = true
 
 -- xor / mod-2 addition
 _⊕_ : Bool → Bool → Bool

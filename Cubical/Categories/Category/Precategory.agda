@@ -2,6 +2,7 @@
 module Cubical.Categories.Category.Precategory where
 
 open import Cubical.Foundations.Prelude
+import Cubical.Categories.Category as C
 
 private
   variable

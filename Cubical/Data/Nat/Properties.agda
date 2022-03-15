@@ -48,6 +48,7 @@ snotz eq = subst (caseNat ⊥ ℕ) eq 0
 injSuc : suc m ≡ suc n → m ≡ n
 injSuc p = cong predℕ p
 
+
 discreteℕ : Discrete ℕ
 discreteℕ zero zero = yes refl
 discreteℕ zero (suc n) = no znots
