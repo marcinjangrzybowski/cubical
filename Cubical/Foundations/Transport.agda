@@ -145,6 +145,12 @@ funTypeTransp : ∀ {ℓ ℓ'} {A : Type ℓ} (B C : A → Type ℓ') {x y : A} 
 funTypeTransp B C {x = x} p f i b =
   transp (λ j → C (p (j ∧ i))) (~ i) (f (transp (λ j → B (p (i ∧ ~ j))) (~ i) b))
 
+funTypeTranspCod : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ} (B : A → Type ℓ') (C : Type ℓ'') {x y : A} (p : x ≡ y) (f : B x → C)
+         → PathP (λ i → B (p i) → C) f (f ∘ subst B (sym p))
+funTypeTranspCod B C {x = x} p f i b =
+   (f (transp (λ j → B (p (i ∧ ~ j))) (~ i) b))
+
+
 -- transports between loop spaces preserve path composition
 overPathFunct : ∀ {ℓ} {A : Type ℓ} {x y : A} (p q : x ≡ x) (P : x ≡ y)
            → transport (λ i → P i ≡ P i) (p ∙ q)

@@ -38,7 +38,7 @@ open Iso
 
 private
   variable
-    ℓ ℓ' ℓ'' : Level
+    ℓ ℓ' ℓ'' ℓ''' : Level
     A A' : Type ℓ
     B B' : (a : A) → Type ℓ
     C : (a : A) (b : B a) → Type ℓ
@@ -299,6 +299,10 @@ module _ (A : Unit → Type ℓ) where
   ΣUnit : Σ Unit A ≃ A tt
   unquoteDef ΣUnit = defStrictEquiv ΣUnit snd (λ { x → (tt , x) })
 
+module _ (A : Unit* {ℓ'} → Type ℓ) where
+  ΣUnit* : Σ Unit* A ≃ A tt*
+  unquoteDef ΣUnit* = defStrictEquiv ΣUnit* snd (λ { x → (lift {_} {ℓ'} tt , x) })
+
 Σ-contractSnd : ((a : A) → isContr (B a)) → Σ A B ≃ A
 Σ-contractSnd c = isoToEquiv isom
   where
@@ -401,3 +405,17 @@ module _ (A : ⊥ → Type ℓ) where
 
   ΣEmpty : Σ ⊥ A ≃ ⊥
   ΣEmpty = isoToEquiv ΣEmptyIso
+
+
+
+-- module _ {ℓ ℓ' ℓ'' ℓ'''} {A : Type ℓ} {B : A → Type ℓ'} {C : ∀ a → B a → Type ℓ''} {D : ∀ a → (b : B a) → (c : C a b) → Type ℓ'''} where
+  
+--     Σ-pentagon :   Path (Iso
+--                           (Σ (Σ (Σ A B) (C _ ∘ snd))( D _ _ ∘ snd ))
+--                           (Σ A λ a → Σ (B _) (λ b → Σ (C a b) (D a b)))) 
+--                    (compIso (Σ-assoc-Iso {A = Σ A B} {C _ ∘ snd} {λ _ → D _ _}) (Σ-assoc-Iso {A = A} {B} {λ a b → Σ _ (D a b)}))
+                     
+--                     (compIso {!!}
+--                            (compIso (Σ-assoc-Iso {A = A} {λ a → Σ (B a) (C _)} {λ _ → (D _ _) ∘ snd})
+--                               {! Σ-cong-iso-fst ?!}))
+--     Σ-pentagon = {!!}

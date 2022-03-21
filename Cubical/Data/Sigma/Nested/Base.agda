@@ -21,6 +21,7 @@ open import Cubical.Data.Nat
 open import Cubical.Data.Empty renaming (rec to ⊥-rec)
 
 open import Cubical.Data.Sigma
+open import Cubical.Data.Bool
 
 open import Cubical.Foundations.Everything
 
@@ -45,12 +46,45 @@ open import Cubical.Foundations.Everything
 --
 --
 
+-- infix 20 _S,_
+
+
+
+-- data Sig' ℓ : Type (ℓ-suc ℓ) where
+--   S∙ : Sig' ℓ
+--   _S,_ : (A : Type ℓ) → (A → Sig' ℓ) → Sig' ℓ
+
+-- Sig'-end? : ∀ {ℓ} → Sig' ℓ → Bool
+-- Sig'-end? S∙ = true
+-- Sig'-end? (A S, x) = false
+
+-- Sig'-reg : ∀ {ℓ} → Sig' ℓ → Type ℓ
+-- Sig'-reg {ℓ} S∙ = Unit* 
+-- Sig'-reg (A S, x) = Σ _ λ b → ∀ a → (Sig'-end? (x a) ≡ b) × (Sig'-reg (x a))
+
+-- Sig'-reg-len : ∀ {ℓ} → (s : Sig' ℓ) → ℕ  → Sig'-reg s → Type ℓ
+-- Sig'-reg-len S∙ zero x₁ = Unit*
+-- Sig'-reg-len S∙ (suc x) x₁ = ⊥*
+-- Sig'-reg-len (A S, x₂) zero x₁ = ⊥*
+-- Sig'-reg-len (A S, x₂) (suc x) x₁ = ∀ a → Sig'-reg-len (x₂ a) x (snd (snd x₁ a))
 
 Sig : ∀ ℓ → ℕ →  Type (ℓ-suc ℓ)
 Sig ℓ 0 = Lift Unit
 Sig ℓ 1 = Type ℓ
 Sig ℓ (suc (suc n)) = Σ (Type ℓ) λ x → x → Sig ℓ (suc n)
 
+
+-- Sig'-Iso-to : ∀ {ℓ} → ∀ n → Sig ℓ n → Sig' ℓ 
+-- Sig'-Iso-to zero x = S∙
+-- Sig'-Iso-to (suc zero) = _S, const S∙
+-- Sig'-Iso-to (suc (suc n)) (ty , x) = ty S, λ x₁ → Sig'-Iso-to (suc n) (x x₁)
+
+-- Sig'-Iso-inv : ∀ {ℓ} → ∀ n → Sig' ℓ → Sig ℓ n 
+-- Sig'-Iso-inv zero x = tt*
+-- Sig'-Iso-inv (suc zero) S∙ = Unit*
+-- Sig'-Iso-inv (suc zero) (A S, x) = A
+-- Sig'-Iso-inv (suc (suc n)) S∙ = Unit* , (const (Sig'-Iso-inv (suc n) S∙))
+-- Sig'-Iso-inv (suc (suc n)) (A S, x) = A , Sig'-Iso-inv (suc n) ∘ x
 
 -- This file only defines NestedΣ in one particular "shape" - rightmost
 -- , meaning that next nested sigma is always in the second argument of outer one.
@@ -154,7 +188,6 @@ module sig-cs where
         split-concat
         (concat-split {n = n})
 
-
 -- isomorphism of NestedΣᵣ related to concat-split isomorphism of Sig
 
 module nestedΣᵣ-cs where
@@ -205,9 +238,18 @@ module nestedΣᵣ-cs where
   concat' {n = suc (suc n)} s ((a , x) , y) =
      a , concat' {n = suc n} (snd s a) (x , y)
 
+  isom-split-Ty : ∀ {ℓ} → ∀ n m
+                         → (s : Sig ℓ (n + m)) → Type ℓ
+  isom-split-Ty n m s =
+                          (Σ (NestedΣᵣ (fst (sig-cs.split {n = n} s)))
+                               (λ x → NestedΣᵣ (snd (sig-cs.split {n = n} {m = m} s) x)))
+                          ≃
+                          (NestedΣᵣ s)
+
+
   isom-split : ∀ {ℓ} → ∀ {n m}
                          → (s : Sig ℓ (n + m))
-                         →  Iso
+                         → Iso
                           (Σ (NestedΣᵣ (fst (sig-cs.split {n = n} s)))
                                (λ x → NestedΣᵣ (snd (sig-cs.split {n = n} {m = m} s) x)))
                           (NestedΣᵣ s)
@@ -245,6 +287,47 @@ module nestedΣᵣ-cs where
   Iso.leftInv (isom-concat {n = suc (suc n)} sₙ sₘ) ((_ , x) , y) =
     cong (λ (x' , y') → ((_ , x') , y'))
        (Iso.leftInv (isom-concat {n = suc n} _ _) (x , y))
+
+
+-- module sig-cs-assoc where
+
+--   assoc-cs-Ty :  ∀ {ℓ} → ∀ n m o
+--              → PathP (λ i → Sig ℓ (+-assoc n m o i) → Type ℓ )
+--                  (nestedΣᵣ-cs.isom-split-Ty n (m + o))
+--                  (nestedΣᵣ-cs.isom-split-Ty (n + m) o)
+
+--   assoc-cs-Ty zero m o = 
+--     funExt
+--     λ s →  cong  (_≃ (NestedΣᵣ s))
+--       ((ua (ΣUnit* (λ _ → NestedΣᵣ s))) ∙ isoToPath (invIso (nestedΣᵣ-cs.isom-split {n = m} {m = o} s)))
+--   assoc-cs-Ty {ℓ} (suc n) m o = 
+--     symP (toPathP
+--       (funExt λ s → {!!})
+--     )
+  
+-- --    toPathP (funExt
+-- --      λ s → cong₂ Iso {!!}
+-- --         λ i → NestedΣᵣ (transp (λ j → Sig ℓ (suc (+-assoc n m o (~ j ∨ i)))) i s) )
+
+--   assoc-cs : ∀ {ℓ} → ∀ n m o →
+--             PathP (λ i → (s : Sig ℓ (+-assoc n m o i)) → assoc-cs-Ty n m o i s)
+--               (isoToEquiv ∘ nestedΣᵣ-cs.isom-split {n = n} {m = (m + o)})
+--               (isoToEquiv ∘ nestedΣᵣ-cs.isom-split {n = n + m} {m = o})
+
+--   assoc-cs zero m o =
+--           funExt λ x → toPathP (equivEq (funExt λ s i → 
+--                    transp (λ i → NestedΣᵣ x) i
+--                      (transp (λ i → NestedΣᵣ x) i
+--                       (transp (λ i → NestedΣᵣ x) i
+--                        (nestedΣᵣ-cs.concat' {n = m} {m = o} x
+--                         (transp
+--                          (λ i →
+--                             Σ (NestedΣᵣ {n = m} _)
+--                             (λ x₁ → NestedΣᵣ {n = o} (snd (sig-cs.split x) x₁)))
+--                          i s))))))
+
+--   assoc-cs (suc n) m o = {!!}
+
 
 module sig-n+1 where
 
@@ -315,6 +398,13 @@ module nestedΣᵣ-n+1 where
   Iso.leftInv (isom-from (suc (suc n)) s) (_ , r) =
     cong (_ ,_) (Iso.leftInv (isom-from (suc n) _ ) r)
 
+  pathP : ∀ {ℓ} → ∀ n → PathP (λ i → isoToPath (sig-n+1.isom {ℓ} n) i → Type ℓ)
+                          (λ x → Σ (NestedΣᵣ (fst x)) (snd x))
+                          NestedΣᵣ
+  pathP n = toPathP
+               (funExt (cong ((λ s → Σ (NestedΣᵣ (fst s)) (snd s)) ∘ sig-n+1.to n) ∘ transportRefl )  
+                 ∙ funExt (isoToPath ∘ invIso ∘ (isom-to _)))
+  
 
 dropLast : ∀ {ℓ} → ∀ {n} → Sig ℓ n → Sig ℓ (predℕ n)
 dropLast {n = zero} = _
@@ -333,8 +423,6 @@ lastTy : ∀ {ℓ} → ∀ {n} → (s : Sig ℓ n)
 lastTy {n = zero} _ = (const (Lift Unit))
 lastTy {n = suc n} _ = snd (sig-n+1.to n _)
 
-
-
 module nestedΣᵣ-dropLast where
 
   isom-to : ∀ {ℓ} → ∀ n → (s : Sig ℓ n) →
@@ -347,6 +435,10 @@ module nestedΣᵣ-dropLast where
 
 dropLastΣᵣ : ∀ {ℓ} → ∀ {n} → (s : Sig ℓ n) → NestedΣᵣ s → NestedΣᵣ (dropLast s)
 dropLastΣᵣ {n = n} s = fst ∘ Iso.fun (nestedΣᵣ-dropLast.isom-to (n) s)
+
+dropLastΣᵣ' : ∀ {ℓ} → ∀ {n} → (s : Sig ℓ n) → ∀ A → NestedΣᵣ (sig-n+1.from n (s , A)) → NestedΣᵣ s
+dropLastΣᵣ' {n = n} s A = fst ∘ Iso.fun (nestedΣᵣ-n+1.isom-from n (s , A))
+
 
 getLast : ∀ {ℓ} → ∀ {n} → (s : Sig ℓ n) → (x : NestedΣᵣ s) → lastTy s (dropLastΣᵣ s x)
 getLast {n = n} s = snd ∘ Iso.fun (nestedΣᵣ-dropLast.isom-to (n) s)
