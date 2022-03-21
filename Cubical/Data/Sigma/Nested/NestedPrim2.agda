@@ -133,14 +133,38 @@ module _ {ℓ} {A B : Type (ℓ-suc ℓ)} (A≃B : A ≃ B) (Ar : A → Type ℓ
   --                             (x (coei→1 (λ k → ua {A = A} {B = B}  A≃B k) i ab)) i)
 
 
-
-
-  over-≃-fun : (∀ b → Ar (equivFun (invEquiv A≃B) b) ≃ Br b) → PathP (λ i → ua A≃B i → Type ℓ) Ar Br
-  over-≃-fun x i ab = hcomp (λ j → λ
+  over-≃-fun-sides : (∀ b → Ar (equivFun (invEquiv A≃B) b) ≃ Br b) → (i : I) → (ab : ua A≃B i) → I → Partial (~ i ∨ i) (Type ℓ)
+  over-≃-fun-sides x i ab =
+                         (λ j → λ
                             { (i = i0) → Ar ab
                             ; (i = i1) → ((λ i₁ → Ar ((( (invEq A≃B (transp (λ i₁ → B) i₁ ab)))))) ∙ ua (x ab)) j
                          })
+
+
+  over-≃-fun : (∀ b → Ar (equivFun (invEquiv A≃B) b) ≃ Br b) → PathP (λ i → ua A≃B i → Type ℓ) Ar Br
+  over-≃-fun x i ab = hcomp (over-≃-fun-sides x i ab) 
                           ((Ar (transp (λ j → ua A≃B (i ∧ ~ j)) (~ i) ab)))
+
+  over-≃-fun-sq1 : (x : ∀ b → Ar (equivFun (invEquiv A≃B) b) ≃ Br b)  → (i : I) → (ab : ua A≃B i) → I → Type ℓ
+                         
+  over-≃-fun-sq1 x i ab = hfill (over-≃-fun-sides x i ab ) (inS (Ar (transp (λ j → ua A≃B (i ∧ ~ j)) (~ i) ab)))  
+
+  over-≃-fun-sq≡ : (x : ∀ b → Ar (equivFun (invEquiv A≃B) b) ≃ Br b) →
+                       PathP (λ j → PathP (λ i → ua A≃B i → Type ℓ) Ar λ ab → ((λ i₁ → Ar ((( (invEq A≃B (transp (λ i₁ → B) i₁ ab)))))) ∙ ua (x ab)) j)
+                       (λ i ab → Ar (transp (λ j → ua A≃B (i ∧ ~ j)) (~ i) ab))
+                       (over-≃-fun x)
+  over-≃-fun-sq≡ x l i ab = over-≃-fun-sq1 x i ab l
+
+
+  -- over-≃-fun-sq≡ : (x : ∀ b → Ar (equivFun (invEquiv A≃B) b) ≃ Br b) →
+  --                      PathP (λ j → PathP (λ i → ua A≃B i → Type ℓ) Ar λ ab → {!!})
+  --                      (λ i ab → Ar (transp (λ j → ua A≃B (i ∧ ~ j)) (~ i) ab))
+  --                      (over-≃-fun x)
+  -- over-≃-fun-sq≡ x l i ab = over-≃-fun-sq1 x i ab l
+
+  -- over-≃-fun-sq1 : (∀ b → Ar (equivFun (invEquiv A≃B) b) ≃ Br b) → PathP (λ i → ua A≃B i → Type ℓ) Ar (Ar ∘ transport⁻ (ua A≃B))
+  -- over-≃-fun-sq1 x i ab = (Ar (transp (λ j → ua A≃B (i ∧ ~ j)) (~ i) ab))
+
 
 
 
@@ -165,10 +189,28 @@ module _ {ℓ} {A B : Type (ℓ-suc ℓ)} (A≃B : A ≃ B) (Ar : A → Type ℓ
 
 
 
-over-≃-funJ : ∀ {ℓ} →  (B : Type (ℓ-suc ℓ)) (Br : B → Type ℓ) →
-                             (over-≃-fun (idEquiv B) Br Br (λ b → idEquiv (Br (equivFun (invEquiv (idEquiv B)) b))))
-                     ≡ transp (λ j → PathP (λ i → (uaIdEquiv {A = B} (~ j)) i → Type ℓ) Br Br) i0 refl
-over-≃-funJ {ℓ} B Br i i₁ = {!!}
+-- over-≃-funJ' : ∀ {ℓ} →  (B : Type (ℓ-suc ℓ)) (Br : B → Type ℓ) →
+--                              {!!}
+-- over-≃-funJ' {ℓ} B Br = 
+--                     {!!}
+
+--    where
+--      w : PathP
+--            (λ j →
+--               PathP (λ i → ua (idEquiv B) i → Type ℓ) Br (λ ab → ((λ i₁ → Br ((transp (λ i₂ → B) i₁ ab))) ∙ ua (idEquiv (Br ab))) j))
+--             (λ i ab → Br (transp (λ j → ua (idEquiv B) (i ∧ ~ j)) (~ i) ab))
+--             (over-≃-fun (idEquiv B) Br Br (λ b → idEquiv (Br b)))
+--      w = over-≃-fun-sq≡ (idEquiv B) Br Br (λ b → idEquiv (Br (equivFun (invEquiv (idEquiv B)) b)))
+
+
+--      w' : ∀ b → {!!} ≡ {!!}
+--      w' b j i = {!over-≃-fun-sq≡ (idEquiv B) Br Br (λ b → idEquiv (Br (equivFun (invEquiv (idEquiv B)) b))) !}
+
+
+-- over-≃-funJ : ∀ {ℓ} →  (B : Type (ℓ-suc ℓ)) (Br : B → Type ℓ) →
+--                              (over-≃-fun (idEquiv B) Br Br (λ b → idEquiv (Br (equivFun (invEquiv (idEquiv B)) b))))
+--                                 ≡ transp (λ j → PathP (λ i → (uaIdEquiv {A = B} (~ j)) i → Type ℓ) Br Br) i0 refl
+-- over-≃-funJ {ℓ} B Br i i₁ = {!!}
 
 --    where
 --      w :  (λ i ab →
@@ -263,207 +305,207 @@ module _ {ℓ} {A B C : Type (ℓ-suc ℓ)} (Ar : A → Type ℓ) (Br : B → Ty
      --                                                   (snd a (transp (λ j₁ → Ar (transp (λ i → A) (j₁ ∨ ii) (fst a))) ii a₁))))) ii z)))))
 
 
--- module _ {ℓ} {A B C : Type (ℓ-suc ℓ)} (Ar : A → Type ℓ) (Br : B → Type ℓ) where
+module _ {ℓ} {A B C : Type (ℓ-suc ℓ)} (Ar : A → Type ℓ) (Br : B → Type ℓ) where
 
---   -- lem-penta : (IsoAB : Iso A B)
---   --           → (AB-Rec≃ : ∀ a → Ar (equivFun (isoToEquiv (invIso IsoAB)) a) ≃ Br a)
---   --           → (AB-RecP-≃ : (∀ a → Ar (equivFun (isoToEquiv (invIso IsoAB)) a) ≃ Br a) ≃ PathP (λ i → isoToPath IsoAB i → Type ℓ) Ar Br)
+  -- lem-penta : (IsoAB : Iso A B)
+  --           → (AB-Rec≃ : ∀ a → Ar (equivFun (isoToEquiv (invIso IsoAB)) a) ≃ Br a)
+  --           → (AB-RecP-≃ : (∀ a → Ar (equivFun (isoToEquiv (invIso IsoAB)) a) ≃ Br a) ≃ PathP (λ i → isoToPath IsoAB i → Type ℓ) Ar Br)
 
---   --           → Path (Σ A (λ a → Ar a → C) ≡ Σ B (λ a → Br a → C))
---   --             (ua (compEquiv (invEquiv (Σ-cong-equiv-fst {B = λ v → Ar v → C} (isoToEquiv (invIso IsoAB))))
---   --                            (Σ-cong-equiv-snd λ a → cong≃ (λ X → X → C) (AB-Rec≃ a))
---   --                            ))
---   --             (
---   --             cong {A = Σ (Type (ℓ-suc ℓ)) λ x → x → Type ℓ } (λ a → Σ (fst a) λ x → (snd a) x → C)
---   --                   (λ i → (isoToPath IsoAB i) , equivFun (AB-RecP-≃) AB-Rec≃ i))
---   -- lem-penta IsoAB AB-Rec≃ AB-RecP-≃ = invEq≡→equivFun≡ (invEquiv univalence) (equivEq (funExt w))
---   --    where
---   --      w : ∀ x → {!!} ≡ {!!}
---   --      w (xx , yy) = ΣPathP ((transportRefl _) ,
---   --           toPathP (funExt λ x → cong (transp (λ i → C) i0 ∘ transp (λ i → C) i0)
---   --             λ i → yy (ww x i)))
---   --         where
+  --           → Path (Σ A (λ a → Ar a → C) ≡ Σ B (λ a → Br a → C))
+  --             (ua (compEquiv (invEquiv (Σ-cong-equiv-fst {B = λ v → Ar v → C} (isoToEquiv (invIso IsoAB))))
+  --                            (Σ-cong-equiv-snd λ a → cong≃ (λ X → X → C) (AB-Rec≃ a))
+  --                            ))
+  --             (
+  --             cong {A = Σ (Type (ℓ-suc ℓ)) λ x → x → Type ℓ } (λ a → Σ (fst a) λ x → (snd a) x → C)
+  --                   (λ i → (isoToPath IsoAB i) , equivFun (AB-RecP-≃) AB-Rec≃ i))
+  -- lem-penta IsoAB AB-Rec≃ AB-RecP-≃ = invEq≡→equivFun≡ (invEquiv univalence) (equivEq (funExt w))
+  --    where
+  --      w : ∀ x → {!!} ≡ {!!}
+  --      w (xx , yy) = ΣPathP ((transportRefl _) ,
+  --           toPathP (funExt λ x → cong (transp (λ i → C) i0 ∘ transp (λ i → C) i0)
+  --             λ i → yy (ww x i)))
+  --         where
 
 
---   --           -- ww'' : cong Br
---   --           --          (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
---   --           --          ∙
---   --           --          ua
---   --           --          (invEquiv
---   --           --           (AB-Rec≃ (transport (λ _ → B) (equivFun (isoToEquiv IsoAB) xx))))
---   --           --          ≡
---   --           --          ua (invEquiv (AB-Rec≃ (equivFun (isoToEquiv IsoAB) xx))) ∙
---   --           --          cong (λ z → Ar (equivFun (isoToEquiv (invIso IsoAB)) z))
---   --           --          (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
---   --           -- ww'' = sym (homotopyNatural {f = Br}
---   --           --                  (λ a → ua (invEquiv (AB-Rec≃ a)))
---   --           --                  {equivFun (isoToEquiv IsoAB) xx} {transport refl (equivFun (isoToEquiv IsoAB) xx)}
---   --           --                  (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
---   --           --                  )
+  --           -- ww'' : cong Br
+  --           --          (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
+  --           --          ∙
+  --           --          ua
+  --           --          (invEquiv
+  --           --           (AB-Rec≃ (transport (λ _ → B) (equivFun (isoToEquiv IsoAB) xx))))
+  --           --          ≡
+  --           --          ua (invEquiv (AB-Rec≃ (equivFun (isoToEquiv IsoAB) xx))) ∙
+  --           --          cong (λ z → Ar (equivFun (isoToEquiv (invIso IsoAB)) z))
+  --           --          (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
+  --           -- ww'' = sym (homotopyNatural {f = Br}
+  --           --                  (λ a → ua (invEquiv (AB-Rec≃ a)))
+  --           --                  {equivFun (isoToEquiv IsoAB) xx} {transport refl (equivFun (isoToEquiv IsoAB) xx)}
+  --           --                  (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
+  --           --                  )
 
---   --           -- ww''2 : cong Br
---   --           --           (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
---   --           --           ∙ funExt⁻ (λ i → fromPathP (equivFun AB-RecP-≃ AB-Rec≃) (~ i)) (transport (λ _ → B) (equivFun (isoToEquiv IsoAB) xx))
---   --           --            -- (λ j → equivFun AB-RecP-≃ AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx) )
---   --           --           ≡
---   --           --           funExt⁻ (λ i → fromPathP (equivFun AB-RecP-≃ AB-Rec≃) (~ i))
---   --           --           (equivFun (isoToEquiv IsoAB) xx)
---   --           --           ∙
---   --           --           cong (λ z → transport (λ i → isoToPath IsoAB i → Type ℓ) Ar z)
---   --           --           (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
---   --           -- ww''2 = sym (homotopyNatural {f = Br}
---   --           --                  (funExt⁻ (sym (fromPathP (equivFun AB-RecP-≃ AB-Rec≃))))
---   --           --                  {equivFun (isoToEquiv IsoAB) xx} {transport refl (equivFun (isoToEquiv IsoAB) xx)}
---   --           --                  (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
---   --           --                  )
+  --           -- ww''2 : cong Br
+  --           --           (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
+  --           --           ∙ funExt⁻ (λ i → fromPathP (equivFun AB-RecP-≃ AB-Rec≃) (~ i)) (transport (λ _ → B) (equivFun (isoToEquiv IsoAB) xx))
+  --           --            -- (λ j → equivFun AB-RecP-≃ AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx) )
+  --           --           ≡
+  --           --           funExt⁻ (λ i → fromPathP (equivFun AB-RecP-≃ AB-Rec≃) (~ i))
+  --           --           (equivFun (isoToEquiv IsoAB) xx)
+  --           --           ∙
+  --           --           cong (λ z → transport (λ i → isoToPath IsoAB i → Type ℓ) Ar z)
+  --           --           (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
+  --           -- ww''2 = sym (homotopyNatural {f = Br}
+  --           --                  (funExt⁻ (sym (fromPathP (equivFun AB-RecP-≃ AB-Rec≃))))
+  --           --                  {equivFun (isoToEquiv IsoAB) xx} {transport refl (equivFun (isoToEquiv IsoAB) xx)}
+  --           --                  (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
+  --           --                  )
 
---   --           -- zzz : {!!}
---   --           -- zzz = {!!}
+  --           -- zzz : {!!}
+  --           -- zzz = {!!}
 
---   --           ww' :  (cong Br (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
---   --                         ∙
---   --                         (λ j → equivFun AB-RecP-≃ AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx) )
---   --                      )
---   --                        ≡
---   --                        {!!}
---   --           ww' = (λ ii → (cong Br (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
---   --                         ∙
---   --                         ((λ j → equivFun AB-RecP-≃ AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx) ))
---   --                      ))
+  --           ww' :  (cong Br (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
+  --                         ∙
+  --                         (λ j → equivFun AB-RecP-≃ AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx) )
+  --                      )
+  --                        ≡
+  --                        {!!}
+  --           ww' = (λ ii → (cong Br (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
+  --                         ∙
+  --                         ((λ j → equivFun AB-RecP-≃ AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx) ))
+  --                      ))
 
---   --                     ∙ {!!} ∙ {!!}
+  --                     ∙ {!!} ∙ {!!}
 
---   --           eee : {!!}
---   --           eee = ((AB-Rec≃ (fst (invEquiv (Σ-cong-equiv-fst {B = λ v → Ar v → C} (isoToEquiv (invIso IsoAB))) .fst (xx , yy)))))
+  --           eee : {!!}
+  --           eee = ((AB-Rec≃ (fst (invEquiv (Σ-cong-equiv-fst {B = λ v → Ar v → C} (isoToEquiv (invIso IsoAB))) .fst (xx , yy)))))
 
---   --           ww : (x : Br (equivFun (isoToEquiv IsoAB) xx)) → 
---   --                 (transp (λ j → equivFun AB-RecP-≃ AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx)) i0
---   --                  (transp (λ j → Br (transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ j))) i0 x))
---   --                        ≡                         
---   --                  (transp (λ j → Ar (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j)) i0
---   --                   (transp (λ j → ua (AB-Rec≃ (fst (invEquiv (Σ-cong-equiv-fst {B = λ v → Ar v → C} (isoToEquiv (invIso IsoAB))) .fst (xx , yy)))) (~ j)) i0 x))
---   --           ww x =
---   --              sym (transportComposite (λ j → Br (transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ j)))
---   --                                       ((λ j → equivFun AB-RecP-≃ AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx)))
---   --                                       x)
+  --           ww : (x : Br (equivFun (isoToEquiv IsoAB) xx)) → 
+  --                 (transp (λ j → equivFun AB-RecP-≃ AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx)) i0
+  --                  (transp (λ j → Br (transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ j))) i0 x))
+  --                        ≡                         
+  --                  (transp (λ j → Ar (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j)) i0
+  --                   (transp (λ j → ua (AB-Rec≃ (fst (invEquiv (Σ-cong-equiv-fst {B = λ v → Ar v → C} (isoToEquiv (invIso IsoAB))) .fst (xx , yy)))) (~ j)) i0 x))
+  --           ww x =
+  --              sym (transportComposite (λ j → Br (transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ j)))
+  --                                       ((λ j → equivFun AB-RecP-≃ AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx)))
+  --                                       x)
 
---   --               ∙∙
---   --                 {!!}
+  --               ∙∙
+  --                 {!!}
                   
---   --                 -- (λ i → transp (λ j → {! (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j)!} j) i0 (equivFun (invEquiv eee) x))
+  --                 -- (λ i → transp (λ j → {! (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j)!} j) i0 (equivFun (invEquiv eee) x))
                   
---   --               ∙∙
---   --                (
---   --                   cong (transp (λ j → Ar (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j)) i0)
---   --                     (sym (uaβ (invEquiv eee) x)
---   --                       ∙ (funExt⁻ (transportUaInv eee) x)))
---   --               -- transportComposite ((λ j → ua (AB-Rec≃ (fst (invEquiv (Σ-cong-equiv-fst {B = λ v → Ar v → C} (isoToEquiv (invIso IsoAB))) .fst (xx , yy)))) (~ j)))
---   --               --             ((λ j → Ar (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j))) x
+  --               ∙∙
+  --                (
+  --                   cong (transp (λ j → Ar (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j)) i0)
+  --                     (sym (uaβ (invEquiv eee) x)
+  --                       ∙ (funExt⁻ (transportUaInv eee) x)))
+  --               -- transportComposite ((λ j → ua (AB-Rec≃ (fst (invEquiv (Σ-cong-equiv-fst {B = λ v → Ar v → C} (isoToEquiv (invIso IsoAB))) .fst (xx , yy)))) (~ j)))
+  --               --             ((λ j → Ar (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j))) x
 
 
 
 
 
---   lem-pentaApp : (IsoAB : A ≃ B)
---             → (AB-Rec≃ : ∀ a → Ar (equivFun ( (invEquiv IsoAB)) a) ≃ Br a)
+  -- lem-pentaApp : (IsoAB : A ≃ B)
+  --           → (AB-Rec≃ : ∀ a → Ar (equivFun ( (invEquiv IsoAB)) a) ≃ Br a)
 
---             → Path (Σ A (λ a → Ar a → C) ≡ Σ B (λ a → Br a → C))
+  --           → Path (Σ A (λ a → Ar a → C) ≡ Σ B (λ a → Br a → C))
               
---               (ua (compEquiv (invEquiv (Σ-cong-equiv-fst {!(λ z → snd IsoAB .equiv-proof z .fst .fst) , ?!}))
---                              (Σ-cong-equiv-snd λ a → cong≃ (λ X → X → C) (AB-Rec≃ a))
---                              ))
+  --             (ua (compEquiv (invEquiv (Σ-cong-equiv-fst {!(λ z → snd IsoAB .equiv-proof z .fst .fst) , ?!}))
+  --                            (Σ-cong-equiv-snd λ a → cong≃ (λ X → X → C) (AB-Rec≃ a))
+  --                            ))
               
---               (
---               cong {A = Σ (Type (ℓ-suc ℓ)) λ x → x → Type ℓ } (λ a → Σ (fst a) λ x → (snd a) x → C)
---                     (λ i → (ua IsoAB i) , (over-≃-fun (IsoAB) Ar Br) AB-Rec≃ i))
---   lem-pentaApp = {!!}
+  --             (
+  --             cong {A = Σ (Type (ℓ-suc ℓ)) λ x → x → Type ℓ } (λ a → Σ (fst a) λ x → (snd a) x → C)
+  --                   (λ i → (ua IsoAB i) , (over-≃-fun (IsoAB) Ar Br) AB-Rec≃ i))
+  -- lem-pentaApp = {!!}
 
       
 
---   -- invEq≡→equivFun≡ (invEquiv univalence) (equivEq (funExt w))
---      -- where
---      --   w : ∀ x → {!!} ≡ {!!}
---      --   w (xx , yy) = ΣPathP ((transportRefl _) ,
---      --        toPathP (funExt λ x → cong (transp (λ i → C) i0 ∘ transp (λ i → C) i0)
---      --          λ i → yy (ww x i)))
---      --      where
+  -- invEq≡→equivFun≡ (invEquiv univalence) (equivEq (funExt w))
+     -- where
+     --   w : ∀ x → {!!} ≡ {!!}
+     --   w (xx , yy) = ΣPathP ((transportRefl _) ,
+     --        toPathP (funExt λ x → cong (transp (λ i → C) i0 ∘ transp (λ i → C) i0)
+     --          λ i → yy (ww x i)))
+     --      where
 
 
---      --        -- ww'' : cong Br
---      --        --          (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
---      --        --          ∙
---      --        --          ua
---      --        --          (invEquiv
---      --        --           (AB-Rec≃ (transport (λ _ → B) (equivFun (isoToEquiv IsoAB) xx))))
---      --        --          ≡
---      --        --          ua (invEquiv (AB-Rec≃ (equivFun (isoToEquiv IsoAB) xx))) ∙
---      --        --          cong (λ z → Ar (equivFun (isoToEquiv (invIso IsoAB)) z))
---      --        --          (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
---      --        -- ww'' = sym (homotopyNatural {f = Br}
---      --        --                  (λ a → ua (invEquiv (AB-Rec≃ a)))
---      --        --                  {equivFun (isoToEquiv IsoAB) xx} {transport refl (equivFun (isoToEquiv IsoAB) xx)}
---      --        --                  (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
---      --        --                  )
+     --        -- ww'' : cong Br
+     --        --          (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
+     --        --          ∙
+     --        --          ua
+     --        --          (invEquiv
+     --        --           (AB-Rec≃ (transport (λ _ → B) (equivFun (isoToEquiv IsoAB) xx))))
+     --        --          ≡
+     --        --          ua (invEquiv (AB-Rec≃ (equivFun (isoToEquiv IsoAB) xx))) ∙
+     --        --          cong (λ z → Ar (equivFun (isoToEquiv (invIso IsoAB)) z))
+     --        --          (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
+     --        -- ww'' = sym (homotopyNatural {f = Br}
+     --        --                  (λ a → ua (invEquiv (AB-Rec≃ a)))
+     --        --                  {equivFun (isoToEquiv IsoAB) xx} {transport refl (equivFun (isoToEquiv IsoAB) xx)}
+     --        --                  (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
+     --        --                  )
 
---      --        -- ww''2 : cong Br
---      --        --           (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
---      --        --           ∙ funExt⁻ (λ i → fromPathP (equivFun AB-RecP-≃ AB-Rec≃) (~ i)) (transport (λ _ → B) (equivFun (isoToEquiv IsoAB) xx))
---      --        --            -- (λ j → equivFun AB-RecP-≃ AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx) )
---      --        --           ≡
---      --        --           funExt⁻ (λ i → fromPathP (equivFun AB-RecP-≃ AB-Rec≃) (~ i))
---      --        --           (equivFun (isoToEquiv IsoAB) xx)
---      --        --           ∙
---      --        --           cong (λ z → transport (λ i → isoToPath IsoAB i → Type ℓ) Ar z)
---      --        --           (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
---      --        -- ww''2 = sym (homotopyNatural {f = Br}
---      --        --                  (funExt⁻ (sym (fromPathP (equivFun AB-RecP-≃ AB-Rec≃))))
---      --        --                  {equivFun (isoToEquiv IsoAB) xx} {transport refl (equivFun (isoToEquiv IsoAB) xx)}
---      --        --                  (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
---      --        --                  )
+     --        -- ww''2 : cong Br
+     --        --           (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
+     --        --           ∙ funExt⁻ (λ i → fromPathP (equivFun AB-RecP-≃ AB-Rec≃) (~ i)) (transport (λ _ → B) (equivFun (isoToEquiv IsoAB) xx))
+     --        --            -- (λ j → equivFun AB-RecP-≃ AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx) )
+     --        --           ≡
+     --        --           funExt⁻ (λ i → fromPathP (equivFun AB-RecP-≃ AB-Rec≃) (~ i))
+     --        --           (equivFun (isoToEquiv IsoAB) xx)
+     --        --           ∙
+     --        --           cong (λ z → transport (λ i → isoToPath IsoAB i → Type ℓ) Ar z)
+     --        --           (λ i → transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ i))
+     --        -- ww''2 = sym (homotopyNatural {f = Br}
+     --        --                  (funExt⁻ (sym (fromPathP (equivFun AB-RecP-≃ AB-Rec≃))))
+     --        --                  {equivFun (isoToEquiv IsoAB) xx} {transport refl (equivFun (isoToEquiv IsoAB) xx)}
+     --        --                  (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
+     --        --                  )
 
---      --        -- zzz : {!!}
---      --        -- zzz = {!!}
---      --        off = over-≃-fun (isoToEquiv IsoAB) Ar Br
+     --        -- zzz : {!!}
+     --        -- zzz = {!!}
+     --        off = over-≃-fun (isoToEquiv IsoAB) Ar Br
 
---      --        ww' :  (cong Br (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
---      --                      ∙
---      --                      (λ j → off AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx) )
---      --                   )
---      --                     ≡
---      --                     {!!}
---      --        ww' = (λ ii → (cong Br (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
---      --                      ∙
---      --                      ((λ j → off AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx) ))
---      --                   ))
+     --        ww' :  (cong Br (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
+     --                      ∙
+     --                      (λ j → off AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx) )
+     --                   )
+     --                     ≡
+     --                     {!!}
+     --        ww' = (λ ii → (cong Br (sym (transportRefl (equivFun (isoToEquiv IsoAB) xx)))
+     --                      ∙
+     --                      ((λ j → off AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx) ))
+     --                   ))
 
---      --                  ∙ {!!} ∙ {!!}
+     --                  ∙ {!!} ∙ {!!}
 
---      --        eee : {!!}
---      --        eee = ((AB-Rec≃ (fst (invEquiv (Σ-cong-equiv-fst {B = λ v → Ar v → C} (isoToEquiv (invIso IsoAB))) .fst (xx , yy)))))
+     --        eee : {!!}
+     --        eee = ((AB-Rec≃ (fst (invEquiv (Σ-cong-equiv-fst {B = λ v → Ar v → C} (isoToEquiv (invIso IsoAB))) .fst (xx , yy)))))
 
---      --        ww : (x : Br (equivFun (isoToEquiv IsoAB) xx)) → 
---      --              (transp (λ j → off AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx)) i0
---      --               (transp (λ j → Br (transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ j))) i0 x))
---      --                     ≡                         
---      --               (transp (λ j → Ar (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j)) i0
---      --                (transp (λ j → ua (AB-Rec≃ (fst (invEquiv (Σ-cong-equiv-fst {B = λ v → Ar v → C} (isoToEquiv (invIso IsoAB))) .fst (xx , yy)))) (~ j)) i0 x))
---      --        ww x =
---      --           sym (transportComposite (λ j → Br (transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ j)))
---      --                                    ((λ j → off AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx)))
---      --                                    x)
+     --        ww : (x : Br (equivFun (isoToEquiv IsoAB) xx)) → 
+     --              (transp (λ j → off AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx)) i0
+     --               (transp (λ j → Br (transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ j))) i0 x))
+     --                     ≡                         
+     --               (transp (λ j → Ar (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j)) i0
+     --                (transp (λ j → ua (AB-Rec≃ (fst (invEquiv (Σ-cong-equiv-fst {B = λ v → Ar v → C} (isoToEquiv (invIso IsoAB))) .fst (xx , yy)))) (~ j)) i0 x))
+     --        ww x =
+     --           sym (transportComposite (λ j → Br (transportRefl (equivFun (isoToEquiv IsoAB) xx) (~ j)))
+     --                                    ((λ j → off AB-Rec≃ (~ j) (transp (λ i → isoToPath IsoAB (i ∧ ~ j)) j xx)))
+     --                                    x)
 
---      --            ∙∙
---      --              {!!}
+     --            ∙∙
+     --              {!!}
                   
---      --              -- (λ i → transp (λ j → {! (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j)!} j) i0 (equivFun (invEquiv eee) x))
+     --              -- (λ i → transp (λ j → {! (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j)!} j) i0 (equivFun (invEquiv eee) x))
                   
---      --            ∙∙
---      --             (
---      --                cong (transp (λ j → Ar (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j)) i0)
---      --                  (sym (uaβ (invEquiv eee) x)
---      --                    ∙ (funExt⁻ (transportUaInv eee) x)))
---      --            -- transportComposite ((λ j → ua (AB-Rec≃ (fst (invEquiv (Σ-cong-equiv-fst {B = λ v → Ar v → C} (isoToEquiv (invIso IsoAB))) .fst (xx , yy)))) (~ j)))
---      --            --             ((λ j → Ar (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j))) x
+     --            ∙∙
+     --             (
+     --                cong (transp (λ j → Ar (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j)) i0)
+     --                  (sym (uaβ (invEquiv eee) x)
+     --                    ∙ (funExt⁻ (transportUaInv eee) x)))
+     --            -- transportComposite ((λ j → ua (AB-Rec≃ (fst (invEquiv (Σ-cong-equiv-fst {B = λ v → Ar v → C} (isoToEquiv (invIso IsoAB))) .fst (xx , yy)))) (~ j)))
+     --            --             ((λ j → Ar (snd (equivCtr (isoToEquiv (invIso IsoAB)) xx) j))) x
 
 
 
@@ -500,31 +542,31 @@ module _ {ℓ} {A B C : Type (ℓ-suc ℓ)} (Ar : A → Type ℓ) (Br : B → Ty
 --                                                         Cr (snd (snd a (fst xx)) (snd xx))) →
 --                                                      D} λ a → cong≃ (λ X → X → D) Σ-assoc-≃)
 
---   penta-Σ-curry-≃ :
---                  Path ( (Σ
---                                   (Σ (Σ A (λ x₄ → Ar x₄ → B))
---                                    (λ x₄ →
---                                       Σ (Ar (fst x₄)) (λ x₅ → Br (snd x₄ x₅)) → C))
---                                   (λ x₄ →
---                                      Σ
---                                      (Σ (Ar (fst (fst x₄))) (λ x₅ → Br (snd (fst x₄) x₅)))
---                                      (λ x₅ → Cr (snd x₄ x₅)) →
---                                      D))
---                          ≃  (Σ A
---                                   (λ x₄ →
---                                      Ar x₄ →
---                                      Σ B
---                                      (λ x₅ →
---                                         Br x₅ → Σ C (λ x₆ → Cr x₆ → D)))))
---                    (compEquiv ((assoc-Σ-curry _ _ Dr )) ((assoc-Σ-curry _ (λ v → Br v) λ x → Σ (Cr (fst x)) λ x₁ → Dr (snd x x₁))) )
---                     (compEquiv hlp1
---                          (compEquiv ((assoc-Σ-curry Ar (λ z → Σ (Br (fst z)) (λ x₁ → Cr (snd z x₁))) Dr))
---                                   (Σ-cong-equiv-snd λ a → equivΠCod λ a₁ → (assoc-Σ-curry _ _ Dr))))
---   penta-Σ-curry-≃ = equivEq (funExt λ x → ΣPathP (refl , (funExt (λ x₁ → ΣPathP (refl , (funExt λ x₂ → ΣPathP (refl , (funExt λ x₃ → {!!}))))))))
+--   -- penta-Σ-curry-≃ :
+--   --                Path ( (Σ
+--   --                                 (Σ (Σ A (λ x₄ → Ar x₄ → B))
+--   --                                  (λ x₄ →
+--   --                                     Σ (Ar (fst x₄)) (λ x₅ → Br (snd x₄ x₅)) → C))
+--   --                                 (λ x₄ →
+--   --                                    Σ
+--   --                                    (Σ (Ar (fst (fst x₄))) (λ x₅ → Br (snd (fst x₄) x₅)))
+--   --                                    (λ x₅ → Cr (snd x₄ x₅)) →
+--   --                                    D))
+--   --                        ≃  (Σ A
+--   --                                 (λ x₄ →
+--   --                                    Ar x₄ →
+--   --                                    Σ B
+--   --                                    (λ x₅ →
+--   --                                       Br x₅ → Σ C (λ x₆ → Cr x₆ → D)))))
+--   --                  (compEquiv ((assoc-Σ-curry _ _ Dr )) ((assoc-Σ-curry _ (λ v → Br v) λ x → Σ (Cr (fst x)) λ x₁ → Dr (snd x x₁))) )
+--   --                   (compEquiv hlp1
+--   --                        (compEquiv ((assoc-Σ-curry Ar (λ z → Σ (Br (fst z)) (λ x₁ → Cr (snd z x₁))) Dr))
+--   --                                 (Σ-cong-equiv-snd λ a → equivΠCod λ a₁ → (assoc-Σ-curry _ _ Dr))))
+--   -- penta-Σ-curry-≃ = equivEq (funExt λ x → ΣPathP (refl , (funExt (λ x₁ → ΣPathP (refl , (funExt λ x₂ → ΣPathP (refl , (funExt λ x₃ → {!!}))))))))
 
---   lemL : ua hlp1 ≡ cong {A = Σ (Type (ℓ-suc ℓ)) λ x → x → Type ℓ } (λ a → Σ (fst a) λ x → (snd a) x → D)
---                     (λ i → (ua ((assoc-Σ-curry Ar Br Cr)) i) , assoc-Σ-curryP Ar Br Cr i)
---   lemL = lem-pentaApp (Ty0 Ar Br Cr) (Ty1 Ar Br Cr) ((assoc-Σ-curry Ar Br Cr)) (assoc-Σ-curryΣ- Ar Br Cr)
+--   -- lemL : ua hlp1 ≡ cong {A = Σ (Type (ℓ-suc ℓ)) λ x → x → Type ℓ } (λ a → Σ (fst a) λ x → (snd a) x → D)
+--   --                   (λ i → (ua ((assoc-Σ-curry Ar Br Cr)) i) , assoc-Σ-curryP Ar Br Cr i)
+--   -- lemL = lem-pentaApp (Ty0 Ar Br Cr) (Ty1 Ar Br Cr) ((assoc-Σ-curry Ar Br Cr)) (assoc-Σ-curryΣ- Ar Br Cr)
 -- --     -- where
 -- --     --   w' : (x : Σ
 -- --     --              (Σ (Σ A (λ a → Ar a → B))
@@ -569,46 +611,31 @@ module _ {ℓ} {A B C : Type (ℓ-suc ℓ)} (Ar : A → Type ℓ) (Br : B → Ty
 -- --   lemR B≃C = isInjectiveTransport (funExt λ x → ΣPathP (refl , funExt λ x₁ → refl)) 
 
 
--- --   penta-Σ-curry :
--- --                  Path ( (Σ
--- --                                   (Σ (Σ A (λ x₄ → Ar x₄ → B))
--- --                                    (λ x₄ →
--- --                                       Σ (Ar (fst x₄)) (λ x₅ → Br (snd x₄ x₅)) → C))
--- --                                   (λ x₄ →
--- --                                      Σ
--- --                                      (Σ (Ar (fst (fst x₄))) (λ x₅ → Br (snd (fst x₄) x₅)))
--- --                                      (λ x₅ → Cr (snd x₄ x₅)) →
--- --                                      D))
--- --                          ≡  (Σ A
--- --                                   (λ x₄ →
--- --                                      Ar x₄ →
--- --                                      Σ B
--- --                                      (λ x₅ →
--- --                                         Br x₅ → Σ C (λ x₆ → Cr x₆ → D)))))
--- --                    (ua (assoc-Σ-curry _ _ Dr ) ∙  ua (assoc-Σ-curry _ (λ v → Br v) λ x → Σ (Cr (fst x)) λ x₁ → Dr (snd x x₁)) )
+--   -- penta-Σ-curry :
+--   --                Path ( (Σ
+--   --                                 (Σ (Σ A (λ x₄ → Ar x₄ → B))
+--   --                                  (λ x₄ →
+--   --                                     Σ (Ar (fst x₄)) (λ x₅ → Br (snd x₄ x₅)) → C))
+--   --                                 (λ x₄ →
+--   --                                    Σ
+--   --                                    (Σ (Ar (fst (fst x₄))) (λ x₅ → Br (snd (fst x₄) x₅)))
+--   --                                    (λ x₅ → Cr (snd x₄ x₅)) →
+--   --                                    D))
+--   --                        ≡  (Σ A
+--   --                                 (λ x₄ →
+--   --                                    Ar x₄ →
+--   --                                    Σ B
+--   --                                    (λ x₅ →
+--   --                                       Br x₅ → Σ C (λ x₆ → Cr x₆ → D)))))
+--   --                  (ua (assoc-Σ-curry _ _ Dr ) ∙  ua (assoc-Σ-curry _ (λ v → Br v) λ x → Σ (Cr (fst x)) λ x₁ → Dr (snd x x₁)) )
                     
--- --                     (cong {A = Σ (Type (ℓ-suc ℓ)) λ x → x → Type ℓ } (λ (a : Σ (Type (ℓ-suc ℓ)) (λ x → x → Type ℓ)) → Σ (fst a) λ x → (snd a) x → D)
--- --                         (λ i → (ua (assoc-Σ-curry Ar Br Cr) i) , assoc-Σ-curryP Ar Br Cr i)
+--   --                   (cong {A = Σ (Type (ℓ-suc ℓ)) λ x → x → Type ℓ } (λ (a : Σ (Type (ℓ-suc ℓ)) (λ x → x → Type ℓ)) → Σ (fst a) λ x → (snd a) x → D)
+--   --                       (λ i → (ua (assoc-Σ-curry Ar Br Cr) i) , assoc-Σ-curryP Ar Br Cr i)
 
--- --                        ∙∙ ua (assoc-Σ-curry Ar (λ z → Σ (Br (fst z)) (λ x₁ → Cr (snd z x₁))) Dr)
--- --                           ∙∙ cong (Σ A) (funExt λ y → cong (λ x → Ar y → x) (ua (assoc-Σ-curry _ _ Dr))))
--- --   penta-Σ-curry = 
-  
--- --       (ua-comp _ _)
--- --       ∙∙ cong ua penta-Σ-curry-≃ ∙∙ 
--- --       ((sym (ua-comp _ _) ∙ cong (ua (hlp1) ∙_) (sym (ua-comp _ _)))     
--- --       ∙∙
--- --       sym (doubleCompPath-elim' _ _ _)
--- --       -- (λ i j → ( {!!} ∙ ((isoToPath (assoc-Σ-curry Ar (λ z → Σ (Br (fst z)) (λ x₁ → Cr (snd z x₁))) Dr)) ∙ {!refl i!})) j )
--- --       ∙∙
--- --       (cong₂ {C = λ _ _ → _ ≡ (Σ A
--- --                                   (λ x₄ →
--- --                                      Ar x₄ →
--- --                                      Σ B
--- --                                      (λ x₅ →
--- --                                         Br x₅ → Σ C (λ x₆ → Cr x₆ → D))))}
--- --                 (_∙∙ (ua (assoc-Σ-curry Ar (λ z → Σ (Br (fst z)) (λ x₁ → Cr (snd z x₁))) Dr)) ∙∙_) lemL (lemR (assoc-Σ-curry Br Cr Dr)))
--- --       )
+--   --                      ∙∙ ua (assoc-Σ-curry Ar (λ z → Σ (Br (fst z)) (λ x₁ → Cr (snd z x₁))) Dr)
+--   --                         ∙∙ cong (Σ A) (funExt λ y → cong (λ x → Ar y → x) (ua (assoc-Σ-curry _ _ Dr))))
+--   -- penta-Σ-curry = {!!}
+
 
 -- -- module _ {ℓ} where
 
