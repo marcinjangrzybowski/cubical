@@ -6,13 +6,23 @@ open import Cubical.Core.Everything
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Prelude
-open import Cubical.Data.Empty as ⊥
+open import Cubical.Foundations.Function
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Data.Empty using (⊥;isProp⊥) 
+import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
 open import Cubical.Relation.Nullary
 
 open import Cubical.Data.List.Base
+
+open import Cubical.HITs.SetTruncation using (∥_∥₂;∣_∣₂;squash₂)
+import Cubical.HITs.SetTruncation as ST
+
+open import Cubical.HITs.GroupoidTruncation using (∥_∥₃;∣_∣₃;squash₃)
+import Cubical.HITs.GroupoidTruncation as GT
+
 
 module _ {ℓ} {A : Type ℓ} where
 
@@ -174,3 +184,48 @@ discreteList eqA (x ∷ xs) (y ∷ ys) with eqA x y | discreteList eqA xs ys
 foldrCons : (xs : List A) → foldr _∷_ [] xs ≡ xs
 foldrCons [] = refl
 foldrCons (x ∷ xs) = cong (x ∷_) (foldrCons xs)
+
+foldr∘map : ∀ {ℓ ℓ' ℓ''} → {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''}
+          → (f : A → B) → (g : B → C → C) → (c : C)
+          → ∀ x → foldr g c (map f x) ≡ foldr (g ∘ f) c x
+foldr∘map f c g = ind refl (λ _ → cong (c (f _)))
+
+
+ListTrunc₂Iso : Iso (List ∥ A ∥₂) ∥ List A ∥₂
+ListTrunc₂Iso = w
+  where
+    open Iso
+    
+    w : Iso _ _
+    fun w = foldr (ST.map2 _∷_) ∣ [] ∣₂
+    inv w = ST.rec (isOfHLevelList 0 squash₂) (map ∣_∣₂)
+    rightInv w =
+        ST.elim (λ _ → isOfHLevelPath 2 squash₂ _ _)
+        (ind refl (λ _ → cong (ST.map2 _∷_ ∣ _ ∣₂)))
+    leftInv w = ind refl
+      λ {l} a →
+        (ST.elim2
+         {C = λ a xx → inv w (ST.map2 _∷_ a xx) ≡ a ∷ inv w xx}
+          (λ _ _ → isOfHLevelPath 2 (isOfHLevelList 0 squash₂) _ _)
+          (λ _ _ → refl)
+          a ((foldr (ST.map2 _∷_) ∣ [] ∣₂ l)) ∙_) ∘ cong (_ ∷_)
+
+
+ListTrunc₃Iso : Iso (List ∥ A ∥₃) ∥ List A ∥₃
+ListTrunc₃Iso = w
+  where
+    open Iso
+    
+    w : Iso _ _
+    fun w = foldr (GT.map2 _∷_) ∣ [] ∣₃
+    inv w = GT.rec (isOfHLevelList 1 squash₃) (map ∣_∣₃)
+    rightInv w =
+        GT.elim (λ _ → isOfHLevelPath 3 squash₃ _ _)
+        (ind refl (λ _ → cong (GT.map2 _∷_ ∣ _ ∣₃)))
+    leftInv w = ind refl
+      λ {l} a →
+        (GT.elim2
+         {C = λ a xx → inv w (GT.map2 _∷_ a xx) ≡ a ∷ inv w xx}
+          (λ _ _ → isOfHLevelPath 3 (isOfHLevelList 1 squash₃) _ _)
+          (λ _ _ → refl)
+          a ((foldr (GT.map2 _∷_) ∣ [] ∣₃ l)) ∙_) ∘ cong (_ ∷_)

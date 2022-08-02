@@ -20,13 +20,17 @@ import Cubical.Data.List.Properties as BP
 
 import Cubical.Functions.Logic as L
 
+open import Cubical.HITs.SetTruncation using (∥_∥₂;∣_∣₂;squash₂)
+import Cubical.HITs.SetTruncation as ST
+
+
 open Iso
 
 private
   variable
-    ℓ : Level
+    ℓ ℓ' : Level
     A : Type ℓ
-
+    B : Type ℓ'
 
 length0≡[] : ∀ {x : List A} → length x ≡ 0 → x ≡ []
 length0≡[] =
@@ -38,8 +42,6 @@ length0≡[] =
        let (px0 , py0) = m+n≡0→m≡0×n≡0 {length xs} {length ys} p
        in cong₂ _++_ (px px0) (py py0) ∙' ++-unit-r [])
       _
-
-
 
 isContrLen0 : isContr (Σ (List A) λ x → length x ≡ 0)
 fst isContrLen0 = [] , refl
@@ -99,15 +101,54 @@ module _ (isSetA : isSet A) where
     ElimProp.f (λ _ → trunc _ _)
       refl
       (++-unit-r ∘ [_])
-      λ {xs} {ys} x y → h _ _ ∙ cong₂ _++_ x y
+      λ x y →
+        h _ _ ∙ cong₂ _++_ x y
    where
      h : ∀ (xs ys : B.List A) →
           fromList (xs B.++ ys) ≡ fromList xs ++ fromList ys 
      h B.[] _ = sym (++-unit-l _)
      h (x B.∷ xs) ys = cong ([ x ] ++_) (h xs ys) ∙ (sym (++-assoc _ _ _)) 
 
-  isoList : Iso (List A) (B.List A)
-  fun isoList = toList
-  inv isoList = fromList
-  rightInv isoList = toList-fromList
-  leftInv isoList = fromList-toList
+  isoList : Iso (B.List A) (List A)
+  fun isoList = fromList
+  inv isoList = toList
+  rightInv isoList = fromList-toList
+  leftInv isoList = toList-fromList
+
+
+map-ListG : ( A → ∥ B ∥₂) → List A → List B
+map-ListG f =
+  Rec.f trunc [] ((ST.rec trunc [_]) ∘ f) _++_
+   ++-unit-r ++-unit-l ++-assoc
+
+map-List : (A → B) → List A → List B
+map-List f =
+  Rec.f trunc [] ([_] ∘ f) (_++_)
+   ++-unit-r ++-unit-l ++-assoc 
+
+
+IsoTrunc : Iso (List A) (List ∥ A ∥₂)
+Iso.fun IsoTrunc = map-List ∣_∣₂
+Iso.inv IsoTrunc = map-ListG (idfun _)
+Iso.rightInv IsoTrunc = 
+  Elim.f
+    (λ x → isProp→isSet (trunc _ _))
+    refl
+    (ST.elim (λ _ → isProp→isSet (trunc _ _)) λ _ → refl)
+    (λ x y → cong₂ _++_ x y)
+    (λ b i j → ++-unit-r (b j) i)
+    (λ b i j → ++-unit-l (b j) i)
+    λ bx by bz i j → ++-assoc (bx j) (by j) (bz j) i
+
+Iso.leftInv IsoTrunc =  
+  Elim.f
+    (λ x → isProp→isSet (trunc _ _))
+    refl
+    (λ _ → refl)
+    (λ x y → cong₂ _++_ x y)
+    (λ b i j → ++-unit-r (b j) i)
+    (λ b i j → ++-unit-l (b j) i)
+    λ bx by bz i j → ++-assoc (bx j) (by j) (bz j) i
+
+IsoTrunc₂ : Iso (List A) (∥ B.List A ∥₂)
+IsoTrunc₂ = compIso IsoTrunc (compIso (invIso (isoList squash₂)) BP.ListTrunc₂Iso)

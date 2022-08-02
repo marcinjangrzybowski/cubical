@@ -152,3 +152,31 @@ homotopySymInv {f = f} H a j i =
                  ; (j = i0) → H (H a (~ i)) i
                  ; (j = i1) → H a (i ∧ ~ k)})
         (H (H a (~ i ∨ j)) i)
+
+
+compSqFacesCongP : ∀ {ℓ ℓ'} {A : I → I → Type ℓ} {B : I → I → Type ℓ'}
+  {a₀₀ : A i0 i0} {a₀₁ : A i0 i1} {a₀₋ : PathP (λ j → A i0 j) a₀₀ a₀₁}
+  {a₁₀ : A i1 i0} {a₁₁ : A i1 i1} {a₁₋ : PathP (λ j → A i1 j) a₁₀ a₁₁}
+  {a₋₀ : PathP (λ i → A i i0) a₀₀ a₁₀} {a₋₁ : PathP (λ i → A i i1) a₀₁ a₁₁}
+  {f₀ : ∀ i j → A i j → B i j}
+  {f₁ : ∀ i j → A i j → B i j}
+  → (f : ∀ i j → (a : A i j) → (f₀ i j a) ≡ (f₁ i j a))
+  → SquareP B (congP (f₀ i0) a₀₋) (congP (f₀ i1) a₁₋)
+              (congP (λ i → f₀ i i0) a₋₀) (congP (λ i → f₀ i i1) a₋₁)
+  → SquareP B (congP (f₁ i0) a₀₋) (congP (f₁ i1) a₁₋)
+              (congP (λ i → f₁ i i0) a₋₀) (congP (λ i → f₁ i i1) a₋₁)
+compSqFacesCongP {a₀₋ = a₀₋} {a₁₋ = a₁₋} {a₋₀ = a₋₀} {a₋₁ = a₋₁}  f sq i j =
+  hcomp (λ k →
+    λ { (i = i0) → f i j (a₀₋ j) k 
+      ; (i = i1) → f i j (a₁₋ j) k 
+      ; (j = i0) → f i j (a₋₀ i) k
+      ; (j = i1) → f i j (a₋₁ i) k
+       }) (sq i j)
+
+compSqFacesCong : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
+  {a₁₀ a₁₁ : A} {a₁₋ : a₁₀ ≡ a₁₁}
+  {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁} {f₀ f₁ : A → B} 
+  → (f : ∀ a → f₀ a ≡ f₁ a) 
+  → Square (cong f₀ a₀₋) (cong f₀ a₁₋) (cong f₀ a₋₀) (cong f₀ a₋₁)
+  → Square (cong f₁ a₀₋) (cong f₁ a₁₋) (cong f₁ a₋₀) (cong f₁ a₋₁)
+compSqFacesCong f sq = compSqFacesCongP (λ _ _ → f) sq

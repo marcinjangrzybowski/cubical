@@ -3,7 +3,8 @@ module Cubical.Data.List.Base where
 
 open import Agda.Builtin.List public
 open import Cubical.Core.Everything
-open import Cubical.Data.Maybe.Base as Maybe
+open import Cubical.Data.Maybe.Base using (Maybe)
+import Cubical.Data.Maybe.Base as Maybe
 open import Cubical.Data.Nat.Base
 
 module _ {ℓ} {A : Type ℓ} where
@@ -50,3 +51,10 @@ module _ {ℓ} {A : Type ℓ} where
   foldl : ∀ {ℓ'} {B : Type ℓ'} → (B → A → B) → B → List A → B
   foldl f b [] = b
   foldl f b (x ∷ xs) = foldl f (f b x) xs
+
+  ind : ∀ {ℓ'} {B : List A → Type ℓ'}
+           → B []
+           → (∀ {l} → ∀ a → B l → B (a ∷ l))
+           → ∀ l → B l
+  ind b _ [] = b
+  ind {B = B} b[] b (a ∷ l) = b a (ind {B = B} b[] b l)

@@ -20,7 +20,7 @@ open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Pointed.Base
 open import Cubical.Data.Sigma
 open import Cubical.HITs.PropositionalTruncation
-  renaming (rec to pRec ; elim to pElim) hiding (elim2 ; elim3 ; rec2 ; map)
+  renaming (rec to pRec ; elim to pElim) hiding (elim2 ; elim3 ; rec2 ; map ; map2)
 
 private
   variable
@@ -66,6 +66,12 @@ elim2 Cset f ∣ x ∣₂ (squash₂ y z p q i j) =
 elim2 Cset f (squash₂ x y p q i j) z =
   isOfHLevel→isOfHLevelDep 2 (λ a → Cset a z) _ _
     (cong (λ a → elim2 Cset f a z) p) (cong (λ a → elim2 Cset f a z) q) (squash₂ x y p q) i j
+
+map2 : ∀ {ℓ' ℓ''} {B : Type ℓ'} {C : Type ℓ''}
+          → (A → B → C)
+          → ∥ A ∥₂ → ∥ B ∥₂ → ∥ C ∥₂ 
+map2 g = elim2 (λ _ _ → squash₂) (λ a → ∣_∣₂ ∘ g a)
+
 
 -- Old version:
 -- elim2 Cset f = elim (λ _ → isSetΠ (λ _ → Cset _ _))

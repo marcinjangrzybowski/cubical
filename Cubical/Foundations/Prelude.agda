@@ -426,6 +426,17 @@ SquareP :
   → Type ℓ
 SquareP A a₀₋ a₁₋ a₋₀ a₋₁ = PathP (λ i → PathP (λ j → A i j) (a₋₀ i) (a₋₁ i)) a₀₋ a₁₋
 
+congSqP : {A : I → I → Type ℓ} {B : I → I → Type ℓ'}
+  {a₀₀ : A i0 i0} {a₀₁ : A i0 i1} {a₀₋ : PathP (λ j → A i0 j) a₀₀ a₀₁}
+  {a₁₀ : A i1 i0} {a₁₁ : A i1 i1} {a₁₋ : PathP (λ j → A i1 j) a₁₀ a₁₁}
+  {a₋₀ : PathP (λ i → A i i0) a₀₀ a₁₀} {a₋₁ : PathP (λ i → A i i1) a₀₁ a₁₁}
+  → (f : ∀ i j → A i j → B i j)
+  → SquareP A a₀₋ a₁₋ a₋₀ a₋₁
+  → SquareP B (congP (f i0) a₀₋) (congP (f i1) a₁₋)
+              (congP (λ i → f i i0) a₋₀) (congP (λ i → f i i1) a₋₁)
+congSqP f sq i j = f i j (sq i j)
+{-# INLINE congSqP #-}
+
 Square :
   {a₀₀ a₀₁ : A} (a₀₋ : a₀₀ ≡ a₀₁)
   {a₁₀ a₁₁ : A} (a₁₋ : a₁₀ ≡ a₁₁)

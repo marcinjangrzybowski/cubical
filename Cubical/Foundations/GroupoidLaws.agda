@@ -273,6 +273,17 @@ cong₂Funct {x = x} {y = y} f p {u = u} {v = v} q j i =
                   ; (j = i0) → f (p i) (q (i ∧ k))})
        (f (p i) u)
 
+cong₂-∙L : ∀ {ℓ} {A B C : Type ℓ}
+        → (f : A → B → C) {x x' x'' : A} {y y' : B}
+        → (p : x ≡ x') (p' : x' ≡ x'') → (q : y ≡ y') 
+        →  cong₂ f (p ∙ p') q ≡ cong (λ x → f x y) p ∙ (λ i → f (p' i) (q i))  
+cong₂-∙L f p p' q i j =
+   hcomp
+     (λ k → λ { (i = i0) → f (compPath-filler p p' k j) (q (j ∧ k))
+               ; (j = i0) → f (p i0) (q i0)
+               ; (j = i1) → f (p' k) (q k)
+               }) (f (p j) (q i0)) 
+
 symDistr-filler : ∀ {ℓ} {A : Type ℓ} {x y z : A} (p : x ≡ y) (q : y ≡ z) → I → I → I → A
 symDistr-filler {A = A} {z = z} p q i j k =
   hfill (λ k → λ { (i = i0) → q (k ∨ j)
