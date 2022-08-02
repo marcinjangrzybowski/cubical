@@ -102,14 +102,14 @@ module _ {A : Type ℓ} where
        isSetB (f x) (f y) (cong f p) (cong f q) i₀ i₁
 
   length : List A → ℕ
-  length = Rec.f isSetℕ 
+  length = Rec.f isSetℕ
     zero
     (λ _ → suc zero)
     _+_
     +-zero
     (λ _ → refl)
     (λ bx by bz → sym (+-assoc bx by bz))
-    
+
   rev : List A → List A
   rev [] = []
   rev [ x ] = [ x ]
@@ -117,4 +117,4 @@ module _ {A : Type ℓ} where
   rev (++-unit-r x i) = ++-unit-l (rev x) i
   rev (++-unit-l x i) = ++-unit-r (rev x) i
   rev (++-assoc x y z i) = ++-assoc (rev z) (rev y) (rev x) (~ i)
-  rev (trunc x y p q i₀ i₁) = trunc (rev x) (rev y) (cong rev p) (cong rev q) i₀ i₁ 
+  rev (trunc x y p q i₀ i₁) = trunc (rev x) (rev y) (cong rev p) (cong rev q) i₀ i₁

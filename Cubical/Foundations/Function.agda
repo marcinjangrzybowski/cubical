@@ -167,16 +167,16 @@ compSqFacesCongP : ∀ {ℓ ℓ'} {A : I → I → Type ℓ} {B : I → I → Ty
               (congP (λ i → f₁ i i0) a₋₀) (congP (λ i → f₁ i i1) a₋₁)
 compSqFacesCongP {a₀₋ = a₀₋} {a₁₋ = a₁₋} {a₋₀ = a₋₀} {a₋₁ = a₋₁}  f sq i j =
   hcomp (λ k →
-    λ { (i = i0) → f i j (a₀₋ j) k 
-      ; (i = i1) → f i j (a₁₋ j) k 
+    λ { (i = i0) → f i j (a₀₋ j) k
+      ; (i = i1) → f i j (a₁₋ j) k
       ; (j = i0) → f i j (a₋₀ i) k
       ; (j = i1) → f i j (a₋₁ i) k
        }) (sq i j)
 
 compSqFacesCong : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
   {a₁₀ a₁₁ : A} {a₁₋ : a₁₀ ≡ a₁₁}
-  {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁} {f₀ f₁ : A → B} 
-  → (f : ∀ a → f₀ a ≡ f₁ a) 
+  {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁} {f₀ f₁ : A → B}
+  → (f : ∀ a → f₀ a ≡ f₁ a)
   → Square (cong f₀ a₀₋) (cong f₀ a₁₋) (cong f₀ a₋₀) (cong f₀ a₋₁)
   → Square (cong f₁ a₀₋) (cong f₁ a₁₋) (cong f₁ a₋₀) (cong f₁ a₋₁)
 compSqFacesCong f sq = compSqFacesCongP (λ _ _ → f) sq

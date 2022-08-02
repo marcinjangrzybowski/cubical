@@ -53,7 +53,7 @@ module _ (isGroupoidA : isGroupoid A) where
        (λ a x _ _ → congSqP (λ _ _ → a B.∷_) ∘ (x _ _)))
      (B.ind (λ by bz bw i j → BP.++-assoc by bz bw (j ∧ (~ i)))
        λ a x _ _ _ → congSqP (λ _ _ → a B.∷_) (x _ _ _))
-     
+
   toList-fromList : ∀ l → toList (fromList l) ≡ l
   toList-fromList B.[] = refl
   toList-fromList (_ B.∷ l) = cong (_ B.∷_) (toList-fromList l)
@@ -72,12 +72,12 @@ module _ (isGroupoidA : isGroupoid A) where
              ; (j = i1) → ++-unit-l (b k) i
               }) (++-unit-l (b i0) (i ∨  ~ j)))
        assoc-case
-  
+
    where
 
      h : ∀ (xs ys : B.List A) → fromList (xs B.++ ys) ≡ fromList xs ++ fromList ys
      h = B.ind (sym ∘ ++-unit-l ∘ fromList) (λ _ → (_∙ (sym (++-assoc _ _ _)) ∘ cong (_ ∷_ )) ∘_)
-     
+
      unit-r-case : {xs : List A} (b : fromList (toList xs) ≡ xs) → _
      unit-r-case b i j =
        hcomp (λ k →
@@ -91,12 +91,12 @@ module _ (isGroupoidA : isGroupoid A) where
         sq B.[] i j = lem-pqpr⁻ {p = refl} {q = sym (++-unit-l [])} {sym (++-unit-r [])}
              (cong sym (sym ++-unit-lr[])) (~ i) j
 
-        sq xs'@(x B.∷ xs) i j = 
+        sq xs'@(x B.∷ xs) i j =
           hcomp (λ k →
               λ { (i = i1) → fromList xs'
                 ; (j = i0) → cong fromList (BP.++-unit-r xs') i
                 ; (j = i1) → ++-assoc-[]-r [ x ] (fromList xs) i (~ k)
-                 }) ([ x ] ++ sq xs i j)    
+                 }) ([ x ] ++ sq xs i j)
 
 
      assoc-case : {xs ys zs : List A} (bx : fromList (toList xs) ≡ xs)
@@ -140,9 +140,9 @@ module _ (isGroupoidA : isGroupoid A) where
               ∙ λ j → hcomp
               (λ l → λ { (j = i0) → ++-assoc [ x ] ((h bx by) (~ k)) bz' (~ k)
                        ; (j = i1) → ++-pentagon-□ [ x ] bx' by' bz' (~ l) (~ k)
-                       ; (k = i0) → [ x ] ++ ++-assoc bx' by' bz' (l ∧ j) 
+                       ; (k = i0) → [ x ] ++ ++-assoc bx' by' bz' (l ∧ j)
                        ; (k = i1) → compPath-filler (cong (x ∷_) (h bx by))
-                            (sym (++-assoc [ x ] bx' by')) l j ++ bz' 
+                            (sym (++-assoc [ x ] bx' by')) l j ++ bz'
                        }) (++-assoc [ x ] ((h bx by) (j ∨ ~ k)) bz' (~ k))) j
             ; (i = i1) → ((λ j → hcomp
               (λ l → λ { (j = i0) → x ∷ compPath-filler pDl pDr l (~ k)
@@ -152,7 +152,7 @@ module _ (isGroupoidA : isGroupoid A) where
                 ∙ λ j → ++-assoc [ x ] bx' ((h by bz) (j ∨ ~ k)) (~ j ∧ ~ k)) j
             ; (j = i0) → x ∷ sq bx by bz i (~ k)
             ; (j = i1) → ++-pentagon-△ [ x ] bx' by' bz' (~ i) (~ k)
-            })                    
+            })
          (((λ _ → x ∷ ++-assoc bx' by' bz' i)
             ∙ invSides-filler (sym (++-assoc [ x ] bx' (by' ++ bz')))
                (cong (x ∷_) (sym (++-assoc bx' by' bz'))) (~ i)) j)
@@ -160,7 +160,7 @@ module _ (isGroupoidA : isGroupoid A) where
            where
              bx' = fromList bx
              by' = fromList by
-             bz' = fromList bz          
+             bz' = fromList bz
 
              pUl = h (bx B.++ by) bz
              pUr = cong (_++ bz') (h bx by)
@@ -168,7 +168,7 @@ module _ (isGroupoidA : isGroupoid A) where
              pDr = cong (_++_ bx') (h by bz)
 
 
-  isoList : Iso (B.List A) (List A) 
+  isoList : Iso (B.List A) (List A)
   fun isoList = fromList
   inv isoList = toList
   rightInv isoList = fromList-toList
@@ -177,7 +177,7 @@ module _ (isGroupoidA : isGroupoid A) where
   ≃List : B.List A ≃ List A
   ≃List = isoToEquiv isoList
 
-  lengthB : PathP (λ i → ua ≃List i → ℕ)           
+  lengthB : PathP (λ i → ua ≃List i → ℕ)
            B.length
            length
   lengthB =
@@ -186,7 +186,7 @@ module _ (isGroupoidA : isGroupoid A) where
   ++-B : PathP (λ i → ua ≃List i → ua ≃List i → ua ≃List i)
            B._++_
            _++_
-  ++-B = ua→ λ a → ua→ λ b → ua-gluePath _ (h a b) 
+  ++-B = ua→ λ a → ua→ λ b → ua-gluePath _ (h a b)
 
        where
          h : (a b : B.List A) → _ ≡ _
@@ -214,7 +214,7 @@ map-List f =
 IsoTrunc : Iso (List A) (List ∥ A ∥₃)
 Iso.fun IsoTrunc = map-List ∣_∣₃
 Iso.inv IsoTrunc = map-ListG (idfun _)
-Iso.rightInv IsoTrunc = 
+Iso.rightInv IsoTrunc =
   Elim.f
     (λ _ → isSet→isGroupoid (trunc _ _))
     refl
@@ -227,8 +227,8 @@ Iso.rightInv IsoTrunc =
     (λ bx by bz bw i j → ++-pentagon-diag (bx j) (by j) (bz j) (bw j) i)
     (λ bx by bz bw i j k → ++-pentagon-△ (bx k) (by k) (bz k) (bw k) i j)
     (λ bx by bz bw i j k → ++-pentagon-□ (bx k) (by k) (bz k) (bw k) i j)
-    
-Iso.leftInv IsoTrunc = 
+
+Iso.leftInv IsoTrunc =
   Elim.f
     (λ _ → isSet→isGroupoid (trunc _ _))
     refl

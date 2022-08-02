@@ -69,7 +69,7 @@ elim2 Cset f (squash₂ x y p q i j) z =
 
 map2 : ∀ {ℓ' ℓ''} {B : Type ℓ'} {C : Type ℓ''}
           → (A → B → C)
-          → ∥ A ∥₂ → ∥ B ∥₂ → ∥ C ∥₂ 
+          → ∥ A ∥₂ → ∥ B ∥₂ → ∥ C ∥₂
 map2 g = elim2 (λ _ _ → squash₂) (λ a → ∣_∣₂ ∘ g a)
 
 

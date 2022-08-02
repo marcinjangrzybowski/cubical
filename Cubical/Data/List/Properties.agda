@@ -8,7 +8,7 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Isomorphism
-open import Cubical.Data.Empty using (⊥;isProp⊥) 
+open import Cubical.Data.Empty using (⊥;isProp⊥)
 import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat
 open import Cubical.Data.Sigma
@@ -195,7 +195,7 @@ ListTrunc₂Iso : Iso (List ∥ A ∥₂) ∥ List A ∥₂
 ListTrunc₂Iso = w
   where
     open Iso
-    
+
     w : Iso _ _
     fun w = foldr (ST.map2 _∷_) ∣ [] ∣₂
     inv w = ST.rec (isOfHLevelList 0 squash₂) (map ∣_∣₂)
@@ -215,7 +215,7 @@ ListTrunc₃Iso : Iso (List ∥ A ∥₃) ∥ List A ∥₃
 ListTrunc₃Iso = w
   where
     open Iso
-    
+
     w : Iso _ _
     fun w = foldr (GT.map2 _∷_) ∣ [] ∣₃
     inv w = GT.rec (isOfHLevelList 1 squash₃) (map ∣_∣₃)

@@ -58,7 +58,7 @@ Iso.leftInv Iso-length0≡[] a = isSetℕ _ _ _ _
 
 
 IsEmpty : List A → hProp ℓ-zero
-IsEmpty = 
+IsEmpty =
    Rec.f isSetHProp
    L.⊤ (λ _ → L.⊥) L._⊓_
    L.⊓-identityʳ  L.⊓-identityˡ (λ _ by bz → sym (L.⊓-assoc _ by bz))
@@ -75,7 +75,7 @@ length0-≡-IsEmpty =
         (map-× (L.pathTo⇒ x) (L.pathTo⇒ y)
           ∘ m+n≡0→m≡0×n≡0 {length xs} {length ys})
       λ (isExs , isEys)  → cong₂ _+_ (L.pathTo⇐ x isExs) (L.pathTo⇐ y isEys)
-       
+
 
 fromList : B.List A → List A
 fromList B.[] = []
@@ -105,9 +105,9 @@ module _ (isSetA : isSet A) where
         h _ _ ∙ cong₂ _++_ x y
    where
      h : ∀ (xs ys : B.List A) →
-          fromList (xs B.++ ys) ≡ fromList xs ++ fromList ys 
+          fromList (xs B.++ ys) ≡ fromList xs ++ fromList ys
      h B.[] _ = sym (++-unit-l _)
-     h (x B.∷ xs) ys = cong ([ x ] ++_) (h xs ys) ∙ (sym (++-assoc _ _ _)) 
+     h (x B.∷ xs) ys = cong ([ x ] ++_) (h xs ys) ∙ (sym (++-assoc _ _ _))
 
   isoList : Iso (B.List A) (List A)
   fun isoList = fromList
@@ -124,13 +124,13 @@ map-ListG f =
 map-List : (A → B) → List A → List B
 map-List f =
   Rec.f trunc [] ([_] ∘ f) (_++_)
-   ++-unit-r ++-unit-l ++-assoc 
+   ++-unit-r ++-unit-l ++-assoc
 
 
 IsoTrunc : Iso (List A) (List ∥ A ∥₂)
 Iso.fun IsoTrunc = map-List ∣_∣₂
 Iso.inv IsoTrunc = map-ListG (idfun _)
-Iso.rightInv IsoTrunc = 
+Iso.rightInv IsoTrunc =
   Elim.f
     (λ x → isProp→isSet (trunc _ _))
     refl
@@ -140,7 +140,7 @@ Iso.rightInv IsoTrunc =
     (λ b i j → ++-unit-l (b j) i)
     λ bx by bz i j → ++-assoc (bx j) (by j) (bz j) i
 
-Iso.leftInv IsoTrunc =  
+Iso.leftInv IsoTrunc =
   Elim.f
     (λ x → isProp→isSet (trunc _ _))
     refl

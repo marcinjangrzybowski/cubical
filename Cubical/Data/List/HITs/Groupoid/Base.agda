@@ -13,11 +13,11 @@ open import Cubical.Data.Nat
 
 
 pqpr-sides : ∀ {ℓ} {A : Type ℓ} → {x y z : A}
-        → (p : x ≡ y) → (q r : y ≡ z)        
+        → (p : x ≡ y) → (q r : y ≡ z)
         → ∀ i j → I → Partial (i ∨ ~ i ∨ j ∨ ~ j) A
-pqpr-sides p q r i j k = 
-    λ { (i = i0) → invSides-filler r (sym p) (~ k) j 
-      ; (i = i1) → q j 
+pqpr-sides p q r i j k =
+    λ { (i = i0) → invSides-filler r (sym p) (~ k) j
+      ; (i = i1) → q j
       ; (j = i0) → p (i ∨ k)
       ; (j = i1) → r (i ∨ k)}
 
@@ -28,7 +28,7 @@ lem-pqpr {p = p} {q} {r} s i j = hcomp (pqpr-sides p q r i j) (s i j)
 
 lem-pqpr⁻ : ∀ {ℓ} {A : Type ℓ} → {x y z : A}
         → {p : x ≡ y} → {q r : y ≡ z}
-        → r ≡ q → Square p q p r 
+        → r ≡ q → Square p q p r
 lem-pqpr⁻ {p = p} {q} {r} s i j = hcomp (λ k → pqpr-sides p q r i j (~ k)) (s i j)
 
 private
@@ -44,7 +44,7 @@ data List (A : Type ℓ) : Type ℓ where
   ++-unit-r : (xs : List A) → xs ++ [] ≡ xs
   ++-unit-l : (xs : List A) → [] ++ xs ≡ xs
   ++-assoc : (xs ys zs : List A) → (xs ++ ys) ++ zs ≡ xs ++ ys ++ zs
-  ++-triangle : ∀ xs ys → Square {A = List A}                     
+  ++-triangle : ∀ xs ys → Square {A = List A}
                            (++-assoc xs [] ys)
                            refl
                            (cong (_++ ys) (++-unit-r xs))
@@ -58,7 +58,7 @@ data List (A : Type ℓ) : Type ℓ where
   ++-pentagon-□ : (xs ys zs ws : List A) →
         Square (++-pentagon-diag xs ys zs ws)
            (++-assoc _ _ _)
-           (cong (_++ ws) (++-assoc _ _ _))           
+           (cong (_++ ws) (++-assoc _ _ _))
            (sym (cong (xs ++_) (++-assoc _ _ _)))
 
   trunc : isGroupoid (List A)
@@ -66,7 +66,7 @@ data List (A : Type ℓ) : Type ℓ where
 ++-pentagon : {A : Type ℓ} → (xs ys zs ws : List A) → Square
            (++-assoc _ zs _ ∙∙ refl ∙∙ ++-assoc _ ys _)
            (++-assoc _ _ _)
-           (cong (_++ ws) (++-assoc _ _ _))           
+           (cong (_++ ws) (++-assoc _ _ _))
            (sym (cong (xs ++_) (++-assoc _ _ _)))
 ++-pentagon xs ys zs ws =
   (λ i j → hcomp
@@ -105,10 +105,10 @@ module _ {A : Type ℓ} where
                                  (λ i → b++ur bx i b++ by)
                                  λ i → bx b++ b++ul by i)
               (b++-pent-diag : (bx by bz bw : B) →
-                                (((bx b++ by) b++ bz) b++ bw) ≡ 
-                                 (bx b++ (by b++ (bz b++ bw))))                                 
+                                (((bx b++ by) b++ bz) b++ bw) ≡
+                                 (bx b++ (by b++ (bz b++ bw))))
               (b++-pent-△ : (bx by bz bw : B) →
-                            Square 
+                            Square
                                   refl
                                   (b++-pent-diag bx by bz bw)
                                   (symP (b++-assoc _ _ _))
@@ -119,7 +119,7 @@ module _ {A : Type ℓ} where
                                  (b++-assoc _ _ _)
                                  (λ i → b++-assoc bx by bz i b++ bw)
                                  λ i → bx b++ b++-assoc by bz bw (~ i))
-              
+
               where
 
     f : List A → B
@@ -174,7 +174,7 @@ module _ {A : Type ℓ} where
                                  (b++-assoc _ _ _)
                                  (λ i → b++-assoc bx by bz i b++ bw)
                                  λ i → bx b++ b++-assoc by bz bw (~ i))
-              
+
               where
 
     f : ∀ x → B x
@@ -225,7 +225,7 @@ module _ {A : Type ℓ} where
                                  (b++-assoc _ _ _)
                                  (λ i → b++-assoc bx by bz i b++ bw)
                                  λ i → bx b++ b++-assoc by bz bw (~ i))
-              
+
               where
 
     f : ∀ x → B x
@@ -236,7 +236,7 @@ module _ {A : Type ℓ} where
     f (++-unit-l x i) = b++ul (f x) i
     f (++-assoc xs ys zs i) = b++-assoc (f xs) (f ys) (f zs) i
     f (++-triangle xs ys i j) = b++-triangle (f xs) (f ys) i j
-    f (++-pentagon-diag xs ys zs ws i) = 
+    f (++-pentagon-diag xs ys zs ws i) =
        comp (λ j → B (++-pentagon-△ xs ys zs ws j i))
         (λ k →
           λ {(i = i0) → b++-assoc (f xs b++ f ys) (f zs) (f ws) (~ k)
@@ -268,7 +268,7 @@ module _ {A : Type ℓ} where
               (b++-assoc : ∀ {xs ys zs} → (bx : B xs) (by : B ys) (bz : B zs)
                              → PathP (λ i → B (++-assoc xs ys zs i))
                                 ((bx b++ by) b++ bz)
-                                 (bx b++ (by b++ bz)))              
+                                 (bx b++ (by b++ bz)))
               where
 
     f : ∀ x → B x
@@ -280,7 +280,7 @@ module _ {A : Type ℓ} where
          b++ur
          b++ul
          b++-assoc
-         (λ _ _ → isSet→SquareP (λ i j → isSetB (++-triangle _ _ i j)) _ _ _ _ )         
+         (λ _ _ → isSet→SquareP (λ i j → isSetB (++-triangle _ _ i j)) _ _ _ _ )
          (λ _ _ _ _ → isSet→SquareP (λ i j → isSetB (++-pentagon-□ _ _ _ _ i j)) _ _ _ _ )
 
   module ElimProp {ℓb} {B : List A → Type ℓb}
@@ -309,8 +309,8 @@ module _ {A : Type ℓ} where
               (b++ul : (b : B) → (b[] b++ b) ≡ b)
               (b++-assoc : (bx by bz : B) → ((bx b++ by) b++ bz) ≡ (bx b++ (by b++ bz)))
               (b++-pent-diag : (bx by bz bw : B) →
-                                (((bx b++ by) b++ bz) b++ bw) ≡ 
-                                 (bx b++ (by b++ (bz b++ bw))))              
+                                (((bx b++ by) b++ bz) b++ bw) ≡
+                                 (bx b++ (by b++ (bz b++ bw))))
               where
     f : List A → B
     f [] = b[]
@@ -319,7 +319,7 @@ module _ {A : Type ℓ} where
     f (++-unit-r x i) = b++ur (f x) i
     f (++-unit-l x i) = b++ul (f x) i
     f (++-assoc xs ys zs i) = b++-assoc (f xs) (f ys) (f zs) i
-    f (++-triangle xs ys i j) = 
+    f (++-triangle xs ys i j) =
       isSet→isSet' isSetB (b++-assoc (f xs) b[] (f ys)) (λ _ → f xs b++ f ys)
         (λ i → b++ur (f xs) i b++ f ys)
         (λ i → f xs b++ b++ul (f ys) i)
@@ -333,15 +333,15 @@ module _ {A : Type ℓ} where
          (b++-assoc (f xs) (f ys) (f zs b++ f ws)) i j
 
 
-    f (++-pentagon-□ xs ys zs ws i j) = 
-          isSet→isSet' isSetB         
+    f (++-pentagon-□ xs ys zs ws i j) =
+          isSet→isSet' isSetB
          (b++-pent-diag (f xs) (f ys) (f zs) (f ws))
          (b++-assoc _ _ _)
          (λ i → b++-assoc (f xs) (f ys) (f zs) i b++ f ws)
          (λ i → f xs b++ b++-assoc (f ys) (f zs) (f ws) (~ i))
          i j
 
-    f (trunc x y p q r s i₀ i₁ i₂) = 
+    f (trunc x y p q r s i₀ i₁ i₂) =
        (isOfHLevel→isOfHLevelDep (suc (suc (suc zero))) λ _ → isSet→isGroupoid isSetB)
             (f x) (f y)
             (cong f p) (cong f q)
@@ -364,15 +364,15 @@ module _ {A : Type ℓ} where
                            ; (j = i1) → [] ++ ++-assoc [] xs ys l
                            ; (k = i0) → ++-pentagon-□ [] [] xs ys (~ l) j
                            }) ((++-assoc [] ([] ++ xs) ys (j ∨ k)))
-           ; (i = i1) → ++-assoc [] xs ys (k ∨ j) 
+           ; (i = i1) → ++-assoc [] xs ys (k ∨ j)
            ; (j = i0) → hcomp (λ l → λ { (i = i1) → ++-assoc [] xs ys k
                                        ; (k = i1) → [] ++ (++-unit-l xs i ++ ys)
                                        ; (k = i0) → ++-triangle [] xs i (~ l) ++ ys
                                        }) (++-assoc [] (++-unit-l xs i) ys k)
            ; (j = i1) → [] ++ ++-unit-l (xs ++ ys) i
             }) (hcomp (λ k →
-                   λ { (i = i0) → ++-pentagon-△ [] [] xs ys k j 
-                     ; (i = i1) → ++-assoc [] xs ys (~ k ∨ j) 
+                   λ { (i = i0) → ++-pentagon-△ [] [] xs ys k j
+                     ; (i = i1) → ++-assoc [] xs ys (~ k ∨ j)
                      ; (j = i0) → ++-assoc (++-unit-r [] i) xs ys (~ k)
                      ; (j = i1) → ++-triangle [] (xs ++ ys) i k
                       }) (++-unit-r [] i ++ xs ++ ys))
@@ -389,7 +389,7 @@ module _ {A : Type ℓ} where
                            ; (j = i0) → ++-assoc xs ys [] (~ l) ++ []
                            ; (k = i0) → ++-pentagon-□ xs ys [] [] (~ l) j
                            }) (++-assoc xs (ys ++ []) [] (j ∧ ~ k))
-           ; (i = i1) → ++-assoc xs ys [] (~ k ∧ j) 
+           ; (i = i1) → ++-assoc xs ys [] (~ k ∧ j)
            ; (j = i1) →  hcomp (λ l →
                            λ { (i = i1) → ++-assoc xs ys [] (~ k)
                              ; (k = i1) → (xs ++ ++-unit-r ys i) ++ []
@@ -397,19 +397,19 @@ module _ {A : Type ℓ} where
                              }) (++-assoc xs (++-unit-r ys i) [] (~ k))
            ; (j = i0) → ++-unit-r (xs ++ ys) i ++ []
             }) (hcomp (λ k →
-                   λ { (i = i0) → ++-pentagon-△ xs ys [] [] k j 
-                     ; (i = i1) → ++-assoc xs ys [] (k ∧ j) 
+                   λ { (i = i0) → ++-pentagon-△ xs ys [] [] k j
+                     ; (i = i1) → ++-assoc xs ys [] (k ∧ j)
                      ; (j = i1) → ++-assoc xs ys (++-unit-l [] i) (k)
                      ; (j = i0) → ++-triangle (xs ++ ys) [] i (~ k)
                       }) ((xs ++ ys) ++ ++-unit-l [] i))
 
 
-  ++-unit-lr[] : ++-unit-l {A = A} [] ≡ ++-unit-r [] 
+  ++-unit-lr[] : ++-unit-l {A = A} [] ≡ ++-unit-r []
   ++-unit-lr[] =
      compSqFacesCong ++-unit-r
       λ i j → hcomp (λ k →
-            λ { (i = i0) → ++-assoc-[]-l [] [] j (~ k) 
-              ; (i = i1) → ++-triangle [] [] j (~ k) 
+            λ { (i = i0) → ++-assoc-[]-l [] [] j (~ k)
+              ; (i = i1) → ++-triangle [] [] j (~ k)
               ; (j = i0) → ++-assoc [] [] [] (~ k)
               ; (j = i1) → [] ++ []
                })
@@ -417,7 +417,7 @@ module _ {A : Type ℓ} where
 
 
   length : List A → ℕ
-  length = RecSet.f isSetℕ 
+  length = RecSet.f isSetℕ
     zero
     (λ _ → suc zero)
     _+_
