@@ -7,6 +7,7 @@ open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.GroupoidLaws
 
 open import Cubical.Relation.Binary
 open import Cubical.Relation.Nullary
@@ -20,6 +21,8 @@ open import Cubical.Data.Sum as ⊎
 
 
 open import Cubical.HITs.SetQuotients as SQ renaming ([_] to [_]/)
+open import Cubical.HITs.GroupoidQuotients as GQ renaming ([_] to [_]//)
+
 
 open import Cubical.HITs.FiniteMultiset as FM
   renaming (_∷_ to _∷fm_ ; [] to []fm ; _++_ to _++fm_) hiding ([_])
@@ -291,7 +294,7 @@ IsoList/↔FMSet {A = A} = w
     fromFM : _
     fromFM = FM.Rec.f squash/
         []/ _∷/_
-        λ _ _ → elimProp (λ _ → squash/ _ _)
+        λ _ _ → SQ.elimProp (λ _ → squash/ _ _)
           λ _ → eq/ _ _ (swapHead ,
              λ { zero → refl ; one → refl ; (suc (suc k)) → refl})
 
@@ -301,7 +304,7 @@ IsoList/↔FMSet {A = A} = w
     Iso.rightInv w = 
       FM.ElimProp.f (trunc _ _) refl
         λ a {xs} →
-          ((elimProp {P = λ x → toFM (a ∷/ x) ≡ _ ∷fm toFM x}
+          ((SQ.elimProp {P = λ x → toFM (a ∷/ x) ≡ _ ∷fm toFM x}
                (λ _ → trunc _ _) (λ _ → refl) ∘ fromFM) xs ∙_) ∘ cong (_ ∷fm_)
 
     Iso.leftInv w = SQ.elimProp (λ x → squash/ _ _) (ind refl (cong (_ ∷/_)))
@@ -309,3 +312,174 @@ IsoList/↔FMSet {A = A} = w
 
 List/↔≃FreeComMonoid : List/↔ A ≃ FreeComMonoid A
 List/↔≃FreeComMonoid = isoToEquiv IsoList/↔FMSet ∙ₑ FMSet≃AssocList ∙ₑ AssocList≃FreeComMonoid
+
+List//↔ : (A : Type ℓ) → Type ℓ
+List//↔ A =  List A // isTrans↔
+
+_∷//_ : A → List//↔ A → List//↔ A
+_∷//_ {A = A} = (λ a → GQ.rec isTrans↔ squash// ([_]// ∘ (a ∷_))
+          (λ {x} {y} r → eq// ((sucPerm (fst r)) , w {x = x} {y} {r} a ))
+           λ r s →
+             comp// 
+                 ((sucPerm (fst r)) , w a )
+                 ((sucPerm (fst s)) , w a ) ▷
+                  cong eq//
+                    (ΣPathP
+                       ((equivEq (funExt (λ { zero → refl ; (suc _) → refl })))
+                         , funExt (λ { zero → sym compPathRefl ; (suc _) → refl }))))
+  where
+    w : {x y : List A} → {r : x ↔ y } → ∀ a _ → _
+    w _ zero = refl
+    w {r = r} _ (suc _) = snd r _
+
+
+-- funExt∙ : ∀ {ℓ'} {B C : Type ℓ'} {f g h : B → A}
+--             → (p : ∀ k → f k ≡ g k) → (q : ∀ k → g k ≡ h k)
+--             → funExt (λ k → p k ∙ q k ) ≡ funExt p ∙ funExt q
+-- funExt∙ p q = refl
+
+module FC2M where
+  open import Cubical.HITs.FiniteMultiset.Base2 as FM2
+       renaming (_∷_ to _∷fm2_ ; [] to []fm2 ; _++_ to _++fm2_) hiding ([_])
+
+  List→FMSet2 : List A → FMSet2 A
+  List→FMSet2 {A = A} = foldr {B = FMSet2 A} _∷fm2_ []fm2
+
+  h-swap2 : (l : List A) → ∀ k → List→FMSet2 l ≡ List→FMSet2 (permute l (PunchInOut≃ k))
+  h-swap2 (x ∷ l) zero = cong List→FMSet2 (sym (tabulate-lookup (x ∷ l)))
+  h-swap2 (x ∷ x₁ ∷ l) one i = comm x x₁ (List→FMSet2 (tabulate-lookup l (~ i))) i
+  h-swap2 (x ∷ x₁ ∷ l) (suc (suc k)) = cong (x ∷fm2_) (h-swap2 (x₁ ∷ l) (suc k)) ∙ comm _ _ _
+
+  ↔→FMSet≡2 : (a b : List A) → a ↔ b → List→FMSet2 a ≡ List→FMSet2 b
+  ↔→FMSet≡2 a b r =  h (length a) a b refl (sym (↔→length≡ {x = a} {y = b} r)) r
+   where
+    h : ∀ n → (a b : List A) → length a ≡ n → length b ≡ n →
+           a ↔ b → List→FMSet2 a ≡ List→FMSet2 b
+    h zero [] [] x x₁ x₂ = refl
+    h zero [] (x₃ ∷ b) x x₁ x₂ = ⊥.rec (ℕsnotz x₁)
+    h zero (x₃ ∷ a) _ x x₁ x₂ = ⊥.rec (ℕsnotz x)
+    h (suc n) [] b x x₁ x₂ = ⊥.rec (ℕznots x)
+    h (suc n) (x₃ ∷ a) [] x x₁ x₂ = ⊥.rec (ℕznots x₁)
+    h (suc n) (x ∷ xs) (y ∷ ys) pX pY ro@(e , p) =
+      let (e' , p') = Fin≃SucEquiv'' e
+          y' = lookup (y ∷ ys) (equivFun (PunchInOut≃ (equivFun e zero)) zero)
+          ys' = tabulate (length xs)
+                   (lookup (y ∷ ys) ∘ 
+                      (equivFun (sucPerm e' ∙ₑ PunchInOut≃ (equivFun e zero))) ∘ suc)
+
+      in cong List→FMSet2 (sym (tabulate-lookup (x ∷ xs))) ∙
+           ((cong (List→FMSet2 ∘ tabulate _) (funExt p))
+            ∙ ((cong (List→FMSet2 ∘ tabulate _ ∘ (lookup (y ∷ ys) ∘_) ∘ equivFun) p')
+           ∙∙
+           cong (y' ∷fm2_)
+           (h n ys' (permute ys' (invEquiv e' ∙ₑ ≡→Fin≃ (sym (length-tabulate _ _))))
+             (length-tabulate _ _ ∙ injSuc pX) (length-tabulate (length ys) _ ∙ sym (isInjectiveFin≃ e')
+                ∙ injSuc pX)
+             (↔permute ys' ((invEquiv e' ∙ₑ ≡→Fin≃ (sym (length-tabulate _ _)))))
+             ∙ cong (List→FMSet2 ∘ tabulate (length ys))
+               (cong (_∘ invEq e') (funExt (lookup-tabulateT _ _)) ∙
+                cong (((
+                   lookup (y ∷ ys) ∘ 
+                    (equivFun (PunchInOut≃ (equivFun e zero))) ∘  suc) ∘_) ∘ fst) ((invEquiv-is-linv e'))))
+            ∙∙
+             sym (h-swap2 (y ∷ ys) (equivFun e zero))))
+
+  ↔→FMSet≡2Trans : (a b c : List A) → (p : a ↔ b) → (q : b ↔ c)
+                    → ↔→FMSet≡2 a b p ∙ ↔→FMSet≡2 b c q ≡
+                      ↔→FMSet≡2 a c (isTrans↔ a b c p q)
+  ↔→FMSet≡2Trans = {!!}
+  -- ↔→FMSet≡2Trans [] [] [] p q = sym (doubleCompPath-filler refl _ _)
+  -- ↔→FMSet≡2Trans [] [] (x ∷ c) p q = {!!}
+  -- ↔→FMSet≡2Trans [] (x ∷ b) [] p q = {!!}
+  -- ↔→FMSet≡2Trans [] (x ∷ b) (x₁ ∷ c) p q = {!!}
+  -- ↔→FMSet≡2Trans (x ∷ a) [] [] p q = {!!}
+  -- ↔→FMSet≡2Trans (x ∷ a) [] (x₁ ∷ c) p q = {!!}
+  -- ↔→FMSet≡2Trans (x ∷ a) (x₁ ∷ b) [] p q = {!!}
+  -- ↔→FMSet≡2Trans (x ∷ xs) (y ∷ ys) (z ∷ zs) (e , p) (f , q) =
+  --   sym (assoc _ _ _) ∙
+  --      (cong ((cong List→FMSet2 (sym (tabulate-lookup (x ∷ xs)))) ∙_)
+  --        (sym (assoc _ _ _)
+  --           ∙  cong ((cong (List→FMSet2 ∘ tabulate _) (funExt p)) ∙_)
+  --          {!!}
+  --          ∙ assoc _ _ {!!}
+  --         ∙ cong₂ _∙_ (sym (cong-∙ (List→FMSet2 ∘ tabulate _) (funExt p)
+  --                           (cong (_∘ (equivFun e)) (funExt q))))
+  --                         {!!}))
+
+
+
+  IsoList//↔FMSet2 : Iso (List//↔ A) (FMSet2 A)
+  IsoList//↔FMSet2 {A = A} = w
+    where
+
+      toFM : _
+      toFM = GQ.rec isTrans↔ trunc List→FMSet2
+        (λ {a} {b} → ↔→FMSet≡2 a b)
+         λ {a} {b} {c} _ _ →
+           compPath-filler _ _ ▷ ↔→FMSet≡2Trans a b c _ _     
+
+      fromFM : _
+      fromFM = FM2.Rec.f
+         squash// [ [] ]// _∷//_
+         (λ x y → GQ.elimSet _ (λ _ → squash// _ _)
+             (λ _ → eq// (headSwap↔ _ _ _)) (λ {a} {b} r i j → h x y {a} {b} r j i) )
+         (λ x y → GQ.elimProp _ (λ _ → squash// _ _ _ _)
+                {!!})
+         {!!}
+         {!!}
+         {!!}
+
+         where
+
+           h'' : ∀ x y → {a b : List A} (r : a ↔ b) →
+                      (λ i → (y ∷// (x ∷// eq// {a = a} {b} r i)))
+                    ≡ eq// {a = y ∷ x ∷ a} {y ∷ x ∷ b} (y ∷↔ (x ∷↔ r))
+           h'' x y r = cong eq// (ΣPathP (refl ,
+                funExt λ { zero → refl ; one → refl ; (suc (suc k)) → refl }))
+
+
+           -- h' : ∀ x y → {a b : List A} (r : a ↔ b) →
+           --         eq// {a = x ∷ y ∷ a} {y ∷ x ∷ a} (headSwap↔ x y a) ∙
+           --            (λ i → (y ∷// (x ∷// eq// {a = a} {b} r i)))
+           --          ≡ {!!}
+           -- h' = {!!}
+
+           h : ∀ x y → {a b : List A} (r : a ↔ b) →
+                   Square
+                   (λ i → (x ∷// (y ∷// eq// {a = a} {b} r i)))
+                   (λ i → (y ∷// (x ∷// eq// {a = a} {b} r i)))
+                   (eq// {a = x ∷ y ∷ a} {y ∷ x ∷ a} (headSwap↔ x y a))
+                   (eq// {a = x ∷ y ∷ b} {y ∷ x ∷ b} (headSwap↔ x y b))
+           h x y r =
+            (h'' y x r) ◁
+            {!!}
+            ▷ sym (h'' x y r)
+
+       -- FM.Rec.f squash/
+       --    []/ _∷/_
+       --    λ _ _ → SQ.elimProp (λ _ → squash/ _ _)
+       --      λ _ → eq/ _ _ (swapHead ,
+       --         λ { zero → refl ; one → refl ; (suc (suc k)) → refl})
+
+      w : Iso (List//↔ A) (FMSet2 A)
+      Iso.fun w = toFM
+      Iso.inv w = fromFM
+      Iso.rightInv w =
+        FM2.ElimSet.f
+          refl
+          (λ x {xs} p → {!!} ∙ cong (x ∷fm2_) p)
+          {!!}
+          {!!}
+          λ _ →  trunc _ _
+        -- FM.ElimProp.f (trunc _ _) refl
+        --   λ a {xs} →
+        --     ((SQ.elimProp {P = λ x → toFM (a ∷/ x) ≡ _ ∷fm toFM x}
+        --          (λ _ → trunc _ _) (λ _ → refl) ∘ fromFM) xs ∙_) ∘ cong (_ ∷fm_)
+
+      Iso.leftInv w =
+        GQ.elimSet
+          _
+          (λ _ → squash// _ _)
+          (ind refl (cong (_ ∷//_)))
+          {!!} 
+       -- SQ.elimProp (λ x → squash/ _ _) (ind refl (cong (_ ∷/_)))
