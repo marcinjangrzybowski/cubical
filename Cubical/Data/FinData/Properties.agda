@@ -24,6 +24,8 @@ open import Cubical.Data.Nat.Order
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Maybe
 
+open import Cubical.Functions.FunExtEquiv
+
 open import Cubical.Relation.Nullary
 
 open import Cubical.Structures.Pointed
@@ -41,8 +43,16 @@ toℕ<n {n = ℕsuc n} (suc i) = toℕ<n i .fst , +-suc _ _ ∙ cong ℕsuc (to�
 znots : ∀{k} {m : Fin k} → ¬ (zero ≡ (suc m))
 znots {k} {m} x = subst (Fin.rec (Fin k) ⊥) x m
 
+znotsP : ∀ {k0 k1 : ℕ} {k : k0 ≡ k1} {m1 : Fin k1}
+  → ¬ PathP (λ i → Fin (ℕsuc (k i))) zero (suc m1)
+znotsP p = ℕznots (congP (λ i → toℕ) p)
+
 snotz : ∀{k} {m : Fin k} → ¬ ((suc m) ≡ zero)
 snotz {k} {m} x = subst (Fin.rec ⊥ (Fin k)) x m
+
+snotzP : ∀ {k0 k1 : ℕ} {k : k0 ≡ k1} {m0 : Fin k0}
+  → ¬ PathP (λ i → Fin (ℕsuc (k i))) (suc m0) zero
+snotzP p = ℕsnotz (congP (λ i → toℕ) p)
 
 -- alternative from
 fromℕ' : (n : ℕ) → (k : ℕ) → (k < n) → Fin n
@@ -79,9 +89,25 @@ injSucFin : ∀ {n} {p q : Fin n} → suc p ≡ suc q → p ≡ q
 injSucFin {ℕsuc ℕzero} {zero} {zero} pf = refl
 injSucFin {ℕsuc (ℕsuc n)} pf = cong predFin pf
 
-suc-predFin : (k : Fin (ℕsuc (ℕsuc n))) → ¬ k ≡ zero → k ≡ suc (predFin k)
-suc-predFin zero x = ⊥.rec (x refl)
-suc-predFin (suc k) x = refl
+injSucFinP : ∀ {n0 n1 : ℕ} {pn : n0 ≡ n1} {p0 : Fin n0} {p1 : Fin n1}
+  → PathP (λ i → Fin (ℕsuc (pn i))) (suc p0) (suc p1)
+  → PathP (λ i → Fin (pn i)) p0 p1
+injSucFinP {one} {one} {pn} {zero} {zero} sucp =
+  transport (λ j → PathP (λ i → Fin (eqn j i)) zero zero) refl
+  where eqn : refl ≡ pn
+        eqn = isSetℕ one one refl pn
+injSucFinP {one} {ℕsuc (ℕsuc n1)} {pn} {p0} {p1} sucp = ⊥.rec (ℕznots (injSuc pn))
+injSucFinP {ℕsuc (ℕsuc n0)} {one} {pn} {p0} {p1} sucp = ⊥.rec (ℕsnotz (injSuc pn))
+injSucFinP {ℕsuc (ℕsuc n0)} {ℕsuc (ℕsuc n1)} {pn} {p0} {p1} sucp =
+  transport (λ j → PathP (λ i → Fin (eqn j i)) p0 p1) (
+      congP (λ i → predFin) (
+        transport (λ j → PathP (λ i → Fin (ℕsuc (eqn (~ j) i))) (suc p0) (suc p1)) sucp
+      )
+    )
+  where pn' : 2 + n0 ≡ 2 + n1
+        pn' = cong ℕsuc (injSuc pn)
+        eqn : pn' ≡ pn
+        eqn = isSetℕ (2 + n0) (2 + n1) pn' pn
 
 discreteFin : ∀{k} → Discrete (Fin k)
 discreteFin zero zero = yes refl
@@ -341,130 +367,146 @@ module FinProdChar where
     helper (inl _) (inr q) = inr (suc (q .fst) , q .snd .fst , q .snd .snd)
     helper (inr p) _ = inr (zero , p)
 
-sucPerm : Fin n ≃ Fin m → Fin (ℕsuc n) ≃ Fin (ℕsuc m)  
-sucPerm {n} {m} e = invEquiv (FinSumChar.Equiv 1 n) ∙ₑ ⊎-equiv (idEquiv _) e ∙ₑ FinSumChar.Equiv 1 m 
+suc-predFin : (k : Fin (ℕsuc (ℕsuc n))) → ¬ k ≡ zero → k ≡ suc (predFin k)
+suc-predFin zero x = ⊥.rec (x refl)
+suc-predFin (suc k) x = refl
 
--- suc' : ∀ {n} → Fin n → Fin (ℕsuc n)
--- suc' {n} x = fromℕ' _ (toℕ x) (suc-≤-suc (<-weaken (toℕ<n x)))
- 
+sucPerm : Fin n ≃ Fin m → Fin (ℕsuc n) ≃ Fin (ℕsuc m)
+sucPerm {n} {m} e =
+     invEquiv (FinSumChar.Equiv 1 n)
+  ∙ₑ ⊎-equiv (idEquiv _) e
+  ∙ₑ FinSumChar.Equiv 1 m
 
--- sucPerm' : Fin n ≃ Fin m → Fin (ℕsuc n) ≃ Fin (ℕsuc m)  
--- sucPerm' {n} {m} e = {!!}
+isInjectiveSucPerm : (e f : Fin n ≃ Fin m) → sucPerm e ≡ sucPerm f → e ≡ f
+isInjectiveSucPerm {ℕzero} {ℕzero} _ _ _ = equivEq (funExt (⊥.rec ∘ ¬Fin0))
+isInjectiveSucPerm {ℕzero} {ℕsuc m} e _ _ = ⊥.rec (¬Fin0 (invEq e zero))
+isInjectiveSucPerm {ℕsuc _} {ℕzero} e _ _ = ⊥.rec (¬Fin0 (equivFun e zero))
+isInjectiveSucPerm {ℕsuc _} {ℕsuc _} _ _ p =
+  equivEq (funExt (cong predFin ∘ funExt⁻ (cong fst p) ∘ suc))
 
+swap0and1 : Fin (ℕsuc (ℕsuc n)) → Fin (ℕsuc (ℕsuc n))
+swap0and1 zero = one
+swap0and1 one = zero
+swap0and1 (suc (suc x)) = suc (suc x)
 
-swapHead : ∀ {n} → Fin (ℕsuc (ℕsuc n)) ≃ Fin (ℕsuc (ℕsuc n))  
-swapHead = isoToEquiv w
+swap0and1≃ : Fin (ℕsuc (ℕsuc n)) ≃ Fin (ℕsuc (ℕsuc n))
+swap0and1≃ = isoToEquiv w
   where
-    f : _
-    f zero = (suc zero)
-    f (suc zero) = zero
-    f (suc (suc x)) = (suc (suc x))
-
     f∘f : _
     f∘f zero = refl
-    f∘f (suc zero) = refl
+    f∘f one = refl
     f∘f (suc (suc b)) = refl
 
     w : Iso _ _
-    Iso.fun w = f
-    Iso.inv w = f
+    Iso.fun w = swap0and1
+    Iso.inv w = swap0and1
     Iso.rightInv w = f∘f
     Iso.leftInv w = f∘f
 
-
-PunchInOut≃ : Fin n →  Fin n ≃ Fin n 
-PunchInOut≃ zero = idEquiv _
-PunchInOut≃ (suc zero) = swapHead
-PunchInOut≃ (suc (suc x)) = swapHead ∙ₑ sucPerm (PunchInOut≃ (suc x))
-
-PunchInOut≃-k : (k : Fin (ℕsuc n)) → equivFun (PunchInOut≃ k) zero ≡ k
-PunchInOut≃-k zero = refl
-PunchInOut≃-k (suc zero) = refl
-PunchInOut≃-k (suc (suc k)) = cong suc (PunchInOut≃-k (suc k))
+swap0and1≃²=idEquiv : swap0and1≃ ∙ₑ swap0and1≃ ≡ idEquiv (Fin (ℕsuc (ℕsuc n)))
+swap0and1≃²=idEquiv =
+  equivEq
+    λ { _ zero → zero ; _ one → one ; _ (suc (suc k)) → suc (suc k) }
 
 
-PunchInOut≃-k'  : (k : Fin (ℕsuc n)) → invEq (PunchInOut≃ k) k ≡ zero
-PunchInOut≃-k' k = sym (invEq (equivAdjointEquiv (PunchInOut≃ k)) (PunchInOut≃-k k)) 
+-- x = 0       ⇒  k
+-- 0 < x =< k  ⇒  x - 1
+-- k < x       ⇒  x
+PunchHeadInOut≃ : Fin n →  Fin n ≃ Fin n
+PunchHeadInOut≃ zero = idEquiv _
+PunchHeadInOut≃ one = swap0and1≃
+PunchHeadInOut≃ (suc (suc x)) = swap0and1≃ ∙ₑ sucPerm (PunchHeadInOut≃ (suc x))
 
+PunchHeadInOut≃-zero : (k : Fin (ℕsuc n)) → equivFun (PunchHeadInOut≃ k) zero ≡ k
+PunchHeadInOut≃-zero zero = refl
+PunchHeadInOut≃-zero one = refl
+PunchHeadInOut≃-zero (suc (suc k)) = cong suc (PunchHeadInOut≃-zero (suc k))
+
+PunchHeadInOut≃-k  : (k : Fin (ℕsuc n)) → invEq (PunchHeadInOut≃ k) k ≡ zero
+PunchHeadInOut≃-k k = sym (invEq (equivAdjointEquiv (PunchHeadInOut≃ k)) (PunchHeadInOut≃-zero k))
 
 ¬Fin1≃Fin[suc[sucN]] : ¬ Fin 1 ≃ Fin (ℕsuc (ℕsuc n))
 ¬Fin1≃Fin[suc[sucN]] e =
-  znots (
-    invEq (congEquiv (invEquiv e)) ((isContr→isProp isContrFin1) (invEq e zero) (invEq e (suc zero))))
+  znots (invEq (congEquiv (invEquiv e))
+    ((isContr→isProp isContrFin1)
+       (invEq e zero) (invEq e (suc zero))))
 
-Fin≃SucEquiv''***1 : (e : Fin (ℕsuc n) ≃ Fin (ℕsuc m))
-                       → zero ≡ equivFun e zero
-                       → Σ _ λ e' → sucPerm e' ≡ e
-Fin≃SucEquiv''***1 {ℕzero} {ℕzero} _ p = (idEquiv _) , equivEq λ { i zero → p i }
-Fin≃SucEquiv''***1 {ℕzero} {ℕsuc m} e =
-  ⊥.rec (¬Fin1≃Fin[suc[sucN]] e)
-Fin≃SucEquiv''***1 {ℕsuc n} {ℕzero} e = ⊥.rec (¬Fin1≃Fin[suc[sucN]] (invEquiv e))
-fst (Fin≃SucEquiv''***1 {ℕsuc n} {ℕsuc m} e p) = isoToEquiv w
-  where
-    w : Iso (Fin (ℕsuc n)) (Fin (ℕsuc m))
-    Iso.fun w = predFin ∘ fst e ∘ suc
-    Iso.inv w = predFin ∘ invEq e ∘ suc
-    Iso.rightInv w b =
-       cong predFin (cong (equivFun e)
-       (sym (suc-predFin (invEq e (suc b))
-        λ x → znots (p ∙ invEq≡→equivFun≡ e x))) ∙ secEq e (suc b))
-    Iso.leftInv w a =
-         cong (predFin ∘ invEq e)
-          (sym (suc-predFin _
-            λ x → snotz (invEq (congEquiv e) (x ∙ p))))
-         ∙ cong predFin (retEq e (suc a))
-
-snd (Fin≃SucEquiv''***1 {ℕsuc n} {ℕsuc m} e p) =
-   equivEq λ { i zero → p i
-             ; i (suc k) →  suc-predFin (fst e (suc k))
-                   (λ  x → snotz (invEq (congEquiv e) (x ∙ p))) (~ i)
-              }
-
-Fin≃SucEquiv'' : (e : Fin (ℕsuc n) ≃ Fin (ℕsuc m))
+unwindPermHead : (e : Fin (ℕsuc n) ≃ Fin (ℕsuc m))
                      → Σ (Fin n ≃ Fin m) λ e'
-                       → e ≡ sucPerm e' ∙ₑ PunchInOut≃ (equivFun e zero)   
-Fin≃SucEquiv'' {ℕzero} {ℕzero} e = idEquiv _ , equivEq λ { i zero →  (PunchInOut≃-k (equivFun e zero)) (~ i)}
-Fin≃SucEquiv'' {ℕzero} {ℕsuc m} e = ⊥.rec (¬Fin1≃Fin[suc[sucN]] e)
-Fin≃SucEquiv'' {ℕsuc n} {ℕzero} e = ⊥.rec (¬Fin1≃Fin[suc[sucN]] (invEquiv e))
-Fin≃SucEquiv'' {ℕsuc n} {ℕsuc m} e = fst w , equivEq (funExt ww)
+                       → e ≡ sucPerm e' ∙ₑ PunchHeadInOut≃ (equivFun e zero)
+unwindPermHead {ℕzero} {ℕzero} e =
+  idEquiv _ , equivEq λ { i zero → (PunchHeadInOut≃-zero (equivFun e zero)) (~ i)}
+unwindPermHead {ℕzero} {ℕsuc _} = ⊥.rec ∘ ¬Fin1≃Fin[suc[sucN]]
+unwindPermHead {ℕsuc _} {ℕzero} = ⊥.rec ∘ ¬Fin1≃Fin[suc[sucN]] ∘ invEquiv
+unwindPermHead {ℕsuc _} {ℕsuc _} e = isoToEquiv w , equivEq (funExt ww)
 
   where
-    w : _
-    w = Fin≃SucEquiv''***1 (e ∙ₑ invEquiv (PunchInOut≃ (equivFun e zero)))
-            (sym (PunchInOut≃-k' (equivFun e zero)))
+    e' = e ∙ₑ invEquiv (PunchHeadInOut≃ (equivFun e zero))
+    p = sym (PunchHeadInOut≃-k (equivFun e zero))
+
+    w : Iso _ _
+    Iso.fun w = predFin ∘ fst e' ∘ suc
+    Iso.inv w = predFin ∘ invEq e' ∘ suc
+    Iso.rightInv w b =
+       cong predFin (cong (equivFun e')
+       (sym (suc-predFin (invEq e' (suc b))
+        λ x → znots (p ∙ invEq≡→equivFun≡ e' x))) ∙ secEq e' (suc b))
+    Iso.leftInv w a =
+       cong (predFin ∘ invEq e')
+        (sym (suc-predFin _ λ x → snotz (invEq (congEquiv e') (x ∙ p))))
+       ∙ cong predFin (retEq e' (suc a))
+
     ww : _
-    ww zero = sym (PunchInOut≃-k (equivFun e zero))
-    ww (suc x) = sym (secEq (PunchInOut≃ (e .fst zero)) (e .fst (suc x)))
-         ∙ cong (equivFun (PunchInOut≃ (e .fst zero)))
+    ww zero = sym (PunchHeadInOut≃-zero (equivFun e zero))
+    ww (suc x) = sym (secEq (PunchHeadInOut≃ (equivFun e zero)) _)
+         ∙ cong (equivFun (PunchHeadInOut≃ (equivFun e zero)))
             (suc-predFin _ λ x₁ →
-              znots 
-               (invEq (congEquiv (e ∙ₑ invEquiv (PunchInOut≃ (fst e zero))))
-                (PunchInOut≃-k' (fst e zero) ∙ (sym x₁))) )
+              znots
+               (invEq (congEquiv (e ∙ₑ invEquiv (PunchHeadInOut≃ (equivFun e zero))))
+                (PunchHeadInOut≃-k (equivFun e zero) ∙ (sym x₁))) )
+
+unwindPermHeadIso : Iso (Fin (ℕsuc n) ≃ Fin (ℕsuc m))
+                        (Fin (ℕsuc m) × (Fin n ≃ Fin m) )
+Iso.fun unwindPermHeadIso e = equivFun e zero , fst (unwindPermHead e)
+Iso.inv unwindPermHeadIso (k , e') = sucPerm e' ∙ₑ PunchHeadInOut≃ k
+Iso.rightInv unwindPermHeadIso (k , e') =
+  ΣPathP (PunchHeadInOut≃-zero _ ,
+    isInjectiveSucPerm _ _
+     ( ∙ₑrightCancel _ _ (PunchHeadInOut≃ k)
+         (cong (sucPerm (fst (unwindPermHead (sucPerm e' ∙ₑ PunchHeadInOut≃ k))) ∙ₑ_)
+            (cong PunchHeadInOut≃ (sym (PunchHeadInOut≃-zero k)))
+          ∙ sym (snd (unwindPermHead (sucPerm e' ∙ₑ PunchHeadInOut≃ k))))  ))
+Iso.leftInv unwindPermHeadIso e = sym (snd (unwindPermHead e))
+
 
 isInjectiveFin≃ : Fin n ≃ Fin m → n ≡ m
 isInjectiveFin≃ {ℕzero} {ℕzero} x = refl
-isInjectiveFin≃ {ℕzero} {ℕsuc m} x = ⊥.rec (¬Fin0 (invEq x zero))
-isInjectiveFin≃ {ℕsuc n} {ℕzero} x = ⊥.rec (¬Fin0 (equivFun x zero))
-isInjectiveFin≃ {ℕsuc n} {ℕsuc m} x = cong ℕsuc (isInjectiveFin≃ (fst (Fin≃SucEquiv'' x)))
+isInjectiveFin≃ {ℕzero} {ℕsuc _} x = ⊥.rec (¬Fin0 (invEq x zero))
+isInjectiveFin≃ {ℕsuc _} {ℕzero} x = ⊥.rec (¬Fin0 (equivFun x zero))
+isInjectiveFin≃ {ℕsuc _} {ℕsuc _} x = cong ℕsuc (isInjectiveFin≃ (fst (unwindPermHead x)))
 
 ≡→Fin≃ : n ≡ m → Fin n ≃ Fin m
-≡→Fin≃ = pathToEquiv ∘ cong Fin
+≡→Fin≃ = isoToEquiv ∘ pathToIso ∘ cong Fin
 
--- ≡→Fin≃' : n ≡ m → Fin n ≃ Fin m
--- ≡→Fin≃' {ℕzero} {ℕzero} = const (idEquiv (Fin ℕzero))
--- ≡→Fin≃' {ℕzero} {ℕsuc m} = ⊥.rec ∘ ℕznots
--- ≡→Fin≃' {ℕsuc n} {ℕzero} = ⊥.rec ∘ ℕsnotz
--- ≡→Fin≃' {ℕsuc n} {ℕsuc m} = sucPerm ∘ ≡→Fin≃' ∘ injSuc
+PunchHeadInOut≃∙ₑ≡→Fin≃ : (p : n ≡ m) → ∀ k →
+   PathP (λ i → Fin (p i) ≃ Fin m)
+      (invEquiv (PunchHeadInOut≃ k) ∙ₑ ≡→Fin≃ p)
+      (invEquiv (PunchHeadInOut≃ (subst Fin p k)))
+PunchHeadInOut≃∙ₑ≡→Fin≃ =
+  J (λ m p → ∀ k →  PathP (λ i → Fin (p i) ≃ Fin m)
+      (invEquiv (PunchHeadInOut≃ k) ∙ₑ ≡→Fin≃ p)
+      (invEquiv (PunchHeadInOut≃ (subst Fin p k))))
+       λ k → equivEq (funExt λ _ → transportRefl _)
+         ∙ cong (invEquiv ∘ PunchHeadInOut≃) (sym (transportRefl k))
 
-transportFinFix : (p' : n ≡ m) → (p : (ℕsuc n) ≡ (ℕsuc m)) → ∀ k
+transportFin-suc : (p' : n ≡ m) → (p : (ℕsuc n) ≡ (ℕsuc m)) → ∀ k
                   → (subst Fin p (suc k)) ≡ suc (subst Fin p' k)
-transportFinFix {n} {m} = J (λ m p' → (p : (ℕsuc n) ≡ (ℕsuc m)) → ∀ k
-                  → (subst Fin p (suc k)) ≡ suc (subst Fin p' k))
-                   λ p k → isSet-subst {B = Fin} isSetℕ _ _ ∙ cong suc (sym (transportRefl k)) 
+transportFin-suc =
+  J (λ _ p' → ∀ p k → (subst Fin p (suc k)) ≡ suc (subst Fin p' k))
+     λ _ k → isSet-subst {B = Fin} isSetℕ _ _ ∙ cong suc (sym (transportRefl k))
 
-transportFinFix-zero : (p : (ℕsuc n) ≡ (ℕsuc m)) 
+transportFin-zero : (p : (ℕsuc n) ≡ (ℕsuc m))
                   → zero ≡ subst Fin p zero
-transportFinFix-zero {n} {m} =
-  J (λ {ℕzero _ → Unit ; (ℕsuc k) p → zero ≡ subst Fin p zero })
+transportFin-zero =
+  J (λ {ℕzero _ → Unit ; (ℕsuc _) p → zero ≡ subst Fin p zero })
     (sym (transportRefl zero))
-  
