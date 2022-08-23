@@ -85,6 +85,10 @@ assoc : (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) →
   p ∙ q ∙ r ≡ (p ∙ q) ∙ r
 assoc p q r k = (compPath-filler p q k) ∙ compPath-filler' q r (~ k)
 
+∙²≡id→≡refl : {l : x ≡ x} → l ∙ l ≡ l → l ≡ refl
+∙²≡id→≡refl {l = l} p =
+   (rUnit l ∙ cong (l ∙_) (sym (rCancel l))) ∙ assoc _ _ _ ∙ cong (_∙ (sym l)) p ∙ rCancel l 
+
 
 -- heterogeneous groupoid laws
 

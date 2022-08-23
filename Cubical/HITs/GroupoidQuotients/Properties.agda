@@ -103,4 +103,12 @@ rec : (Rt : BinaryRelation.isTrans R)
           → Square (feq r) (feq (Rt a b c r s)) refl (feq s))
     → (x : A // Rt)
     → B
-rec Rt Bgpd = elim Rt (λ _ → Bgpd)
+rec Rt Bgpd f feq fcomp [ a ] = f a
+rec Rt Bgpd f feq fcomp (eq// r i) = feq r i
+rec Rt Bgpd f feq fcomp (comp// r s j i) =  (fcomp r s j i)
+rec Rt Bgpd f feq fcomp (squash// x y p q r s i i₁ i₂) =
+  Bgpd (rec Rt Bgpd f feq fcomp x) (rec Rt Bgpd f feq fcomp y)
+     (cong (rec Rt Bgpd f feq fcomp) p) (cong (rec Rt Bgpd f feq fcomp) q)
+      (λ j j' → rec Rt Bgpd f feq fcomp (r j j'))
+      (λ j j' → rec Rt Bgpd f feq fcomp (s j j'))
+      i i₁ i₂ 
