@@ -1,4 +1,4 @@
-{-# OPTIONS --safe #-}
+{-# OPTIONS  #-}
 module Cubical.Data.List.FinData where
 
 open import Cubical.Foundations.Prelude
@@ -304,6 +304,21 @@ PunchHeadInOut/≡⁻ x (x₁ ∷ l) (suc (suc k)) =
           ) ⟩ _ ∎
 
 
+factor↔ : (a b : List A) → (r : a ↔ b) →
+            r ≡ ≡→↔ (sym (tabulate-lookup a) ∙ cong (tabulate (length a)) (funExt (l≡ r)))
+                   ∙↔ sym↔ (↔permute b (F≃ r)) 
+factor↔ a b r =
+  cong₂ prm (equivEq {!!}) {!!}
+
+
+comm-≡-↔ : (a b : List A) → ∀ n →
+            (p : a ≡ b) →
+            (r : (Fin n) ≃ (Fin (length b))) → 
+              ≡→↔ p ∙↔ ↔permute b r ≡
+              ↔permute a ( r ∙ₑ ≡→Fin≃ (cong length (sym p))) ∙↔ ≡→↔
+                ({!!} )
+comm-≡-↔ = {!!}
+
 IsoList/↔FMSet : Iso (List/↔ A) (FMSet A)
 IsoList/↔FMSet = w
   where
@@ -475,21 +490,22 @@ module FC2M where
      in
         _ ≡⟨ cong (x ∷fm2_) (↔→FMSet2≡ xs xs' (↔permute xs (invEquiv e'))) ⟩
         _ ≡⟨ PunchHeadInOut//≡⁻ x xs' (subst Fin pL k') ⟩
-        _ ≡⟨ cong List→FMSet2
+        _ ≡⟨⟩ cong List→FMSet2
             (_ ≡⟨ sym (congP (λ _ → permute (x ∷ xs'))
                       (PunchHeadInOut≃∙ₑ≡→Fin≃ pL k')) ⟩
              _ ≡⟨ tabulate∘ (lookup (x ∷ xs) ∘ invEq (sucPerm e'))
                              (invEq (PunchHeadInOut≃ k'))  ⟩
              _ ≡⟨ cong (permute (x ∷ xs) ∘ invEquiv) (sym p') ⟩
              _ ≡⟨ cong (tabulate _) (sym (funExt p⁻)) ⟩
-             _ ≡⟨ tabulate-lookup _ ⟩ (y ∷ ys) ∎
-            ) ⟩ _ ∎
+             _ ≡⟨⟩ tabulate-lookup (y ∷ ys))
 
 
   -- ↔→FMSet≡2TransH : (x y z : A) (xs ys zs : List A) → (p : x ∷ xs ↔ y ∷ ys) → (q : y ∷ ys ↔ z ∷ zs)
   --                   → {!!} ≡ {!!} 
   -- ↔→FMSet≡2TransH = {!!}
-  
+
+
+  {-# TERMINATING  #-}
   ↔→FMSet≡2Trans : (a b c : List A) → (p : a ↔ b) → (q : b ↔ c)
                     → ↔→FMSet2≡ a b p ∙ ↔→FMSet2≡ b c q ≡
                       ↔→FMSet2≡ a c (isTrans↔ a b c p q)
@@ -498,18 +514,108 @@ module FC2M where
   ↔→FMSet≡2Trans [] (_ ∷ _) _ p _ = ⊥.rec (¬nil↔cons p)
   ↔→FMSet≡2Trans (_ ∷ _) [] _ p _ = ⊥.rec (¬cons↔nil p)
   ↔→FMSet≡2Trans (_ ∷ _) (_ ∷ _) [] _ q = ⊥.rec (¬cons↔nil q)
-  ↔→FMSet≡2Trans (x ∷ xs) (y ∷ ys) (z ∷ zs) (prm f q) (prm g r) = 
-    let (prm e p) = isTrans↔ (x ∷ xs) (y ∷ ys) (z ∷ zs) (prm f q) (prm g r)
+  ↔→FMSet≡2Trans (x ∷ xs) (y ∷ ys) (z ∷ zs) r*@(prm f q) r**@(prm g w) = 
+    let r@(prm e p) = isTrans↔ (x ∷ xs) (y ∷ ys) (z ∷ zs) (prm f q) (prm g w)
         (e' , p') = unwindPermHead e
         k' = equivFun e zero
         xs' = permute xs (invEquiv e')
+        (prm _ p⁻) = isSym↔ _ _ r
+        pL = sym (length-tabulate _ (lookup (x ∷ xs) ∘ invEq (sucPerm e')))
+
+        LHS0 = PunchHeadInOut//≡⁻ x xs' (subst Fin pL k')
+        LHS1 =  (_ ≡⟨ sym (congP (λ _ → permute (x ∷ xs'))
+                      (PunchHeadInOut≃∙ₑ≡→Fin≃ pL k')) ⟩
+             _ ≡⟨ tabulate∘ (lookup (x ∷ xs) ∘ invEq (sucPerm e'))
+                             (invEq (PunchHeadInOut≃ k'))  ⟩
+             _ ≡⟨ cong (permute (x ∷ xs) ∘ invEquiv) (sym p') ⟩
+             _ ≡⟨ cong (tabulate _) (sym (funExt p⁻)) ⟩
+             _ ≡⟨⟩ tabulate-lookup (z ∷ zs))
+                  
+
+        LHS = LHS0 ∙ cong List→FMSet2 LHS1
+
         (e'* , p'*) = unwindPermHead f
         k'* = equivFun f zero
         xs'* = permute xs (invEquiv e'*)
+        (prm _ p⁻*) = isSym↔ _ _ r*
+        pL* = sym (length-tabulate _ (lookup (x ∷ xs) ∘ invEq (sucPerm e'*)))
+
+        LHS0* = PunchHeadInOut//≡⁻ x xs'* (subst Fin pL* k'*)
+        LHS1* =  (_ ≡⟨ sym (congP (λ _ → permute (x ∷ xs'*))
+                      (PunchHeadInOut≃∙ₑ≡→Fin≃ pL* k'*)) ⟩
+             _ ≡⟨ tabulate∘ (lookup (x ∷ xs) ∘ invEq (sucPerm e'*))
+                             (invEq (PunchHeadInOut≃ k'*))  ⟩
+             _ ≡⟨ cong (permute (x ∷ xs) ∘ invEquiv) (sym p'*) ⟩
+             _ ≡⟨ cong (tabulate _) (sym (funExt p⁻*)) ⟩
+             _ ≡⟨⟩ tabulate-lookup (y ∷ ys))
+        LHS* = LHS0* ∙ cong List→FMSet2 LHS1*
+
+
+
+        (e'** , p'**) = unwindPermHead g
+        k'** = equivFun g zero
+        xs'** = permute ys (invEquiv e'**)
+        (prm _ p⁻**) = isSym↔ _ _ r**
+        pL** = sym (length-tabulate _ (lookup (y ∷ ys) ∘ invEq (sucPerm e'**)))
+
+        LHS0** = PunchHeadInOut//≡⁻ y xs'** (subst Fin pL** k'**)
+        LHS1** =  (_ ≡⟨ sym (congP (λ _ → permute (y ∷ xs'**))
+                      (PunchHeadInOut≃∙ₑ≡→Fin≃ pL** k'**)) ⟩
+             _ ≡⟨ tabulate∘ (lookup (y ∷ ys) ∘ invEq (sucPerm e'**))
+                             (invEq (PunchHeadInOut≃ k'**))  ⟩
+             _ ≡⟨ cong (permute (y ∷ ys) ∘ invEquiv) (sym p'**) ⟩
+             _ ≡⟨ cong (tabulate _) (sym (funExt p⁻**)) ⟩
+             _ ≡⟨⟩ tabulate-lookup (z ∷ zs))
+        LHS** = LHS0** ∙ cong List→FMSet2 LHS1**
+
+
+
         pp = ↔→FMSet≡2Trans xs xs'* xs' (↔permute _ (invEquiv e'*))
                   (sym↔ (↔permute xs (invEquiv e'*)) ∙↔ ↔permute xs (invEquiv e'))
-        pp' = ↔→FMSet≡2Trans xs {!!} xs' {!!}
-                  {!!}
+ 
+
+        pp' : ↔→FMSet2≡ xs xs'
+                 (isTrans↔ xs xs'* xs' (↔permute _ (invEquiv e'*))
+                  (sym↔ (↔permute xs (invEquiv e'*)) ∙↔ ↔permute xs (invEquiv e')))
+               ≡
+              ↔→FMSet2≡ xs xs' (↔permute xs (invEquiv e'))
+        pp' = cong (↔→FMSet2≡ xs xs')
+               (cong₂ prm (equivEq {!!}) {!!})
+
+        MHS = cong (y ∷fm2_) (↔→FMSet2≡ ys xs'** (↔permute ys (invEquiv e'**)))
+
+        zzz : _ ≡ _
+        zzz = {!!}
+
+        vvv : _ ≡ _
+        vvv = cong (y ∷fm2_)  (↔→FMSet2≡ (ys) (permute ys ((invEquiv (fst (unwindPermHead (g))))))
+                (↔permute ys (invEquiv (fst (unwindPermHead g))))) ∙
+              ↔→FMSet2≡ ((y ∷ permute ys ((invEquiv (fst (unwindPermHead (g)))))))
+                         (x ∷ permute xs ((invEquiv (fst (unwindPermHead (f ∙ₑ g))))))
+                {!!}
+
+        LHS1= : (LHS1**) ≡
+                 zzz ∙ LHS1
+        LHS1= = {!!}
+
+        LHS0= : MHS ∙ LHS0**  ≡ vvv ∙ LHS0 ∙ cong List→FMSet2 (sym zzz) 
+        LHS0= = {!!}
+
+        LHS00 : LHS* ≡ cong (x ∷fm2_) (↔→FMSet2≡ xs'* xs' (sym↔ (↔permute xs (invEquiv e'*))
+                ∙↔ ↔permute xs (invEquiv e'))) ∙ sym vvv
+        LHS00 = {!!}
+
+
+        -- qqH =  sym (cong-∙ (x ∷fm2_) _ _)
+        --        ∙ (cong (cong (x ∷fm2_))
+        --        (↔→FMSet≡2Trans _ _ _ (sym↔ (↔permute xs (invEquiv e'*))) ((↔permute xs (invEquiv e')))))
+
+        qq : LHS* ∙ MHS ∙ LHS** ≡
+              cong (x ∷fm2_) (↔→FMSet2≡ xs'* xs' (sym↔ (↔permute xs (invEquiv e'*))
+                ∙↔ ↔permute xs (invEquiv e'))) ∙ LHS 
+        qq = {!!}
+
+
 
         -- lemP : (↔→FMSet2≡ (permute xs (invEquiv (fst (unwindPermHead f))))
         --         (permute xs (invEquiv (fst (unwindPermHead (f ∙ₑ g)))))
@@ -518,10 +624,16 @@ module FC2M where
         --          ∙ {!!}
         --          ≡ {!!}
         -- lemP = {!pp!}
-        p0 : {!!}
-        p0 = cong (cong (x ∷fm2_)) pp'
+        -- p0 : {!!}
+        p0 = cong (cong (x ∷fm2_)) (pp ∙ pp')
 
-    in {!!} ∙ cong ((_∙ _)) p0
+    in (sym (assoc _ _ _) ∙
+           (cong (cong (x ∷fm2_) (↔→FMSet2≡ xs xs'* (↔permute _ (invEquiv e'*))) ∙_)
+              qq)
+              ∙
+              assoc _ _ _)         
+         ∙ (cong (_∙ LHS) (sym (cong-∙ (x ∷fm2_) _ _) ∙ p0))
+         
     -- sym (assoc _ _ _) ∙ {!!}
     -- sym (assoc _ _ _) ∙
     --    (cong ((cong List→FMSet2 (sym (tabulate-lookup (x ∷ xs)))) ∙_)
