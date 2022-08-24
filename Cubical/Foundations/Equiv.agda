@@ -115,6 +115,9 @@ leftInv (equivToIso e)  = retEq e
 invEquiv : A ≃ B → B ≃ A
 invEquiv e = isoToEquiv (invIso (equivToIso e))
 
+invEquivInvo : (e : A ≃ B) → e ≡ invEquiv (invEquiv e)
+invEquivInvo e = equivEq refl
+
 invEquivIdEquiv : (A : Type ℓ) → invEquiv (idEquiv A) ≡ idEquiv A
 invEquivIdEquiv _ = equivEq refl
 
