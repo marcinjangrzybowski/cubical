@@ -22,6 +22,9 @@ Rel A B ℓ' = A → B → Type ℓ'
 PropRel : ∀ {ℓ} (A B : Type ℓ) (ℓ' : Level) → Type (ℓ-max ℓ (ℓ-suc ℓ'))
 PropRel A B ℓ' = Σ[ R ∈ Rel A B ℓ' ] ∀ a b → isProp (R a b)
 
+SetRel : ∀ {ℓ} (A B : Type ℓ) (ℓ' : Level) → Type (ℓ-max ℓ (ℓ-suc ℓ'))
+SetRel A B ℓ' = Σ[ R ∈ Rel A B ℓ' ] ∀ a b → isSet (R a b)
+
 idPropRel : ∀ {ℓ} (A : Type ℓ) → PropRel A A ℓ
 idPropRel A .fst a a' = ∥ a ≡ a' ∥₁
 idPropRel A .snd _ _ = squash₁
@@ -123,6 +126,10 @@ EquivRel A ℓ' = Σ[ R ∈ Rel A A ℓ' ] BinaryRelation.isEquivRel R
 
 EquivPropRel : ∀ {ℓ} (A : Type ℓ) (ℓ' : Level) → Type (ℓ-max ℓ (ℓ-suc ℓ'))
 EquivPropRel A ℓ' = Σ[ R ∈ PropRel A A ℓ' ] BinaryRelation.isEquivRel (R .fst)
+
+EquivSetRel : ∀ {ℓ} (A : Type ℓ) (ℓ' : Level) → Type (ℓ-max ℓ (ℓ-suc ℓ'))
+EquivSetRel A ℓ' = Σ[ R ∈ SetRel A A ℓ' ] BinaryRelation.isEquivRel (R .fst)
+
 
 record RelIso {A : Type ℓA} (_≅_ : Rel A A ℓ≅A)
               {A' : Type ℓA'} (_≅'_ : Rel A' A' ℓ≅A') : Type (ℓ-max (ℓ-max ℓA ℓA') (ℓ-max ℓ≅A ℓ≅A')) where
