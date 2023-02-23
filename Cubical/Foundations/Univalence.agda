@@ -69,6 +69,53 @@ module _ {A B : Type ℓ} (e : A ≃ B) {x : A} {y : B} where
   unquoteDef ua-ungluePath-Equiv =
     defStrictEquiv ua-ungluePath-Equiv ua-ungluePath ua-gluePath
 
+module _ {A B : Type ℓ} (e : A ≃ B) (x : A) where
+  ua-singl : Type ℓ
+  ua-singl = (Σ _ (PathP (λ i → ua e i) x))
+
+  isContr-ua-singl : isContr ua-singl 
+  fst isContr-ua-singl = (fst e x) , (ua-gluePath e refl)
+  fst (snd isContr-ua-singl (y , p) i) = ua-ungluePath e p i
+  snd (snd isContr-ua-singl (y , p) i) j =
+    glue (λ {(j = i0) → x
+            ;(j = i1) → ua-ungluePath e p i
+            }) (ua-ungluePath e p (j ∧ i))
+
+module _ {A B : Type ℓ} (e : A ≃ B) where
+  ua-singl-Iso : Iso A (Σ A λ x → Σ _ (PathP (λ i → ua e i) x))
+  Iso.fun ua-singl-Iso x = x , (fst e x) , (ua-gluePath e refl)
+  Iso.inv ua-singl-Iso = fst 
+  fst (Iso.rightInv ua-singl-Iso b i) = fst b
+  snd (Iso.rightInv ua-singl-Iso b i) = snd (isContr-ua-singl e (fst b)) (snd b) i
+  Iso.leftInv ua-singl-Iso _ = refl
+
+  -- ua-singl-Iso' : ∀ i → Iso (ua e i) (Σ A λ x → Σ _ (PathP (λ i → ua e i) x))
+  -- Iso.fun (ua-singl-Iso' i) g =
+  --     _ , (_ ,
+  --      (λ j → glue (λ { (j = i0) → _
+  --                     ; (j = i1) → _
+  --                     }) (secEq e (ua-unglue e i g) j)))
+  -- Iso.inv (ua-singl-Iso' i) x =
+  --    glue (λ { (i = i0) → fst x
+  --            ; (i = i1) → fst (snd x)
+  --                     }) (ua-unglue e i (snd (snd x) i))
+  -- fst (Iso.rightInv (ua-singl-Iso' i) b i₁) = {!!}
+  -- snd (Iso.rightInv (ua-singl-Iso' i) b i₁) = {!!}
+  -- Iso.leftInv (ua-singl-Iso' i) a j = 
+  --    glue (λ { (i = i0) → {!!}
+  --            ; (i = i1) → {!!}
+  --                     }) {!(secEq e (ua-unglue e i a) j)!} 
+
+
+ua-ungluePathExt : {A B : Type ℓ} (e : A ≃ B) → PathP (λ i → ua e i → B) (fst e) (idfun B)
+ua-ungluePathExt e i = ua-unglue e i
+
+ua-gluePathExt : {A B : Type ℓ} (e : A ≃ B) → PathP (λ i → A → ua e i) (idfun _) (fst e)
+ua-gluePathExt e i x =
+  ua-glue e i (λ { (i = i0) → x }) (inS (fst e x))
+
+
+
 -- ua-unglue and ua-glue are also definitional inverses, in a way
 -- strengthening the types of ua-unglue and ua-glue gives a nicer formulation of this, see below
 
@@ -79,6 +126,9 @@ ua-unglue-glue _ _ _ _ = refl
 ua-glue-unglue : ∀ {A B : Type ℓ} (e : A ≃ B) (i : I) (x : ua e i)
                  → ua-glue e i (λ { (i = i0) → x }) (inS (ua-unglue e i x)) ≡ x
 ua-glue-unglue _ _ _ = refl
+
+ua-ungluePathExt-ua-gluePathExt : ∀ {A B : Type ℓ} (e : A ≃ B) → ∀ i → ua-ungluePathExt e i ∘ ua-gluePathExt e i ≡ fst e
+ua-ungluePathExt-ua-gluePathExt e i = refl
 
 -- mainly for documentation purposes, ua-unglue and ua-glue wrapped in cubical subtypes
 
@@ -137,6 +187,54 @@ unglueEquiv : ∀ (A : Type ℓ) (φ : I)
               (Glue A f) ≃ A
 unglueEquiv A φ f = ( unglue φ , unglueIsEquiv A φ f )
 
+ua-unglueEquiv : ∀ {A B : Type ℓ} (e : A ≃ B) →
+                    PathP (λ i → ua e i ≃ B)
+                       e
+                       (idEquiv _)
+fst (ua-unglueEquiv e i) = ua-unglue e i
+snd (ua-unglueEquiv e i) =
+  isProp→PathP (λ i → isPropIsEquiv (ua-unglue e i))
+   (snd e) (idIsEquiv _) i
+
+
+
+-- glue-unglue-Iso : ∀ (A : Type ℓ) (φ : I)
+--                 (f : PartialP φ (λ o → Σ[ T ∈ Type ℓ ] T ≃ A)) →
+--                 Iso (Glue A f) A
+-- Iso.fun (glue-unglue-Iso A φ f) = unglue φ
+-- Iso.inv (glue-unglue-Iso A φ f) a =
+--            -- glue (λ {(φ = i1) → invEq (snd (f 1=1)) a})
+--            --  {!!}
+--            -- -- (fst (f  .snd) (invEq (snd (f _)) a))
+--      glue (λ {(φ = i1) → invEq (snd (f 1=1)) a})
+--      (hcomp (λ i → λ {(φ = i1) → secEq (snd (f 1=1)) a (~ i)}) a)
+-- Iso.rightInv (glue-unglue-Iso A φ f) b i =
+--     hfill (λ i → λ {(φ = i1) → secEq (snd (f 1=1)) b (~ i)}) (inS b) (~ i)
+-- Iso.leftInv (glue-unglue-Iso A φ f) a = {!!}
+--     -- glue (λ {(φ = i1) → {!unglue φ a !}
+--     --   -- {!invEq (snd (f 1=1)) ? !}  i
+--     --   }) {!!}
+
+-- fst (fst (equiv-proof (snd (ua-unglueEquiv e i)) y)) =
+--   glue (λ { (i = i0) → _ 
+--           ; (i = i1) → _ }) ( snd (fst (equiv-proof (snd e) y)) i  )
+-- snd (fst (equiv-proof (snd (ua-unglueEquiv e i)) y)) j =
+--   snd (fst (equiv-proof (snd e) y)) (i ∨ j)
+-- fst (snd (equiv-proof (snd (ua-unglueEquiv e i)) y) y' j) =  
+--   glue
+--     (λ { (i = i0) → fst ((snd (equiv-proof (snd e) y)) y' j)
+--        ; (i = i1) → {!!}
+--        })
+--     {!(snd (equiv-proof (snd e) y)) ? !}
+
+-- i = i0 ⊢ fst (snd (equiv-proof (snd e) y) y' j)
+-- i = i1 ⊢ snd y' (~ j)
+-- j = i0 ⊢ glue
+--          (λ { (i = i0) → fst (fst (equiv-proof (snd e) y)) ; (i = i1) → y })
+--          (snd (fst (equiv-proof (snd e) y)) i)
+-- j = i1 ⊢ fst y'
+
+-- snd (snd (equiv-proof (snd (ua-unglueEquiv e i)) y) y' j) = {!!}
 
 -- The following is a formulation of univalence proposed by Martín Escardó:
 -- https://groups.google.com/forum/#!msg/homotopytypetheory/HfCB_b-PNEU/Ibb48LvUMeUJ
@@ -241,6 +339,14 @@ uaη : ∀ {A B : Type ℓ} → (P : A ≡ B) → ua (pathToEquiv P) ≡ P
 uaη = J (λ _ q → ua (pathToEquiv q) ≡ q) (cong ua pathToEquivRefl ∙ uaIdEquiv)
 
 -- Lemmas for constructing and destructing dependent paths in a function type where the domain is ua.
+
+-- ua→' : ∀ {ℓ ℓ'} {A₀ A₁ : Type ℓ} {e : A₀ ≃ A₁} {B : (i : I) → Type ℓ'}
+--   {f₀ : A₀ → B i0} {f₁ : A₁ → B i1}
+--   → ((b : A₁) → PathP B (f₀ (invEq e b)) (f₁ b))
+--   → PathP (λ i → ua e i → B i) {!f₀ ?!} f₁
+-- ua→' {e = e} x i g =  x (ua-unglue e i g) i
+--  -- {!λ b → x b i!} ∘ ua-unglue e i
+
 ua→ : ∀ {ℓ ℓ'} {A₀ A₁ : Type ℓ} {e : A₀ ≃ A₁} {B : (i : I) → Type ℓ'}
   {f₀ : A₀ → B i0} {f₁ : A₁ → B i1}
   → ((a : A₀) → PathP B (f₀ a) (f₁ (e .fst a)))
@@ -252,9 +358,9 @@ ua→ {e = e} {f₀ = f₀} {f₁} h i a =
       ; (i = i1) → f₁ (lem a j)
       })
     (h (transp (λ j → ua e (~ j ∧ i)) (~ i) a) i)
-  where
-  lem : ∀ a₁ → e .fst (transport (sym (ua e)) a₁) ≡ a₁
-  lem a₁ = secEq e _ ∙ transportRefl _
+   where
+     lem : ∀ a₁ → e .fst (transport (sym (ua e)) a₁) ≡ a₁
+     lem a₁ i = secEq e (transportRefl a₁ i) i
 
 ua→⁻ : ∀ {ℓ ℓ'} {A₀ A₁ : Type ℓ} {e : A₀ ≃ A₁} {B : (i : I) → Type ℓ'}
   {f₀ : A₀ → B i0} {f₁ : A₁ → B i1}
@@ -311,12 +417,104 @@ elimIso {ℓ} {ℓ'} {B} Q h {A} f g sfg rfg = rem1 f g sfg rfg
   rem1 f g sfg rfg = elimEquivFun P rem (f , isoToIsEquiv (iso f g sfg rfg)) g sfg rfg
 
 
+
+-- inGlueHlp : ∀ {ℓ ℓ'} → {A₀ A₁ : Type ℓ} (A : A₀ ≡ A₁) {B : Type ℓ'}
+--              → {f₀ : A i0 → B} → {f₁ : A i1 → B}
+--              → (p : PathP (λ i → A i → B) f₀ f₁)
+--              → (isEquivF₀ : isEquiv f₀) (isEquivF₁ : isEquiv f₁)
+--              → Path (Σ (Type ℓ) (λ T → T ≃ B))
+--                   ((A i0) , (f₀ , isEquivF₀))
+--                   ((A i1) , (f₁ , isEquivF₁))
+-- fst (inGlueHlp A _ _ _ i) = A i
+-- fst (snd (inGlueHlp _ p _ _ i)) = p i
+-- snd (snd (inGlueHlp _ p isEquivF₀ isEquivF₁ i)) =
+--    isProp→PathP (λ i → isPropIsEquiv (p i)) isEquivF₀ isEquivF₁ i
+
+
 uaInvEquiv : ∀ {A B : Type ℓ} → (e : A ≃ B) → ua (invEquiv e) ≡ sym (ua e)
-uaInvEquiv {B = B} = EquivJ (λ _ e → ua (invEquiv e) ≡ sym (ua e))
+uaInvEquiv {A = A} {B = B} =
+
+  EquivJ (λ _ e → ua (invEquiv e) ≡ sym (ua e))
                             (cong ua (invEquivIdEquiv B))
+
+-- uaInvEquiv-unglueSq : ∀ {A B : Type ℓ} → (e : A ≃ B) →
+--                           SquareP (λ i j → uaInvEquiv e i j → {!!})
+--                               {!!}
+--                               {!!}
+--                               {!!}
+--                               {!!}
+-- uaInvEquiv-unglueSq e i j x = {!x!}
+
+
+-- ua→InvEquiv : ∀ {ℓ ℓ'} {A₀ A₁ : Type ℓ}  {B : (i : I) → Type ℓ'} (e : A₀ ≃ A₁)
+--   {f₀ : A₀ → B i0} {f₁ : A₁ → B i1}
+--   → (p : (a : A₁) → PathP (λ i → B (~ i)) (f₁ a) (f₀ (invEq e a)))
+--   → (p' :  (a : A₀) → PathP (λ v → B v) (f₀ a) (f₁ (e .fst a)))
+--   → SquareP (λ i j → uaInvEquiv e i j → B (~ j))       
+--        (ua→ p)
+--        (symP (ua→ p'))
+--        refl
+--        refl
+      
+-- ua→InvEquiv {A₁ = A₁} {B = B} = {!!}
+  -- EquivJ (λ A₀ e → 
+  --         {f₀ : A₀ → B i0} {f₁ : A₁ → B i1}
+  --         → (p : (a : A₁) → PathP (λ i → B (~ i)) (f₁ a) (f₀ (invEq e a)))
+  --         → (p' :  (a : A₀) → PathP (λ v → B v) (f₀ a) (f₁ (e .fst a)))
+  --         → SquareP (λ i j → uaInvEquiv e i j → B (~ j))       
+  --              (ua→ p)
+  --              (symP (ua→ p'))
+  --              refl
+  --              refl)
+  --   λ {f₀} {f₁} p p' →
+  --     let z : SquareP (λ i j → ua (idEquiv A₁) j → B (~ j))
+  --              (ua→ p) (symP (ua→ p')) (λ _ → f₁) (λ _ → f₀)
+  --         z = {!!}
+  --     in subst {x = uaInvEquiv (idEquiv _)} {y = {!!}}
+  --              (λ qq → SquareP (λ i j → qq i j → B (~ j))       
+  --              (ua→ p)
+  --              (symP (ua→ p'))
+  --              refl
+  --              refl ) {!!} {!!} 
 
 uaCompEquiv : ∀ {A B C : Type ℓ} → (e : A ≃ B) (f : B ≃ C) → ua (compEquiv e f) ≡ ua e ∙ ua f
 uaCompEquiv {B = B} {C} = EquivJ (λ _ e → (f : B ≃ C) → ua (compEquiv e f) ≡ ua e ∙ ua f)
                                  (λ f → cong ua (compEquivIdEquiv f)
                                         ∙ sym (cong (λ x → x ∙ ua f) uaIdEquiv
                                         ∙ sym (lUnit (ua f))))
+
+
+uaEquivPathEq :  {A₀ A₁ : Type ℓ} {A : A₀ ≡ A₁} → {e : A₀ ≃ A₁}
+                        → PathP (λ i₁ → A i₁ → A₁) (fst e) (λ x → x)
+                        → ua e ≡ A
+uaEquivPathEq {A = A} {e = e} p j i =
+    Glue (A i1)
+      λ { (i = i0) → A i0 , e
+        ; (i = i1) → A i1 , idEquiv _
+        ; (j = i1) →
+         A i , (p i , isProp→PathP (λ i → isPropIsEquiv (p i)) (snd e) (idIsEquiv _) i)
+        }
+
+unglue-uaEquivPathEq :  {A₀ A₁ : Type ℓ} {A : A₀ ≡ A₁} → {e : A₀ ≃ A₁}
+                        → (p : PathP (λ i₁ → A i₁ → A₁) (fst e) (λ x → x))
+                        → ∀ j i → uaEquivPathEq {e = e} p j i → A₁
+unglue-uaEquivPathEq {A = A} {e = e} p j i = unglue (i ∨ ~ i ∨ j)
+    
+
+glue-uaEquivPathEq :  {A₀ A₁ : Type ℓ} {A : A₀ ≡ A₁} → {e : A₀ ≃ A₁}
+                        → (p : PathP (λ i₁ → A i₁ → A₁) (fst e) (λ x → x))
+                        → ∀ j i → A i → uaEquivPathEq {e = e} p j i
+glue-uaEquivPathEq {A = A} {e = e} p j i y = glue ( λ { (i = i0) → y 
+        ; (i = i1) → y
+        ; (j = i1) → y
+        }) (p i y)
+
+
+uaDoubleCompEquiv'* :  ∀ {ℓ} {A B C D : Type ℓ} → (e : A ≃ B) (f : B ≃ C) (g : C ≃ D)
+    → ∀ j →  ua f j ≃ ua (e ∙ₑ f ∙ₑ g) j
+uaDoubleCompEquiv'* {A = A} {B = B} {C} {D} e f g j =
+    ((unglueEquiv C (j ∨ ~ j) λ { (j = i0) → B , f ; (j = i1) → C , idEquiv C})
+        ∙ₑ g ∙ₑ
+     invEquiv (unglueEquiv D (j ∨ ~ j)  λ { (j = i0) → A , e ∙ₑ f ∙ₑ g ; (j = i1) → D , idEquiv D}))
+
+

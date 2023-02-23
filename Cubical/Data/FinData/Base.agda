@@ -51,6 +51,7 @@ predFin : {n : ℕ} → Fin (suc (suc n)) → Fin (suc n)
 predFin zero = zero
 predFin (suc x) = x
 
+
 foldrFin : ∀ {n} → (A → B → B) → B → (Fin n → A) → B
 foldrFin {n = zero}  _ b _ = b
 foldrFin {n = suc n} f b l = f (l zero) (foldrFin f b (l ∘ suc))

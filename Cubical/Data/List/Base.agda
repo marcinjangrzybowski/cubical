@@ -47,6 +47,11 @@ module _ {ℓ} {A : Type ℓ} where
   foldr f b [] = b
   foldr f b (x ∷ xs) = f x (foldr f b xs)
 
+  foldrDep : ∀ {ℓ'} {B : A → Type ℓ'} → ∀ {a} → {f : A → A → A}
+              → (∀ a → ∀ {a'} → B a' → B (f a a')) → B a → (l : List A) → B (foldr f a l)
+  foldrDep f b [] = b
+  foldrDep f b (x ∷ xs) = f x (foldrDep f b xs)
+
   foldl : ∀ {ℓ'} {B : Type ℓ'} → (B → A → B) → B → List A → B
   foldl f b [] = b
   foldl f b (x ∷ xs) = foldl f (f b x) xs
@@ -57,3 +62,10 @@ module _ {ℓ} {A : Type ℓ} where
            → ∀ l → B l
   ind b _ [] = b
   ind {B = B} b[] b (a ∷ l) = b (ind {B = B} b[] b l )
+
+  ind' : ∀ {ℓ'} {B : List A → Type ℓ'}
+           → B []
+           → (∀ {a} l → B l → B (a ∷ l))
+           → ∀ l → B l
+  ind' b _ [] = b
+  ind' {B = B} b[] b (a ∷ l) = b l (ind' {B = B} b[] b l )

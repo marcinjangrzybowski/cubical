@@ -280,6 +280,10 @@ isPropBool→Type : {a : Bool} → isProp (Bool→Type a)
 isPropBool→Type {a = true} = isPropUnit
 isPropBool→Type {a = false} = isProp⊥
 
+Bool→Prop : Bool → Σ Type₀ isProp 
+Bool→Prop x = Bool→Type x , isPropBool→Type
+
+
 isPropBool→Type* : {a : Bool} → isProp (Bool→Type* {ℓ} a)
 isPropBool→Type* {a = true} = isPropUnit*
 isPropBool→Type* {a = false} = isProp⊥*

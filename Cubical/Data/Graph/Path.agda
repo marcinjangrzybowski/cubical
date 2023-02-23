@@ -79,3 +79,29 @@ module _ {ℓv ℓe : Level} where
       isSetPath : ∀ v w → isSet (Path v w)
       isSetPath v w = isSetRetract Path→PathWithLen PathWithLen→Path
                                    Path→PWL→Path isSet-ΣnPathWithLen
+
+
+
+    foldPath : (∀ {v} → Edge G v v) → (∀ {v w x} → Edge G v w → Edge G w x → Edge G v x)
+                  → ∀ {v w} → Path v w → Edge G v w 
+    foldPath idE _⊙_ pnil = idE
+    foldPath idE _⊙_ (pcons pnil x₁) = x₁
+    foldPath idE _⊙_ (pcons z x₁) = foldPath idE _⊙_ z  ⊙ x₁
+
+module _ {ℓ} (A : Type ℓ) where
+  ≡Graph : Graph ℓ ℓ
+  ≡Graph = record { Node = A ; Edge = _≡_ }
+
+module _ {ℓ} {A : Type ℓ} where
+
+  ≡Path : A → A → Type ℓ
+  ≡Path = Path (≡Graph A)
+
+  ≡Path→≡  : ∀ x y → ≡Path x y → x ≡ y
+  ≡Path→≡ _ _ = foldPath (≡Graph A) refl _∙_
+
+testP≡ : ∀ k → ≡Path {A = ℕ} (k + (suc k)) (2 · k + 1)
+testP≡ k = pcons (pcons (pcons pnil (cong (k +_) (+-comm 1 k))) (cong (k +_) (+-assoc k 0 1))) (+-assoc k (k + 0) 1)
+
+testP≡' : ∀ k → (k + (suc k)) ≡ (2 · k + 1)
+testP≡' k = ≡Path→≡ _ _ (testP≡ k)

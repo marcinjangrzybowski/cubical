@@ -88,6 +88,29 @@ module _ {A : I → Type ℓ} {B : (i : I) → A i → Type ℓ'}
               ≡ (PathP (λ i → Σ (A i) (B i)) x y)
   ΣPath≡PathΣ = ua ΣPath≃PathΣ
 
+module _ {A : I → I → Type ℓ} {B : (i j : I) → A i j → Type ℓ'}
+            {a₀₀ : Σ (A i0 i0) (B i0 i0)} {a₀₁ : Σ (A i0 i1) (B i0 i1)}
+            {a₀₋ : PathP (λ j → Σ (A i0 j) (B i0 j)) a₀₀ a₀₁}
+            {a₁₀ : Σ (A i1 i0) (B i1 i0)} {a₁₁ : Σ (A i1 i1) (B i1 i1)}
+             {a₁₋ : PathP (λ j → Σ (A i1 j) (B i1 j)) a₁₀ a₁₁}
+            {a₋₀ : PathP (λ i → Σ (A i i0) (B i i0)) a₀₀ a₁₀}
+            {a₋₁ : PathP (λ i → Σ (A i i1) (B i i1)) a₀₁ a₁₁}
+  where
+
+  ΣSquareP : Σ[ s ∈ SquareP A (congP (λ _ → fst) a₀₋)
+                      (congP (λ _ → fst) a₁₋)
+                      (congP (λ _ → fst) a₋₀)
+                      (congP (λ _ → fst) a₋₁) ]
+                SquareP (λ i j → B i j (s i j))
+                      (congP (λ _ → snd) a₀₋)
+                      (congP (λ _ → snd) a₁₋)
+                      (congP (λ _ → snd) a₋₀)
+                      (congP (λ _ → snd) a₋₁)
+         → SquareP (λ i j → Σ (A i j) (B i j)) a₀₋ a₁₋ a₋₀ a₋₁
+           
+  ΣSquareP (s , q) i j = s i j , q i j 
+
+
 ×≡Prop : isProp A' → {u v : A × A'} → u .fst ≡ v .fst → u ≡ v
 ×≡Prop pB {u} {v} p i = (p i) , (pB (u .snd) (v .snd) i)
 
@@ -142,6 +165,13 @@ inv rUnit×Iso = _, tt
 rightInv rUnit×Iso _ = refl
 leftInv rUnit×Iso _ = refl
 
+rUnit*×Iso : Iso (A × Unit* {ℓ'}) A
+fun rUnit*×Iso = fst
+inv rUnit*×Iso = _, _
+rightInv rUnit*×Iso _ = refl
+leftInv rUnit*×Iso _ = refl
+
+
 module _ {A : Type ℓ} {A' : Type ℓ'} where
   Σ-swap-Iso : Iso (A × A') (A' × A)
   fun Σ-swap-Iso (x , y) = (y , x)
@@ -150,6 +180,51 @@ module _ {A : Type ℓ} {A' : Type ℓ'} where
   leftInv Σ-swap-Iso _  = refl
 
   unquoteDecl Σ-swap-≃ = declStrictIsoToEquiv Σ-swap-≃ Σ-swap-Iso
+
+module _ {A : Type ℓ} {A' : Type ℓ'} {A'' : Type ℓ''} where
+  swap-01 : (A × A' × A'') →  (A' × A × A'')
+  swap-01 (x , y , z) = (y , x , z)
+
+module _ {A : Type ℓ} {A' : Type ℓ'} {A'' : Type ℓ''} where
+
+  Σ-swap-01-Iso : Iso (A × A' × A'') (A' × A × A'')
+  fun Σ-swap-01-Iso = swap-01 
+  inv Σ-swap-01-Iso = swap-01 
+  rightInv Σ-swap-01-Iso _ = refl
+  leftInv Σ-swap-01-Iso _  = refl
+
+  unquoteDecl Σ-swap-01-≃ = declStrictIsoToEquiv Σ-swap-01-≃ Σ-swap-01-Iso
+
+module _ {ℓ'''} {A : Type ℓ} {A' : Type ℓ'} {A'' : Type ℓ''} {A''' : Type ℓ'''} where
+  swap-02 : (A × A' × A'' × A''') →  (A'' × A' × A × A''')
+  swap-02 (x , y , z , w) = (z , y , x , w)
+
+  rot-201 : (A × A' × A'' × A''') →  (A'' × A × A' × A''')
+  rot-201 (x , y , z , w) = (z , x , y , w)
+
+  rot-120 : (A × A' × A'' × A''') →  (A' × A'' × A × A''')
+  rot-120 (x , y , z , w) = (y , z , x , w)
+
+
+module _ {ℓ'''} {A : Type ℓ} {A' : Type ℓ'} {A'' : Type ℓ''} {A''' : Type ℓ'''} where
+
+  Σ-swap-02-Iso : Iso (A × A' × A'' × A''') (A'' × A' × A × A''')
+  fun Σ-swap-02-Iso = swap-02 
+  inv Σ-swap-02-Iso = swap-02 
+  rightInv Σ-swap-02-Iso _ = refl
+  leftInv Σ-swap-02-Iso _  = refl
+
+  unquoteDecl Σ-swap-02-≃ = declStrictIsoToEquiv Σ-swap-02-≃ Σ-swap-02-Iso
+
+  Σ-rot-012-Iso : Iso (A × A' × A'' × A''') (A'' × A × A' × A''')
+  fun Σ-rot-012-Iso = rot-201
+  inv Σ-rot-012-Iso = rot-120 
+  rightInv Σ-rot-012-Iso _ = refl
+  leftInv Σ-rot-012-Iso _  = refl
+
+  unquoteDecl Σ-rot-012-≃ = declStrictIsoToEquiv Σ-rot-012-≃ Σ-rot-012-Iso
+
+
 
 module _ {A : Type ℓ} {B : A → Type ℓ'} {C : ∀ a → B a → Type ℓ''} where
   Σ-assoc-Iso : Iso (Σ[ (a , b) ∈ Σ A B ] C a b) (Σ[ a ∈ A ] Σ[ b ∈ B a ] C a b)
@@ -345,6 +420,12 @@ isEmbeddingFstΣProp {B = B} pB {u = u} {v = v} .equiv-proof x = ctr , isCtr
        → (p : u .fst ≡ v .fst) → u ≡ v
 Σ≡Prop pB p = equivFun (Σ≡PropEquiv pB) p
 
+-- Σ≡Prop∙ : (pB : (x : A) → isProp (B x)) → {u v w : Σ A B}
+--           → (p : u .fst ≡ v .fst) → (q : v .fst ≡ w .fst) →
+--              Σ≡Prop pB {u} {v} p ∙ Σ≡Prop pB {u = v} {v = w} q
+--            ≡ Σ≡Prop pB (p ∙ q)
+-- Σ≡Prop∙ pB p q = {!!}
+
 -- dependent version
 ΣPathPProp : ∀ {ℓ ℓ'} {A : I → Type ℓ} {B : (i : I) → A i → Type ℓ'}
            → {u : Σ (A i0) (B i0)} {v : Σ (A i1) (B i1)}
@@ -356,6 +437,7 @@ snd (ΣPathPProp {B = B} {u = u} {v = v} pB p i) = lem i
   where
   lem : PathP (λ i → B i (p i)) (snd u) (snd v)
   lem = toPathP (pB _ _ _)
+
 
 ≃-× : ∀ {ℓ'' ℓ'''} {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''} {D : Type ℓ'''} → A ≃ C → B ≃ D → A × B ≃ C × D
 ≃-× eq1 eq2 =
@@ -408,6 +490,21 @@ module _ {A : Type ℓ} {B : A → Type ℓ'} {C : ∀ a → B a → Type ℓ''}
   Iso.leftInv curryIso f = refl
 
   unquoteDecl curryEquiv = declStrictIsoToEquiv curryEquiv curryIso
+
+module _ {A : Type ℓ} 
+     {B : A → A → Type ℓ'} {C : A → A → Type ℓ''} where
+     
+  curryIso' : Iso ((((a , a') , _) : Σ (A × A) λ (a , a') → B a a')
+                     → C a a')
+                (∀ {a a' : A} → B a a' → C a a')
+                    
+  fun curryIso' x b = x (_ , b)
+  inv curryIso' x ((a , a') , b) = x b 
+  rightInv curryIso' _ = refl
+  leftInv curryIso' _ = refl
+
+  unquoteDecl curryEquiv' = declStrictIsoToEquiv curryEquiv' curryIso'
+
 
 -- Sigma type with empty base
 

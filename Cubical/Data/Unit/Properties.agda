@@ -13,6 +13,8 @@ open import Cubical.Data.Nat
 open import Cubical.Data.Unit.Base
 open import Cubical.Data.Prod.Base
 
+open import Cubical.Data.Empty.Base
+
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Univalence
@@ -89,6 +91,14 @@ fibId : (A : Type ℓ) → (fiber (λ (x : A) → tt) tt) ≡ A
 fibId A = ua e
   where
   unquoteDecl e = declStrictEquiv e fst (λ a → a , refl)
+
+
+Unit*≃⊥→A : (A : Type ℓ) → Unit* {ℓ} ≃ (⊥ → A)  
+Unit*≃⊥→A {ℓ = ℓ} A = isoToEquiv (iso (λ _ ()) (λ _ → _)  (λ _ → funExt λ ()) (λ _ → refl))
+
+Unit*≃⊥*→A : (A : Type ℓ) → Unit* {ℓ} ≃ (⊥* {ℓ'} → A)  
+Unit*≃⊥*→A {ℓ = ℓ} A = isoToEquiv (iso (λ _ ()) (λ _ → _)  (λ _ → funExt λ ()) (λ _ → refl))
+
 
 isContr→≃Unit : {A : Type ℓ} → isContr A → A ≃ Unit
 isContr→≃Unit contr = isoToEquiv (iso (λ _ → tt) (λ _ → fst contr) (λ _ → refl) λ _ → snd contr _)

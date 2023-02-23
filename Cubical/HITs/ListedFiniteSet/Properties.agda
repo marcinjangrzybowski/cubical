@@ -4,6 +4,10 @@ module Cubical.HITs.ListedFiniteSet.Properties where
 open import Cubical.Foundations.Prelude
 open import Cubical.Data.Prod using (_×_; _,_)
 
+open import Cubical.Relation.Nullary
+
+open import Cubical.Foundations.Everything
+
 open import Cubical.HITs.ListedFiniteSet.Base
 
 private
@@ -104,3 +108,18 @@ cart-product (trunc xs xs′ p q i j) ys =
     (cart-product xs ys) (cart-product xs′ ys)
     (λ k → cart-product (p k) ys) (λ k → cart-product (q k) ys)
     i j
+
+
+-- module _ {ℓ} {A : Type ℓ} (_≟_ : Discrete A) where
+
+--   disj : LFSet A → LFSet A → hProp ℓ
+--   disj = Rec.f
+--     {!!} {!!} {!!} {!!} {!!}
+
+--   isDisjFam : LFSet (LFSet A) → (hProp ℓ)
+--   isDisjFam = Rec.f
+--     {!!}
+--     {!!}
+--     {!!}
+--     {!!}
+--     {!!}

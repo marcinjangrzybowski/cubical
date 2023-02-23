@@ -46,6 +46,10 @@ znots eq = subst (caseNat ℕ ⊥) eq 0
 snotz : ¬ (suc n ≡ 0)
 snotz eq = subst (caseNat ⊥ ℕ) eq 0
 
+≢suc→≡zero : (∀ n → m ≡ suc n → ⊥) → m ≡ zero
+≢suc→≡zero {zero} x = refl
+≢suc→≡zero {suc m} x = ⊥.rec (x m refl)
+
 injSuc : suc m ≡ suc n → m ≡ n
 injSuc p = cong predℕ p
 
@@ -161,6 +165,9 @@ inj-m+ {suc m} p = inj-m+ (injSuc p)
 
 inj-+m : l + m ≡ n + m → l ≡ n
 inj-+m {l} {m} {n} p = inj-m+ ((+-comm m l) ∙ (p ∙ (+-comm n m)))
+
+snotid : ¬ (suc n ≡ n)
+snotid = snotz ∘ inj-+m
 
 m+n≡n→m≡0 : m + n ≡ n → m ≡ 0
 m+n≡n→m≡0 {n = zero} = λ p → (sym (+-zero _)) ∙ p

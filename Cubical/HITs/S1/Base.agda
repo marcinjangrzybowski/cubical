@@ -400,7 +400,6 @@ base     · x = x
 
 infixl 30 _·_
 
-
 -- rot i j = filler-rot i j i1
 filler-rot : I → I → I → S¹
 filler-rot i j = hfill (λ k → λ { (i = i0) → loop (j ∨ ~ k)
@@ -420,6 +419,8 @@ rotIsEquiv (loop i) = isPropFamS¹ (λ x → isEquiv (x ·_))
                                   (idIsEquiv _) i
 
 -- more direct definition of the rot (loop i) equivalence
+
+
 
 rotLoopInv : (a : S¹) → PathP (λ i → rotLoop (rotLoop a (~ i)) i ≡ a) refl refl
 rotLoopInv a i j = homotopySymInv rotLoop a j i

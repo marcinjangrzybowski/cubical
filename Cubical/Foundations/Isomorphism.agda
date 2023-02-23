@@ -212,3 +212,23 @@ rightInv (Iso≡Set hA hB f g hfun hinv i) x j =
   isSet→isSet' hB (rightInv f x) (rightInv g x) (λ i → hfun (hinv x i) i) refl i j
 leftInv (Iso≡Set hA hB f g hfun hinv i) x j =
   isSet→isSet' hA (leftInv f x) (leftInv g x) (λ i → hinv (hfun x i) i) refl i j
+
+
+Iso≡Set-fun : isSet A → isSet B → (f g : Iso A B)
+        → ((x : A) → f .fun x ≡ g .fun x)
+        → f ≡ g
+Iso≡Set-fun isSetA isSetB f g p =
+  Iso≡Set isSetA isSetB f g p
+    λ x →  sym (Iso.leftInv g (f .inv x)) 
+     ∙∙  sym (cong (Iso.inv g) (p (Iso.inv f x)))
+     ∙∙ (cong (Iso.inv g) (Iso.rightInv f x))
+
+Iso≡Set-inv : isSet A → isSet B → (f g : Iso A B)
+        → ((x : B) → f .inv x ≡ g .inv x)
+        → f ≡ g
+Iso≡Set-inv isSetA isSetB f g p =
+  Iso≡Set isSetA isSetB f g 
+    (λ x →  sym (Iso.rightInv g (f .fun x)) 
+     ∙∙  sym (cong (Iso.fun g) (p (Iso.fun f x)))
+     ∙∙ (cong (Iso.fun g) (Iso.leftInv f x)))
+    p

@@ -50,6 +50,14 @@ elim+2 a0 a1 ind (suc zero) = a1
 elim+2 {A = A} a0 a1 ind (suc (suc n)) =
   ind n (elim+2 {A = A} a0 a1 ind (suc n))
 
+cases : ∀ {ℓ} {A : ℕ → Type ℓ}
+  → A zero
+  → ((n : ℕ) → A (suc n))
+  → (n : ℕ) → A n
+cases a₀ _ zero = a₀
+cases a₀ f (suc n) = f n
+
+
 isEven isOdd : ℕ → Bool
 isEven zero = true
 isEven (suc n) = isOdd n

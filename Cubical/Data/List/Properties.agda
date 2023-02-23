@@ -7,10 +7,16 @@ open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Prelude
 open import Cubical.Data.Empty as ⊥
-open import Cubical.Data.Nat
+open import Cubical.Data.Nat as ℕ
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
 open import Cubical.Relation.Nullary
+open import Cubical.Foundations.Function
+open import Cubical.Foundations.Path
+open import Cubical.Foundations.Isomorphism
+
+
+open import Cubical.HITs.SequentialColimit as SC
 
 open import Cubical.Data.List.Base
 
@@ -120,17 +126,17 @@ private
     ℓ : Level
     A : Type ℓ
 
-  caseList : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → (n c : B) → List A → B
-  caseList n _ []      = n
-  caseList _ c (_ ∷ _) = c
+caseList : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → (n c : B) → List A → B
+caseList n _ []      = n
+caseList _ c (_ ∷ _) = c
 
-  safe-head : A → List A → A
-  safe-head x []      = x
-  safe-head _ (x ∷ _) = x
+safe-head : A → List A → A
+safe-head x []      = x
+safe-head _ (x ∷ _) = x
 
-  safe-tail : List A → List A
-  safe-tail []       = []
-  safe-tail (_ ∷ xs) = xs
+safe-tail : List A → List A
+safe-tail []       = []
+safe-tail (_ ∷ xs) = xs
 
 cons-inj₁ : ∀ {x y : A} {xs ys} → x ∷ xs ≡ y ∷ ys → x ≡ y
 cons-inj₁ {x = x} p = cong (safe-head x) p
@@ -184,3 +190,71 @@ length++ : (xs ys : List A) → length (xs ++ ys) ≡ length xs + length ys
 length++ [] ys = refl
 length++ (x ∷ xs) ys = cong suc (length++ xs ys)
 
+map-++ : ∀ {ℓA ℓB} {A : Type ℓA} {B : Type ℓB} → (f : A → B) → (as bs : List A)
+          → map f (as ++ bs) ≡ map f as ++ map f bs
+map-++ _ = ind (λ _ → refl) (cong (_ ∷_) ∘_)  
+
+map-rev : ∀ {ℓA ℓB} {A : Type ℓA} {B : Type ℓB} → (f : A → B) → (xs : List A)
+          → map f (rev xs) ≡ rev (map f xs)
+map-rev _ = ind refl (λ {_} {l} p → map-++ _ (rev l) [ _ ] ∙ cong (_++ [ _ ]) p)  
+
+-- foldr : ∀ {ℓ'} {B : Type ℓ'} → (A → B → B) → B → List A → B
+
+-- foldr-map : ∀ {ℓA ℓB ℓC} {A : Type ℓA} {B : Type ℓB} {C : Type ℓC}
+--              → (f : B → C → C) → (b : B) → (l : List A) → (g : A → B)
+--              → {!foldr f b l!}
+-- foldr-map = {!!}
+
+-- module _ {ℓ} {A : Type ℓ} where
+
+--  map' : List A → (ℕ → A) → List A × (ℕ → A)
+--  map' [] f = [] , f
+--  map' (x ∷ xs) f = xs , cases x f
+ 
+--  []×ℕ : Sequence ℓ
+--  Sequence.space []×ℕ _ = List A × (ℕ → A)
+--  Sequence.map []×ℕ = uncurry map'
+ 
+-- --  (l , f) = f zero ∷ l , f ∘ suc
+
+--  Lim→[]×ℕ-ℕ→ : (Lim→ []×ℕ) → (ℕ → A)
+--  Lim→[]×ℕ-ℕ→ = SC.elim []×ℕ
+--    (λ _ → ℕ → A)
+--    w
+--   where
+--    wf : (x : List A) (y : ℕ → A) → ℕ → A
+--    wf [] f  = f
+--    wf (x ∷ x₂) f =
+--      wf x₂ (cases x f) 
+--    -- wf [] f = f
+--    -- wf (x ∷ _) _ zero = x
+--    -- wf (_ ∷ x₂) y (suc x₁) = wf x₂ y x₁
+
+--    wp : (x : List A) (y : ℕ → A) →
+--           wf x y ≡ wf (fst (map' x y)) (snd (map' x y))
+--    wp [] y = refl
+--    wp (x ∷ x₁) y = refl
+
+--    w : ElimData []×ℕ (λ _ → ℕ → A)
+--    ElimData.finl w = uncurry wf
+--    ElimData.fpush w = uncurry wp
+
+--  Iso-Lim→[]×ℕ-ℕ→ : Iso (Lim→ []×ℕ) (ℕ → A)
+--  Iso.fun Iso-Lim→[]×ℕ-ℕ→ = Lim→[]×ℕ-ℕ→
+--  Iso.inv Iso-Lim→[]×ℕ-ℕ→ = inl {n = zero} ∘ ([] ,_)
+--  Iso.rightInv Iso-Lim→[]×ℕ-ℕ→ _ = refl
+--  Iso.leftInv Iso-Lim→[]×ℕ-ℕ→ = SC.elim []×ℕ _ w
+--   where
+--    w-finl : ∀ k → (x : List A) (y : ℕ → A) →
+--       Path (Lim→ []×ℕ)
+--       (inl {n = zero} ([] , Lim→[]×ℕ-ℕ→ (inl {n = k} (x , y))))
+--       (inl {n = k} (x , y))
+--    w-finl zero [] y = refl
+--    w-finl zero (x ∷ x₁) y = w-finl (suc zero) x₁ (cases x y) ∙
+--      {!push ?!}
+--    w-finl (suc k) x y = {!!}
+
+--    w : ElimData []×ℕ
+--          (λ z → Iso.inv Iso-Lim→[]×ℕ-ℕ→ (Iso.fun Iso-Lim→[]×ℕ-ℕ→ z) ≡ z)
+--    ElimData.finl w {k} = uncurry (w-finl k)
+--    ElimData.fpush w = {!!}

@@ -10,12 +10,19 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.Path
+open import Cubical.Foundations.GroupoidLaws
+
 
 open import Cubical.Data.Bool
-open import Cubical.Data.Empty
+open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Unit
+open import Cubical.Data.Sigma
 
-open import Cubical.HITs.Delooping.Two.Base
+open import Cubical.Functions.FunExtEquiv
+
+
+open import Cubical.HITs.Delooping.Two.Base as Two
 open import Cubical.HITs.PropositionalTruncation
 
 private
@@ -50,6 +57,52 @@ module Embed where
 
   El : Bℤ₂ → Type₀
   El b = Code b .fst
+
+  module _ {ℓ} (A : Type ℓ) where
+
+    Pair : Type ℓ  
+    Pair = Σ Bℤ₂ λ b → El b → A
+
+    mkPair : A → A → Pair 
+    mkPair a a' = base , λ { true → a ; false →  a' }
+
+    pairComm : ∀ a a' → mkPair a a' ≡ mkPair a' a
+    pairComm a a' = ΣPathP (loop , toPathP (funExt λ {true → transportRefl _ ; false → transportRefl _ }))
+
+    Pair' : ∀ b → singl (El b → A)
+    Pair' = Two.Elim.elim
+      (λ z → singl (El z → A))
+      (A × A , {!!})
+      {!!}
+      {!!}
+      {!!}
+
+    PairRec : ∀ {ℓ'} {B : Type ℓ'} → (f : A → A → B) →
+               (fComm : ∀ a a' → f a a' ≡ f a' a)
+             → ∀ a a' → fComm a a' ≡ sym (fComm a' a)
+             → Pair → B
+    PairRec = {!!}
+
+  isContrΣB : isContr (Σ Bℤ₂ (fst ∘ Code))
+  fst isContrΣB = (base , true)
+  snd isContrΣB =
+    uncurry (Elim.elimSet _ ww (funExtDep zzzz) λ _ → isSetΠ λ _ → isGroupoidΣ trunc
+        (λ x → isSet→isGroupoid (snd (Code x))) _ _) 
+
+     where
+      ww : (y : fst (Code base)) → fst isContrΣB ≡ (base , y)
+      ww false = sym (ΣPathP (loop , ua-gluePath _ refl))
+      ww true = refl
+
+      zzzz : {x₀ x₁ : fst (Code base)}
+        (p : PathP (λ z → fst (Code (loop z))) x₀ x₁) →
+        PathP (λ i → (base , true) ≡ (loop i , p i)) (ww x₀) (ww x₁)
+      zzzz {false} {false} = ⊥.rec ∘ true≢false ∘ fromPathP
+      zzzz {false} {true} p = ΣSquareSet (snd ∘ Code) λ i i₁ → loop (i ∨ ~ i₁)
+      zzzz {true} {false} p = ΣSquareSet (snd ∘ Code) ((λ i j → loop (i ∧ j)) ▷
+        PathP→compPathR loop² ∙ sym (lUnit _) ∙ sym (lUnit _))
+      zzzz {true} {true} = ⊥.rec ∘ false≢true ∘ fromPathP
+
 
 module BINARY where
   open import Cubical.Data.FinSet.Binary.Large
@@ -196,3 +249,4 @@ module BINARY where
     3k : 3-Constant (based B)
     3k .link = looped B
     3k .coh₁ = looped² B
+

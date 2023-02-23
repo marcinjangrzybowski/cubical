@@ -65,3 +65,12 @@ groupoidTruncIdempotent≃ {A = A} hA = isoToEquiv f
 
 groupoidTruncIdempotent : isGroupoid A → ∥ A ∥₃ ≡ A
 groupoidTruncIdempotent hA = ua (groupoidTruncIdempotent≃ hA)
+
+map : ∀ {ℓ'} {B : Type ℓ'} → (A → B) → ∥ A ∥₃ → ∥ B ∥₃
+map f = rec squash₃ (∣_∣₃ ∘ f)
+
+map2 : ∀ {ℓ' ℓ''} {B : Type ℓ'}{C : Type ℓ''} → (A → B → C)
+         → ∥ A ∥₃ → ∥ B ∥₃ → ∥ C ∥₃
+map2 f = elim (λ _ → isGroupoidΠ λ _ → squash₃)
+           λ a → elim (λ _ → squash₃)
+              λ b → ∣ f a b ∣₃

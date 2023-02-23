@@ -280,6 +280,26 @@ isSet→SquareP :
 isSet→SquareP isset a₀₋ a₁₋ a₋₀ a₋₁ =
   PathPIsoPath _ _ _ .Iso.inv (isOfHLevelPathP' 1 (isset _ _) _ _ _ _ )
 
+isSet→SquareP' :
+  {A : I → I → Type ℓ}
+  (isSet : isSet (A i0 i0))
+  {a₀₀ : A i0 i0} {a₀₁ : A i0 i1} (a₀₋ : PathP (λ j → A i0 j) a₀₀ a₀₁)
+  {a₁₀ : A i1 i0} {a₁₁ : A i1 i1} (a₁₋ : PathP (λ j → A i1 j) a₁₀ a₁₁)
+  (a₋₀ : PathP (λ i → A i i0) a₀₀ a₁₀) (a₋₁ : PathP (λ i → A i i1) a₀₁ a₁₁)
+  → SquareP A a₀₋ a₁₋ a₋₀ a₋₁
+isSet→SquareP' {A = A} isset =
+  isSet→SquareP
+   λ i j →
+     isProp→SquareP
+       (λ i j → isPropIsSet {A = A i j})
+        {isset}
+        (toPathP refl)
+        (isProp→PathP (λ i → isPropIsSet) _ _)
+        (toPathP refl)
+        (toPathP refl)
+      i j
+
+
 isGroupoid→isGroupoid' : isGroupoid A → isGroupoid' A
 isGroupoid→isGroupoid' {A = A} Agpd a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁ =
   PathPIsoPath (λ i → Square (a₋₀₋ i) (a₋₁₋ i) (a₋₋₀ i) (a₋₋₁ i)) a₀₋₋ a₁₋₋ .Iso.inv
@@ -699,6 +719,32 @@ snd (ΣSquareSet {B = B} pB {p = p} {q = q} {r = r} {s = s} sq i j) = lem i j
   lem : SquareP (λ i j → B (sq i j))
           (cong snd p) (cong snd r) (cong snd s) (cong snd q)
   lem = toPathP (isOfHLevelPathP' 1 (pB _) _ _ _ _)
+
+-- Σsq : (A : I → I → Type ℓ) (B : ∀ i j → A i j → Type ℓ') →
+--           I → I → Type ℓ
+-- Σsq A B i j = Σ (A i j) {!B i j!}          
+
+ΣSquarePSet : ∀ {A : I → I → Type ℓ} {B : ∀ i j → A i j → Type ℓ'} →
+              ((i j : I) → ∀ a → isSet (B i j a))
+          → {a₀₀ : Σ (A i0 i0) (B i0 i0)} {a₀₁ : Σ (A i0 i1) (B i0 i1)}
+            (a₀₋ : PathP (λ j → Σ (A i0 j) (B i0 j)) a₀₀ a₀₁)
+            {a₁₀ : Σ (A i1 i0) (B i1 i0)} {a₁₁ : Σ (A i1 i1) (B i1 i1)}
+             (a₁₋ : PathP (λ j → Σ (A i1 j) (B i1 j)) a₁₀ a₁₁)
+            (a₋₀ : PathP (λ i → Σ (A i i0) (B i i0)) a₀₀ a₁₀)
+            (a₋₁ : PathP (λ i → Σ (A i i1) (B i i1)) a₀₁ a₁₁)
+          → SquareP A (congP (λ _ → fst) a₀₋)
+                      (congP (λ _ → fst) a₁₋)
+                      (congP (λ _ → fst) a₋₀)
+                      (congP (λ _ → fst) a₋₁)
+          → SquareP (λ i j → Σ (A i j) (B i j)) a₀₋ a₁₋ a₋₀ a₋₁
+          
+fst (ΣSquarePSet isSetB a₀₋ a₁₋ a₋₀ a₋₁ s i j) = s i j
+snd (ΣSquarePSet isSetB a₀₋ a₁₋ a₋₀ a₋₁ s i j) =
+  isSet→SquareP (λ i j → isSetB i j (s i j))
+   (congP (λ _ → snd) a₀₋)
+   (congP (λ _ → snd) a₁₋)
+   (congP (λ _ → snd) a₋₀)
+   (congP (λ _ → snd) a₋₁) i j
 
 module _ (isSet-A : isSet A) (isSet-A' : isSet A') where
 

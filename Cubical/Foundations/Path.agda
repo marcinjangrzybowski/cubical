@@ -166,6 +166,16 @@ flipSquare : {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
   → Square a₀₋ a₁₋ a₋₀ a₋₁ → Square a₋₀ a₋₁ a₀₋ a₁₋
 flipSquare sq i j = sq j i
 
+
+flipSquareP :  {A : I → I → Type ℓ}
+  {a₀₀ : A i0 i0} {a₀₁ : A i0 i1} {a₀₋ : PathP (λ j → A i0 j) a₀₀ a₀₁}
+  {a₁₀ : A i1 i0} {a₁₁ : A i1 i1} {a₁₋ : PathP (λ j → A i1 j) a₁₀ a₁₁}
+  {a₋₀ : PathP (λ i → A i i0) a₀₀ a₁₀}
+  {a₋₁ : PathP (λ i → A i i1) a₀₁ a₁₁}
+  → SquareP A  a₀₋ a₁₋ a₋₀ a₋₁ → SquareP (λ i j → A j i) a₋₀ a₋₁ a₀₋ a₁₋
+flipSquareP sq i j = sq j i
+
+
 module _ {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁} {a₁₀ a₁₁ : A} {a₁₋ : a₁₀ ≡ a₁₁}
   {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁}
   where
@@ -196,6 +206,15 @@ module _ {a₀₀ a₁₁ : A} {a₋ : a₀₀ ≡ a₁₁}
     fillerTo p k i j = hcomp-equivFiller (λ k → slideSquareFaces i j (~ k)) (inS (p i j)) (~ k)
     fillerFrom : ∀ p → slideSquareInv (slideSquare p) ≡ p
     fillerFrom p k i j = hcomp-equivFiller (slideSquareFaces i j) (inS (p i j)) (~ k)
+
+  q∙p≡r→p≡q⁻1∙r : a₋₀ ∙ a₁₋ ≡ a₋ → a₁₋ ≡ sym a₋₀ ∙ a₋ 
+  q∙p≡r→p≡q⁻1∙r s i j =
+     hcomp (λ k → λ {
+           (i = i0) → compPath-filler a₋₀ a₁₋ j k
+         ; (j = i0) → a₋₀ (k ∨ i)
+         ; (j = i1) → s i k
+         }) (a₋₀ (~ j ∧ i))
+        
 
 -- The type of fillers of a square is equivalent to the double composition identites
 Square≃doubleComp : {a₀₀ a₀₁ a₁₀ a₁₁ : A}
@@ -309,6 +328,37 @@ congPathEquiv : ∀ {ℓ ℓ'} {A : I → Type ℓ} {B : I → Type ℓ'}
   → PathP A a₀ a₁ ≃ PathP B (e i0 .fst a₀) (e i1 .fst a₁)
 congPathEquiv e = isoToEquiv (congPathIso e)
 
+congSqP : ∀ {ℓ ℓ'} {A : I → I → Type ℓ} {B : I → I → Type ℓ'}
+  {a₀₀ : A i0 i0} {a₀₁ : A i0 i1} {a₀₋ : PathP (λ j → A i0 j) a₀₀ a₀₁}
+  {a₁₀ : A i1 i0} {a₁₁ : A i1 i1} {a₁₋ : PathP (λ j → A i1 j) a₁₀ a₁₁}
+  {a₋₀ : PathP (λ i → A i i0) a₀₀ a₁₀} {a₋₁ : PathP (λ i → A i i1) a₀₁ a₁₁}
+  → (f : ∀ i j → A i j → B i j)
+  → SquareP A a₀₋ a₁₋ a₋₀ a₋₁
+  → SquareP B (congP (f i0) a₀₋) (congP (f i1) a₁₋)
+              (congP (λ i → f i i0) a₋₀) (congP (λ i → f i i1) a₋₁)
+congSqP f sq i j = f i j (sq i j)
+{-# INLINE congSqP #-}
+
+
+congSq : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
+  {a₁₀ a₁₁ : A} {a₁₋ : a₁₀ ≡ a₁₁}
+  {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁} (f : A → B)
+  → Square (a₀₋) (a₁₋) (a₋₀) (a₋₁)
+  → Square (cong f a₀₋) (cong f a₁₋) (cong f a₋₀) (cong f a₋₁)
+congSq {a₀₋ = a₀₋} {a₁₋ = a₁₋} {a₋₀ = a₋₀} {a₋₁ = a₋₁}  f sq i j = f (sq i j)
+{-# INLINE congSq #-}
+
+
+congSq' : ∀ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} → {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
+  {a₁₀ a₁₁ : A} {a₁₋ : a₁₀ ≡ a₁₁}
+  {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁}
+  (f : ∀ a → B a)
+  → (s : Square (a₀₋) (a₁₋) (a₋₀) (a₋₁))
+  → SquareP (λ i j → B (s i j))  (cong f a₀₋) (cong f a₁₋) (cong f a₋₀) (cong f a₋₁)
+congSq' {a₀₋ = a₀₋} {a₁₋ = a₁₋} {a₋₀ = a₋₀} {a₋₁ = a₋₁}  f sq i j = f (sq i j)
+{-# INLINE congSq' #-}
+
+
 -- Characterizations of dependent paths in path types
 
 doubleCompPath-filler∙ : {a b c d : A} (p : a ≡ b) (q : b ≡ c) (r : c ≡ d)
@@ -347,6 +397,27 @@ PathP→compPathR {p = p} {q = q} {r = r} {s = s} P j i =
         (P j i)
 
 
+PathP→compPathR' : {a b c d : A} {p p' : a ≡ c} {q : b ≡ d} {r : a ≡ b} {s : c ≡ d}
+  → (p ≡ p')
+  → PathP (λ i → p i ≡ q i) r s
+  → Square q s
+           (sym r ∙∙ refl ∙∙ p')
+           refl
+PathP→compPathR' {p = p} {q = q} {r = r} {s = s} p=p' P j i =
+  
+  hcomp (λ k → λ { (i = i0) →
+                    hcomp (λ k' → λ {
+                              (j = i0) → r (k' ∧ k)
+                            ; (j = i1) → p=p' k k'
+                            ; (k = i0) → p (k' ∧ j)}
+                            )
+                          (r i0) 
+                 ; (i = i1) → q (j ∨ k) 
+                 ; (j = i0) → invSides-filler q (sym r) (~ i) k
+                 ; (j = i1) → s i})
+        (P j i)
+
+
 -- Other direction
 
 compPathL→PathP : {a b c d : A} {p : a ≡ c} {q : b ≡ d} {r : a ≡ b} {s : c ≡ d}
@@ -369,6 +440,27 @@ compPathR→PathP {p = p} {q = q} {r = r} {s = s} P j i =
                  ; (j = i1) → doubleCompPath-filler∙  p s (sym q) k i})
         (P j i)
 
+PathP∙∙→compPathR : {a b c d : A} {p : a ≡ c} {q : b ≡ d} {r : a ≡ b} {s : c ≡ d}  
+  → PathP (λ i → p i ≡ q i) r s
+  → r ≡ p ∙∙ s ∙∙ sym q
+PathP∙∙→compPathR {p = p} {q = q} {r = r} {s = s} P j i =
+    hcomp (λ k → λ { (i = i0) → p (~ k ∧ j)
+                   ; (i = i1) → q (~ k ∧ j)
+                   ; (j = i0) → r i
+                   ; (j = i1) → doubleCompPath-filler  p s (sym q) (k) i})
+          (P j i)
+
+PathP∙∙→compPathR' : {a b c d : A} {p : a ≡ c} {q : b ≡ d} {r : a ≡ b} {s : c ≡ d}  
+  → PathP (λ i → p i ≡ q i) r s
+  → Square refl refl r (p ∙∙ s ∙∙ sym q)
+PathP∙∙→compPathR' {p = p} {q = q} {r = r} {s = s} P i j =
+    hcomp (λ k → λ { (i = i0) → p (~ k ∧ j)
+                   ; (i = i1) → q (~ k ∧ j)
+                   ; (j = i0) → r i
+                   ; (j = i1) → doubleCompPath-filler  p s (sym q) (k) i})
+          (P j i)
+
+
 compPathR→PathP∙∙ : {a b c d : A} {p : a ≡ c} {q : b ≡ d} {r : a ≡ b} {s : c ≡ d}
   → r ≡ p ∙∙ s ∙∙ sym q
   → PathP (λ i → p i ≡ q i) r s
@@ -379,15 +471,61 @@ compPathR→PathP∙∙ {p = p} {q = q} {r = r} {s = s} P j i =
                    ; (j = i1) → doubleCompPath-filler  p s (sym q) (~ k) i})
           (P j i)
 
-comm→PathP : {a b c d : A}  {p : a ≡ c} {q : b ≡ d} {r : a ≡ b} {s : c ≡ d}
-  → p ∙ s ≡ r ∙ q
-  → PathP (λ i → p i ≡ q i) r s
-comm→PathP {p = p} {q = q} {r = r} {s = s} P i j =
-  hcomp
-    (λ k → λ
-      { (i = i0) → r (j ∧ k)
-      ; (i = i1) → s (j ∨ ~ k)
-      ; (j = i0) → compPath-filler p s (~ k) i
-      ; (j = i1) → compPath-filler' r q (~ k) i
-      })
-    (P j i)
+
+module _ {a b c d : A}  {p : a ≡ c} {q : b ≡ d} {r : a ≡ b} {s : c ≡ d} where
+
+ comm↔PathP-sides : ∀ i j →  I → Partial _ A
+ comm↔PathP-sides i j k = λ
+       { (i = i0) → r (j ∧ k)
+       ; (i = i1) → s (j ∨ ~ k)
+       ; (j = i0) → compPath-filler p s (~ k) i
+       ; (j = i1) → compPath-filler' r q (~ k) i }
+
+ comm→PathP : 
+     p ∙ s ≡ r ∙ q
+   → PathP (λ i → p i ≡ q i) r s
+ comm→PathP P i j =
+   hcomp (comm↔PathP-sides i j)
+     (P j i)
+
+ PathP→comm : 
+     PathP (λ i → p i ≡ q i) r s
+   → p ∙ s ≡ r ∙ q
+ PathP→comm P j i =
+   hcomp
+     (λ k → comm↔PathP-sides i j (~ k))
+     (P i j)
+
+ PathP→comm-Iso : Iso
+   (p ∙ s ≡ r ∙ q)
+   (Square p q r s) --(PathP (λ i → p i ≡ q i) r s)
+ Iso.fun PathP→comm-Iso = flipSquare ∘ comm→PathP
+ Iso.inv PathP→comm-Iso = PathP→comm ∘ flipSquare
+ Iso.rightInv PathP→comm-Iso s k i j =
+   hcomp-equivFiller (λ k → comm↔PathP-sides j i (~ k)) (inS (s i j)) (~ k) 
+ Iso.leftInv PathP→comm-Iso s k i j =
+   hcomp-equivFiller (comm↔PathP-sides j i) (inS (s i j)) (~ k)
+
+module whiskSq (A : I → I → Type ℓ)
+  {a₀₀ : A i0 i0} {a₀₁ : A i0 i1} {a₀₋ : PathP (λ j → A i0 j) a₀₀ a₀₁}
+  {a₁₀ : A i1 i0} {a₁₁ : A i1 i1} {a₁₋ : PathP (λ j → A i1 j) a₁₀ a₁₁}
+  {a₋₀ : PathP (λ i → A i i0) a₀₀ a₁₀} {a₋₁ : PathP (λ i → A i i1) a₀₁ a₁₁}
+  {a₀₀' : A i0 i0} {a₀₁' : A i0 i1} {a₀₋' : PathP (λ j → A i0 j) a₀₀' a₀₁'}
+  {a₁₀' : A i1 i0} {a₁₁' : A i1 i1} {a₁₋' : PathP (λ j → A i1 j) a₁₀' a₁₁'}
+  {a₋₀' : PathP (λ i → A i i0) a₀₀' a₁₀'} {a₋₁' : PathP (λ i → A i i1) a₀₁' a₁₁'}
+  (sq : SquareP A a₀₋ a₁₋ a₋₀ a₋₁)
+  {p₀₀ : a₀₀ ≡ a₀₀'} {p₀₁ : a₀₁ ≡ a₀₁'} (p₀₋ : PathP (λ j → a₀₋ j ≡ a₀₋' j) p₀₀ p₀₁)
+  {p₁₀ : a₁₀ ≡ a₁₀'} {p₁₁ : a₁₁ ≡ a₁₁'} (p₁₋ : PathP (λ j → a₁₋ j ≡ a₁₋' j) p₁₀ p₁₁)
+  (p₋₀ : PathP (λ i → a₋₀ i ≡ a₋₀' i) p₀₀ p₁₀) (p₋₁ : PathP (λ i → a₋₁ i ≡ a₋₁' i) p₀₁ p₁₁)
+    where
+
+
+ sq' : SquareP A a₀₋' a₁₋' a₋₀' a₋₁'
+ sq' i j =
+   hcomp (λ l →
+      λ { (i = i0) → p₀₋ j l
+        ; (i = i1) → p₁₋ j l
+        ; (j = i0) → p₋₀ i l
+        ; (j = i1) → p₋₁ i l
+        })
+     (sq i j)

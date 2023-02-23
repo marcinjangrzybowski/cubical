@@ -169,3 +169,8 @@ snd (fst hopfInvariantEquiv) =
                       π₂S³-gen-by-HopfMap (GroupHom-HopfInvariant-π' 0)
                       (abs→⊎ _ _ HopfInvariant-HopfMap)
 snd hopfInvariantEquiv = snd (GroupHom-HopfInvariant-π' 0)
+
+
+-- one' : I → I → I →  ∥ Susp S¹ ∥₂
+-- one' i j k = (map (λ x →  fst x (merid (merid (loop k) j) i)) (invEq (fst hopfInvariantEquiv) (pos zero))) 
+

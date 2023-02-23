@@ -53,3 +53,24 @@ module Elim where
              (cong go p) (cong go q)
              (cong (cong go) r) (cong (cong go) s)
              (trunc x y p q r s) i j k
+
+  elimSet : (P : Bℤ₂ → Type ℓ)
+       → (x : P base)
+       → (p : PathP (λ i → P (loop i)) x x)
+       → (∀ x → isSet (P x))
+       → (z : Bℤ₂) → P z
+  elimSet P x p Pgpd = go
+    where
+    go : (z : Bℤ₂) → P z
+    go base = x
+    go (loop i) = p i
+    go (loop² i j) =
+               isSet→SquareP 
+         (λ i j → Pgpd (loop² i j))
+         (cong go loop)
+         refl
+         refl
+         (cong go loop) i j
+    go (trunc x y p q r s i j k)
+      = isOfHLevel→isOfHLevelDep 3 (λ x → isSet→isGroupoid (Pgpd x))
+            _ _ _ _ (λ j k → go (r j k)) (λ j k → go (s j k)) (trunc x y p q r s) i j k

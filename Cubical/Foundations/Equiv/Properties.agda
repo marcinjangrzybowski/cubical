@@ -21,6 +21,7 @@ open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Equiv.HalfAdjoint
 open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Path
 open import Cubical.Foundations.HLevels
@@ -259,3 +260,129 @@ isEquiv[equivFunA≃B∘f]→isEquiv[f] f (g , gIsEquiv) g∘fIsEquiv  =
                  → f ∙ₑ h ≡ g ∙ₑ h → f ≡ g
 ∙ₑrightCancel _ _ h =
   equivEq ∘ invEq (congEquiv (postCompEquiv h)) ∘ cong fst
+
+∙ₑleftCancel : {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''}
+                 → (f : A ≃ B) (g h : B ≃ C)
+                 → f ∙ₑ g ≡ f ∙ₑ h → g ≡ h
+∙ₑleftCancel f _ _ =
+  equivEq ∘ invEq (congEquiv (preCompEquiv f)) ∘ cong fst
+
+uaInvEquiv' : ∀ {A B : Type ℓ} → (e : A ≃ B) → ua (invEquiv e) ≡ sym (ua e)
+uaInvEquiv' {A = A} {B = B} e i j =
+    Glue (ua e i) {φ = j ∨ ~ j}
+        λ {  (j = i0) → B , ΣPathPProp {A = λ i → B → ua e i} {B = λ i → isEquiv}
+                              {u = invEquiv e} {v = idEquiv B}
+                              isPropIsEquiv (funExt (λ x → ua-gluePath e (secEq e x))) i            
+           ; (j = i1) → A , ΣPathPProp {A = λ i → A → ua e i} {B = λ i → isEquiv}
+                              {u = idEquiv A} {v = e}
+                              isPropIsEquiv (funExt (λ x → ua-gluePath e refl )) i
+           }
+
+
+uaDomIso : ∀ {ℓ ℓ'} {A B : Type ℓ} (C : Type ℓ') → (e : Iso A B) →  
+     ua (isoToEquiv (domIso {C = C} e))
+       ≡ cong (λ X → X → C) (ua (isoToEquiv e))
+uaDomIso C e =
+  invEq≡→equivFun≡ (invEquiv univalence)
+   (equivEq (funExt (λ x →
+     fromPathP (funTypeTransp' (idfun _) C ((ua (isoToEquiv e))) x)
+      ∙ funExt λ y → cong x (cong (Iso.inv e) (transportRefl y)))))
+
+
+
+uaDomIso' : ∀ {ℓ ℓ'} {A B : Type ℓ} (C : Type ℓ') → (e : Iso A B) →  
+     (transport (λ i → idfun (Type ℓ) (ua (isoToEquiv e) i) → C))
+       ≡ λ z x → z (Iso.inv e x)
+uaDomIso' C e =
+   (funExt (λ x →
+     fromPathP (funTypeTransp' (idfun _) C ((ua (isoToEquiv e))) x)
+      ∙ funExt λ y → cong x (cong (Iso.inv e) (transportRefl y))))
+
+
+uaCompIdFill : {A : Type ℓ} 
+ → Square
+  (ua (idEquiv A))
+  (ua (idEquiv A))
+  refl
+  (ua (idEquiv A))
+uaCompIdFill {A = A} i j  =
+    Glue A {(~ j) ∨ (j ∧ (i ∨ ~ i))} (λ _ → A , idEquiv A)
+
+
+ua-CompFill : ∀ {ℓ} {A B C : Type ℓ} (e : A ≃ B) (f : B ≃ C)
+   → ∀ p
+  → Square
+          (ua e)
+          (ua (fst (e ∙ₑ f) , p))
+          refl
+          (ua f)
+ua-CompFill {A = A} {B} {C} e f p i j =
+          Glue (ua f i)
+         (λ { (j = i0) → (A ,
+              ua-gluePathExt f i ∘ fst e ,
+              isProp→PathP (λ i → isPropIsEquiv
+                (ua-gluePathExt f i ∘ fst e))
+                  (snd e)
+                  (p) i
+            )
+            ; (j = i1) → (ua f i , idEquiv (ua f i)) })
+
+ua-CompFill∙ₑ  : ∀ {ℓ} {A B C : Type ℓ} (e : A ≃ B) (f : B ≃ C)
+  → Square
+          (ua e)
+          (ua (e ∙ₑ f))
+          refl
+          (ua f)
+ua-CompFill∙ₑ e f = ua-CompFill e f _
+
+ua-CompFill' : ∀ {ℓ} {A B C : Type ℓ} (e : A ≃ B) (f : B ≃ C)
+  → ∀ p
+  → Square
+          (ua f)
+          (ua (fst (e ∙ₑ f) , p))
+          (sym (ua e))
+          refl
+          
+ua-CompFill' {A = A} {B} {C} e f p i j =
+    Glue C
+         (λ { (j = i0) → (ua e (~ i) ,
+               fst f ∘ ua-ungluePathExt e (~ i) ,
+                 isProp→PathP (λ i → isPropIsEquiv
+                (fst f ∘ ua-ungluePathExt e (~ i)))
+                  (snd f)
+                  p i)
+            ; (j = i1) → (C , idEquiv C)
+            })
+
+ua-CompFill'∙ₑ : ∀ {ℓ} {A B C : Type ℓ} (e : A ≃ B) (f : B ≃ C)  → Square
+          (ua f)
+          (ua (e ∙ₑ f))
+          (sym (ua e))
+          refl
+ua-CompFill'∙ₑ f e = ua-CompFill' f e _
+
+
+domGlue : ∀ {ℓ'} (B : Type ℓ') (A : Type ℓ) (φ : I)
+              (f : PartialP φ (λ o → Σ[ T ∈ Type ℓ ] T ≃ A)) →
+              
+              (Glue (A → B) λ o → (fst (f o) → B) ,
+                invEquiv (preCompEquiv {C = B} (snd (f o))))
+               ≃ (Glue A f → B)
+domGlue B A φ f =
+   unglueEquiv (A → B)
+     φ (λ o → (fst (f o) → B) ,
+                  invEquiv (preCompEquiv {C = B} (snd (f o))))
+     ∙ₑ preCompEquiv (unglueEquiv A φ f)
+
+-- domUA : ∀ {A B : Type ℓ} {ℓ'} {C : Type ℓ'}
+--          → (e : A ≃ B) →
+--           Square
+--             {!!}
+--             (λ j → ua e j → C)
+--             -- (ua (invEquiv (preCompEquiv {C = C} e)))
+--             {!!}
+--             {!!}
+          
+-- domUA {A = A} {B = B} {C = C} e i j =
+--    ua (domGlue C B (j ∨ ~ j)
+--          (λ {(j = i0) → A , e ; (j = i1) → B , idEquiv _ })) i

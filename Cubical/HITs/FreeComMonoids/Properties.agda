@@ -99,3 +99,7 @@ AssocList≃FreeComMonoid = isoToEquiv (iso AL→FCM FCM→AL AL→FCM∘FCM→A
 
 AssocList≡FreeComMonoid : AssocList A ≡ FreeComMonoid A
 AssocList≡FreeComMonoid = ua AssocList≃FreeComMonoid
+
+len : FreeComMonoid A → ℕ
+len = {!!}
+

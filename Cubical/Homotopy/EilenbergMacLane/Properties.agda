@@ -36,7 +36,7 @@ open import Cubical.Data.Nat hiding (_·_)
 open import Cubical.HITs.Truncation as Trunc
   renaming (rec to trRec; elim to trElim)
 open import Cubical.HITs.EilenbergMacLane1
-  renaming (rec to EMrec ; elim to EM₁elim)
+  renaming (rec to EMrec' ; elim to EM₁elim)
 open import Cubical.HITs.Truncation
   renaming (elim to trElim ; rec to trRec ; rec2 to trRec2)
 open import Cubical.HITs.Susp
@@ -132,7 +132,7 @@ module _ (Ĝ : Group ℓ) where
   compRightEquiv g h = equivEq (funExt (λ x → (·Assoc x g h) ⁻¹))
 
   CodesSet : EM₁ Ĝ → hSet ℓ
-  CodesSet = EMrec Ĝ (isOfHLevelTypeOfHLevel 2) (G , is-set) RE REComp
+  CodesSet = EMrec' Ĝ (isOfHLevelTypeOfHLevel 2) (G , is-set) RE REComp
     where
       RE : (g : G) → Path (hSet ℓ) (G , is-set) (G , is-set)
       RE g = Σ≡Prop (λ X → isPropIsOfHLevel {A = X} 2) (ua (rightEquiv g))
@@ -179,9 +179,11 @@ module _ (Ĝ : Group ℓ) where
   Iso.inv ΩEM₁Iso = emloop
   Iso.rightInv ΩEM₁Iso = encode-decode embase
   Iso.leftInv ΩEM₁Iso = decode-encode embase
-
+  
   ΩEM₁≡ : (Path (EM₁ Ĝ) embase embase) ≡ G
   ΩEM₁≡ = isoToPath ΩEM₁Iso
+
+  
 
 --------- Ω (EMₙ₊₁ G) ≃ EMₙ G ---------
 module _ {G : AbGroup ℓ} where
@@ -644,7 +646,7 @@ inducedFun-EM-raw : {G' : AbGroup ℓ} {H' : AbGroup ℓ'}
                      → EM-raw G' n → EM-raw H' n
 inducedFun-EM-raw f =
   elim+2 (fst f)
-    (EMrec _ emsquash embase
+    (EMrec' _ emsquash embase
      (λ g → emloop (fst f g))
       λ g h → compPathR→PathP (sym
                 (sym (lUnit _)

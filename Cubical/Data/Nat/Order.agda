@@ -278,6 +278,12 @@ splitℕ-< m n with m ≟ n
 ... | eq x = inr (0 , (sym x))
 ... | gt x = inr (<-weaken x)
 
+¬≡ℕ-cases : (m n : ℕ) → ¬ m ≡ n → (m < n) ⊎ (n < m)
+¬≡ℕ-cases m n ¬p with m ≟ n
+... | lt x = inl x
+... | eq x = ⊥.rec (¬p x)
+... | gt x = inr x
+
 ≤CaseInduction : {P : ℕ → ℕ → Type ℓ} {n m : ℕ}
   → (n ≤ m → P n m) → (m ≤ n → P n m)
   → P n m

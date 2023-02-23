@@ -6,6 +6,7 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Pointed
+open import Cubical.Foundations.Path
 
 open import Cubical.Data.Bool
 open import Cubical.Data.Empty
@@ -105,6 +106,89 @@ meridian-contraction i j l = hfill (λ k → λ { (i = i0) → north
 S²→SuspS¹ : S² → SuspS¹
 S²→SuspS¹ base = north
 S²→SuspS¹ (surf i j) = meridian-contraction i j i1
+
+
+pp1 pp-1 pp0 : Square {A = SuspS¹}
+             (λ j → merid base j )
+             (λ j → south)
+             (λ i → merid base i)
+             (λ i → south)
+pp0 i j = merid base (j ∨ i)
+pp1 i j = merid (loop (j ∧ i)) (j ∨ i)
+pp-1 i j = merid (loop (~ (j ∧ i))) (j ∨ i)
+
+
+data dS² : Type where
+ no ce  : dS²
+ no≡ce : no ≡ ce
+ surf : Square no≡ce refl no≡ce refl
+
+-- ww : Susp S¹ → Type
+-- ww north = S¹
+-- ww south = S¹
+-- ww (merid base i) = {!!}
+-- ww (merid (loop i₁) i) = {!!}
+
+-- zz : Susp S¹ → (x : Susp S¹) → x ≡ x
+-- zz = {!!}
+
+-- IsoDS²SuspS¹ : Iso dS² (Susp S¹)
+-- fun IsoDS²SuspS¹ no = north
+-- fun IsoDS²SuspS¹ ce = south
+-- fun IsoDS²SuspS¹ (no≡ce i) = merid base i
+-- fun IsoDS²SuspS¹ (surf i j) = pp1 i j
+-- inv IsoDS²SuspS¹ north = no
+-- inv IsoDS²SuspS¹ south = ce
+-- inv IsoDS²SuspS¹ (merid base i) = no≡ce i
+-- inv IsoDS²SuspS¹ (merid (loop i) j) = no≡ce j
+-- rightInv IsoDS²SuspS¹ north = refl
+-- rightInv IsoDS²SuspS¹ south = refl
+-- rightInv IsoDS²SuspS¹ (merid base i) = refl
+-- rightInv IsoDS²SuspS¹ (merid (loop i) j) k = {!merid (loop i) j!}
+-- leftInv IsoDS²SuspS¹ no = refl
+-- leftInv IsoDS²SuspS¹ ce = refl
+-- leftInv IsoDS²SuspS¹ (no≡ce i) j = {!surf (i ∧ j) !}
+-- leftInv IsoDS²SuspS¹ (surf i j) k = {!!}
+
+-- dS²Co : dS² → Type
+-- dS²Co no = S¹
+-- dS²Co ce = S¹
+-- dS²Co (no≡ce i) = ua (rotIsEquiv loop) i
+-- dS²Co (surf i i₁) = {!!}
+
+-- IsoDS²S² : Iso dS² S²
+-- fun IsoDS²S² no = base
+-- fun IsoDS²S² so = base
+-- fun IsoDS²S² ce = base
+-- fun IsoDS²S² (no≡ce i) = base
+-- fun IsoDS²S² (ce≡so i) = base
+-- fun IsoDS²S² (surf i j) = surf i j 
+-- inv IsoDS²S² base = ce
+-- inv IsoDS²S² (surf i i₁) = {!!}
+-- rightInv IsoDS²S² = {!!}
+-- leftInv IsoDS²S² = {!!}
+
+
+-- pp' : Square {A = SuspS¹}
+--              (λ j → merid base j )
+--              (λ j → south)
+--              (λ i → merid base i)
+--              (λ i → south)
+-- pp' i j = merid (loop (j ∧ i)) (j ∧ (~ i))
+
+
+-- S²→SuspS¹' : S² → SuspS¹
+-- S²→SuspS¹' base = north
+-- S²→SuspS¹' (surf i j) =
+--   hcomp
+--     ((λ k → λ { (i = i0) → {!!}
+--               ; (i = i1) → {!!}
+--               ; (j = i0) → {!!}
+--               ; (j = i1) → {!!} }))
+--     {!!}
+
+
+
 
 S²→SuspS¹→S² : ∀ x → SuspS¹→S² (S²→SuspS¹ x) ≡ x
 S²→SuspS¹→S² base k = base

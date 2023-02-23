@@ -79,6 +79,15 @@ cong₂ : {C : (a : A) → (b : B a) → Type ℓ} →
 cong₂ f p q i = f (p i) (q i)
 {-# INLINE cong₂ #-}
 
+cong₂' : {C : Type ℓ} →
+        (f : (a : A) → (b : B a) → C) →
+        (p : x ≡ y) →
+        {u : B x} {v : B y} (q : PathP (λ i → B (p i)) u v) →
+        (f x u)  ≡ (f y v)
+cong₂' f p q i = f (p i) (q i)
+{-# INLINE cong₂' #-}
+
+
 congP₂ : {A : I → Type ℓ} {B : (i : I) → A i → Type ℓ'}
   {C : (i : I) (a : A i) → B i a → Type ℓ''}
   (f : (i : I) → (a : A i) → (b : B i a) → C i a b)
@@ -217,11 +226,14 @@ compPathP'-filler : {B : A → Type ℓ'} {x' : B x} {y' : B y} {z' : B z} {p : 
   (P : PathP (λ i → B (p i)) x' y') (Q : PathP (λ i → B (q i)) y' z')
   → PathP (λ j → PathP (λ i → B (compPath-filler p q j i)) x' (Q j)) P (compPathP' {B = B} P Q)
 compPathP'-filler {B = B} {x' = x'} {p = p} {q = q} P Q j i =
+
   fill (λ j → B (compPath-filler p q j i))
        (λ j → λ { (i = i0) → x'  ;
                   (i = i1) → Q j })
        (inS (P i))
        j
+
+
 
 -- Syntax for chains of equational reasoning
 

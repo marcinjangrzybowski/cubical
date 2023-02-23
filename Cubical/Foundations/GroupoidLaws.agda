@@ -89,6 +89,17 @@ assoc p q r k = (compPath-filler p q k) ∙ compPath-filler' q r (~ k)
 ∙²≡id→≡refl {l = l} p =
    (rUnit l ∙ cong (l ∙_) (sym (rCancel l))) ∙ assoc _ _ _ ∙ cong (_∙ (sym l)) p ∙ rCancel l 
 
+rCancelRefl : (p : x ≡ x) (q : x ≡ y) →
+           p ∙ q ≡ q → p ≡ refl
+rCancelRefl p q s i j =
+   hcomp
+     (λ k → λ { (i = i0) → compPath-filler p q (~ k) j
+              ; (i = i1) → q (~ k ∧ j) 
+              ; (j = i0) → p i0
+              ; (j = i1) → q (~ k)
+              })
+     (s i j)
+
 
 -- heterogeneous groupoid laws
 
@@ -170,6 +181,19 @@ leftright p q i j =
                  ; (j = i1) → q (t ∨ i) })
         (invSides-filler q (sym p) (~ i) j)
 
+∙≡∙→square : (p : x ≡ y) → (q : y ≡ z) → (r : x ≡ w) → (s : w ≡ z)
+              → p ∙ q ≡ r ∙ s
+              → Square p s r q
+         
+∙≡∙→square p q r s v i j =
+   hcomp
+    (λ k → λ { (i = i0) → compPath-filler p q (~ k) j
+             ; (i = i1) → compPath-filler' r s (~ k) j
+             ; (j = i0) → r (i ∧ k)
+             ; (j = i1) → q (i ∨ ~ k)
+             })
+      (v i j) 
+
 -- equating doubleCompPath and a succession of two compPath
 
 split-leftright : {ℓ : Level} {A : Type ℓ} {w x y z : A} (p : w ≡ x) (q : x ≡ y) (r : y ≡ z) →
@@ -193,6 +217,16 @@ doubleCompPath-elim p q r = (split-leftright p q r) ∙ (λ i → (leftright p q
 doubleCompPath-elim' : {ℓ : Level} {A : Type ℓ} {w x y z : A} (p : w ≡ x) (q : x ≡ y)
                        (r : y ≡ z) → (p ∙∙ q ∙∙ r) ≡ p ∙ (q ∙ r)
 doubleCompPath-elim' p q r = (split-leftright' p q r) ∙ (sym (leftright p (q ∙ r)))
+
+
+∙-∙≡→square : {p : x ≡ y} → {q : y ≡ z} → {r : x ≡ w} → {s : w ≡ z}
+              → p ≡ r ∙ s ∙ sym q
+              → Square p s r q
+         
+∙-∙≡→square {q = q} {r} {s} v  =
+  (v ∙ sym (doubleCompPath-elim' _ _  _))
+    ◁ symP (doubleCompPath-filler r s (sym q))
+
 
 cong-∙∙-filler : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} {x y z w : A}
      (f : A → B) (p : w ≡ x) (q : x ≡ y) (r : y ≡ z)
@@ -271,7 +305,7 @@ cong₂Funct : ∀ {ℓ ℓ'} {A : Type ℓ} {x y : A} {B : Type ℓ'} (f : A �
         (p : x ≡ y) →
         {u v : A} (q : u ≡ v) →
         cong₂ f p q ≡ cong (λ x → f x u) p ∙ cong (f y) q
-cong₂Funct {x = x} {y = y} f p {u = u} {v = v} q j i =
+cong₂Funct {x = x} {y = y} f p {u = u} {v = v} q j i = 
   hcomp (λ k → λ { (i = i0) → f x u
                   ; (i = i1) → f y (q k)
                   ; (j = i0) → f (p i) (q (i ∧ k))})
@@ -280,8 +314,9 @@ cong₂Funct {x = x} {y = y} f p {u = u} {v = v} q j i =
 symDistr-filler : ∀ {ℓ} {A : Type ℓ} {x y z : A} (p : x ≡ y) (q : y ≡ z) → I → I → I → A
 symDistr-filler {A = A} {z = z} p q i j k =
   hfill (λ k → λ { (i = i0) → q (k ∨ j)
-                 ; (i = i1) → p (~ k ∧ j) })
-       (inS (invSides-filler q (sym p) i j))
+                 ; (i = i1) → p (~ k ∧ j)
+                 })
+                 (inS (invSides-filler q (sym p) i j))
        k
 
 symDistr : ∀ {ℓ} {A : Type ℓ} {x y z : A} (p : x ≡ y) (q : y ≡ z) → sym (p ∙ q) ≡ sym q ∙ sym p
@@ -499,3 +534,86 @@ pentagonIdentity {x = x} {y} p q r s =
          → (p : x ≡ y)
          → sym p ∙∙ refl ∙∙ p ≡ refl
 ∙∙lCancel p i j = ∙∙lCancel-fill p i j i1
+
+
+-- filler'≡filler : (p : x ≡ y) (q : y ≡ z) →
+--        Cube (compPath-filler p q)
+--             (compPath-filler' p q)
+--           (λ i j → (invSides-filler q (sym p)) (~ i) (j))
+--           (refl {x = p ∙ q})
+--           (λ l i → p (~ i ∧ l))
+--           λ l i → q (l ∨ i)
+-- filler'≡filler p q l i j =
+--   hcomp
+--     (λ z →
+--       λ {  (i = i0) → ci0 z j l
+--           ;(j = i0) → p (~ i ∧ l)
+--           ;(j = i1) → q ((l ∨ i) ∧ z)  
+--         })
+--        (p (j ∨ (~ i ∧ l)))
+--  where
+--    ci0 : Cube
+--       (λ j l → p (j ∨ l))
+--       (λ j l → (invSides-filler q (sym p)) (~ j) (l))
+--       (λ z l → p l)
+--       (λ z l → q (l ∧ z))
+--       (λ z j → p j)
+--       λ z j → q (j ∧ z)
+--    ci0 z j l =
+--      hcomp {φ = j ∨ l ∨ ~ z ∨ ~ j ∨ ~ l}
+--        (λ w → λ {
+--            (z = i0) → p (j ∨ l ∨ ~ w)
+--           ;(j = i0) → p (l ∨ ~ w)
+--           ;(j = i1) → q (l ∧ z ∧ w)  
+--           ;(l = i0) → p (j ∨ ~ w)
+--           ;(l = i1) → q (j ∧ z ∧ w)  
+--         })
+--        (p i1)
+
+
+-- compPathP'-filler' : ∀ {ℓ'} {B : A → Type ℓ'} {x' : B x} {y' : B y} {z' : B z} {p : x ≡ y} {q : y ≡ z}
+--   (P : PathP (λ i → B (p i)) x' y') (Q : PathP (λ i → B (q i)) y' z')
+--   → PathP (λ j → PathP (λ i → B (compPath-filler' p q j i)) (P (~ j)) z') Q (compPathP' {B = B} P Q)
+-- compPathP'-filler' {B = B} {x' = x'} {p = p} {q = q} P Q j i =
+--   comp (λ z → B (filler'≡filler p q z j i))
+--        {!!}
+--        {!!}
+--   -- fill (λ j → B {!(compPath-filler p q j i)!})
+--   --      (λ j → λ { (i = i0) → {!!}  ;
+--   --                 (i = i1) → {!!} })
+--   --      (inS {!!})
+--   --      j
+
+filler'≡filler : (p : x ≡ y) (q : y ≡ z) →
+       Cube
+         (λ i j → (p ∙ q) (~ i ∨ j))
+         (compPath-filler' p q)
+         (λ l j → q (j ∨ ~ l))
+         (refl {x = p ∙ q})
+         (λ l i → (compPath-filler p q) (~ l) (~ i))
+         λ _ _ → z
+filler'≡filler p q l i j =
+  hcomp 
+       (λ z → λ {
+            (l = i1)(j = i0) → p (~ i)
+           ;(i = i0) → q ((j ∨ ~ l) ∧ z)
+           ;(i = i1)(j = i0) → p i0
+           ;(j = i1) → q z
+        }) (p( ~ i ∨ j))
+
+  -- {!!}
+  -- hcomp 
+  --      (λ z → λ {
+  --           (j = i1) → {!!}
+  --          ;(i = i0) → {!!}
+  --          ;(i = i1)(j = i0) → {!!}
+  --          -- (z = i0) → ?
+  --         --  (l = i1) → ?
+  --         -- ;(i = i0) → ?
+  --         -- -- ;(j = i1) → ?  
+  --         -- ;(j = i0) → ?
+  --         -- -- ;(l = i1) → ?
+  --         -- ;(l = i0)(j = i1) → ?
+  --         -- ;(j = i1)(i = i1) → ?
+  --       })
+  --      {!!}

@@ -8,7 +8,7 @@ open import Cubical.Foundations.Function
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Path
 
-open import Cubical.HITs.S1.Base
+open import Cubical.HITs.S1
 open import Cubical.HITs.S2.Base
 open import Cubical.HITs.Susp
 
@@ -131,3 +131,46 @@ S¹×S¹→S²-sym : (x y : S¹) → toSusp S²∙ (S¹×S¹→S² x y) ≡ sym 
 S¹×S¹→S²-sym x y =
   cong sym (sym (toSuspPresInvS²  (S¹×S¹→S² x y)))
   ∙ cong (sym ∘ toSusp S²∙) (S¹×S¹→S²-anticomm x y)
+
+
+-- π₃S² = S³ → S²
+
+-- -- reflSq : Square {A = S²} (λ _ → base) refl refl refl  
+-- -- reflSq = (λ _ _ → base)
+
+π₃S²' : S² → Type
+π₃S²' x =
+ let z = (λ _ _ → x)
+ in Cube {A = S²} z z z z z z
+
+-- Iso-π₃S²' : Iso (Σ _ π₃S²') π₃S²
+-- fun Iso-π₃S²' (x , y) base = x
+-- fun Iso-π₃S²' (x , y) (surf i j k) = y i j k
+-- fst (inv Iso-π₃S²' x) = x base
+-- snd (inv Iso-π₃S²' x) i j k = x (surf i j k)
+-- rightInv Iso-π₃S²' b i base = b base
+-- rightInv Iso-π₃S²' b i (surf j i₁ i₂) = b (surf j i₁ i₂)
+-- leftInv Iso-π₃S²' a = refl
+
+
+-- S²→SuspS¹ : S² → Susp S¹
+-- S²→SuspS¹ = ?
+
+-- S²→S¹→S¹ : S² → S¹ → S¹
+-- S²→S¹→S¹ base x = x
+-- S²→S¹→S¹ (surf i j) base = {!!}
+-- S²→S¹→S¹ (surf i i₁) (loop i₂) = {!!}
+--  -- isGroupoid→isGroupoid' isGroupoidS¹
+--  --    (λ _ i₂ → loop i₂) (λ _ i₂ → loop i₂)
+--  --    (λ _ i₂ → loop i₂) (λ _ i₂ → loop i₂)
+--  --    (λ i i₁ → loop (i ∧ ~ i ∧ i₁ ∧ ~ i₁))
+--  --    (λ i i₁ → loop (i ∧ ~ i ∧ i₁ ∧ ~ i₁))
+--  --    i i₁ i₂
+
+-- S²→S¹→S¹ : S² → Path S¹ base base
+-- S²→S¹→S¹ base = loop 
+-- S²→S¹→S¹ (surf i j) k = {!!}
+
+-- CodeS² : S² → Type
+-- CodeS² base = Path S¹ base base
+-- CodeS² (surf i i₁) = {!!}
