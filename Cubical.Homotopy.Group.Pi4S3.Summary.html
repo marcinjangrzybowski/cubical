@@ -1,100 +1,141 @@
 <!DOCTYPE HTML>
 <html><head><meta charset="utf-8"><title>Cubical.Homotopy.Group.Pi4S3.Summary</title><link rel="stylesheet" href="Agda.css"></head><body><pre class="Agda"><a id="1" class="Comment">{-
 
-This file contains a summary of the proof that π₄(S³) ≡ ℤ/2ℤ
+This file contains a summary of the proofs that π₄(S³) ≡ ℤ/2ℤ
 
-The --experimental-lossy-unification flag is used to speed up type checking.
+- The first proof &quot;π₄S³≃ℤ/2ℤ&quot; closely follows Brunerie&#39;s thesis.
+
+- The second proof &quot;π₄S³≃ℤ/2ℤ-direct&quot; is much more direct and avoids
+  all of the more advanced constructions in chapters 4-6 in Brunerie&#39;s
+  thesis.
+
+- The third proof &quot;π₄S³≃ℤ/2ℤ-computation&quot; uses ideas from the direct
+  proof to define an alternative Brunerie number which computes to -2
+  in a few seconds and the main result is hence obtained by computation
+  as conjectured on page 85 of Brunerie&#39;s thesis.
+
+The --lossy-unification flag is used to speed up type checking.
 The file still type checks without it, but it&#39;s a lot slower (about 10 times).
 
 -}</a>
-<a id="227" class="Symbol">{-#</a> <a id="231" class="Keyword">OPTIONS</a> <a id="239" class="Pragma">--safe</a> <a id="246" class="Pragma">--experimental-lossy-unification</a> <a id="279" class="Symbol">#-}</a>
-<a id="283" class="Keyword">module</a> <a id="290" href="Cubical.Homotopy.Group.Pi4S3.Summary.html" class="Module">Cubical.Homotopy.Group.Pi4S3.Summary</a> <a id="327" class="Keyword">where</a>
+<a id="694" class="Symbol">{-#</a> <a id="698" class="Keyword">OPTIONS</a> <a id="706" class="Pragma">--safe</a> <a id="713" class="Pragma">--lossy-unification</a> <a id="733" class="Symbol">#-}</a>
+<a id="737" class="Keyword">module</a> <a id="744" href="Cubical.Homotopy.Group.Pi4S3.Summary.html" class="Module">Cubical.Homotopy.Group.Pi4S3.Summary</a> <a id="781" class="Keyword">where</a>
 
-<a id="334" class="Keyword">open</a> <a id="339" class="Keyword">import</a> <a id="346" href="Cubical.Foundations.Prelude.html" class="Module">Cubical.Foundations.Prelude</a>
-<a id="374" class="Keyword">open</a> <a id="379" class="Keyword">import</a> <a id="386" href="Cubical.Foundations.Pointed.html" class="Module">Cubical.Foundations.Pointed</a>
+<a id="788" class="Keyword">open</a> <a id="793" class="Keyword">import</a> <a id="800" href="Cubical.Foundations.Prelude.html" class="Module">Cubical.Foundations.Prelude</a>
+<a id="828" class="Keyword">open</a> <a id="833" class="Keyword">import</a> <a id="840" href="Cubical.Foundations.Pointed.html" class="Module">Cubical.Foundations.Pointed</a>
 
-<a id="415" class="Keyword">open</a> <a id="420" class="Keyword">import</a> <a id="427" href="Cubical.Data.Nat.Base.html" class="Module">Cubical.Data.Nat.Base</a>
-<a id="449" class="Keyword">open</a> <a id="454" class="Keyword">import</a> <a id="461" href="Cubical.Data.Sigma.Base.html" class="Module">Cubical.Data.Sigma.Base</a>
+<a id="869" class="Keyword">open</a> <a id="874" class="Keyword">import</a> <a id="881" href="Cubical.Data.Nat.Base.html" class="Module">Cubical.Data.Nat.Base</a>
+<a id="903" class="Keyword">open</a> <a id="908" class="Keyword">import</a> <a id="915" href="Cubical.Data.Int.Base.html" class="Module">Cubical.Data.Int.Base</a>
+<a id="937" class="Keyword">open</a> <a id="942" class="Keyword">import</a> <a id="949" href="Cubical.Data.Sigma.Base.html" class="Module">Cubical.Data.Sigma.Base</a>
 
-<a id="486" class="Keyword">open</a> <a id="491" class="Keyword">import</a> <a id="498" href="Cubical.HITs.Sn.html" class="Module">Cubical.HITs.Sn</a>
-<a id="514" class="Keyword">open</a> <a id="519" class="Keyword">import</a> <a id="526" href="Cubical.HITs.SetTruncation.html" class="Module">Cubical.HITs.SetTruncation</a>
+<a id="974" class="Keyword">open</a> <a id="979" class="Keyword">import</a> <a id="986" href="Cubical.HITs.Sn.html" class="Module">Cubical.HITs.Sn</a>
+<a id="1002" class="Keyword">open</a> <a id="1007" class="Keyword">import</a> <a id="1014" href="Cubical.HITs.SetTruncation.html" class="Module">Cubical.HITs.SetTruncation</a>
 
-<a id="554" class="Keyword">open</a> <a id="559" class="Keyword">import</a> <a id="566" href="Cubical.Homotopy.HopfInvariant.Base.html" class="Module">Cubical.Homotopy.HopfInvariant.Base</a>
-<a id="602" class="Keyword">open</a> <a id="607" class="Keyword">import</a> <a id="614" href="Cubical.Homotopy.HopfInvariant.Homomorphism.html" class="Module">Cubical.Homotopy.HopfInvariant.Homomorphism</a>
-<a id="658" class="Keyword">open</a> <a id="663" class="Keyword">import</a> <a id="670" href="Cubical.Homotopy.HopfInvariant.HopfMap.html" class="Module">Cubical.Homotopy.HopfInvariant.HopfMap</a>
-<a id="709" class="Keyword">open</a> <a id="714" class="Keyword">import</a> <a id="721" href="Cubical.Homotopy.HopfInvariant.Brunerie.html" class="Module">Cubical.Homotopy.HopfInvariant.Brunerie</a>
-<a id="761" class="Keyword">open</a> <a id="766" class="Keyword">import</a> <a id="773" href="Cubical.Homotopy.Whitehead.html" class="Module">Cubical.Homotopy.Whitehead</a>
-<a id="800" class="Keyword">open</a> <a id="805" class="Keyword">import</a> <a id="812" href="Cubical.Homotopy.Group.Base.html" class="Module">Cubical.Homotopy.Group.Base</a> <a id="840" class="Keyword">hiding</a> <a id="847" class="Symbol">(</a><a id="848" href="Cubical.Homotopy.Group.Base.html#1361" class="Function">π</a><a id="849" class="Symbol">)</a>
-<a id="851" class="Keyword">open</a> <a id="856" class="Keyword">import</a> <a id="863" href="Cubical.Homotopy.Group.Pi3S2.html" class="Module">Cubical.Homotopy.Group.Pi3S2</a>
-<a id="892" class="Keyword">open</a> <a id="897" class="Keyword">import</a> <a id="904" href="Cubical.Homotopy.Group.Pi4S3.BrunerieNumber.html" class="Module">Cubical.Homotopy.Group.Pi4S3.BrunerieNumber</a>
+<a id="1042" class="Keyword">open</a> <a id="1047" class="Keyword">import</a> <a id="1054" href="Cubical.Homotopy.HopfInvariant.Base.html" class="Module">Cubical.Homotopy.HopfInvariant.Base</a>
+<a id="1090" class="Keyword">open</a> <a id="1095" class="Keyword">import</a> <a id="1102" href="Cubical.Homotopy.HopfInvariant.Homomorphism.html" class="Module">Cubical.Homotopy.HopfInvariant.Homomorphism</a>
+<a id="1146" class="Keyword">open</a> <a id="1151" class="Keyword">import</a> <a id="1158" href="Cubical.Homotopy.HopfInvariant.HopfMap.html" class="Module">Cubical.Homotopy.HopfInvariant.HopfMap</a>
+<a id="1197" class="Keyword">open</a> <a id="1202" class="Keyword">import</a> <a id="1209" href="Cubical.Homotopy.HopfInvariant.Brunerie.html" class="Module">Cubical.Homotopy.HopfInvariant.Brunerie</a>
+<a id="1249" class="Keyword">open</a> <a id="1254" class="Keyword">import</a> <a id="1261" href="Cubical.Homotopy.Whitehead.html" class="Module">Cubical.Homotopy.Whitehead</a>
+<a id="1288" class="Keyword">open</a> <a id="1293" class="Keyword">import</a> <a id="1300" href="Cubical.Homotopy.Group.Base.html" class="Module">Cubical.Homotopy.Group.Base</a> <a id="1328" class="Keyword">hiding</a> <a id="1335" class="Symbol">(</a><a id="1336" href="Cubical.Homotopy.Group.Base.html#1539" class="Function">π</a><a id="1337" class="Symbol">)</a>
+<a id="1339" class="Keyword">open</a> <a id="1344" class="Keyword">import</a> <a id="1351" href="Cubical.Homotopy.Group.Pi3S2.html" class="Module">Cubical.Homotopy.Group.Pi3S2</a>
+<a id="1380" class="Keyword">open</a> <a id="1385" class="Keyword">import</a> <a id="1392" href="Cubical.Homotopy.Group.Pi4S3.BrunerieNumber.html" class="Module">Cubical.Homotopy.Group.Pi4S3.BrunerieNumber</a>
+<a id="1436" class="Keyword">open</a> <a id="1441" class="Keyword">import</a> <a id="1448" href="Cubical.Homotopy.Group.Pi4S3.DirectProof.html" class="Module">Cubical.Homotopy.Group.Pi4S3.DirectProof</a> <a id="1489" class="Symbol">as</a> <a id="1492" class="Module">DirectProof</a>
 
-<a id="949" class="Keyword">open</a> <a id="954" class="Keyword">import</a> <a id="961" href="Cubical.Algebra.Group.Base.html" class="Module">Cubical.Algebra.Group.Base</a>
-<a id="988" class="Keyword">open</a> <a id="993" class="Keyword">import</a> <a id="1000" href="Cubical.Algebra.Group.Instances.Bool.html" class="Module">Cubical.Algebra.Group.Instances.Bool</a>
-<a id="1037" class="Keyword">open</a> <a id="1042" class="Keyword">import</a> <a id="1049" href="Cubical.Algebra.Group.Morphisms.html" class="Module">Cubical.Algebra.Group.Morphisms</a>
-<a id="1081" class="Keyword">open</a> <a id="1086" class="Keyword">import</a> <a id="1093" href="Cubical.Algebra.Group.GroupPath.html" class="Module">Cubical.Algebra.Group.GroupPath</a>
-<a id="1125" class="Keyword">open</a> <a id="1130" class="Keyword">import</a> <a id="1137" href="Cubical.Algebra.Group.MorphismProperties.html" class="Module">Cubical.Algebra.Group.MorphismProperties</a>
-<a id="1178" class="Keyword">open</a> <a id="1183" class="Keyword">import</a> <a id="1190" href="Cubical.Algebra.Group.Instances.Int.html" class="Module">Cubical.Algebra.Group.Instances.Int</a>
-<a id="1226" class="Keyword">open</a> <a id="1231" class="Keyword">import</a> <a id="1238" href="Cubical.Algebra.Group.Instances.IntMod.html" class="Module">Cubical.Algebra.Group.Instances.IntMod</a>
-<a id="1277" class="Keyword">open</a> <a id="1282" class="Keyword">import</a> <a id="1289" href="Cubical.Algebra.Group.ZAction.html" class="Module">Cubical.Algebra.Group.ZAction</a>
-
-
-<a id="1321" class="Comment">-- Homotopy groups (shifted version of π&#39;Gr to get nicer numbering)</a>
-<a id="π"></a><a id="1389" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1389" class="Function">π</a> <a id="1391" class="Symbol">:</a> <a id="1393" href="Agda.Builtin.Nat.html#192" class="Datatype">ℕ</a> <a id="1395" class="Symbol">→</a> <a id="1397" href="Cubical.Foundations.Pointed.Base.html#550" class="Function">Pointed₀</a> <a id="1406" class="Symbol">→</a> <a id="1408" href="Cubical.Algebra.Group.Base.html#1100" class="Function">Group₀</a>
-<a id="1415" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1389" class="Function">π</a> <a id="1417" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1417" class="Bound">n</a> <a id="1419" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1419" class="Bound">X</a> <a id="1421" class="Symbol">=</a> <a id="1423" href="Cubical.Homotopy.Group.Base.html#24809" class="Function">π&#39;Gr</a> <a id="1428" class="Symbol">(</a><a id="1429" href="Cubical.Data.Nat.Base.html#436" class="Function">predℕ</a> <a id="1435" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1417" class="Bound">n</a><a id="1436" class="Symbol">)</a> <a id="1438" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1419" class="Bound">X</a>
+<a id="1505" class="Keyword">open</a> <a id="1510" class="Keyword">import</a> <a id="1517" href="Cubical.Algebra.Group.Base.html" class="Module">Cubical.Algebra.Group.Base</a>
+<a id="1544" class="Keyword">open</a> <a id="1549" class="Keyword">import</a> <a id="1556" href="Cubical.Algebra.Group.Instances.Bool.html" class="Module">Cubical.Algebra.Group.Instances.Bool</a>
+<a id="1593" class="Keyword">open</a> <a id="1598" class="Keyword">import</a> <a id="1605" href="Cubical.Algebra.Group.Morphisms.html" class="Module">Cubical.Algebra.Group.Morphisms</a>
+<a id="1637" class="Keyword">open</a> <a id="1642" class="Keyword">import</a> <a id="1649" href="Cubical.Algebra.Group.GroupPath.html" class="Module">Cubical.Algebra.Group.GroupPath</a>
+<a id="1681" class="Keyword">open</a> <a id="1686" class="Keyword">import</a> <a id="1693" href="Cubical.Algebra.Group.MorphismProperties.html" class="Module">Cubical.Algebra.Group.MorphismProperties</a>
+<a id="1734" class="Keyword">open</a> <a id="1739" class="Keyword">import</a> <a id="1746" href="Cubical.Algebra.Group.Instances.Int.html" class="Module">Cubical.Algebra.Group.Instances.Int</a>
+<a id="1782" class="Keyword">open</a> <a id="1787" class="Keyword">import</a> <a id="1794" href="Cubical.Algebra.Group.Instances.IntMod.html" class="Module">Cubical.Algebra.Group.Instances.IntMod</a>
+<a id="1833" class="Keyword">open</a> <a id="1838" class="Keyword">import</a> <a id="1845" href="Cubical.Algebra.Group.ZAction.html" class="Module">Cubical.Algebra.Group.ZAction</a>
 
 
-<a id="1442" class="Comment">-- Nicer notation for the spheres (as pointed types)</a>
-<a id="𝕊²"></a><a id="1495" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1495" class="Function">𝕊²</a> <a id="𝕊³"></a><a id="1498" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1498" class="Function">𝕊³</a> <a id="1501" class="Symbol">:</a> <a id="1503" href="Cubical.Foundations.Pointed.Base.html#550" class="Function">Pointed₀</a>
-<a id="1512" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1495" class="Function">𝕊²</a> <a id="1515" class="Symbol">=</a> <a id="1517" href="Cubical.HITs.Sn.Base.html#573" class="Function">S₊∙</a> <a id="1521" class="Number">2</a>
-<a id="1523" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1498" class="Function">𝕊³</a> <a id="1526" class="Symbol">=</a> <a id="1528" href="Cubical.HITs.Sn.Base.html#573" class="Function">S₊∙</a> <a id="1532" class="Number">3</a>
+<a id="1877" class="Comment">-- Homotopy groups (shifted version of π&#39;Gr to get nicer numbering)</a>
+<a id="π"></a><a id="1945" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1945" class="Function">π</a> <a id="1947" class="Symbol">:</a> <a id="1949" href="Agda.Builtin.Nat.html#186" class="Datatype">ℕ</a> <a id="1951" class="Symbol">→</a> <a id="1953" href="Cubical.Foundations.Pointed.Base.html#587" class="Function">Pointed₀</a> <a id="1962" class="Symbol">→</a> <a id="1964" href="Cubical.Algebra.Group.Base.html#1134" class="Function">Group₀</a>
+<a id="1971" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1945" class="Function">π</a> <a id="1973" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1973" class="Bound">n</a> <a id="1975" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1975" class="Bound">X</a> <a id="1977" class="Symbol">=</a> <a id="1979" href="Cubical.Homotopy.Group.Base.html#25052" class="Function">π&#39;Gr</a> <a id="1984" class="Symbol">(</a><a id="1985" href="Cubical.Data.Nat.Base.html#436" class="Function">predℕ</a> <a id="1991" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1973" class="Bound">n</a><a id="1992" class="Symbol">)</a> <a id="1994" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1975" class="Bound">X</a>
 
 
-<a id="1536" class="Comment">-- The Brunerie number; defined in Cubical.Homotopy.Group.Pi4S3.BrunerieNumber</a>
-<a id="1615" class="Comment">-- as &quot;abs (HopfInvariant-π&#39; 0 ([ (∣ idfun∙ _ ∣₂ , ∣ idfun∙ _ ∣₂) ]×))&quot;</a>
-<a id="β"></a><a id="1687" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1687" class="Function">β</a> <a id="1689" class="Symbol">:</a> <a id="1691" href="Agda.Builtin.Nat.html#192" class="Datatype">ℕ</a>
-<a id="1693" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1687" class="Function">β</a> <a id="1695" class="Symbol">=</a> <a id="1697" href="Cubical.Homotopy.Group.Pi4S3.BrunerieNumber.html#2041" class="Function">Brunerie</a>
+<a id="1998" class="Comment">-- Nicer notation for the spheres (as pointed types)</a>
+<a id="𝕊²"></a><a id="2051" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2051" class="Function">𝕊²</a> <a id="𝕊³"></a><a id="2054" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2054" class="Function">𝕊³</a> <a id="2057" class="Symbol">:</a> <a id="2059" href="Cubical.Foundations.Pointed.Base.html#587" class="Function">Pointed₀</a>
+<a id="2068" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2051" class="Function">𝕊²</a> <a id="2071" class="Symbol">=</a> <a id="2073" href="Cubical.HITs.Sn.Base.html#573" class="Function">S₊∙</a> <a id="2077" class="Number">2</a>
+<a id="2079" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2054" class="Function">𝕊³</a> <a id="2082" class="Symbol">=</a> <a id="2084" href="Cubical.HITs.Sn.Base.html#573" class="Function">S₊∙</a> <a id="2088" class="Number">3</a>
 
 
-<a id="1708" class="Comment">-- The connection to π₄(S³) is then also proved in the BrunerieNumber</a>
-<a id="1778" class="Comment">-- file following Corollary 3.4.5 in Guillaume Brunerie&#39;s PhD thesis.</a>
-<a id="βSpec"></a><a id="1848" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1848" class="Function">βSpec</a> <a id="1854" class="Symbol">:</a> <a id="1856" href="Cubical.Algebra.Group.Morphisms.html#1601" class="Function">GroupEquiv</a> <a id="1867" class="Symbol">(</a><a id="1868" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1389" class="Function">π</a> <a id="1870" class="Number">4</a> <a id="1872" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1498" class="Function">𝕊³</a><a id="1874" class="Symbol">)</a> <a id="1876" class="Symbol">(</a><a id="1877" href="Cubical.Algebra.Group.Instances.IntMod.html#1229" class="Function Operator">ℤ/</a> <a id="1880" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1687" class="Function">β</a><a id="1881" class="Symbol">)</a>
-<a id="1883" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1848" class="Function">βSpec</a> <a id="1889" class="Symbol">=</a> <a id="1891" href="Cubical.Homotopy.Group.Pi4S3.BrunerieNumber.html#15590" class="Function">BrunerieIso</a>
+<a id="2092" class="Comment">-- The Brunerie number; defined in Cubical.Homotopy.Group.Pi4S3.BrunerieNumber</a>
+<a id="2171" class="Comment">-- as &quot;abs (HopfInvariant-π&#39; 0 ([ (∣ idfun∙ _ ∣₂ , ∣ idfun∙ _ ∣₂) ]×))&quot;</a>
+<a id="β"></a><a id="2243" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2243" class="Function">β</a> <a id="2245" class="Symbol">:</a> <a id="2247" href="Agda.Builtin.Nat.html#186" class="Datatype">ℕ</a>
+<a id="2249" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2243" class="Function">β</a> <a id="2251" class="Symbol">=</a> <a id="2253" href="Cubical.Homotopy.Group.Pi4S3.BrunerieNumber.html#2190" class="Function">Brunerie</a>
 
 
-<a id="1905" class="Comment">-- Ideally one could prove that β is 2 by normalization, but this does</a>
-<a id="1976" class="Comment">-- not seem to terminate before we run out of memory. To try normalize</a>
-<a id="2047" class="Comment">-- this use &quot;C-u C-c C-n β≡2&quot; (which normalizes the term, ignoring</a>
-<a id="2114" class="Comment">-- abstract&#39;s). So instead we prove this by hand as in the second half</a>
-<a id="2185" class="Comment">-- of Guillaume&#39;s thesis.</a>
-<a id="β≡2"></a><a id="2211" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2211" class="Function">β≡2</a> <a id="2215" class="Symbol">:</a> <a id="2217" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1687" class="Function">β</a> <a id="2219" href="Agda.Builtin.Cubical.Path.html#381" class="Function Operator">≡</a> <a id="2221" class="Number">2</a>
-<a id="2223" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2211" class="Function">β≡2</a> <a id="2227" class="Symbol">=</a> <a id="2229" href="Cubical.Homotopy.HopfInvariant.Brunerie.html#14770" class="Function">Brunerie≡2</a>
+<a id="2264" class="Comment">-- The connection to π₄(S³) is then also proved in the BrunerieNumber</a>
+<a id="2334" class="Comment">-- file following Corollary 3.4.5 in Guillaume Brunerie&#39;s PhD thesis.</a>
+<a id="βSpec"></a><a id="2404" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2404" class="Function">βSpec</a> <a id="2410" class="Symbol">:</a> <a id="2412" href="Cubical.Algebra.Group.Morphisms.html#1601" class="Function">GroupEquiv</a> <a id="2423" class="Symbol">(</a><a id="2424" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1945" class="Function">π</a> <a id="2426" class="Number">4</a> <a id="2428" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2054" class="Function">𝕊³</a><a id="2430" class="Symbol">)</a> <a id="2432" class="Symbol">(</a><a id="2433" href="Cubical.Algebra.Group.Instances.IntMod.html#1042" class="Function Operator">ℤGroup/</a> <a id="2441" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2243" class="Function">β</a><a id="2442" class="Symbol">)</a>
+<a id="2444" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2404" class="Function">βSpec</a> <a id="2450" class="Symbol">=</a> <a id="2452" href="Cubical.Homotopy.Group.Pi4S3.BrunerieNumber.html#15772" class="Function">BrunerieIso</a>
 
 
-<a id="2242" class="Comment">-- This involves a lot of theory, for example that π₃(S²) ≃ ℤ where</a>
-<a id="2310" class="Comment">-- the underlying map is induced by the Hopf invariant (which involves</a>
-<a id="2381" class="Comment">-- the cup product on cohomology).</a>
-<a id="2416" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2416" class="Function">_</a> <a id="2418" class="Symbol">:</a> <a id="2420" href="Cubical.Algebra.Group.Morphisms.html#1601" class="Function">GroupEquiv</a> <a id="2431" class="Symbol">(</a><a id="2432" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1389" class="Function">π</a> <a id="2434" class="Number">3</a> <a id="2436" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1495" class="Function">𝕊²</a><a id="2438" class="Symbol">)</a> <a id="2440" href="Cubical.Algebra.Group.Instances.Int.html#461" class="Function">ℤ</a>
-<a id="2442" class="Symbol">_</a> <a id="2444" class="Symbol">=</a> <a id="2446" href="Cubical.Homotopy.Group.Pi3S2.html#5588" class="Function">hopfInvariantEquiv</a>
-
-<a id="2466" class="Comment">-- Which is a consequence of the fact that π₃(S²) is generated by the</a>
-<a id="2536" class="Comment">-- Hopf map.</a>
-<a id="2549" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2549" class="Function">_</a> <a id="2551" class="Symbol">:</a> <a id="2553" href="Cubical.Algebra.Group.ZAction.html#6996" class="Function">gen₁-by</a> <a id="2561" class="Symbol">(</a><a id="2562" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1389" class="Function">π</a> <a id="2564" class="Number">3</a> <a id="2566" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1495" class="Function">𝕊²</a><a id="2568" class="Symbol">)</a> <a id="2570" href="Cubical.HITs.SetTruncation.Base.html#299" class="InductiveConstructor Operator">∣</a> <a id="2572" href="Cubical.Homotopy.HopfInvariant.HopfMap.html#1929" class="Function">HopfMap</a> <a id="2580" href="Cubical.HITs.SetTruncation.Base.html#299" class="InductiveConstructor Operator">∣₂</a>
-<a id="2583" class="Symbol">_</a> <a id="2585" class="Symbol">=</a> <a id="2587" href="Cubical.Homotopy.Group.Pi3S2.html#5313" class="Function">π₂S³-gen-by-HopfMap</a>
-
-<a id="2608" class="Comment">-- etc. For more details see the proof of &quot;Brunerie≡2&quot;.</a>
+<a id="2466" class="Comment">-- Ideally one could prove that β is 2 by normalization, but this does</a>
+<a id="2537" class="Comment">-- not seem to terminate before we run out of memory. To try normalize</a>
+<a id="2608" class="Comment">-- this use &quot;C-u C-c C-n β≡2&quot; (which normalizes the term, ignoring</a>
+<a id="2675" class="Comment">-- abstract&#39;s). So instead we prove this by hand as in the second half</a>
+<a id="2746" class="Comment">-- of Guillaume&#39;s thesis.</a>
+<a id="β≡2"></a><a id="2772" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2772" class="Function">β≡2</a> <a id="2776" class="Symbol">:</a> <a id="2778" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2243" class="Function">β</a> <a id="2780" href="Agda.Builtin.Cubical.Path.html#272" class="Function Operator">≡</a> <a id="2782" class="Number">2</a>
+<a id="2784" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2772" class="Function">β≡2</a> <a id="2788" class="Symbol">=</a> <a id="2790" href="Cubical.Homotopy.HopfInvariant.Brunerie.html#14925" class="Function">Brunerie≡2</a>
 
 
-<a id="2666" class="Comment">-- Combining all of this gives us the desired equivalence of groups:</a>
-<a id="π₄S³≃ℤ/2ℤ"></a><a id="2735" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2735" class="Function">π₄S³≃ℤ/2ℤ</a> <a id="2745" class="Symbol">:</a> <a id="2747" href="Cubical.Algebra.Group.Morphisms.html#1601" class="Function">GroupEquiv</a> <a id="2758" class="Symbol">(</a><a id="2759" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1389" class="Function">π</a> <a id="2761" class="Number">4</a> <a id="2763" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1498" class="Function">𝕊³</a><a id="2765" class="Symbol">)</a> <a id="2767" class="Symbol">(</a><a id="2768" href="Cubical.Algebra.Group.Instances.IntMod.html#1229" class="Function Operator">ℤ/</a> <a id="2771" class="Number">2</a><a id="2772" class="Symbol">)</a>
-<a id="2774" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2735" class="Function">π₄S³≃ℤ/2ℤ</a> <a id="2784" class="Symbol">=</a> <a id="2786" href="Cubical.Foundations.Prelude.html#8526" class="Function">subst</a> <a id="2792" class="Symbol">(</a><a id="2793" href="Cubical.Algebra.Group.Morphisms.html#1601" class="Function">GroupEquiv</a> <a id="2804" class="Symbol">(</a><a id="2805" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1389" class="Function">π</a> <a id="2807" class="Number">4</a> <a id="2809" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1498" class="Function">𝕊³</a><a id="2811" class="Symbol">))</a> <a id="2814" class="Symbol">(</a><a id="2815" href="Cubical.Foundations.Prelude.html#1125" class="Function">cong</a> <a id="2820" href="Cubical.Algebra.Group.Instances.IntMod.html#1229" class="Function Operator">ℤ/_</a> <a id="2824" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2211" class="Function">β≡2</a><a id="2827" class="Symbol">)</a> <a id="2829" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1848" class="Function">βSpec</a>
+<a id="2803" class="Comment">-- This involves a lot of theory, for example that π₃(S²) ≃ ℤGroup where</a>
+<a id="2876" class="Comment">-- the underlying map is induced by the Hopf invariant (which involves</a>
+<a id="2947" class="Comment">-- the cup product on cohomology).</a>
+<a id="2982" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2982" class="Function">_</a> <a id="2984" class="Symbol">:</a> <a id="2986" href="Cubical.Algebra.Group.Morphisms.html#1601" class="Function">GroupEquiv</a> <a id="2997" class="Symbol">(</a><a id="2998" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1945" class="Function">π</a> <a id="3000" class="Number">3</a> <a id="3002" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2051" class="Function">𝕊²</a><a id="3004" class="Symbol">)</a> <a id="3006" href="Cubical.Algebra.Group.Instances.Int.html#451" class="Function">ℤGroup</a>
+<a id="3013" class="Symbol">_</a> <a id="3015" class="Symbol">=</a> <a id="3017" href="Cubical.Homotopy.Group.Pi3S2.html#5763" class="Function">hopfInvariantEquiv</a>
+
+<a id="3037" class="Comment">-- Which is a consequence of the fact that π₃(S²) is generated by the</a>
+<a id="3107" class="Comment">-- Hopf map.</a>
+<a id="3120" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#3120" class="Function">_</a> <a id="3122" class="Symbol">:</a> <a id="3124" href="Cubical.Algebra.Group.ZAction.html#6917" class="Function">gen₁-by</a> <a id="3132" class="Symbol">(</a><a id="3133" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1945" class="Function">π</a> <a id="3135" class="Number">3</a> <a id="3137" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2051" class="Function">𝕊²</a><a id="3139" class="Symbol">)</a> <a id="3141" href="Cubical.HITs.SetTruncation.Base.html#299" class="InductiveConstructor Operator">∣</a> <a id="3143" href="Cubical.Homotopy.HopfInvariant.HopfMap.html#2071" class="Function">HopfMap</a> <a id="3151" href="Cubical.HITs.SetTruncation.Base.html#299" class="InductiveConstructor Operator">∣₂</a>
+<a id="3154" class="Symbol">_</a> <a id="3156" class="Symbol">=</a> <a id="3158" href="Cubical.Homotopy.Group.Pi3S2.html#5488" class="Function">π₂S³-gen-by-HopfMap</a>
+
+<a id="3179" class="Comment">-- etc. For more details see the proof of &quot;Brunerie≡2&quot;.</a>
 
 
-<a id="2837" class="Comment">-- By the SIP this induces an equality of groups:</a>
-<a id="π₄S³≡ℤ/2ℤ"></a><a id="2887" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2887" class="Function">π₄S³≡ℤ/2ℤ</a> <a id="2897" class="Symbol">:</a> <a id="2899" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1389" class="Function">π</a> <a id="2901" class="Number">4</a> <a id="2903" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1498" class="Function">𝕊³</a> <a id="2906" href="Agda.Builtin.Cubical.Path.html#381" class="Function Operator">≡</a> <a id="2908" href="Cubical.Algebra.Group.Instances.IntMod.html#1229" class="Function Operator">ℤ/</a> <a id="2911" class="Number">2</a>
-<a id="2913" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2887" class="Function">π₄S³≡ℤ/2ℤ</a> <a id="2923" class="Symbol">=</a> <a id="2925" href="Cubical.Algebra.Group.GroupPath.html#1389" class="Function">GroupPath</a> <a id="2935" class="Symbol">_</a> <a id="2937" class="Symbol">_</a> <a id="2939" class="Symbol">.</a><a id="2940" href="Agda.Builtin.Sigma.html#252" class="Field">fst</a> <a id="2944" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2735" class="Function">π₄S³≃ℤ/2ℤ</a>
+<a id="3237" class="Comment">-- Combining all of this gives us the desired equivalence of groups:</a>
+<a id="π₄S³≃ℤ/2ℤ"></a><a id="3306" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#3306" class="Function">π₄S³≃ℤ/2ℤ</a> <a id="3316" class="Symbol">:</a> <a id="3318" href="Cubical.Algebra.Group.Morphisms.html#1601" class="Function">GroupEquiv</a> <a id="3329" class="Symbol">(</a><a id="3330" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1945" class="Function">π</a> <a id="3332" class="Number">4</a> <a id="3334" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2054" class="Function">𝕊³</a><a id="3336" class="Symbol">)</a> <a id="3338" class="Symbol">(</a><a id="3339" href="Cubical.Algebra.Group.Instances.IntMod.html#1042" class="Function Operator">ℤGroup/</a> <a id="3347" class="Number">2</a><a id="3348" class="Symbol">)</a>
+<a id="3350" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#3306" class="Function">π₄S³≃ℤ/2ℤ</a> <a id="3360" class="Symbol">=</a> <a id="3362" href="Cubical.Foundations.Prelude.html#9128" class="Function">subst</a> <a id="3368" class="Symbol">(</a><a id="3369" href="Cubical.Algebra.Group.Morphisms.html#1601" class="Function">GroupEquiv</a> <a id="3380" class="Symbol">(</a><a id="3381" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1945" class="Function">π</a> <a id="3383" class="Number">4</a> <a id="3385" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2054" class="Function">𝕊³</a><a id="3387" class="Symbol">))</a> <a id="3390" class="Symbol">(</a><a id="3391" href="Cubical.Foundations.Prelude.html#1430" class="Function">cong</a> <a id="3396" href="Cubical.Algebra.Group.Instances.IntMod.html#1042" class="Function Operator">ℤGroup/_</a> <a id="3405" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2772" class="Function">β≡2</a><a id="3408" class="Symbol">)</a> <a id="3410" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2404" class="Function">βSpec</a>
 
 
-<a id="2956" class="Comment">-- As a sanity check we also establish the equality with Bool:</a>
-<a id="π₄S³≡Bool"></a><a id="3019" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#3019" class="Function">π₄S³≡Bool</a> <a id="3029" class="Symbol">:</a> <a id="3031" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1389" class="Function">π</a> <a id="3033" class="Number">4</a> <a id="3035" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1498" class="Function">𝕊³</a> <a id="3038" href="Agda.Builtin.Cubical.Path.html#381" class="Function Operator">≡</a> <a id="3040" href="Cubical.Algebra.Group.Instances.Bool.html#695" class="Function">Bool</a>
-<a id="3045" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#3019" class="Function">π₄S³≡Bool</a> <a id="3055" class="Symbol">=</a> <a id="3057" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2887" class="Function">π₄S³≡ℤ/2ℤ</a> <a id="3067" href="Cubical.Foundations.Prelude.html#3894" class="Function Operator">∙</a> <a id="3069" href="Cubical.Algebra.Group.GroupPath.html#1389" class="Function">GroupPath</a> <a id="3079" class="Symbol">_</a> <a id="3081" class="Symbol">_</a> <a id="3083" class="Symbol">.</a><a id="3084" href="Agda.Builtin.Sigma.html#252" class="Field">fst</a> <a id="3088" class="Symbol">(</a><a id="3089" href="Cubical.Algebra.Group.MorphismProperties.html#9968" class="Function">GroupIso→GroupEquiv</a> <a id="3109" href="Cubical.Algebra.Group.Instances.IntMod.html#2691" class="Function">ℤ/2≅Bool</a><a id="3117" class="Symbol">)</a>
+<a id="3418" class="Comment">-- By the SIP this induces an equality of groups:</a>
+<a id="π₄S³≡ℤ/2ℤ"></a><a id="3468" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#3468" class="Function">π₄S³≡ℤ/2ℤ</a> <a id="3478" class="Symbol">:</a> <a id="3480" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1945" class="Function">π</a> <a id="3482" class="Number">4</a> <a id="3484" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2054" class="Function">𝕊³</a> <a id="3487" href="Agda.Builtin.Cubical.Path.html#272" class="Function Operator">≡</a> <a id="3489" href="Cubical.Algebra.Group.Instances.IntMod.html#1042" class="Function Operator">ℤGroup/</a> <a id="3497" class="Number">2</a>
+<a id="3499" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#3468" class="Function">π₄S³≡ℤ/2ℤ</a> <a id="3509" class="Symbol">=</a> <a id="3511" href="Cubical.Algebra.Group.GroupPath.html#1266" class="Function">GroupPath</a> <a id="3521" class="Symbol">_</a> <a id="3523" class="Symbol">_</a> <a id="3525" class="Symbol">.</a><a id="3526" href="Agda.Builtin.Sigma.html#234" class="Field">fst</a> <a id="3530" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#3306" class="Function">π₄S³≃ℤ/2ℤ</a>
+
+
+<a id="3542" class="Comment">-- As a sanity check we also establish the equality with Bool:</a>
+<a id="π₄S³≡Bool"></a><a id="3605" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#3605" class="Function">π₄S³≡Bool</a> <a id="3615" class="Symbol">:</a> <a id="3617" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1945" class="Function">π</a> <a id="3619" class="Number">4</a> <a id="3621" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2054" class="Function">𝕊³</a> <a id="3624" href="Agda.Builtin.Cubical.Path.html#272" class="Function Operator">≡</a> <a id="3626" href="Cubical.Algebra.Group.Instances.Bool.html#626" class="Function">BoolGroup</a>
+<a id="3636" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#3605" class="Function">π₄S³≡Bool</a> <a id="3646" class="Symbol">=</a> <a id="3648" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#3468" class="Function">π₄S³≡ℤ/2ℤ</a> <a id="3658" href="Cubical.Foundations.Prelude.html#4447" class="Function Operator">∙</a> <a id="3660" href="Cubical.Algebra.Group.GroupPath.html#1266" class="Function">GroupPath</a> <a id="3670" class="Symbol">_</a> <a id="3672" class="Symbol">_</a> <a id="3674" class="Symbol">.</a><a id="3675" href="Agda.Builtin.Sigma.html#234" class="Field">fst</a> <a id="3679" class="Symbol">(</a><a id="3680" href="Cubical.Algebra.Group.MorphismProperties.html#10741" class="Function">GroupIso→GroupEquiv</a> <a id="3700" href="Cubical.Algebra.Group.Instances.IntMod.html#2486" class="Function">ℤGroup/2≅Bool</a><a id="3713" class="Symbol">)</a>
+
+
+<a id="3717" class="Comment">-- We also have a much more direct proof in Cubical.Homotopy.Group.Pi4S3.DirectProof,</a>
+<a id="3803" class="Comment">-- not relying on any of the more advanced constructions in chapters</a>
+<a id="3872" class="Comment">-- 4-6 in Brunerie&#39;s thesis (but still using chapters 1-3 for the</a>
+<a id="3938" class="Comment">-- construction). For details see the header of that file.</a>
+
+<a id="π₄S³≃ℤ/2ℤ-direct"></a><a id="3998" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#3998" class="Function">π₄S³≃ℤ/2ℤ-direct</a> <a id="4015" class="Symbol">:</a> <a id="4017" href="Cubical.Algebra.Group.Morphisms.html#1601" class="Function">GroupEquiv</a> <a id="4028" class="Symbol">(</a><a id="4029" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1945" class="Function">π</a> <a id="4031" class="Number">4</a> <a id="4033" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2054" class="Function">𝕊³</a><a id="4035" class="Symbol">)</a> <a id="4037" class="Symbol">(</a><a id="4038" href="Cubical.Algebra.Group.Instances.IntMod.html#1042" class="Function Operator">ℤGroup/</a> <a id="4046" class="Number">2</a><a id="4047" class="Symbol">)</a>
+<a id="4049" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#3998" class="Function">π₄S³≃ℤ/2ℤ-direct</a> <a id="4066" class="Symbol">=</a> <a id="4068" href="Cubical.Homotopy.Group.Pi4S3.DirectProof.html#27303" class="Function">DirectProof.BrunerieGroupEquiv</a>
+
+
+<a id="4101" class="Comment">-- This direct proof allows us to define a much simplified version of</a>
+<a id="4171" class="Comment">-- the Brunerie number:</a>
+<a id="β&#39;"></a><a id="4195" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#4195" class="Function">β&#39;</a> <a id="4198" class="Symbol">:</a> <a id="4200" href="Cubical.Data.Int.Base.html#393" class="Datatype">ℤ</a>
+<a id="4202" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#4195" class="Function">β&#39;</a> <a id="4205" class="Symbol">=</a> <a id="4207" href="Agda.Builtin.Sigma.html#234" class="Field">fst</a> <a id="4211" href="Cubical.Homotopy.Group.Pi4S3.DirectProof.html#41218" class="Function">DirectProof.computer</a> <a id="4232" href="Cubical.Homotopy.Group.Pi4S3.DirectProof.html#29214" class="Function">η₃&#39;</a>
+
+<a id="4237" class="Comment">-- This number computes definitionally to -2 in a few seconds!</a>
+<a id="β&#39;≡-2"></a><a id="4300" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#4300" class="Function">β&#39;≡-2</a> <a id="4306" class="Symbol">:</a> <a id="4308" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#4195" class="Function">β&#39;</a> <a id="4311" href="Agda.Builtin.Cubical.Path.html#272" class="Function Operator">≡</a> <a id="4313" class="Number">-2</a>
+<a id="4316" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#4300" class="Function">β&#39;≡-2</a> <a id="4322" class="Symbol">=</a> <a id="4324" href="Cubical.Foundations.Prelude.html#915" class="Function">refl</a>
+
+<a id="4330" class="Comment">-- As a sanity check we have proved (commented as typechecking is quite slow):</a>
+<a id="4409" class="Comment">-- β&#39;Spec : GroupEquiv (π 4 𝕊³) (ℤGroup/ abs β&#39;)</a>
+<a id="4458" class="Comment">-- β&#39;Spec = DirectProof.BrunerieGroupEquiv&#39;</a>
+
+<a id="4503" class="Comment">-- Combining all of this gives us the desired equivalence of groups by</a>
+<a id="4574" class="Comment">-- computation as conjectured in Brunerie&#39;s thesis:</a>
+<a id="π₄S³≃ℤ/2ℤ-computation"></a><a id="4626" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#4626" class="Function">π₄S³≃ℤ/2ℤ-computation</a> <a id="4648" class="Symbol">:</a> <a id="4650" href="Cubical.Algebra.Group.Morphisms.html#1601" class="Function">GroupEquiv</a> <a id="4661" class="Symbol">(</a><a id="4662" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#1945" class="Function">π</a> <a id="4664" class="Number">4</a> <a id="4666" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#2054" class="Function">𝕊³</a><a id="4668" class="Symbol">)</a> <a id="4670" class="Symbol">(</a><a id="4671" href="Cubical.Algebra.Group.Instances.IntMod.html#1042" class="Function Operator">ℤGroup/</a> <a id="4679" class="Number">2</a><a id="4680" class="Symbol">)</a>
+<a id="4682" href="Cubical.Homotopy.Group.Pi4S3.Summary.html#4626" class="Function">π₄S³≃ℤ/2ℤ-computation</a> <a id="4704" class="Symbol">=</a> <a id="4706" href="Cubical.Homotopy.Group.Pi4S3.DirectProof.html#44452" class="Function">DirectProof.BrunerieGroupEquiv&#39;&#39;</a>
 </pre></body></html>
