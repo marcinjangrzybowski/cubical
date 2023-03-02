@@ -33,6 +33,9 @@ open import Cubical.Induction.WellFounded
 
 open import Cubical.Relation.Nullary
 
+import Cubical.Data.List as L
+
+
 infix 4 _≤_ _<_
 
 _≤_ : ℕ → ℕ → Type₀
@@ -282,6 +285,10 @@ max≤ (suc m) (suc n) (suc k) x x₁ = max≤ m n k x x₁
 
 Fin : ℕ → Type
 Fin n = Σ _ (_< n)
+
+Fin-elim : ∀ {ℓ} {A : Type ℓ} → ∀ n → A → (Fin n → A) → (Fin (suc n) → A)
+Fin-elim n a _ (zero , _) = a
+Fin-elim (suc n) _ f (suc k , k<) = f (k , k<)
 
 Fin₋₁ : ℕ → Type
 Fin₋₁ n = Σ ℕ λ k → (suc k < n)
@@ -659,6 +666,18 @@ glue-Σ-swap-01 P i x =
 --   --              (refl {x = a , a' , b}) i)
 
 
+Σ-swap-01→hProp : ∀ {ℓ ℓ' ℓ''}
+  (A : Type ℓ) (B : Type ℓ') (D : Type ℓ'') 
+  → ∀ f
+  → (∀ x y z → f (y , x , z) ≡ f (x , y , z)) 
+  → 
+    PathP (λ i → ua (Σ-swap-01-≃ {A = A} {A} {B}) i → D)
+      f
+      f
+Σ-swap-01→hProp A B D f f= i g =
+ let (x , y , z) = (ua-unglue Σ-swap-01-≃ i g)
+ in f= x y z i 
+
 glue'-Σ-swap-01 : ∀ {ℓ ℓ'} {A : Type ℓ} → {B B' : Type ℓ'} →
     (P : B ≡ B') →
       PathP (λ i → A × A × P i →
@@ -771,7 +790,10 @@ glue'-Σ-swap-01 P i x =
                    }) (snd x)
         ; (j = i1) → _ })
      x
-     
+
+
+
+
 module _ {ℓ} {A : Type ℓ} where  
 
 
@@ -1009,6 +1031,35 @@ module _ {ℓ} {A : Type ℓ} where
    Σ-swap-01-≡-invol-ua   
   -- Glue (adjT×^≡ {n = suc (suc n)} zero i)
   --   (adjT×^≡-invol-sides0 i j) 
+
+
+
+ adjT×^≡-invol-glue : ∀ n l →
+   SquareP (λ i j → A ×^ n → adjT×^≡-invol n l j (~ i))
+     (λ _ x → x)
+     (λ _ → adjT×^ {n = n} l)
+     (symP (glue'AdjT× n l))
+     (glueAdjT× n l)
+ adjT×^≡-invol-glue zero l = refl
+ adjT×^≡-invol-glue (suc n) (suc l) i j (a , x) =
+   a , adjT×^≡-invol-glue n l i j x
+ adjT×^≡-invol-glue (suc zero) zero = refl
+ adjT×^≡-invol-glue (suc (suc n)) zero i j =
+   Σ-swap-01-≡-invol-ua-glue j (~ i) ∘ swap-01 
+
+ adjT×^≡-invol-glue' : ∀ n l →
+    SquareP (λ i j → A ×^ n → adjT×^≡-invol n l j (~ i))      
+      (λ _ → adjT×^ {n = n} l)
+      (λ _ x → x)
+      (symP (glueAdjT× n l))
+      (glue'AdjT× n l)
+ adjT×^≡-invol-glue' zero l = refl
+ adjT×^≡-invol-glue' (suc n) (suc l) i j (a , x) =
+   a , adjT×^≡-invol-glue' n l i j x
+ adjT×^≡-invol-glue' (suc zero) zero = refl
+ adjT×^≡-invol-glue' (suc (suc n)) zero i j =
+   Σ-swap-01-≡-invol-ua-glue j (~ i) 
+
 
  adjT×^≡-invol-unglue : ∀ n l →
    SquareP (λ i j → adjT×^≡-invol n l j (~ i) → A ×^ n)
@@ -1296,6 +1347,28 @@ module _ {ℓ} {A : Type ℓ} where
         ;(i = i1) →
          (glue (λ {(j = i0) → _ ;(j = i1) → _ }) (x'' , x' , x , z))
         }) (glue (λ {(j = i0) → _ ;(j = i1) → _ }) (x'' , x , x' , z))
+
+module hex (A : Type ℓ) (B : Type ℓ) where
+
+ hexSq : Square {A = Type ℓ}
+           (λ i₁ →  A × ua (Σ-swap-01-≃ {A = A} {A} {B}) i₁)
+           (ua Σ-swap-01-≃)           
+           (𝑮 Σ-swap-01-≃ (λ _ → A × A × A × B)
+             (≃-× (idEquiv A) Σ-swap-01-≃))
+           (𝑮  Σ-swap-01-≃ (λ _ → A × A × A × B)
+            (≃-× (idEquiv A) Σ-swap-01-≃))
+ hexSq = 
+   let z = ua (≃-× (idEquiv A) Σ-swap-01-≃
+             ∙ₑ (Σ-swap-01-≃ {A = A} {A} {A × B})
+             ∙ₑ ≃-× (idEquiv A) Σ-swap-01-≃)
+   in flipSquare
+       (congP₂ (λ i → 𝑮-refl {B = z i})
+          (equivPathP' _ _ λ i → (λ (x , x' , x'' , x''') →
+             glue (λ {(i = i0) → _ ;(i = i1) → _ }) (x' , x , x'' , x'''))
+                     ∘' map-snd (ua-ungluePathExt (Σ-swap-01-≃) i))
+          (equivPathP' _ _  λ i → (λ (x , x' , x'' , x''') →
+             glue (λ {(i = i0) → _ ;(i = i1) → _ }) (x , x'' , x' , x'''))
+                     ∘' ua-ungluePathExt (Σ-swap-01-≃) i))
 
 
 Glue' : ∀ {ℓ ℓ'} → (A : Type ℓ) {φ : I}
@@ -2130,10 +2203,45 @@ module Tab× {A : Type ℓ} where
    {A × (A ×^ n)}
    {Fin× n}
    (Maybe∘Fin×≃Fin×∘suc n) (tab×≡ n) (idEquiv _)
-  -- 𝑮 (preCompEquiv (Maybe∘Fin×≃Fin×∘suc n) ∙ₑ ≃MaybeFunProd)
-  --                   (cong′ (A ×_) (tab×≡ n)) (idEquiv _)
-  --   -- Glue (A × tab×≡ n i) (tab×≡-sides n i)
 
+ List→ΣℕFin×→ : (l : L.List A) → Fin (L.length l) → A
+ List→ΣℕFin×→ L.[] ()
+ List→ΣℕFin×→ (x L.∷ l) =
+   Fin-elim (L.length l) x (List→ΣℕFin×→ l)
+  
+ ΣℕFin×→List : ∀ n → (Fin n → A) → L.List A
+ ΣℕFin×→List zero _ = L.[]
+ ΣℕFin×→List (suc k) f =  f (zero , _) L.∷ ΣℕFin×→List k (f ∘ sucF)
+
+--  sec-IsoListΣℕFin×→-fst : ∀ n f → fst (List→ΣℕFin×→ (ΣℕFin×→List n f)) ≡ n
+--  sec-IsoListΣℕFin×→-fst zero f = refl
+--  sec-IsoListΣℕFin×→-fst (suc n) f = {!!}
+
+--  sec-IsoListΣℕFin×→ : ∀ n → (f : (Fin n → A)) →
+--     List→ΣℕFin×→ (ΣℕFin×→List n f) ≡ (n , f)
+--  sec-IsoListΣℕFin×→ n f = ΣPathP (sec-IsoListΣℕFin×→-fst n f , {!!})
+--  -- sec-IsoListΣℕFin×→ zero f = ΣPathP (refl , funExt λ ())
+--  -- sec-IsoListΣℕFin×→ (suc n) f =
+--  --  let p = sec-IsoListΣℕFin×→ n (f ∘ sucF)
+--  --  in  (λ i → suc (fst (p i)) ,
+--  --           Fin-elim _ (f (zero , _)) (snd (p i))) ∙
+--  --            ΣPathP (refl ,
+--  --             funExt λ { (zero , _) → refl ; (suc _ , _) → {!!} } )
+            
+--  --      -- ΣPathP (cong (suc ∘ fst) p ,
+--  --      --  congP (λ i f' → {!Fin-elim ? ? ? !}) (cong snd p)) 
+
+ -- IsoListΣℕFin×→ : Iso (L.List A) (Σ ℕ λ n → Fin n → A)
+ -- Iso.fun IsoListΣℕFin×→ = (λ {l} → (L.length l ,_)) ∘ List→ΣℕFin×→
+ -- Iso.inv IsoListΣℕFin×→ = uncurry ΣℕFin×→List
+ -- Iso.rightInv IsoListΣℕFin×→ = {!!}
+ --   -- uncurry λ x y → ΣPathP ({!!} , {!!})
+ -- -- uncurry sec-IsoListΣℕFin×→
+ -- Iso.leftInv IsoListΣℕFin×→ = 
+ --   L.ind' refl λ {a} l p →
+ --    cong (a L.∷_)
+ --     (cong (ΣℕFin×→List (L.length l))
+ --      (funExt {!!}) ∙ p) 
 
  tab×≡-sides : ∀ n → ∀ i → Partial (~ i ∨ i) (Σ-syntax (Type ℓ) (λ T → T ≃ A × tab×≡ n i)) 
  tab×≡-sides n i =

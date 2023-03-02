@@ -884,3 +884,43 @@ permuteIso· n = RelimProp.f w
   ∷A w k {xs} X h = Iso≡Set-fun (isSetFin {n = n})
        (isSetFin {n = n})
      _ _ (funExt⁻ (cong Iso.fun (X h)) ∘ _)
+
+module List-perm {A : Type ℓ} where
+ 
+
+ List→×^ : (l : List A) → A ×^ (length l)
+ List→×^ [] = tt*
+ List→×^ (x ∷ l) = x , List→×^ l 
+
+ ×^→List : ∀ n → A ×^ n → List A
+ ×^→List zero x = []
+ ×^→List (suc n) x = fst x ∷ ×^→List n (snd x)
+
+ sec-IsoList-×^-fst : ∀ k v → length (×^→List k v) ≡ k
+ sec-IsoList-×^-fst zero v = refl
+ sec-IsoList-×^-fst (suc k) v = cong suc (sec-IsoList-×^-fst k (snd v))
+
+ sec-IsoList-×^-snd : ∀ k → (v : A ×^ k) →
+     PathP (λ i → A ×^ (sec-IsoList-×^-fst k v i))
+       (List→×^ (×^→List k v))
+       v
+ sec-IsoList-×^-snd zero v = refl
+ sec-IsoList-×^-snd (suc k) v =
+   congP (λ _ → (fst v) ,_) (sec-IsoList-×^-snd k (snd v))
+
+ IsoList-×^ : Iso (List A) (Σ _ (A ×^_))
+ Iso.fun IsoList-×^ = (_ ,_) ∘ List→×^
+ Iso.inv IsoList-×^ (k , v) = ×^→List k v
+ fst (Iso.rightInv IsoList-×^ (k , v) i) = sec-IsoList-×^-fst k v i
+ snd (Iso.rightInv IsoList-×^ (k , v) i) = sec-IsoList-×^-snd k v i
+ Iso.leftInv IsoList-×^ = ind' refl λ _ → cong (_ ∷_)
+
+
+ permuteList' : ∀ {n} → (l : List A) → (Fin n → Fin (length l)) → List A
+ permuteList' {n} l x =
+    ×^→List n (tabulate (lookup (List→×^ l) ∘' x))
+
+
+ permuteList : (l : List A) →
+    Perm (length l) → List A
+ permuteList l = permuteList' {n = (length l)} l ∘ permuteF (length l)

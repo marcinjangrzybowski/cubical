@@ -1409,6 +1409,7 @@ plInv (x , (k , (p , q))) =  SC.inl {n = k} (x , p)
 -- [Fin→Fin]→[ℕ→ℕ] (suc (suc n)) f (suc x₁) =
 --  suc ([Fin→Fin]→[ℕ→ℕ] (suc n) (f ∘ sucF) x₁)
 
+
 [Fin→Fin]→[ℕ→ℕ]' : ∀ n → ((Fin n) → ℕ) → ∀ k → Dec (suc k ≤ n) → ℕ 
 [Fin→Fin]→[ℕ→ℕ]' n f k (yes p) = f (k , p)
 [Fin→Fin]→[ℕ→ℕ]' n f k (no ¬p) = k
@@ -1912,7 +1913,6 @@ isFGli'' (suc (suc n)) zero e (suc (suc m)) (suc (suc m')) p p' H x k< =
             (sym (sucFGℕ≃ℕresp· (sucFGℕ≃ℕ eR) (rotFG (predℕ e1')))))
 
 
-
 isFGli'' (suc n) (suc 𝑘) e (suc m) (suc m') p p' H m'< 𝑘< =
   let ((k , k<) , (x' , X')) = Iso.fun (unwindIsoIsoCF m') ( e , p')
       ((k* , k<*) , (x'* , X'*)) = Iso.fun (unwindIsoIsoCF m)
@@ -1952,3 +1952,4 @@ Iso.leftInv isoFG = RelimProp.f w
   RelimProp.εA w = refl
   RelimProp.∷A w k {xs} X = isFGli k (fst (to≃' xs)) (snd (to≃' xs)) 
       ∙ cong (k ∷_) X
+

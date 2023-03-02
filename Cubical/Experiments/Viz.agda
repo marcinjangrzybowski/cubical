@@ -59,3 +59,90 @@ aaa = {!ℕsq!}
 
 -- ℕsq' : ∀ n → Square {A = ℕ} (λ _ → zero) (λ _ → zero) (λ _ → zero) (λ _ → zero)
 -- ℕsq' n = {!zero + n!}
+
+data A : Type where
+ a : A
+ p : ℕ → a ≡ a
+
+
+aLoop : ℕ → Square (λ _ → a) (λ _ → a) (λ _ → a) (λ _ → a)
+aLoop k i j =
+    hcomp
+   (λ l' → λ {
+       (i = i0) → p k l'
+      ;(i = i1) → p k l'
+      ;(j = i0) → p k l'
+      ;(j = i1) → p k l'
+      })
+   a
+
+-- aTest : Square (λ _ → a) (λ _ → a) (λ _ → a) (λ _ → a)
+-- aTest i j =
+--       hcomp
+--    (λ l → λ {
+--        (i = i0) → hcomp {ℓ-zero} {A} {~ l ∨ l ∨ ~ j ∨ j}
+--                     (λ { l' (l = i0) → p _ l'
+--                        ; l' (l = i1) → p _ l'
+--                        ; l' (j = i0) → p _ l'
+--                        ; l' (j = i1) → p _ l'
+--                        })
+--                     a
+--       ;(i = i1) → hcomp {ℓ-zero} {A} {~ l ∨ l ∨ ~ j ∨ j}
+--                     (λ { l' (l = i0) → p _ l'
+--                        ; l' (l = i1) → p _ l'
+--                        ; l' (j = i0) → p _ l'
+--                        ; l' (j = i1) → p _ l'
+--                        })
+--                     a
+--       ;(j = i0) → hcomp {ℓ-zero} {A} {~ l ∨ l ∨ ~ i ∨ i}
+--                     (λ { l' (l = i0) → p _ l'
+--                        ; l' (l = i1) → p _ l'
+--                        ; l' (i = i0) → p _ l'
+--                        ; l' (i = i1) → p _ l'
+--                        })
+--                     a
+--       ;(j = i1) → hcomp {ℓ-zero} {A} {~ l ∨ l ∨ ~ i ∨ i}
+--                     (λ { l' (l = i0) → p _ l'
+--                        ; l' (l = i1) → p _ l'
+--                        ; l' (i = i0) → p _ l'
+--                        ; l' (i = i1) → p _ l'
+--                        })
+--                     a
+--       })
+--    a
+
+
+aTest : Square (λ _ → a) (λ _ → a) (λ _ → a) (λ _ → a)
+aTest i j =
+      hcomp
+   (λ l → λ {
+       (i = i0) → hcomp {ℓ-zero} {A} {~ l ∨ l ∨ ~ j ∨ j}
+                    (λ { l' (l = i0) → p 2 l'
+                       ; l' (l = i1) → p 2 l'
+                       ; l' (j = i0) → p 2 l'
+                       ; l' (j = i1) → p 2 l'
+                       })
+                    a
+      ;(i = i1) → hcomp {ℓ-zero} {A} {~ l ∨ l ∨ ~ j ∨ j}
+                    (λ { l' (l = i0) → p 1 l'
+                       ; l' (l = i1) → p 1 l'
+                       ; l' (j = i0) → p 1 l'
+                       ; l' (j = i1) → p 1 l'
+                       })
+                    a
+      ;(j = i0) → hcomp {ℓ-zero} {A} {~ l ∨ l ∨ ~ i ∨ i}
+                    (λ { l' (l = i0) → p 3 l'
+                       ; l' (l = i1) → p 3 l'
+                       ; l' (i = i0) → p 3 l'
+                       ; l' (i = i1) → p 3 l'
+                       })
+                    a
+      ;(j = i1) → hcomp {ℓ-zero} {A} {~ l ∨ l ∨ ~ i ∨ i}
+                    (λ { l' (l = i0) → p {!!} l'
+                       ; l' (l = i1) → p {!!} l'
+                       ; l' (i = i0) → p {!!} l'
+                       ; l' (i = i1) → p {!!} l'
+                       })
+                    a
+      })
+   a

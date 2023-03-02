@@ -54,10 +54,10 @@ private
 
 infixr 9 _∘'_
 
-_∘'_ : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''}
-        → (g : B → C) → (f : A → B) → A → C 
-g ∘' f = λ x → g (f x)
-{-# INLINE _∘'_ #-}
+-- _∘'_ : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''}
+--         → (g : B → C) → (f : A → B) → A → C 
+-- g ∘' f = λ x → g (f x)
+-- {-# INLINE _∘'_ #-}
 
 
 infixr 4  _=→_
@@ -96,11 +96,11 @@ _sq→_ : ∀ {ℓ} {A : Type ℓ} {f g f' g'  : ℕ → A}
 
 
 
-commT : ℕ → ℕ → Type₀
-commT x zero = ⊥
-commT x (suc zero) = ⊥
-commT zero (suc (suc x₁)) = Unit
-commT (suc k) (suc (suc l)) = commT k (suc l)
+-- commT : ℕ → ℕ → Type₀
+-- commT x zero = ⊥
+-- commT x (suc zero) = ⊥
+-- commT zero (suc (suc x₁)) = Unit
+-- commT (suc k) (suc (suc l)) = commT k (suc l)
 
 infixr 5 _∷_
 

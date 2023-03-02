@@ -488,223 +488,258 @@ module _ (A : Type ℓ) where
      RElimSet.hexDiag* w x y z b i j = hexDiag x y z (b j) i
      RElimSet.trunc* w _ = trunc _ _
 
-  -- sym++2 : ∀ xs ys → xs ++2 ys ≡ ys ++2 xs
-  -- sym++2 = RElimSet.f w
-  --   where
-  --     w : RElimSet (λ xs → ∀ ys → (xs ++2 ys) ≡ (ys ++2 xs))
-  --     RElimSet.[]* w = rUnit++
-  --     (w RElimSet.∷* a) {xs} p ys = {!p (a ∷2 [])!}
-  --     -- cong (a ∷2_) (p ys) ∙ 
-  --     --         cong (_++2 xs) {!!} ∙ sym (assoc++ ys (a ∷2 []) xs) 
-  --     RElimSet.comm* w = {!!}
-  --     RElimSet.hexDiag* w = {!!}
-  --     RElimSet.trunc* w _ = isSetΠ λ _ → trunc _ _
-  -- _++2_ = RRec.f w
-  --   where
-  --     w : RRec {B = FMSet2 A → FMSet2 A} {!!}
-  --     w = {!!}
-
-module _ {A : Type ℓ} where
-  -- isSetLofLA : ∀ n → isSet (ListOfLen A n)
-  -- isSetLofLA n = isOfHLevelListOfLen 0 isSetA n 
-
-  FMSet2OfLen≡ : ∀ {n} → {x y : FMSet2OfLen A n} → fst x ≡ fst y → x ≡ y 
-  FMSet2OfLen≡ = Σ≡Prop λ _ → isSetℕ _ _
-
-  isGroupoidFMSet2OfLen : ∀ n → isGroupoid (FMSet2OfLen A n)
-  isGroupoidFMSet2OfLen n = 
-    (isOfHLevelΣ 3 trunc λ _ → isSet→isGroupoid (isProp→isSet (isSetℕ _ _)))
-
-module mkFunTest {CD : hSet ℓ} where
-
-  hSet≡ : {A B : Type ℓ} {isSetA : isSet A} {isSetB : isSet B} → A ≡ B →
-              Path (hSet ℓ) (A , isSetA) (B , isSetB)  
-  fst (hSet≡ p i) = p i
-  snd (hSet≡  {isSetA = isSetA} {isSetB} p i) =
-    isProp→PathP
-     (λ i → isPropIsSet {A = p i})
-     isSetA
-     isSetB i
-
-  flipIso : {A B C : Type ℓ} → Iso (A → B → C) (B → A → C) 
-  Iso.fun flipIso = flip
-  Iso.inv flipIso = flip
-  Iso.rightInv flipIso b = refl
-  Iso.leftInv flipIso b = refl
-
-
-  flip≃ : {A B C : Type ℓ} → (A → B → C) ≃ (B → A → C) 
-  flip≃ = isoToEquiv flipIso
-
-  diagIso : {A B C D : Type ℓ} → Iso (A → B → C → D) (C → B → A → D) 
-  Iso.fun diagIso x x₁ x₂ x₃ = x x₃ x₂ x₁
-  Iso.inv diagIso x x₁ x₂ x₃ = x x₃ x₂ x₁
-  Iso.rightInv diagIso b = refl
-  Iso.leftInv diagIso b = refl
-
-  zzR : RRec {A = Type ℓ} (isGroupoidHSet {ℓ})
-  RRec.[]* zzR = CD
-  RRec._∷*_ zzR A HS = (A → fst HS) , isSet→ (snd HS)
-  RRec.comm* zzR _ _ _ = hSet≡ (ua flip≃) 
-  RRec.comm-inv* zzR _ _ _ =
-    ΣSquareSet (λ _ → isProp→isSet (isPropIsSet)) (isInjectiveTransport refl)
-  RRec.hexDiag* zzR _ _ _ _ = hSet≡ (ua (isoToEquiv diagIso))
-  RRec.hexU* zzR _ _ _ _ =
-   ΣSquareSet (λ _ → isProp→isSet (isPropIsSet))
-    (∙≡∙→square _ _ _ _ (isInjectiveTransport refl))
-  RRec.hexL* zzR _ _ _ _ =
-   ΣSquareSet (λ _ → isProp→isSet (isPropIsSet))
-    (∙≡∙→square _ _ _ _ (isInjectiveTransport refl))
+  lUnit++ : ∀ xs → xs ≡ [] ++2 xs
+  lUnit++ xs = refl
   
-  zz : FMSet2 (Type ℓ) → hSet ℓ
-  zz = RRec.f zzR
+  -- sym++[] : ∀ xs a → a ∷2 xs ≡ xs ++2 (a ∷2 [])
+  -- sym++[] = RElimSet'.f w
+  --   where
+  --     w : RElimSet' (λ z → (a : A) → a ∷2 z ≡ (z ++2 (a ∷2 [])))
+  --     RElimSet'.[]* w _ = refl
+  --     RElimSet'._∷*_ w x p a =
+  --       comm _ _ _ ∙ cong (x ∷2_) (p a)
+  --     RElimSet'.comm* w = {!!}
+  --     RElimSet'.trunc* w _ = isSetΠ (λ _ → trunc _ _ )
 
-module mkRecTest (ℓ : Level) where
+  -- -- -- sym++2 : ∀ xs ys → xs ++2 ys ≡ ys ++2 xs
+  -- -- -- sym++2 [] ys = rUnit++ ys
+  -- -- -- sym++2 (x ∷2 xs) ys =
+  -- -- --   cong (x ∷2_) (sym++2 xs ys) ∙
+  -- -- --     {!!}
+  -- -- -- sym++2 (comm x y xs i) ys = {!!}
+  -- -- -- sym++2 (comm-inv x y xs i i₁) ys = {!!}
+  -- -- -- sym++2 (hexDiag x y z xs i) ys = {!!}
+  -- -- -- sym++2 (hexU x y z xs i i₁) ys = {!!}
+  -- -- -- sym++2 (hexL x y z xs i i₁) ys = {!!}
+  -- -- -- sym++2 (trunc xs xs₁ x y x₁ y₁ i i₁ x₂) ys = {!!}
 
-  hSet≡ : {A B : Type ℓ} {isSetA : isSet A} {isSetB : isSet B} → A ≡ B →
-              Path (hSet ℓ) (A , isSetA) (B , isSetB)  
-  fst (hSet≡ p i) = p i
-  snd (hSet≡  {isSetA = isSetA} {isSetB} p i) =
-    isProp→PathP
-     (λ i → isPropIsSet {A = p i})
-     isSetA
-     isSetB i
+  -- sym++2 : ∀ xs ys → xs ++2 ys ≡ ys ++2 xs
+  -- sym++2 = RElimSet'.f w
+  --   where
+  --     w : RElimSet' (λ xs → ∀ ys → (xs ++2 ys) ≡ (ys ++2 xs))
+  --     RElimSet'.[]* w = rUnit++
+  --     (w RElimSet'.∷* a) {xs} p ys =
+  --         (sym++[] (xs ++2 ys) a ∙∙ sym (assoc++ xs ys (a ∷2 [])) ∙∙ p (ys ++2 (a ∷2 [])))
+  --              ∙ sym (assoc++ ys (a ∷2 []) xs)
 
-  swapIso : {A B C : Type ℓ} → Iso (A × B × C) (B × A × C) 
-  Iso.fun swapIso (x , y , z) = y , x , z
-  Iso.inv swapIso (x , y , z) = y , x , z
-  Iso.rightInv swapIso b = refl
-  Iso.leftInv swapIso b = refl
+  --     RElimSet'.comm* w x y xs i j = {!!}
+  --     RElimSet'.trunc* w _ = isSetΠ λ _ → trunc _ _
 
-  diagIso : {A B C D : Type ℓ} → Iso (A × B × C × D) (C × B × A × D) 
-  Iso.fun diagIso (x , y , z , w) = z , y , x , w
-  Iso.inv diagIso (x , y , z , w) = z , y , x , w
-  Iso.rightInv diagIso b = refl
-  Iso.leftInv diagIso b = refl
+  -- invol++2 : ∀ xs ys → sym++2 xs ys ≡ sym (sym++2 ys xs)
+  -- invol++2 = RElimProp'.f w
+  --  where
+  --  w : RElimProp'
+  --        (λ z → (ys : FMSet2 A) → sym++2 z ys ≡ sym (sym++2 ys z))
+  --  RElimProp'.[]* w = RElimProp'.f w'
+  --   where
+  --   w' : RElimProp' (λ z → sym++2 [] z ≡ sym (sym++2 z []))
+  --   RElimProp'.[]* w' = refl
+  --   RElimProp'._∷*_ w' x {xs} p = {!!}
+  --   RElimProp'.trunc* w' = {!!}
+  --  RElimProp'._∷*_ w = {!!}
+  --  RElimProp'.trunc* w = {!!}
 
+-- -- module _ {A : Type ℓ} where
+-- --   -- isSetLofLA : ∀ n → isSet (ListOfLen A n)
+-- --   -- isSetLofLA n = isOfHLevelListOfLen 0 isSetA n 
 
-  zzR : RRec {A = hSet ℓ} (isGroupoidHSet {ℓ})
-  RRec.[]* zzR = Unit* , isSetUnit*
-  RRec._∷*_ zzR A HS = fst A × (fst HS) , isSet× (snd A) (snd HS)
-  RRec.comm* zzR A B HS = hSet≡ (ua (isoToEquiv swapIso))
-  RRec.comm-inv* zzR A B HS =
-    ΣSquareSet (λ _ → isProp→isSet (isPropIsSet)) (isInjectiveTransport refl)
-  RRec.hexDiag* zzR A B C HS =
-    hSet≡ (ua (isoToEquiv diagIso))
-  RRec.hexU* zzR _ _ _ _ =
-       ΣSquareSet (λ _ → isProp→isSet (isPropIsSet))
-    (∙≡∙→square _ _ _ _ (isInjectiveTransport refl))
+-- --   FMSet2OfLen≡ : ∀ {n} → {x y : FMSet2OfLen A n} → fst x ≡ fst y → x ≡ y 
+-- --   FMSet2OfLen≡ = Σ≡Prop λ _ → isSetℕ _ _
 
-  RRec.hexL* zzR _ _ _ _ =
-       ΣSquareSet (λ _ → isProp→isSet (isPropIsSet))
-    (∙≡∙→square _ _ _ _ (isInjectiveTransport (
-       funExt λ _ → cong₂ _,_ refl (cong₂ _,_ refl (cong₂ _,_ refl refl)))))
+-- --   isGroupoidFMSet2OfLen : ∀ n → isGroupoid (FMSet2OfLen A n)
+-- --   isGroupoidFMSet2OfLen n = 
+-- --     (isOfHLevelΣ 3 trunc λ _ → isSet→isGroupoid (isProp→isSet (isSetℕ _ _)))
 
--- module sum (ℓ : Level) where
+-- -- module mkFunTest {CD : hSet ℓ} where
 
---   hSet≡ : {A B : Type ℓ} {isSetA : isSet A} {isSetB : isSet B} → A ≡ B →
---               Path (hSet ℓ) (A , isSetA) (B , isSetB)  
---   fst (hSet≡ p i) = p i
---   snd (hSet≡  {isSetA = isSetA} {isSetB} p i) =
---     isProp→PathP
---      (λ i → isPropIsSet {A = p i})
---      isSetA
---      isSetB i
+-- --   hSet≡ : {A B : Type ℓ} {isSetA : isSet A} {isSetB : isSet B} → A ≡ B →
+-- --               Path (hSet ℓ) (A , isSetA) (B , isSetB)  
+-- --   fst (hSet≡ p i) = p i
+-- --   snd (hSet≡  {isSetA = isSetA} {isSetB} p i) =
+-- --     isProp→PathP
+-- --      (λ i → isPropIsSet {A = p i})
+-- --      isSetA
+-- --      isSetB i
 
---   swapIso : {A B C : Type ℓ} → Iso (A × B × C) (B × A × C) 
---   Iso.fun swapIso (x , y , z) = y , x , z
---   Iso.inv swapIso (x , y , z) = y , x , z
---   Iso.rightInv swapIso b = refl
---   Iso.leftInv swapIso b = refl
-
---   diagIso : {A B C D : Type ℓ} → Iso (A × B × C × D) (C × B × A × D) 
---   Iso.fun diagIso (x , y , z , w) = z , y , x , w
---   Iso.inv diagIso (x , y , z , w) = z , y , x , w
---   Iso.rightInv diagIso b = refl
---   Iso.leftInv diagIso b = refl
-
-
---   zzR : RRec {A = hSet ℓ} (isGroupoidHSet {ℓ})
---   RRec.[]* zzR = Unit* , isSetUnit*
---   RRec._∷*_ zzR A HS = fst A × (fst HS) , isSet× (snd A) (snd HS)
---   RRec.comm* zzR A B HS = hSet≡ (ua (isoToEquiv swapIso))
---   RRec.comm-inv* zzR A B HS =
---     ΣSquareSet (λ _ → isProp→isSet (isPropIsSet)) (isInjectiveTransport refl)
---   RRec.hexDiag* zzR A B C HS =
---     hSet≡ (ua (isoToEquiv diagIso))
---   RRec.hexU* zzR _ _ _ _ =
---        ΣSquareSet (λ _ → isProp→isSet (isPropIsSet))
---     (∙≡∙→square _ _ _ _ (isInjectiveTransport refl))
-
---   RRec.hexL* zzR _ _ _ _ =
---        ΣSquareSet (λ _ → isProp→isSet (isPropIsSet))
---     (∙≡∙→square _ _ _ _ (isInjectiveTransport (
---        funExt λ _ → cong₂ _,_ refl (cong₂ _,_ refl (cong₂ _,_ refl refl)))))
+-- --   flipIso : {A B C : Type ℓ} → Iso (A → B → C) (B → A → C) 
+-- --   Iso.fun flipIso = flip
+-- --   Iso.inv flipIso = flip
+-- --   Iso.rightInv flipIso b = refl
+-- --   Iso.leftInv flipIso b = refl
 
 
+-- --   flip≃ : {A B C : Type ℓ} → (A → B → C) ≃ (B → A → C) 
+-- --   flip≃ = isoToEquiv flipIso
+
+-- --   diagIso : {A B C D : Type ℓ} → Iso (A → B → C → D) (C → B → A → D) 
+-- --   Iso.fun diagIso x x₁ x₂ x₃ = x x₃ x₂ x₁
+-- --   Iso.inv diagIso x x₁ x₂ x₃ = x x₃ x₂ x₁
+-- --   Iso.rightInv diagIso b = refl
+-- --   Iso.leftInv diagIso b = refl
+
+-- --   zzR : RRec {A = Type ℓ} (isGroupoidHSet {ℓ})
+-- --   RRec.[]* zzR = CD
+-- --   RRec._∷*_ zzR A HS = (A → fst HS) , isSet→ (snd HS)
+-- --   RRec.comm* zzR _ _ _ = hSet≡ (ua flip≃) 
+-- --   RRec.comm-inv* zzR _ _ _ =
+-- --     ΣSquareSet (λ _ → isProp→isSet (isPropIsSet)) (isInjectiveTransport refl)
+-- --   RRec.hexDiag* zzR _ _ _ _ = hSet≡ (ua (isoToEquiv diagIso))
+-- --   RRec.hexU* zzR _ _ _ _ =
+-- --    ΣSquareSet (λ _ → isProp→isSet (isPropIsSet))
+-- --     (∙≡∙→square _ _ _ _ (isInjectiveTransport refl))
+-- --   RRec.hexL* zzR _ _ _ _ =
+-- --    ΣSquareSet (λ _ → isProp→isSet (isPropIsSet))
+-- --     (∙≡∙→square _ _ _ _ (isInjectiveTransport refl))
+  
+-- --   zz : FMSet2 (Type ℓ) → hSet ℓ
+-- --   zz = RRec.f zzR
+
+-- -- module mkRecTest (ℓ : Level) where
+
+-- --   hSet≡ : {A B : Type ℓ} {isSetA : isSet A} {isSetB : isSet B} → A ≡ B →
+-- --               Path (hSet ℓ) (A , isSetA) (B , isSetB)  
+-- --   fst (hSet≡ p i) = p i
+-- --   snd (hSet≡  {isSetA = isSetA} {isSetB} p i) =
+-- --     isProp→PathP
+-- --      (λ i → isPropIsSet {A = p i})
+-- --      isSetA
+-- --      isSetB i
+
+-- --   swapIso : {A B C : Type ℓ} → Iso (A × B × C) (B × A × C) 
+-- --   Iso.fun swapIso (x , y , z) = y , x , z
+-- --   Iso.inv swapIso (x , y , z) = y , x , z
+-- --   Iso.rightInv swapIso b = refl
+-- --   Iso.leftInv swapIso b = refl
+
+-- --   diagIso : {A B C D : Type ℓ} → Iso (A × B × C × D) (C × B × A × D) 
+-- --   Iso.fun diagIso (x , y , z , w) = z , y , x , w
+-- --   Iso.inv diagIso (x , y , z , w) = z , y , x , w
+-- --   Iso.rightInv diagIso b = refl
+-- --   Iso.leftInv diagIso b = refl
 
 
---   zz : FMSet2 (hSet ℓ) → hSet ℓ
---   zz = RRec.f zzR
+-- --   zzR : RRec {A = hSet ℓ} (isGroupoidHSet {ℓ})
+-- --   RRec.[]* zzR = Unit* , isSetUnit*
+-- --   RRec._∷*_ zzR A HS = fst A × (fst HS) , isSet× (snd A) (snd HS)
+-- --   RRec.comm* zzR A B HS = hSet≡ (ua (isoToEquiv swapIso))
+-- --   RRec.comm-inv* zzR A B HS =
+-- --     ΣSquareSet (λ _ → isProp→isSet (isPropIsSet)) (isInjectiveTransport refl)
+-- --   RRec.hexDiag* zzR A B C HS =
+-- --     hSet≡ (ua (isoToEquiv diagIso))
+-- --   RRec.hexU* zzR _ _ _ _ =
+-- --        ΣSquareSet (λ _ → isProp→isSet (isPropIsSet))
+-- --     (∙≡∙→square _ _ _ _ (isInjectiveTransport refl))
 
---   -- uncR : RElim {A = hSet ℓ} λ S → fst (zz S) → FMSet2 (Σ (Type ℓ) λ X → X) 
---   -- RElim.[]* uncR _ = []
---   -- (uncR RElim.∷* x) {xs} x₁ (a , r) = (_ , a) ∷2 x₁ r
---   -- RElim.comm* uncR x y b i =
---   --   (λ b₁ → comm (fst x , fst (snd b₁)) (fst y , fst b₁) (b (snd (snd b₁))) i)
---   --     ∘ ua-unglue (isoToEquiv swapIso) i
---   -- -- toPathP (funExt λ z i → comm {!!} {!!} {!!} i)
---   -- RElim.comm-inv* uncR x y b i j x₁ =
---   --  let xx = {!!}
---   --  in comm-inv (fst x , {!fst x₁!}) {!!} {!!} i j
---   -- RElim.hexDiag* uncR = {!!}
---   -- RElim.hexU* uncR = {!!}
---   -- RElim.hexL* uncR = {!!}
---   -- RElim.trunc* uncR = {!!}
+-- --   RRec.hexL* zzR _ _ _ _ =
+-- --        ΣSquareSet (λ _ → isProp→isSet (isPropIsSet))
+-- --     (∙≡∙→square _ _ _ _ (isInjectiveTransport (
+-- --        funExt λ _ → cong₂ _,_ refl (cong₂ _,_ refl (cong₂ _,_ refl refl)))))
 
---   -- unc : ∀ S → fst (zz S) → FMSet2 (Σ (Type ℓ) λ X → X)
---   -- unc = {!!}
+-- -- -- module sum (ℓ : Level) where
 
--- -- module ⊎' where
--- --   -- QL : Bool → Type₀
--- --   -- QL false = ___+_++{!!}
--- --   -- QL true = {!!}
+-- -- --   hSet≡ : {A B : Type ℓ} {isSetA : isSet A} {isSetB : isSet B} → A ≡ B →
+-- -- --               Path (hSet ℓ) (A , isSetA) (B , isSetB)  
+-- -- --   fst (hSet≡ p i) = p i
+-- -- --   snd (hSet≡  {isSetA = isSetA} {isSetB} p i) =
+-- -- --     isProp→PathP
+-- -- --      (λ i → isPropIsSet {A = p i})
+-- -- --      isSetA
+-- -- --      isSetB i
 
--- --   -- QR : Bool → Type₀
--- --   -- QR x = {!!}
+-- -- --   swapIso : {A B C : Type ℓ} → Iso (A × B × C) (B × A × C) 
+-- -- --   Iso.fun swapIso (x , y , z) = y , x , z
+-- -- --   Iso.inv swapIso (x , y , z) = y , x , z
+-- -- --   Iso.rightInv swapIso b = refl
+-- -- --   Iso.leftInv swapIso b = refl
 
--- --   -- record _⊎'_ {ℓ ℓ'} (A : Type ℓ)(B : Type ℓ') : Type (ℓ-max ℓ ℓ') where 
--- --   --   field
--- --   --     sw : Bool
--- --   --     ll : (Bool→Type sw → A)
--- --   --     rr : (Bool→Type (not sw) → B)
-
--- --   _⊎'_ : ∀ {ℓ ℓ'} (A : Type ℓ)(B : Type ℓ') → Type (ℓ-max ℓ ℓ')
--- --   A ⊎' B = Σ Bool λ sw → (Bool→Type sw → A) × (Bool→Type (not sw) → B)
-
--- --   ⊎-swap-Path : ∀ {ℓ ℓ'} (A : Type ℓ)(B : Type ℓ') → (A ⊎' B) ≡ (B ⊎' A)
--- --   ⊎-swap-Path A B i =
--- --    Σ (notEq i)
--- --      ((λ b → ua (Σ-swap-≃ {A = {!Bool→Type b → A!}} {A' = Bool→Type b → B}) i)
--- --        ∘ ua-unglue notEquiv i)
-
--- --   -- ⊎-swap-Iso : ∀ {ℓ ℓ'} (A : Type ℓ)(B : Type ℓ') → Iso (A ⊎' B) (B ⊎' A)
--- --   -- Iso.fun (⊎-swap-Iso A B) = {!!}
--- --   -- Iso.inv (⊎-swap-Iso A B) = {!!}
--- --   -- Iso.rightInv (⊎-swap-Iso A B) = {!!}
--- --   -- Iso.leftInv (⊎-swap-Iso A B) = {!!}
+-- -- --   diagIso : {A B C D : Type ℓ} → Iso (A × B × C × D) (C × B × A × D) 
+-- -- --   Iso.fun diagIso (x , y , z , w) = z , y , x , w
+-- -- --   Iso.inv diagIso (x , y , z , w) = z , y , x , w
+-- -- --   Iso.rightInv diagIso b = refl
+-- -- --   Iso.leftInv diagIso b = refl
 
 
--- -- module ⊎'2 where
--- --   -- QL : Bool → Type₀
--- --   -- QL false = ___+_++{!!}
--- --   -- QL true = {!!}
+-- -- --   zzR : RRec {A = hSet ℓ} (isGroupoidHSet {ℓ})
+-- -- --   RRec.[]* zzR = Unit* , isSetUnit*
+-- -- --   RRec._∷*_ zzR A HS = fst A × (fst HS) , isSet× (snd A) (snd HS)
+-- -- --   RRec.comm* zzR A B HS = hSet≡ (ua (isoToEquiv swapIso))
+-- -- --   RRec.comm-inv* zzR A B HS =
+-- -- --     ΣSquareSet (λ _ → isProp→isSet (isPropIsSet)) (isInjectiveTransport refl)
+-- -- --   RRec.hexDiag* zzR A B C HS =
+-- -- --     hSet≡ (ua (isoToEquiv diagIso))
+-- -- --   RRec.hexU* zzR _ _ _ _ =
+-- -- --        ΣSquareSet (λ _ → isProp→isSet (isPropIsSet))
+-- -- --     (∙≡∙→square _ _ _ _ (isInjectiveTransport refl))
 
--- --   -- QR : Bool → Type₀
--- --   -- QR x = {!!}
+-- -- --   RRec.hexL* zzR _ _ _ _ =
+-- -- --        ΣSquareSet (λ _ → isProp→isSet (isPropIsSet))
+-- -- --     (∙≡∙→square _ _ _ _ (isInjectiveTransport (
+-- -- --        funExt λ _ → cong₂ _,_ refl (cong₂ _,_ refl (cong₂ _,_ refl refl)))))
 
--- --   record _⊎'_ {ℓ ℓ'} (A : Type ℓ)(B : Type ℓ') : Type (ℓ-max ℓ ℓ') where 
--- --     field
--- --       sw : Bool
--- --       ll : (Bool→Type sw → A)
--- --       rr : (Bool→Type (not sw) → B)
+
+
+
+-- -- --   zz : FMSet2 (hSet ℓ) → hSet ℓ
+-- -- --   zz = RRec.f zzR
+
+-- -- --   -- uncR : RElim {A = hSet ℓ} λ S → fst (zz S) → FMSet2 (Σ (Type ℓ) λ X → X) 
+-- -- --   -- RElim.[]* uncR _ = []
+-- -- --   -- (uncR RElim.∷* x) {xs} x₁ (a , r) = (_ , a) ∷2 x₁ r
+-- -- --   -- RElim.comm* uncR x y b i =
+-- -- --   --   (λ b₁ → comm (fst x , fst (snd b₁)) (fst y , fst b₁) (b (snd (snd b₁))) i)
+-- -- --   --     ∘ ua-unglue (isoToEquiv swapIso) i
+-- -- --   -- -- toPathP (funExt λ z i → comm {!!} {!!} {!!} i)
+-- -- --   -- RElim.comm-inv* uncR x y b i j x₁ =
+-- -- --   --  let xx = {!!}
+-- -- --   --  in comm-inv (fst x , {!fst x₁!}) {!!} {!!} i j
+-- -- --   -- RElim.hexDiag* uncR = {!!}
+-- -- --   -- RElim.hexU* uncR = {!!}
+-- -- --   -- RElim.hexL* uncR = {!!}
+-- -- --   -- RElim.trunc* uncR = {!!}
+
+-- -- --   -- unc : ∀ S → fst (zz S) → FMSet2 (Σ (Type ℓ) λ X → X)
+-- -- --   -- unc = {!!}
+
+-- -- -- -- module ⊎' where
+-- -- -- --   -- QL : Bool → Type₀
+-- -- -- --   -- QL false = ___+_++{!!}
+-- -- -- --   -- QL true = {!!}
+
+-- -- -- --   -- QR : Bool → Type₀
+-- -- -- --   -- QR x = {!!}
+
+-- -- -- --   -- record _⊎'_ {ℓ ℓ'} (A : Type ℓ)(B : Type ℓ') : Type (ℓ-max ℓ ℓ') where 
+-- -- -- --   --   field
+-- -- -- --   --     sw : Bool
+-- -- -- --   --     ll : (Bool→Type sw → A)
+-- -- -- --   --     rr : (Bool→Type (not sw) → B)
+
+-- -- -- --   _⊎'_ : ∀ {ℓ ℓ'} (A : Type ℓ)(B : Type ℓ') → Type (ℓ-max ℓ ℓ')
+-- -- -- --   A ⊎' B = Σ Bool λ sw → (Bool→Type sw → A) × (Bool→Type (not sw) → B)
+
+-- -- -- --   ⊎-swap-Path : ∀ {ℓ ℓ'} (A : Type ℓ)(B : Type ℓ') → (A ⊎' B) ≡ (B ⊎' A)
+-- -- -- --   ⊎-swap-Path A B i =
+-- -- -- --    Σ (notEq i)
+-- -- -- --      ((λ b → ua (Σ-swap-≃ {A = {!Bool→Type b → A!}} {A' = Bool→Type b → B}) i)
+-- -- -- --        ∘ ua-unglue notEquiv i)
+
+-- -- -- --   -- ⊎-swap-Iso : ∀ {ℓ ℓ'} (A : Type ℓ)(B : Type ℓ') → Iso (A ⊎' B) (B ⊎' A)
+-- -- -- --   -- Iso.fun (⊎-swap-Iso A B) = {!!}
+-- -- -- --   -- Iso.inv (⊎-swap-Iso A B) = {!!}
+-- -- -- --   -- Iso.rightInv (⊎-swap-Iso A B) = {!!}
+-- -- -- --   -- Iso.leftInv (⊎-swap-Iso A B) = {!!}
+
+
+-- -- -- -- module ⊎'2 where
+-- -- -- --   -- QL : Bool → Type₀
+-- -- -- --   -- QL false = ___+_++{!!}
+-- -- -- --   -- QL true = {!!}
+
+-- -- -- --   -- QR : Bool → Type₀
+-- -- -- --   -- QR x = {!!}
+
+-- -- -- --   record _⊎'_ {ℓ ℓ'} (A : Type ℓ)(B : Type ℓ') : Type (ℓ-max ℓ ℓ') where 
+-- -- -- --     field
+-- -- -- --       sw : Bool
+-- -- -- --       ll : (Bool→Type sw → A)
+-- -- -- --       rr : (Bool→Type (not sw) → B)
