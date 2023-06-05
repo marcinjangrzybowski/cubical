@@ -123,6 +123,24 @@ EMrec.bComp (toℙrmR n) g h = RelimProp.f (toℙrmRsq n h) g
 toℙrm : ∀ n → ℙrm' n → ℙrm n
 toℙrm n = EMrec.f (toℙrmR n)
 
+toℙrmInv : ∀ n xs → (sym (cong (toℙrm n) (emloop xs))) ≡ cong (toℙrm n) (emloop (inv xs))
+toℙrmInv n = RelimProp.f {n = n} (w n)
+ where
+  w : ∀ n → RelimProp
+        (λ z →
+           sym (cong (toℙrm n) (emloop z)) ≡ cong (toℙrm n) (emloop (inv z)))
+  RelimProp.isPropA (w n) x = 𝕡squash _ _ _ _ _
+  RelimProp.εA (w n) = refl
+  RelimProp.∷A (w n) k {xs} X =
+    symDistr (𝕡loop k) _ ∙     
+     cong′ (_∙ (sym (𝕡loop k))) X ∙
+        (( cong₂ _∙_ (cong (cong (toℙrm n)) (emloop-sym _ xs))
+            (doubleCompPath-filler refl _ refl) ∙
+          sym (cong-∙ (toℙrm n) (sym (emloop xs)) (sym (emloop (k ∷ ε))))
+          ) ∙
+          cong (cong (toℙrm n))
+            (sym (symDistr (emloop (k ∷ ε)) _) ∙ cong sym (sym (emloop-comp' _ (k ∷ ε) xs))
+              ∙ sym (emloop-sym _ (k ∷ xs))))
 
 commSq : ∀ n → ∀ k xs → Square {A = ℙrm' n}
            (emloop (η k))

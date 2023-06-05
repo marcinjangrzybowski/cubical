@@ -52,7 +52,9 @@ record IsLattice {L : Type ℓ}
      ; idem to ∨lIdem
      ; isCommMonoid to ∨lIsCommMonoid
      ; isMonoid to ∨lIsMonoid
-     ; isSemigroup to ∨lIsSemigroup )
+     ; isSemigroup to ∨lIsSemigroup
+     ; MGeneratedBy to ∨MGeneratedBy
+     ; MGeneratedElim to ∨MGeneratedElim )
 
   open IsSemilattice meetSemilattice public
    renaming
@@ -63,7 +65,9 @@ record IsLattice {L : Type ℓ}
      ; idem to ∧lIdem
      ; isCommMonoid to ∧lIsCommMonoid
      ; isMonoid to ∧lIsMonoid
-     ; isSemigroup to ∧lIsSemigroup )
+     ; isSemigroup to ∧lIsSemigroup
+     ; MGeneratedBy to ∧MGeneratedBy
+     ; MGeneratedElim to ∧MGeneratedElim )
    hiding
      ( is-set )
 

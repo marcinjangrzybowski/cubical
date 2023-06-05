@@ -558,8 +558,37 @@ toℕFGℕ≃ℕinv = RelimProp.f w
   RelimProp.∷A w (k , _) {xs} X =
      cong (A._· A.η k) X ∙ toℕFGℕ≃ℕ· (inv xs) _
 
+GroupHomToℕFGℕ≃ℕ : ∀ n → IsGroupHom (snd (PermG n))
+                              toℕFGℕ≃ℕ (snd (A.FinGenℕ≃ℕ))
+IsGroupHom.pres· (GroupHomToℕFGℕ≃ℕ n) x y = sym (toℕFGℕ≃ℕ· {n} x y)
+IsGroupHom.pres1 (GroupHomToℕFGℕ≃ℕ n) = refl
+IsGroupHom.presinv (GroupHomToℕFGℕ≃ℕ n) = sym ∘ toℕFGℕ≃ℕinv {n}
 
 
+
+-- injectiveToℕFGℕ≃ℕ : ∀ n → ∀ x y →
+--      toℕFGℕ≃ℕ {n = n} x ≡ toℕFGℕ≃ℕ {n = n} y
+--      → x ≡ y
+-- injectiveToℕFGℕ≃ℕ n = RelimProp.f w
+--  where
+--    w : RelimProp _
+--    RelimProp.isPropA w x = isPropΠ2 λ _ _ → trunc _ _
+--    RelimProp.εA w x = {!!}
+--    RelimProp.∷A w x {xs} X p =
+--     let z = {!X ?!}
+--     in {!!}
+
+
+-- injectiveToℕFGℕ≃ℕ : ∀ n → isInjective (_ , GroupHomToℕFGℕ≃ℕ n)
+-- injectiveToℕFGℕ≃ℕ n = RelimProp.f w
+--  where
+--    w : RelimProp _
+--    RelimProp.isPropA w x = isPropΠ λ _ → trunc _ _
+--    RelimProp.εA w = λ _ → refl
+--    RelimProp.∷A w x {xs} X p =
+--     let z = {!X ?!}
+--     in {!!}
+    
 to≃ : ∀ {n} → Perm n → Iso ℕ ℕ
 to≃ {n} = A.to≃ ∘ toℕFGℕ≃ℕ
 
@@ -885,9 +914,26 @@ permuteIso· n = RelimProp.f w
        (isSetFin {n = n})
      _ _ (funExt⁻ (cong Iso.fun (X h)) ∘ _)
 
-module List-perm {A : Type ℓ} where
- 
 
+
+module List-perm {A : Type ℓ} where
+
+ module _ {ℓ'} {B : Type ℓ'} (e : B ≃ B) (f₀ f₁ : B → A) where
+
+  substDom :
+    (PathP (λ i → ua e (~ i) → A)
+      f₀ f₁)
+     ≃
+    (f₀ ∘ fst e ≡ f₁)
+  substDom =
+     PathP≃Path _ _ _ ∙ₑ
+      compPathlEquiv (sym zz)
+
+   where
+    zz : transport (λ i → (ua e (~ i)) → A) f₀ ≡ f₀ ∘ fst e
+    zz = fromPathP (funTypeTransp' (idfun _) A (sym (ua e)) f₀)
+          ∙ cong (f₀ ∘_) (funExt (uaβ e))
+          
  List→×^ : (l : List A) → A ×^ (length l)
  List→×^ [] = tt*
  List→×^ (x ∷ l) = x , List→×^ l 
@@ -916,11 +962,147 @@ module List-perm {A : Type ℓ} where
  Iso.leftInv IsoList-×^ = ind' refl λ _ → cong (_ ∷_)
 
 
- permuteList' : ∀ {n} → (l : List A) → (Fin n → Fin (length l)) → List A
- permuteList' {n} l x =
-    ×^→List n (tabulate (lookup (List→×^ l) ∘' x))
+ -- permuteList' : ∀ {n} → (l : List A) → (Fin n → Fin (length l)) → List A
+ -- permuteList' {n} l x =
+ --    ×^→List n (tabulate (lookup (List→×^ l) ∘' x))
+
+
+ -- permuteList : (l : List A) →
+ --    Perm (length l) → List A
+ -- permuteList l = permuteList' {n = (length l)} l ∘ permuteF (length l)
+
+ ListOfLen : ℕ → Type ℓ
+ ListOfLen n = Σ (List A) λ l → length l ≡ n
+
+ -- mkOfLen : List A → ListOfLen n
+ -- mkOfLen = ?
+ 
+ IsoListOfLen×^ : ∀ n → Iso (ListOfLen n) (A ×^ n)
+ IsoListOfLen×^ = w
+  where
+
+  w→ : ∀ n → (ListOfLen n) → (A ×^ n)
+  w→ zero x = tt*
+  w→ (suc n) ([] , snd₁) = ⊥.rec (znots snd₁) 
+  w→ (suc n) (x ∷ fst₁ , snd₁) = x , w→ n (fst₁ , cong predℕ snd₁)
+
+  w← : ∀ n → (A ×^ n) → (ListOfLen n)
+  w← zero x = [] , refl
+  w← (suc n) x =
+   let (l , p) = w← n (snd x)
+   in fst x ∷ l , cong suc p
+
+  w-ri : ∀ n → section (w→ n) (w← n)
+  w-ri zero b = refl
+  w-ri (suc n) b = cong (fst b ,_) (w-ri n (snd b))
+
+  w-li : ∀ n → retract (w→ n) (w← n)
+  w-li zero ([] , snd₁) = Σ≡Prop (λ _ → isSetℕ _ _) refl
+  w-li zero (x ∷ fst₁ , snd₁) = ⊥.rec (snotz snd₁) 
+  w-li (suc n) ([] , snd₁) = ⊥.rec (znots snd₁)
+  w-li (suc n) (x ∷ fst₁ , snd₁) =
+   let z = w-li n (fst₁ , cong predℕ snd₁)
+   in Σ≡Prop (λ _ → isSetℕ _ _) (cong (x ∷_) (cong fst z)) 
+ 
+  w : ∀ n → Iso _ _
+  Iso.fun (w n) = w→ n
+  Iso.inv (w n) = w← n
+  Iso.rightInv (w n) = w-ri n
+  Iso.leftInv (w n) = w-li n
 
 
  permuteList : (l : List A) →
     Perm (length l) → List A
- permuteList l = permuteList' {n = (length l)} l ∘ permuteF (length l)
+ permuteList l p =
+   fst (Iso.inv (IsoListOfLen×^ (length l))
+         (tabulate (lookup (Iso.fun (IsoListOfLen×^ (length l)) (l , refl))
+              ∘' permuteF' _ p)))
+   -- permuteList' {n = (length l)} l ∘ permuteF (length l)
+
+
+ listOfLenPerm : ∀ n → Perm n → (ListOfLen n) ≃ (ListOfLen n)
+ listOfLenPerm n p =
+   --  compIso {!!}
+   -- (compIso {!preCompIso!}
+   --          {!!})
+    isoToEquiv (compIso (IsoListOfLen×^ n) (Iso-×^-F→ n))
+     ∙ₑ preCompEquiv {C = A} (isoToEquiv (permuteIso n p)) ∙ₑ
+     isoToEquiv (invIso (compIso (IsoListOfLen×^ n) (Iso-×^-F→ n)))
+
+ permuteList-len : (x : List A) →
+     (p : Perm (length x)) → length (permuteList x p) ≡ length x
+ permuteList-len l p =
+   snd (Iso.inv (IsoListOfLen×^ (length l))
+         (tabulate (lookup (Iso.fun (IsoListOfLen×^ (length l)) (l , refl))
+              ∘' permuteF' _ p)))
+
+ lookupList : (x : List A) → Fin (length x) → A
+ lookupList x = Iso.fun (compIso (IsoListOfLen×^ (length x)) (Iso-×^-F→ _)) (x , refl)
+   
+ 
+ permuteList-lemma : (x y : List A) → (l= : length x ≡ length y) →
+     (p : Perm (length x)) →
+    _ -- PathP _ _ _
+       ≃
+   (permuteList x p ≡ y)
+ permuteList-lemma x y l= p =
+   --    PathP (λ i → ua (isoToEquiv (invIso (permuteIso _ p))) (~ i) → A)
+   --      ((equivFun
+   --        (isoToEquiv
+   --         (compIso (IsoListOfLen×^ (length x)) (Iso-×^-F→ (length x))))
+   --        (x , refl)))
+   --      ((equivFun
+   --        (isoToEquiv
+   --         (compIso (IsoListOfLen×^ (length x)) (Iso-×^-F→ (length x))))
+   --        (y , (λ i → l= (~ i)))))
+   -- ≃⟨ substDom _ _ _ ⟩ 
+      Path (Fin (length x) → A)
+        ((equivFun
+          (isoToEquiv
+           (compIso (IsoListOfLen×^ (length x)) (Iso-×^-F→ (length x))))
+          (x , refl)) ∘' permuteF' _ p)
+        (equivFun
+          (isoToEquiv
+           (compIso (IsoListOfLen×^ (length x)) (Iso-×^-F→ (length x))))
+          (y , (λ i → l= (~ i))))
+   ≃⟨ compPathlEquiv (Iso.rightInv
+        ((compIso (IsoListOfLen×^ (length x)) (Iso-×^-F→ (length x))))
+         (lookup (Iso.fun (IsoListOfLen×^ (length x)) (x , refl)) ∘'
+           permuteF' (length x) p))
+       ∙ₑ invEquiv (congEquiv (
+       isoToEquiv (compIso (IsoListOfLen×^ (length x))
+                           (Iso-×^-F→ (length x))))) ⟩ 
+     Path (ListOfLen (length x)) (permuteList x p , permuteList-len x p)
+                                 (y , sym l=)
+   ≃⟨ isoToEquiv zz ⟩ 
+      Path (List A) _ _ ■
+   where
+    zz : Iso _ _
+    Iso.fun zz = cong fst
+    Iso.inv zz = Σ≡Prop λ _ → isSetℕ _ _
+    Iso.rightInv zz b = refl
+    Iso.leftInv zz a = invEq (congEquiv (invEquiv ΣPath≃PathΣ))
+                       (Σ≡Prop
+                         (λ _ → isProp→isPropPathP (λ _ → isSetℕ _ _) _ _) refl)
+    
+
+     
+
+ -- permuteList-lemma : (x y : List A) → (l= : length x ≡ length y) →
+ --     (p : Perm (length x)) →
+ --    PathP (λ i → ua (listOfLenPerm (length x) p) i)
+ --       (x , refl) (y , sym l=)
+ --       ≃
+ --   (permuteList x p ≡ y)
+
+
+
+ -- permuteList-lemma = {!!}
+
+
+
+ -- isPermutedBy : ∀ n → Perm n → (x y : List A) → Type ℓ
+ -- isPermutedBy = {!!}
+
+
+ 

@@ -7,7 +7,10 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.SIP
 
+open import Cubical.Functions.Logic
+
 open import Cubical.Data.Sigma
+open import Cubical.Data.List
 
 open import Cubical.Reflection.RecordEquiv
 
@@ -37,6 +40,8 @@ record IsSemigroup {A : Type ℓ} (_·_ : A → A → A) : Type ℓ where
   field
     is-set : isSet A
     ·Assoc  : (x y z : A) → x · (y · z) ≡ (x · y) · z
+
+
 
 unquoteDecl IsSemigroupIsoΣ = declareRecordIsoΣ IsSemigroupIsoΣ (quote IsSemigroup)
 

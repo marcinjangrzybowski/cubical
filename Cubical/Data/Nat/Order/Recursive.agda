@@ -27,7 +27,7 @@ open import Cubical.Data.Maybe as Mb
 open import Cubical.Data.Bool hiding (_≤_ ; isProp≤ ; _≟_)
 
 open import Cubical.Data.Nat.Base as Nat
-open import Cubical.Data.Nat.Properties
+open import Cubical.Data.Nat.Properties as NatP
 
 open import Cubical.Induction.WellFounded
 
@@ -343,6 +343,17 @@ X×ⁿ A B (suc n) = A × (X×ⁿ A B n)
 _×^_ : ∀ {ℓ} → Type ℓ → ℕ → Type ℓ 
 A ×^ zero = Unit*
 A ×^ suc x = A × (A ×^ x)
+
+subst×^Suc : ∀ {ℓ} → {A : Type ℓ} → ∀ {n m}
+             → (p : suc n ≡ suc m) → ∀ x
+             → subst (A ×^_) p x ≡ map-snd (subst (A ×^_) (cong predℕ p)) x 
+subst×^Suc {A = A} {n = n} {m} p y =
+  let q = J {x = n} (λ m p → ∀ x
+             → subst (A ×^_) (cong suc p) x ≡ map-snd (subst (A ×^_) p) x)
+               (λ x → ΣPathP ((transportRefl (fst x)) , refl)) (cong predℕ p)
+                 y
+  in  cong (λ p → subst (_×^_ A) p y) (isSetℕ _ _ p (cong (suc ∘ predℕ) p))
+        ∙ q
 
 bindDec : ∀ {ℓ} {A : Type ℓ} {B : Type ℓ} →
              (A → Dec B) → (¬ A → ¬ B) → Dec A → Dec B
@@ -1448,6 +1459,9 @@ module _ {ℓ} {A : Type ℓ} where
   adjT×^-repeat (suc zero) zero a = refl
   adjT×^-repeat (suc (suc n)) zero a = refl
 
+
+ 
+
 allFalse : ∀ n → Bool ×^ n → hProp ℓ-zero
 allFalse zero x = L.⊤
 allFalse (suc n) (x , xs) =
@@ -1456,12 +1470,23 @@ allFalse (suc n) (x , xs) =
   else allFalse n xs
 -- allFalse (suc n) (x , xs) = (Bool→Prop (not x)) L.⊔  allFalse n xs
 
+allFalse? : ∀ n x → Dec ⟨ allFalse n x ⟩
+allFalse? zero x = yes _
+allFalse? (suc n) (false , xs) = allFalse? n xs
+allFalse? (suc n) (true , xs) = no λ ()
+
+
 Fin×Snd : ∀ n → Bool ×^ n → hProp ℓ-zero
 Fin×Snd zero _ = L.⊥ 
 Fin×Snd (suc n) (x , xs) =
   if x
   then allFalse n xs
   else Fin×Snd n xs
+
+Fin×Snd? : ∀ n x → Dec ⟨ Fin×Snd n x ⟩
+Fin×Snd? zero x = no λ ()
+Fin×Snd? (suc n) (false , xs) = Fin×Snd? n xs
+Fin×Snd? (suc n) (true , xs) = allFalse? n xs
 
 allFalse∘adjT× : ∀ n k x → ⟨ allFalse n x ⟩ → ⟨ allFalse n (adjT×^ k x) ⟩ 
 allFalse∘adjT× zero k x x₁ = x₁
@@ -1496,6 +1521,15 @@ Fin×Snd∘adjT×≡ (suc zero) zero xs = refl
 Fin×Snd∘adjT×≡ (suc (suc n)) zero (false , x' , xs) = refl
 Fin×Snd∘adjT×≡ (suc (suc n)) zero (true , x' , xs) = refl
 
+
+allFalseSubst : ∀ {n m} p v → ⟨ allFalse n v ⟩ → 
+      ⟨ allFalse m
+       (subst (_×^_ Bool) p v) ⟩ 
+allFalseSubst {n = n} =
+ J (λ m p → ∀ v → ⟨ allFalse n v ⟩ → 
+      ⟨ allFalse m
+       (subst (_×^_ Bool) p v) ⟩)
+         λ v → subst (fst ∘ allFalse n) (sym (transportRefl v))
 
 ℕ→Fin× : ∀ n → ℕ → (Bool ×^ n)
 ℕ→Fin× zero x = tt*
@@ -1604,13 +1638,19 @@ sucFin× (xs , ys) = (false , xs) , ys
 Fin×0 : Fin× (suc n)
 Fin×0 {n} = (true , repeat _ false) , allFalse-repeat-false n
 
+
+-- subst-Fin× : {!n ≡ m → Fin× n → Fin× m!}
+-- subst-Fin× = {!!}
+
 Fin×cases : ∀ {ℓ} {A : Type ℓ} → A → (Fin× n → A) → Fin× (suc n) → A
 Fin×cases _ f ((false , xs) , ys) = f (xs , ys)
 Fin×cases a _ ((true , _) , _) = a
 
 
--- Fin×casesβ : {!!}
--- Fin×casesβ = {!!}
+-- Fin×casesβ0 : ∀ {ℓ} {A : Type ℓ} → (a : A) → (f : Fin× n → A) →
+--                  ∀ xs ys → 
+--                   Fin×cases a f ((true , xs) , ys) ≡ a 
+-- Fin×casesβ0 = {!!}
 
 Fin×elim : ∀ {ℓ} {A : Fin× (suc n) → Type ℓ}
                     → (∀ x y → A ((true , x) , y))
@@ -2213,35 +2253,54 @@ module Tab× {A : Type ℓ} where
  ΣℕFin×→List zero _ = L.[]
  ΣℕFin×→List (suc k) f =  f (zero , _) L.∷ ΣℕFin×→List k (f ∘ sucF)
 
---  sec-IsoListΣℕFin×→-fst : ∀ n f → fst (List→ΣℕFin×→ (ΣℕFin×→List n f)) ≡ n
---  sec-IsoListΣℕFin×→-fst zero f = refl
---  sec-IsoListΣℕFin×→-fst (suc n) f = {!!}
+ -- sec-IsoListΣℕFin×→-fst : ∀ n f → fst ({!!}) ≡ n
+ -- sec-IsoListΣℕFin×→-fst zero f = {!!}
+ -- sec-IsoListΣℕFin×→-fst (suc n) f = {!!}
 
---  sec-IsoListΣℕFin×→ : ∀ n → (f : (Fin n → A)) →
---     List→ΣℕFin×→ (ΣℕFin×→List n f) ≡ (n , f)
---  sec-IsoListΣℕFin×→ n f = ΣPathP (sec-IsoListΣℕFin×→-fst n f , {!!})
---  -- sec-IsoListΣℕFin×→ zero f = ΣPathP (refl , funExt λ ())
---  -- sec-IsoListΣℕFin×→ (suc n) f =
---  --  let p = sec-IsoListΣℕFin×→ n (f ∘ sucF)
---  --  in  (λ i → suc (fst (p i)) ,
---  --           Fin-elim _ (f (zero , _)) (snd (p i))) ∙
---  --            ΣPathP (refl ,
---  --             funExt λ { (zero , _) → refl ; (suc _ , _) → {!!} } )
+ -- sec-IsoListΣℕFin×→ : ∀ n → (f : (Fin n → A)) →
+   
+ --    -- List→ΣℕFin×→ (ΣℕFin×→List n f) ≡ (n , f)
+ -- sec-IsoListΣℕFin×→ n f = ΣPathP (sec-IsoListΣℕFin×→-fst n f , {!!})
+ -- sec-IsoListΣℕFin×→ zero f = ΣPathP (refl , funExt λ ())
+ -- sec-IsoListΣℕFin×→ (suc n) f =
+ --  let p = sec-IsoListΣℕFin×→ n (f ∘ sucF)
+ --  in  (λ i → suc (fst (p i)) ,
+ --           Fin-elim _ (f (zero , _)) (snd (p i))) ∙
+ --            ΣPathP (refl ,
+ --             funExt λ { (zero , _) → refl ; (suc _ , _) → {!!} } )
             
---  --      -- ΣPathP (cong (suc ∘ fst) p ,
---  --      --  congP (λ i f' → {!Fin-elim ? ? ? !}) (cong snd p)) 
+ --      -- ΣPathP (cong (suc ∘ fst) p ,
+ --      --  congP (λ i f' → {!Fin-elim ? ? ? !}) (cong snd p)) 
 
- -- IsoListΣℕFin×→ : Iso (L.List A) (Σ ℕ λ n → Fin n → A)
- -- Iso.fun IsoListΣℕFin×→ = (λ {l} → (L.length l ,_)) ∘ List→ΣℕFin×→
- -- Iso.inv IsoListΣℕFin×→ = uncurry ΣℕFin×→List
- -- Iso.rightInv IsoListΣℕFin×→ = {!!}
- --   -- uncurry λ x y → ΣPathP ({!!} , {!!})
- -- -- uncurry sec-IsoListΣℕFin×→
- -- Iso.leftInv IsoListΣℕFin×→ = 
- --   L.ind' refl λ {a} l p →
- --    cong (a L.∷_)
- --     (cong (ΣℕFin×→List (L.length l))
- --      (funExt {!!}) ∙ p) 
+ finElim-lem : ∀ n a → (f : Fin n → A) → (x : Fin n)  
+      → Fin-elim n a f (sucF x) ≡ f x
+ finElim-lem (suc n) a f x = refl
+
+ finElimβ : ∀ n f → Fin-elim {A = A} n (f (zero , tt)) (λ x → f (sucF x)) ≡ f
+ finElimβ n f i (zero , snd₁) = f (zero , tt)
+ finElimβ (suc n) f i (suc k , snd₁) = f (suc k , snd₁)
+
+ IsoListΣℕFin×→-RI : ∀ n → (f : Fin n → A) →
+    ((λ {l} → (L.length l ,_)) ∘ List→ΣℕFin×→)
+       ((ΣℕFin×→List n f)) ≡ (n , f)
+ fst (IsoListΣℕFin×→-RI zero f i) = 0
+ snd (IsoListΣℕFin×→-RI zero f i) ()
+ IsoListΣℕFin×→-RI (suc n) f =
+   let z = IsoListΣℕFin×→-RI n (f ∘ sucF)
+   in ΣPathP ((cong suc (cong fst z)) ,
+        (congP (λ i q → Fin-elim (fst q) (f (zero , tt)) (snd q)) z ▷
+         finElimβ n f)) 
+   
+ IsoListΣℕFin×→ : Iso (L.List A) (Σ ℕ λ n → Fin n → A)
+ Iso.fun IsoListΣℕFin×→ = (λ {l} → (L.length l ,_)) ∘ List→ΣℕFin×→
+ Iso.inv IsoListΣℕFin×→ = uncurry ΣℕFin×→List
+ Iso.rightInv IsoListΣℕFin×→ = uncurry IsoListΣℕFin×→-RI
+
+ Iso.leftInv IsoListΣℕFin×→ = 
+   L.ind' refl λ {a} l p →
+    cong (a L.∷_)
+     (cong (ΣℕFin×→List (L.length l))
+      (funExt ((finElim-lem (L.length l) a _))) ∙ p) 
 
  tab×≡-sides : ∀ n → ∀ i → Partial (~ i ∨ i) (Σ-syntax (Type ℓ) (λ T → T ≃ A × tab×≡ n i)) 
  tab×≡-sides n i =

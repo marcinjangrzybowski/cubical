@@ -288,3 +288,6 @@ Decₚ P = Dec ⟨ P ⟩ , isPropDec (isProp⟨⟩ P)
 ⊓-∀-distrib P Q =
   ⇒∶ (λ {(p , q) a → p a , q a})
   ⇐∶ λ pq → (fst ∘ pq ) , (snd ∘ pq)
+
+-- absˡ : (P : hProp ℓ) (Q : hProp ℓ') → (P ⊔ (Q ⊓ y)) ≡ P
+-- absˡ = ?

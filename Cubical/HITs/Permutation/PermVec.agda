@@ -22,7 +22,7 @@ open import Cubical.Data.Sum as ⊎
 
 
 open import Cubical.Data.Nat.Order.Recursive
-open import Cubical.Data.Nat.Order.Permutation
+-- open import Cubical.Data.Nat.Order.Permutation
 -- open import Cubical.Data.Nat.Order.RecursiveMoreEquiv
 
 open import Cubical.Relation.Nullary

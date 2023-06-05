@@ -8,6 +8,9 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.SIP
 
 open import Cubical.Data.Sigma
+open import Cubical.Data.List
+
+open import Cubical.Functions.Logic
 
 open import Cubical.Algebra.Semigroup
 
@@ -17,6 +20,10 @@ open import Cubical.Displayed.Record
 open import Cubical.Displayed.Universe
 
 open import Cubical.Reflection.RecordEquiv
+
+open import Cubical.HITs.PropositionalTruncation
+  renaming (rec to rec₁ ; map to map₁ ; map2 to map2₁ ; elim to elim₁)
+
 
 open Iso
 
@@ -32,7 +39,21 @@ record IsMonoid {A : Type ℓ} (ε : A) (_·_ : A → A → A) : Type ℓ where
     ·IdR : (x : A) → x · ε ≡ x
     ·IdL : (x : A) → ε · x ≡ x
 
+
   open IsSemigroup isSemigroup public
+
+  MGeneratedBy : ∀ {ℓ'} {G : Type ℓ'} → (f : G → A) → hProp (ℓ-max ℓ ℓ')
+  MGeneratedBy f = 
+    ∀[ x ] ∃[ l ] ((foldr (_·_) ε (map f l) ≡ x) , is-set _ _)
+     
+
+
+  MGeneratedElim : ∀ {ℓ' ℓ''} {G : Type ℓ'} {f : G → A} →
+                   ⟨ MGeneratedBy f ⟩ → {B :  A → Type ℓ''} → (∀ a → isProp (B a)) 
+                    → (∀ l → B (foldr (_·_) ε (map f l))) → ∀ a → B a
+  MGeneratedElim {G = G} {f} gBy {B} isPrp fl a =
+     elim₁ (λ _ → isPrp _) (λ (x' , p) → subst _ p (fl x')) (gBy a)
+
 
 unquoteDecl IsMonoidIsoΣ = declareRecordIsoΣ IsMonoidIsoΣ (quote IsMonoid)
 

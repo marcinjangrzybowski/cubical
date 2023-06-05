@@ -10,7 +10,7 @@ open import Cubical.Foundations.Path
 
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sum as ⊎ using (_⊎_; inl; inr)
-open import Cubical.Data.Nat
+open import Cubical.Data.Nat as Nat
 open import Cubical.Data.Sigma
 open import Cubical.Data.List
 
@@ -33,6 +33,8 @@ open import Cubical.HITs.EilenbergMacLane1
 open import Cubical.Data.FinData.Properties
 
 open import Cubical.Data.Nat.Order.Recursive
+
+open import Cubical.Relation.Nullary
 
 open import Cubical.Relation.Binary
 
@@ -288,6 +290,8 @@ mapFM2 fb f = f'
 <$tt : FMSet2C {B = B} A → FMSet2C Unit
 <$tt = mapFM2 (idfun _) (λ _ → tt)
 
+
+
 length2 : ∀ {B : Type} {A : Type ℓ} → FMSet2C {B = B} A → ℕ
 length2 [] = zero
 length2 (x ∷2 x₁) = suc (length2 x₁)
@@ -301,6 +305,28 @@ length2 (trunc x x₁ x₂ y p q i i₁ x₄) =
     (λ i j → length2 (p i j))
     (λ i j → length2 (q i j))
     i i₁ x₄
+
+-- module _ (B :  Type ℓ') where
+
+--  tt> : (𝕝 : FMSet2 B) → (l : List A) → (length2 𝕝 ≡ length l)
+--          → FMSet2 A   
+--  tt> = RElim.ff w λ _ _ → isGroupoidΠ2 λ _ _ → trunc 
+--   where
+--   w : RElim (λ z → (l : List _) → length2 z ≡ length l → FMSet2 _)
+--   RElim.[]* w [] x = []
+--   RElim.[]* w (x₁ ∷ l) x = ⊥.rec (Nat.znots x)
+--   (w RElim.∷* x) x₁ [] x₂ = ⊥.rec (Nat.snotz x₂)
+--   (w RElim.∷* x) x₁ (x₃ ∷ l) x₂ =
+--      x₃ ∷2 x₁ l (cong predℕ x₂) 
+--   RElim.comm* w x y b i [] x₁ = ⊥.rec (Nat.snotz x₁)
+--   RElim.comm* w x y b i (x₂ ∷ []) x₁ =
+--      x₂ ∷2 ⊥.rec (Nat.snotz (λ i₁ → predℕ (x₁ i₁)))
+--   RElim.comm* w x y b i (x₂ ∷ x₃ ∷ l) x₁ =
+--     {!x₂ ∷2 x₃ ∷2 b l (λ i₁ → predℕ (predℕ (x₁ i₁)))!}
+--   RElim.comm-inv* w = {!!}
+--   RElim.commm* w = {!!}
+--   RElim.commp* w = {!!}
+--   RElim.hex* w = {!!}
 
 -- toTruncFM2 : ∀ {T T'} → (T → T') → FMSet2C {B = T} A → FMSet2C {B = T'} A
 -- toTruncFM2 fb = mapFM2 fb (idfun _)
@@ -441,9 +467,8 @@ module 𝕃Fin {T} {A' : Type ℓ'} where
   (w RElimProp.∷* x) x₁ = x₁
   RElimProp.trunc* w 𝕝 = snd (𝕃allFalse 𝕝 (repeatF 𝕝))
 
-
-
-
+ 
+  
  𝕃FinSnd : ∀ 𝕝 → 𝕃Bool 𝕝 → hProp ℓ-zero
  𝕃FinSnd = RElimSet.f w
   where
@@ -470,6 +495,7 @@ module 𝕃Fin {T} {A' : Type ℓ'} where
  𝕃Fin0 : ∀ 𝕝 {a'} → 𝕃Fin (a' ∷2 𝕝)
  𝕃Fin0 𝕝 {a'} = (true , repeatF 𝕝) , repeat𝕃allFalse 𝕝 
 
+
  𝕃Fin-suc : ∀ 𝕝 {a'} → 𝕃Fin 𝕝 →  𝕃Fin (a' ∷2 𝕝)
  𝕃Fin-suc 𝕝 x = (false , (fst x)) , (snd x)
 
@@ -484,15 +510,41 @@ module 𝕃Fin {T} {A' : Type ℓ'} where
               PathP (λ i → 𝕃Fin (comm a' a'' 𝕝 i))
                 (𝕃Fin-suc (a' ∷2 𝕝) {a''} (𝕃Fin-suc 𝕝 {a'} x))
                 (𝕃Fin-suc (a'' ∷2 𝕝) {a'} (𝕃Fin-suc 𝕝 {a''} x))
- 𝕃Fin-comm 𝕝 {a'} {a''} x =
-   ΣPathPProp (snd ∘ 𝕃FinSnd (a'' ∷2 a' ∷2 𝕝))
-        λ i → glue'-Σ-swap-01 refl i (false , false , fst x)
+ 𝕃Fin-comm 𝕝 {a'} {a''} x = ΣPathP w
+  where
+  w : Σ (PathP _ _ _) _
+  fst w = λ i → glue'-Σ-swap-01 refl i (false , false , fst x)
+  snd w = isProp→PathP (λ i →
+       (snd (𝕃FinSnd (comm a' a'' 𝕝 i) (fst w i)))) _ _
+   -- ΣPathPProp (snd ∘ 𝕃FinSnd (a'' ∷2 a' ∷2 𝕝))
+   --      λ i → glue'-Σ-swap-01 refl i (false , false , fst x)
+
+ 𝕃Fin-commm : ∀ 𝕝 {a a' a''} → (x : 𝕃Fin 𝕝) →
+              PathP (λ i → 𝕃Fin (commm a a' a'' 𝕝 i))                
+                (𝕃Fin-suc (a' ∷2 a'' ∷2 𝕝) {a}
+                 (𝕃Fin-suc (a'' ∷2 𝕝) {a'} (𝕃Fin-suc 𝕝 {a''} x)))
+                (𝕃Fin-suc (a'' ∷2 a ∷2 𝕝) {a'}
+                 (𝕃Fin-suc (a ∷2 𝕝) {a''} (𝕃Fin-suc 𝕝 {a} x)))
+ 𝕃Fin-commm 𝕝 {a} {a'} {a''} x = ΣPathP w
+  where
+  w : Σ (PathP _ _ _) _
+  fst w = 𝑮-refl-gluePath Σ-swap-01-≃ (≃-× (idEquiv _) Σ-swap-01-≃) refl
+  snd w = isProp→PathP (λ i →
+       (snd (𝕃FinSnd (commm a a' a'' 𝕝 i) (fst w i)))) _ _
+  
 
  𝕃Fin-swap01 : ∀ 𝕝 {a' a''} → 𝕃Fin (a' ∷2 a'' ∷2 𝕝) → 𝕃Fin (a'' ∷2 a' ∷2 𝕝)
  fst (𝕃Fin-swap01 𝕝 x) = swap-01 (fst x)
  snd (𝕃Fin-swap01 𝕝 ((false , false , _) , x)) = x
  snd (𝕃Fin-swap01 𝕝 ((false , true , _) , x)) = x
  snd (𝕃Fin-swap01 𝕝 ((true , false , _) , x)) = x
+
+ 𝕃Fin-swap01-invol : ∀ 𝕝 {a' a''} → ∀ x →
+    x ≡ (𝕃Fin-swap01 𝕝 {a'} {a''} (𝕃Fin-swap01 𝕝 {a''} {a'} x)) 
+ 𝕃Fin-swap01-invol 𝕝 {a'} {a''} x =
+   Σ≡Prop (λ x₁ → (snd (𝕃FinSnd (a' ∷2 a'' ∷2 𝕝) x₁))) refl
+ 
+
 
  𝕃Fin-comm-unglue : ∀ 𝕝 {a' a''} →
               PathP (λ i → 𝕃Fin (comm a' a'' 𝕝 i) → (𝕃Fin (a'' ∷2 a' ∷2 𝕝)))
@@ -521,6 +573,84 @@ module 𝕃Fin {T} {A' : Type ℓ'} where
                λ i → glue'-Σ-swap-01 refl i
                  (false , true , repeatF 𝕝)))
 
+
+ 𝕃Fin-120 : ∀ 𝕝 {a a' a''} → 
+       PathP (λ i → 𝕃Fin (commm a a' a'' 𝕝 i)
+                  × 𝕃Fin (commm a a' a'' 𝕝 i)
+                  × 𝕃Fin (commm a a' a'' 𝕝 i))
+         ( 𝕃Fin-suc (a'' ∷2 a ∷2 𝕝) {a'} (𝕃Fin0 (a ∷2 𝕝) {a''})
+         , 𝕃Fin-suc (a'' ∷2 a ∷2 𝕝) {a'}
+            (𝕃Fin-suc (a ∷2 𝕝) {a''} (𝕃Fin0 𝕝 {a}))
+         , 𝕃Fin0 (a'' ∷2 a' ∷2 𝕝) {a'})
+         ((𝕃Fin0 (a' ∷2 a'' ∷2 𝕝) {a}
+         , 𝕃Fin-suc (a' ∷2 a'' ∷2 𝕝) {a} (𝕃Fin0 (a'' ∷2 𝕝) {a'})
+         , 𝕃Fin-suc (a' ∷2 a'' ∷2 𝕝) {a}
+            (𝕃Fin-suc (a'' ∷2 𝕝) {a'} (𝕃Fin0 𝕝 {a''}))
+         ))
+
+ 𝕃Fin-120 𝕝 {a} {a'} {a''} =
+   ΣPathP  (ΣPathPProp (snd ∘ 𝕃FinSnd (a ∷2 a ∷2 a ∷2 𝕝))
+      (𝑮-refl-gluePath Σ-swap-01-≃ (≃-× (idEquiv _) Σ-swap-01-≃) refl) ,
+    ΣPathP (ΣPathPProp (snd ∘ 𝕃FinSnd (a ∷2 a ∷2 a ∷2 𝕝))
+      (𝑮-refl-gluePath Σ-swap-01-≃ (≃-× (idEquiv _) Σ-swap-01-≃) refl)
+          , ΣPathPProp (snd ∘ 𝕃FinSnd (a ∷2 a ∷2 a ∷2 𝕝))
+      (𝑮-refl-gluePath Σ-swap-01-≃ (≃-× (idEquiv _) Σ-swap-01-≃) refl)))
+
+
+ isSet𝕃Fin : ∀ 𝕝 → isSet (𝕃Fin 𝕝)
+ isSet𝕃Fin 𝕝 =
+   isSetΣ (isSet𝕃₂ _ (isSetBool) 𝕝)
+                            λ v → isProp→isSet
+                               (snd (𝕃FinSnd 𝕝 v))
+
+ allFalse→≡repeat-false-𝔽 : ∀ 𝕝 → (v : Σ _ (λ v → ⟨ 𝕃allFalse 𝕝 v ⟩)) →
+         (fst v) ≡ repeatF 𝕝
+ allFalse→≡repeat-false-𝔽 = RElimProp.f w
+  where
+  w : RElimProp (λ z → (v : Σ (𝕃Bool z)
+         λ v → ⟨ 𝕃allFalse z v ⟩) → fst v ≡ repeatF z)
+  RElimProp.[]* w _ = refl
+  (w RElimProp.∷* x) x₁ ((false , snd₁) , x₂) = cong (false ,_) (x₁ (snd₁ , x₂))
+  RElimProp.trunc* w xs = isPropΠ λ _ → (isSet𝕃₂ _ (isSetBool) xs) _ _
+
+ isContrΣ𝕃allFalse : ∀ 𝕝 → isContr (Σ (𝕃Bool 𝕝) λ v → ⟨ 𝕃allFalse 𝕝 v ⟩)
+ fst (isContrΣ𝕃allFalse 𝕝) = _ , repeat𝕃allFalse 𝕝
+ snd (isContrΣ𝕃allFalse 𝕝) y =
+   Σ≡Prop (snd ∘ 𝕃allFalse 𝕝)
+     (sym (allFalse→≡repeat-false-𝔽 𝕝 y))
+ 
+ -- 𝕃Fin-comm-inv : ∀ 𝕝 {a' a''} → (x : 𝕃Fin 𝕝) →
+ --              SquareP (λ i j → 𝕃Fin (comm-inv a' a'' 𝕝 i j))
+ --                (𝕃Fin-comm 𝕝 {a'} {a''} x)
+ --                (symP (𝕃Fin-comm 𝕝 {a''} {a'} x))
+ --                refl refl
+ -- 𝕃Fin-comm-inv 𝕝 {a'} {a''} x = {!!}
+
+ -- 𝕃Fin-comm-inv : ∀ 𝕝 {a' a''} → (x : 𝕃Fin 𝕝) →
+ --              SquareP (λ i j → 𝕃Fin (comm-inv a' a'' 𝕝 i j))
+ --                (𝕃Fin-comm 𝕝 {a'} {a''} x)
+ --                (symP (𝕃Fin-comm 𝕝 {a''} {a'} x))
+ --                refl refl
+ -- 𝕃Fin-comm-inv 𝕝 {a'} {a''} x = {!!}
+   -- ΣPathPProp (snd ∘ 𝕃FinSnd (a'' ∷2 a' ∷2 𝕝))
+   --      λ i → glue'-Σ-swap-01 refl i (false , false , fst x)
+
+
+ -- 𝕃Fin-01-invo : ∀ 𝕝 {a' a''} → 
+ --       SquareP (λ i j → 𝕃Fin (comm-inv a' a'' 𝕝 i j) × 𝕃Fin (comm-inv a' a'' 𝕝 i j))
+ --         (𝕃Fin-01 𝕝 {a'} {a''}) --(𝕃Fin0 (a' ∷2 𝕝) {a''} , 𝕃Fin-suc (a'' ∷2 𝕝) {a'} (𝕃Fin0 𝕝 {a''}))
+ --         (symP (𝕃Fin-01 𝕝 {a''} {a'})) --(𝕃Fin-suc (a' ∷2 𝕝) {a''} (𝕃Fin0 𝕝 {a'}) , (𝕃Fin0 (a'' ∷2 𝕝) {a'}))
+ --         {!!}
+ --         {!!}
+ -- 𝕃Fin-01-invo 𝕝 {a'} {a''} = {!!}
+ --   -- ΣPathP ((ΣPathPProp (snd ∘ 𝕃FinSnd (a'' ∷2 a' ∷2 𝕝))
+ --   --             λ i → glue'-Σ-swap-01 refl i
+ --   --               (true , false , repeatF 𝕝)) ,
+ --   --        (ΣPathPProp (snd ∘ 𝕃FinSnd (a'' ∷2 a' ∷2 𝕝))
+ --   --             λ i → glue'-Σ-swap-01 refl i
+ --   --               (false , true , repeatF 𝕝)))
+
+
 -- infix  0 dep-if_then_else_
 
 -- dep-if_then_else_ : Bool → A → A → A
@@ -536,10 +666,173 @@ module 𝕃Fin {T} {A' : Type ℓ'} where
 --    λ g → ∀ (x : T) → Σ (f (g x) ≡ x)
 --      {!!}
 
+
+
 open 𝕃Fin {T = Unit} {A' = Unit} public
+
+
+-- 𝕃addIndex-fst : (𝕝 : FMSet2 A) → 𝕃Bool (<$tt 𝕝) →
+--      (FMSet2 (A × Bool))   
+-- 𝕃addIndex-fst = w
+--  where
+--  w : (𝕝 : FMSet2 _) → 𝕃Bool (<$tt 𝕝) → FMSet2 (_ × Bool)
+--  w [] x = []
+--  w (x₁ ∷2 𝕝) (b , snd₁) =
+--    (x₁ , b) ∷2 w 𝕝 snd₁
+--  w (comm x y 𝕝 i) bs =
+--    let (b , b' , bs') = unglue (i ∨ ~ i) bs
+--    in comm (x , b') (y , b) (w 𝕝 bs') i
+--  w (comm-inv x y 𝕝 j i) bs =
+--    let (b , b' , bs') = unglue (j ∨ ~ j) (unglue (i ∨ ~ i) bs)
+--    in comm-inv (x , b) (y , b') (w 𝕝 bs') j i
+--  w (commm x y z 𝕝 i) bs =
+--    let (b , b' , b'' , bs') = unglue (i ∨ ~ i) bs      
+--    in commm (x , b') (y , b) (z , b'') (w 𝕝 bs') i
+--  w (commp x y z 𝕝 j i) bs =
+--   let (b , b' , b'' , bs') = unglue ((~ j ∧ ~ i) ∨ j ∨ i) bs
+--   in commp (x , b) (y , b'') (z , b') (w 𝕝 bs') j i
+--  w (hex x y z 𝕝 j i) bs =
+--   let (b , b' , b'' , bs') = unglue (i ∨ ~ i) (unglue (~ j ∨ j) bs)
+--   in hex (x , b'') (y , b) (z , b') (w 𝕝 bs') j i
+
+--  w (trunc xs ys p q r s i j k) =
+--          isOfHLevel→isOfHLevelDep 3 (λ a → ?)
+--         _ _ _ _
+--         (λ j k → w (r j k)) (λ j k → w (s j k)) 
+--           (trunc xs ys p q r s) i j k
+
+--        -- trunc {!!} {!!} {!!} {!!}
+--        --  (λ i₂ x₄ → {!w (x₂ i₂ x₄) x!})
+--        --  {!!} i i₁ x₃
+
+𝕃addIndex-fst : (𝕝 : FMSet2 A) → 𝕃Bool (<$tt 𝕝) →
+     (FMSet2 (A × Bool))   
+𝕃addIndex-fst = RElim.ff w λ _ _ → isGroupoidΠ
+      λ _ → trunc
+
+ where
+ w : RElim _
+ RElim.[]* w _ = []
+ (w RElim.∷* x) {xs} f (b , bs) = (x , b) ∷2 f bs
+ RElim.comm* w x y {xs} f i bs =
+  let (b , b' , bs') = ua-unglue Σ-swap-01-≃ i bs
+  in comm (x , b') (y , b) (f bs') i
+ RElim.comm-inv* w x y {xs} f j i bs =
+  let (b , b' , bs') = unglue (j ∨ ~ j) (unglue (i ∨ ~ i) bs)
+  in comm-inv (x , b) (y , b') (f bs') j i
+ RElim.commm* w x y z {xs} f i bs =
+  let (b , b' , b'' , bs') = 𝑮-ungluePathExt Σ-swap-01-≃
+                  refl (≃-× (idEquiv _) Σ-swap-01-≃ ) i bs
+      
+  in commm (x , b') (y , b) (z , b'') (f bs') i
+ RElim.commp* w x y z {xs} f j i bs = 
+  let (b , b' , b'' , bs') = unglue ((~ j ∧ ~ i) ∨ j ∨ i) bs
+  in commp (x , b) (y , b'') (z , b') (f bs') j i
+ RElim.hex* w x y z {xs} f j i bs =
+  let (b , b' , b'' , bs') = unglue (i ∨ ~ i) (unglue (~ j ∨ j) bs)
+  in hex (x , b'') (y , b) (z , b') (f bs') j i
+
 
 FM2⊤ : Type
 FM2⊤ = FMSet2C {ℓ-zero} {Unit} Unit
+
+-- 𝕝Count-lem : (𝕝 : FM2⊤) →
+--               (xs : FMSet2 (𝕃Fin 𝕝)) →
+--               PathP (λ i → FMSet2 (𝕃Fin (comm tt tt 𝕝 i)))
+--                 ((mapFM2 (λ _ → _) (𝕃Fin-suc (tt ∷2 𝕝) {tt})
+--                      (mapFM2 (λ _ → tt) (𝕃Fin-suc 𝕝 {tt}) xs)))
+--                 (((mapFM2 (λ _ → _) (𝕃Fin-suc (tt ∷2 𝕝) {tt})
+--                      (mapFM2 (λ _ → tt) (𝕃Fin-suc 𝕝 {tt}) xs))))
+--               -- (mapFM2 (λ _ → _) (𝕃Fin-suc 𝕝 {tt}) xs)
+-- 𝕝Count-lem 𝕝 = RElimSet.f w 
+--  where
+--  w : RElimSet _
+--  RElimSet.[]* w i = []
+--  (w RElimSet.∷* x) p i = 𝕃Fin-comm 𝕝 x i ∷2 p i
+--  RElimSet.comm* w x y p i j =
+--    comm (𝕃Fin-comm 𝕝 x j) ((𝕃Fin-comm 𝕝 y j)) (p j) i
+--  RElimSet.trunc* w _ = isOfHLevelPathP' 2 trunc _ _
+
+-- 𝕝Count-lem-inv : (𝕝 : FM2⊤) →
+--               (xs : FMSet2 (𝕃Fin 𝕝)) →
+--               SquareP (λ i j → FMSet2 (𝕃Fin (comm-inv tt tt 𝕝 i j)))
+--                 (𝕝Count-lem 𝕝 xs)
+--                 (symP (𝕝Count-lem 𝕝 xs))
+--                 (λ _ → mapFM2 (λ _ → tt) (𝕃Fin-suc (tt ∷2 𝕝))
+--                   (mapFM2 (λ _ → tt) (𝕃Fin-suc 𝕝) xs))
+--                     (λ _ → mapFM2 (λ _ → tt) (𝕃Fin-suc (tt ∷2 𝕝))
+--                   (mapFM2 (λ _ → tt) (𝕃Fin-suc 𝕝) xs))
+
+-- 𝕝Count-lem-inv 𝕝 = RElimProp.f w 
+--  where
+--  w : RElimProp _
+--  RElimProp.[]* w i j = []
+--  RElimProp._∷*_ w x sq =
+--    congSqP₂ (λ _ _ → _∷2_)
+--      (isSet→SquareP
+--        (λ i j → isSet𝕃Fin (comm-inv tt tt 𝕝 i j)) _ _ _ _) sq
+
+--  RElimProp.trunc* w = {!!}
+
+-- 𝕝Count : (𝕝 : FM2⊤) → FMSet2 (𝕃Fin 𝕝) 
+-- 𝕝Count = RElim.ff w λ _ _ → trunc 
+--  where
+--  w : RElim (λ z → FMSet2 (𝕃Fin z))
+--  RElim.[]* w = []
+--  RElim._∷*_ w tt {𝕝} xs =
+--    𝕃Fin0 𝕝 {tt} ∷2 (mapFM2 (λ _ → _) (𝕃Fin-suc 𝕝 {tt}) xs)
+--  RElim.comm* w tt tt {𝕝} xs i =
+--    comm (glue-Σ-swap-01 (λ _ → 𝕃Bool 𝕝) i
+--          (false , true , repeatF 𝕝) ,
+--             isProp→PathP
+--             (λ i → snd (𝕃FinSnd (comm tt tt 𝕝 i)
+--                          (glue-Σ-swap-01 (λ _ → 𝕃Bool 𝕝) i
+--                    (false , true , repeatF 𝕝))))
+--             (repeat𝕃allFalse 𝕝)
+--             (repeat𝕃allFalse 𝕝) i)
+--         (glue-Σ-swap-01 (λ _ → 𝕃Bool 𝕝) i
+--          (true , false , repeatF 𝕝) ,
+--           isProp→PathP
+--             (λ i → snd (𝕃FinSnd (comm tt tt 𝕝 i)
+--                          (glue-Σ-swap-01 (λ _ → 𝕃Bool 𝕝) i
+--                    (true , false , repeatF 𝕝))))
+--             (repeat𝕃allFalse 𝕝)
+--             (repeat𝕃allFalse 𝕝) i)
+--         ( 𝕝Count-lem 𝕝 xs i)
+--         i
+--  RElim.comm-inv* w tt tt {𝕝} xs =
+--     congSqP₂ (λ i j x y →
+--        comm-inv x y (𝕝Count-lem-inv 𝕝 xs i j) i j)
+--         (isSet→SquareP (λ i j → isSet𝕃Fin (comm-inv tt tt 𝕝 i j) )
+--           _ _ _ _)
+--         (isSet→SquareP (λ i j → isSet𝕃Fin (comm-inv tt tt 𝕝 i j) )
+--           _ _ _ _)
+--  RElim.commm* w = {!!}
+--  RElim.commp* w = {!!}
+--  RElim.hex* w = {!!}
+
+
+-- 𝕃Fin0-transp-fst : ∀ xs xs' (p : xs' ≡ xs) v v' →
+--   (true , (repeatF xs)) ≡
+--     fst (transport (λ i → 𝕃Fin (tt ∷2 p i)
+--                             -- (tab-look-fst (x ∷2 xs) y i)
+--                             )
+--                          ((true , v) , v'))
+
+-- 𝕃Fin0-transp-fst xs xs' p v v' =
+--   cong₂ _,_ refl {!!}
+
+
+-- 𝕃Fin0-transp : ∀ xs xs' (p : xs' ≡ xs) v v' →
+--   𝕃Fin0 xs ≡
+--     transport (λ i → 𝕃Fin (tt ∷2 p i)
+--                             -- (tab-look-fst (x ∷2 xs) y i)
+--                             )
+--                          ((true , v) , v')
+--     -- transport (λ i → 𝕃Fin (tab-look-fst (x ∷2 xs) y i))
+--     -- ((true , v) , v')
+-- 𝕃Fin0-transp xs xs' p v v' =
+--   {!!}
 
 
 -- Iso-look-tab' : Iso (Σ FM2⊤ λ 𝕝 → (𝕃Fin 𝕝 → A)) (FMSet2 A)
@@ -598,6 +891,11 @@ module _ {A : Type ℓ} where
  sameL : (FMSet2 B) → (List A) → Type
  sameL p l = (length2 p) ≡' (length l)
 
+
+
+
+
+-- (P? : ∀ a → Dec (P a)) 
 
 --  ↔-trans : (a b c : List A) → a ↔ b → b ↔ c → a ↔ c
 --  ↔-trans _ _ _ = _∙_

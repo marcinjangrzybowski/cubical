@@ -8,6 +8,13 @@ open import Cubical.Data.Sum as ⊎ using (_⊎_; inl; inr)
 
 open import Cubical.Functions.Logic
 
+open import Cubical.Algebra.Semilattice
+open import Cubical.Algebra.CommMonoid
+open import Cubical.Algebra.Monoid
+open import Cubical.Algebra.Semigroup
+open import Cubical.Algebra.CommMonoid.CommMonoidProd
+
+
 private
   variable
     ℓ : Level

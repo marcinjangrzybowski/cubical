@@ -153,12 +153,37 @@ funTypeTransp : ∀ {ℓ ℓ'} {A : Type ℓ} (B C : A → Type ℓ') {x y : A} 
 funTypeTransp B C {x = x} p f i b =
   transp (λ j → C (p (j ∧ i))) (~ i) (f (transp (λ j → B (p (i ∧ ~ j))) (~ i) b))
 
+
+funTypeTranspDep : ∀ {ℓ ℓ'} 
+     {x y : Type ℓ} (p : x ≡ y)
+       {X' : _} {Y' : _} (A : PathP (λ i → p i → Type ℓ') X' Y')
+       (f : _) 
+      →  
+      PathP (λ i → (pi : p i) → A i pi) f
+         ((λ {a} → transport (funExt⁻ (fromPathP A) a)) ∘ f ∘ transport⁻  p)
+      
+funTypeTranspDep p A f = toPathP refl
+  
+
+
 funTypeTransp' : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ} (B : A → Type ℓ')
    (C : Type ℓ'') {x y : A} (p : x ≡ y) (f : B x → C)
          → PathP (λ i → B (p i) → C) f (f ∘ subst B (sym p))
 funTypeTransp' B C {x = x} p f i b =
    (f (transp (λ j → B (p (i ∧ ~ j))) (~ i) b))
 
+funTypePathP : ∀ {ℓ ℓ'} 
+     {x y : Type ℓ} (p : x ≡ y)
+       {X' : _} {Y' : _} (A : PathP (λ i → p i → Type ℓ') X' Y')
+       (f₀ : _) (f₁ : _) →
+        (λ x₁ →
+             transport (λ i → A i (transp (λ j → p (i ∨ ~ j)) i x₁))
+             (f₀ (transport (λ i → p (~ i)) x₁)))
+          ≡ f₁ →
+        PathP (λ i → (pi : p i) → A i pi) f₀ f₁
+funTypePathP p A f₀ f₁ q = 
+  let z = funTypeTranspDep p A f₀
+  in z ▷ q
 
 -- transports between loop spaces preserve path composition
 overPathFunct : ∀ {ℓ} {A : Type ℓ} {x y : A} (p q : x ≡ x) (P : x ≡ y)

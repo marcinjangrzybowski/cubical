@@ -52,7 +52,9 @@ record IsRing {R : Type ℓ}
 
   open IsMonoid ·IsMonoid public
     renaming
-      ( isSemigroup to ·IsSemigroup )
+      ( isSemigroup to ·IsSemigroup
+      ; MGeneratedBy to ·MGeneratedBy
+      ; MGeneratedElim to ·MGeneratedElim)
     hiding
       ( is-set ) -- We only want to export one proof of this
 

@@ -9,6 +9,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat as ℕ
 open import Cubical.Data.Sigma
+open import Cubical.Data.Maybe
 open import Cubical.Data.Unit
 open import Cubical.Relation.Nullary
 open import Cubical.Foundations.Function
@@ -197,6 +198,12 @@ map-++ _ = ind (λ _ → refl) (cong (_ ∷_) ∘_)
 map-rev : ∀ {ℓA ℓB} {A : Type ℓA} {B : Type ℓB} → (f : A → B) → (xs : List A)
           → map f (rev xs) ≡ rev (map f xs)
 map-rev _ = ind refl (λ {_} {l} p → map-++ _ (rev l) [ _ ] ∙ cong (_++ [ _ ]) p)  
+
+
+lookupMb : ℕ → List A → Maybe A
+lookupMb x [] = nothing
+lookupMb zero (a ∷ _) = just a
+lookupMb (suc x) (_ ∷ l) = lookupMb x l
 
 -- foldr : ∀ {ℓ'} {B : Type ℓ'} → (A → B → B) → B → List A → B
 
