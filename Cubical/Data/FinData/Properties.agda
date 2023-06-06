@@ -1144,7 +1144,7 @@ transportFin-suc : (p' : n ≡ m) → (p : (ℕsuc n) ≡ (ℕsuc m)) → ∀ k
                   → (subst Fin p (suc k)) ≡ suc (subst Fin p' k)
 transportFin-suc =
   J (λ _ p' → ∀ p k → (subst Fin p (suc k)) ≡ suc (subst Fin p' k))
-     λ _ k → isSet-subst {B = Fin} isSetℕ _ _ ∙ cong suc (sym (transportRefl k))
+     λ p k → isSet-subst {B = Fin} isSetℕ p _ ∙ cong suc (sym (transportRefl k))
 
 transportFin-zero : (p : (ℕsuc n) ≡ (ℕsuc m))
                   → zero ≡ subst Fin p zero
