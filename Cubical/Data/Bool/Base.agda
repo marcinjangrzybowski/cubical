@@ -26,16 +26,12 @@ not true = false
 not false = true
 
 _or_ : Bool → Bool → Bool
-false or false = false
-false or true  = true
-true  or false = true
-true  or true  = true
+false or x = x
+true  or _ = true
 
 _and_ : Bool → Bool → Bool
-false and false = false
-false and true  = false
-true  and false = false
-true  and true  = true
+false and _ = false
+true  and x = x
 
 -- xor / mod-2 addition
 _⊕_ : Bool → Bool → Bool
@@ -84,6 +80,10 @@ toWitnessFalse {Q = no ¬p} _ = ¬p
 dichotomyBool : (x : Bool) → (x ≡ true) ⊎ (x ≡ false)
 dichotomyBool true  = inl refl
 dichotomyBool false = inr refl
+
+dichotomyBoolSym : (x : Bool) → (x ≡ false) ⊎ (x ≡ true)
+dichotomyBoolSym false = inl refl
+dichotomyBoolSym true = inr refl
 
 -- TODO: this should be uncommented and implemented using instance arguments
 -- _==_ : {dA : Discrete A} → A → A → Bool

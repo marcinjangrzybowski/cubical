@@ -64,7 +64,7 @@ module _ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} where
   sectionOfEquiv : (f : A → B) → isEquiv f → hasSection f
   sectionOfEquiv f e = sectionOfEquiv' f e , isSec f e
 
-module _ {ℓ} {A B : Type ℓ} where
+module _ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} where
 
   fromIsEquiv : (f : A → B) → isEquiv f → isPathSplitEquiv f
   sec (fromIsEquiv f pf) = sectionOfEquiv' f pf , isSec f pf
@@ -93,8 +93,8 @@ module _ {ℓ} {A B : Type ℓ} where
   PathSplitEquiv is a proposition and the type
   of path split equivs is equivalent to the type of equivalences
 -}
-isPropIsPathSplitEquiv : ∀ {ℓ} {A B : Type ℓ} (f : A → B) → isProp (isPathSplitEquiv f)
-isPropIsPathSplitEquiv {_} {A} {B} f
+isPropIsPathSplitEquiv : ∀ {ℓ} {ℓ'} {A : Type ℓ} {B : Type ℓ'} (f : A → B) → isProp (isPathSplitEquiv f)
+isPropIsPathSplitEquiv {A = A} {B = B} f
   record { sec = sec-φ ; secCong = secCong-φ }
   record { sec = sec-ψ ; secCong = secCong-ψ } i
   =

@@ -1,11 +1,12 @@
 {-# OPTIONS --safe #-}
-module Cubical.Algebra.Ring.QuotientRing where
+module Cubical.Algebra.Ring.Quotient where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Powerset using (_∈_; _⊆_; ⊆-extensionality) -- \in, \sub=
+open import Cubical.Functions.Surjection
 
 open import Cubical.Data.Sigma using (Σ≡Prop)
 
@@ -203,6 +204,10 @@ IsRingHom.pres+ (snd (quotientHom R I)) _ _ = refl
 IsRingHom.pres· (snd (quotientHom R I)) _ _ = refl
 IsRingHom.pres- (snd (quotientHom R I)) _ = refl
 
+quotientHomSurjective : (R : Ring ℓ) → (I : IdealsIn R)
+                        → isSurjection (fst (quotientHom R I))
+quotientHomSurjective R I = []surjective
+
 
 module UniversalProperty (R : Ring ℓ) (I : IdealsIn R) where
   open RingStr ⦃...⦄
@@ -210,7 +215,6 @@ module UniversalProperty (R : Ring ℓ) (I : IdealsIn R) where
   Iₛ = fst I
   private
     instance
-      _ = R
       _ = snd R
 
   module _ {S : Ring ℓ'} (φ : RingHom R S) where
@@ -218,7 +222,6 @@ module UniversalProperty (R : Ring ℓ) (I : IdealsIn R) where
     open RingHomTheory φ
     private
       instance
-        _ = S
         _ = snd S
       f = fst φ
       module φ = IsRingHom (snd φ)
@@ -228,7 +231,7 @@ module UniversalProperty (R : Ring ℓ) (I : IdealsIn R) where
       if S is from a different universe. Instead, the condition, that
       Iₛ is contained in the kernel of φ is rephrased explicitly.
     -}
-    inducedHom : ((x : ⟨ R ⟩) → x ∈ Iₛ → φ $ x ≡ 0r) → RingHom (R / I) S
+    inducedHom : ((x : ⟨ R ⟩) → x ∈ Iₛ → φ $r x ≡ 0r) → RingHom (R / I) S
     fst (inducedHom Iₛ⊆kernel) =
       elim
         (λ _ → isSetRing S)
@@ -247,13 +250,13 @@ module UniversalProperty (R : Ring ℓ) (I : IdealsIn R) where
     pres- (snd (inducedHom Iₛ⊆kernel)) =
       elimProp (λ _ → isSetRing S _ _) φ.pres-
 
-    solution : (p : ((x : ⟨ R ⟩) → x ∈ Iₛ → φ $ x ≡ 0r))
-               → (x : ⟨ R ⟩) → inducedHom p $ [ x ] ≡ φ $ x
+    solution : (p : ((x : ⟨ R ⟩) → x ∈ Iₛ → φ $r x ≡ 0r))
+               → (x : ⟨ R ⟩) → inducedHom p $r [ x ] ≡ φ $r x
     solution p x = refl
 
-    unique : (p : ((x : ⟨ R ⟩) → x ∈ Iₛ → φ $ x ≡ 0r))
-             → (ψ : RingHom (R / I) S) → (ψIsSolution : (x : ⟨ R ⟩) → ψ $ [ x ] ≡ φ $ x)
-             → (x : ⟨ R ⟩) → ψ $ [ x ] ≡ inducedHom p $ [ x ]
+    unique : (p : ((x : ⟨ R ⟩) → x ∈ Iₛ → φ $r x ≡ 0r))
+             → (ψ : RingHom (R / I) S) → (ψIsSolution : (x : ⟨ R ⟩) → ψ $r [ x ] ≡ φ $r x)
+             → (x : ⟨ R ⟩) → ψ $r [ x ] ≡ inducedHom p $r [ x ]
     unique p ψ ψIsSolution x = ψIsSolution x
 
 {-

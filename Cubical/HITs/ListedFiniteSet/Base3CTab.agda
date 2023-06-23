@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --experimental-lossy-unification  #-}  
+{-# OPTIONS --safe --lossy-unification  #-}  
 module Cubical.HITs.ListedFiniteSet.Base3CTab where
 
 open import Cubical.Foundations.Prelude

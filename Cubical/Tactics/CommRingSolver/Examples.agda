@@ -58,6 +58,12 @@ module Test (R : CommRing ℓ) where
   _ : ∀ x y → x + y ≡ y + x
   _ = solve R
 
+  _ : ∀ x y → y ≡ (y - x) + x
+  _ = solve R
+
+  _ : ∀ x y → x ≡ (x - y) + y
+  _ = solve R
+
   _ : ∀ x y → (x + y) · (x - y) ≡ x · x - y · y
   _ = solve R
 
@@ -79,15 +85,6 @@ module Test (R : CommRing ℓ) where
   _ : (x y z : (fst R)) → x · (y - z) ≡ x · y - x · z
   _ = solve R
 
-  {-
-    Keep in mind, that the solver can lead to wrong error locations.
-    For example, the commented code below tries to solve an equation that does not hold,
-    with the result of an error at the wrong location.
-
-  _ : (x y : (fst R)) → x ≡ y
-  _ = solve R
-  -}
-
 module _ (R : CommRing ℓ) (A : CommAlgebra R ℓ') where
   open CommAlgebraStr {{...}}
   private
@@ -107,15 +104,15 @@ module TestInPlaceSolving (R : CommRing ℓ) where
    testWithOneVariabl : (x : fst R) → x + 0r ≡ 0r + x
    testWithOneVariabl x = solveInPlace R (x ∷ [])
 
-   testEquationalReasoning : (x : fst R) → x + 0r ≡ 0r + x
-   testEquationalReasoning x =
-     x + 0r                       ≡⟨solveIn R withVars (x ∷ []) ⟩
-     0r + x ∎
-
    testWithTwoVariables :  (x y : fst R) → x + y ≡ y + x
    testWithTwoVariables x y =
-     x + y                      ≡⟨solveIn R withVars (x ∷ y ∷ []) ⟩
+     x + y                      ≡⟨ solveInPlace R (x ∷ y ∷ []) ⟩
      y + x ∎
+
+   testEquationalReasoning : (x : fst R) → x + 0r ≡ 0r + x
+   testEquationalReasoning x =
+     x + 0r                       ≡⟨ solveInPlace R (x ∷ []) ⟩
+     0r + x ∎
 
    {-
      So far, solving during equational reasoning has a serious
@@ -125,8 +122,8 @@ module TestInPlaceSolving (R : CommRing ℓ) where
      entails that in the following code, the order of 'p' and 'x' cannot be
      switched.
    -}
-   testEquationalReasoning' :  (p : (y : fst R) → 0r + y ≡ 1r) (x : fst R) → x + 0r ≡ 1r
+   testEquationalReasoning' : (p : (y : fst R) → 0r + y ≡ 1r) (x : fst R) → x + 0r ≡ 1r
    testEquationalReasoning' p x =
-     x + 0r              ≡⟨solveIn R withVars (x ∷ []) ⟩
+     x + 0r              ≡⟨ solveInPlace R (x ∷ []) ⟩
      0r + x              ≡⟨ p x ⟩
      1r ∎

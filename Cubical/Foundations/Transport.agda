@@ -30,6 +30,10 @@ transport⁻ p = transport (λ i → p (~ i))
 subst⁻ : ∀ {ℓ ℓ'} {A : Type ℓ} {x y : A} (B : A → Type ℓ') (p : x ≡ y) → B y → B x
 subst⁻ B p pa = transport⁻ (λ i → B (p i)) pa
 
+subst⁻-filler : ∀ {ℓ ℓ'} {A : Type ℓ} {x y : A} (B : A → Type ℓ') (p : x ≡ y) (b : B y)
+  → PathP (λ i → B (p (~ i))) b (subst⁻ B p b)
+subst⁻-filler B p = subst-filler B (sym p)
+
 transport-fillerExt : ∀ {ℓ} {A B : Type ℓ} (p : A ≡ B)
                     → PathP (λ i → A → p i) (λ x → x) (transport p)
 transport-fillerExt p i x = transport-filler p x i
@@ -130,17 +134,17 @@ transportComposite : ∀ {ℓ} {A B C : Type ℓ} (p : A ≡ B) (q : B ≡ C) (x
 transportComposite = substComposite (λ D → D)
 
 -- substitution commutes with morphisms in slices
-substCommSlice : ∀ {ℓ ℓ′} {A : Type ℓ}
-                   → (B C : A → Type ℓ′)
+substCommSlice : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ}
+                   → (B : A → Type ℓ') (C : A → Type ℓ'')
                    → (F : ∀ a → B a → C a)
                    → {x y : A} (p : x ≡ y) (u : B x)
                    → subst C p (F x u) ≡ F y (subst B p u)
 substCommSlice B C F p Bx a =
   transport-fillerExt⁻ (cong C p) a (F _ (transport-fillerExt (cong B p) a Bx))
 
-constSubstCommSlice : ∀ {ℓ ℓ'} {A : Type ℓ}
+constSubstCommSlice : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ}
                    → (B : A → Type ℓ')
-                   → (C : Type ℓ')
+                   → (C : Type ℓ'')
                    → (F : ∀ a → B a → C)
                    → {x y : A} (p : x ≡ y) (u : B x)
                    →  (F x u) ≡ F y (subst B p u)
@@ -148,7 +152,7 @@ constSubstCommSlice B C F p Bx = (sym (transportRefl (F _ Bx)) ∙ substCommSlic
 
 -- transporting over (λ i → B (p i) → C (p i)) divides the transport into
 -- transports over (λ i → C (p i)) and (λ i → B (p (~ i)))
-funTypeTransp : ∀ {ℓ ℓ'} {A : Type ℓ} (B C : A → Type ℓ') {x y : A} (p : x ≡ y) (f : B x → C x)
+funTypeTransp : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ} (B : A → Type ℓ') (C : A → Type ℓ'') {x y : A} (p : x ≡ y) (f : B x → C x)
          → PathP (λ i → B (p i) → C (p i)) f (subst C p ∘ f ∘ subst B (sym p))
 funTypeTransp B C {x = x} p f i b =
   transp (λ j → C (p (j ∧ i))) (~ i) (f (transp (λ j → B (p (i ∧ ~ j))) (~ i) b))
@@ -207,6 +211,12 @@ substInPaths {a = a} f g p q =
     p=refl = subst (λ y → f y ≡ g y) refl q
            ≡⟨ substRefl {B = (λ y → f y ≡ g y)} q ⟩ q
            ≡⟨ (rUnit q) ∙ lUnit (q ∙ refl) ⟩ refl ∙ q ∙ refl ∎
+
+flipTransport : ∀ {ℓ} {A : I → Type ℓ} {x : A i0} {y : A i1}
+  → x ≡ transport⁻ (λ i → A i) y
+  → transport (λ i → A i) x ≡ y
+flipTransport {A = A} {y = y} p =
+  cong (transport (λ i → A i)) p ∙ transportTransport⁻ (λ i → A i) y
 
 -- special cases of substInPaths from lemma 2.11.2 in The Book
 module _ {ℓ : Level} {A : Type ℓ} {a x1 x2 : A} (p : x1 ≡ x2) where

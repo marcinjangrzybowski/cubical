@@ -252,15 +252,15 @@ record X≟ (A : Type ℓ) : Type ℓ where
   s (just x) (yes p) = ⊥.rec (snd x p)
   s (just x) (no ¬p) = cong just (ΣPathP (refl , isProp¬ _ _ _))
 
-  r : ∀ x → (p : Dec (x ≡ elPt)) → from (to x p) ≡ x
-  r x (yes p) = sym p
-  r x (no ¬p) = refl
+  𝕣 : ∀ x → (p : Dec (x ≡ elPt)) → from (to x p) ≡ x
+  𝕣 x (yes p) = sym p
+  𝕣 x (no ¬p) = refl
 
   IsoANotPt : Iso A (Maybe NotPt)
   Iso.fun IsoANotPt x = to x (elTest x)
   Iso.inv IsoANotPt = from
   Iso.rightInv IsoANotPt b = s b _
-  Iso.leftInv IsoANotPt a = r a (elTest a)
+  Iso.leftInv IsoANotPt a = 𝕣 a (elTest a)
 
 
   pt↔no' : (a : A) → Dec (a ≡ elPt) → Maybe A

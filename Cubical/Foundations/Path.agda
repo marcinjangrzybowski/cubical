@@ -259,12 +259,50 @@ sym≡cong-sym P = sym-cong-sym≡id (sym P)
 symIso : {a b : A} → Iso (a ≡ b) (b ≡ a)
 symIso = iso sym sym (λ _ → refl) λ _ → refl
 
+
 symIsoP : {A : I → Type ℓ} → {x : A i1} → {y : A i0} →
            Iso (PathP (λ i → A (~ i)) x y) (PathP A y x)
 Iso.fun symIsoP = symP
 Iso.inv symIsoP = symP
 Iso.rightInv symIsoP _ = refl
 Iso.leftInv symIsoP _ = refl
+
+-- Vertical composition of squares (along their first dimension)
+-- See Cubical.Foundations.Prelude for horizontal composition
+
+module _ {ℓ : Level} {A : Type ℓ}
+  {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
+  {a₁₀ a₁₁ : A} {a₁₋ : a₁₀ ≡ a₁₁}
+  {a₂₀ a₂₁ : A} {a₂₋ : a₂₀ ≡ a₂₁}
+  {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁}
+  {b₋₀ : a₁₀ ≡ a₂₀} {b₋₁ : a₁₁ ≡ a₂₁}
+  where
+
+  -- "Pointwise" composition
+  _∙v_ : (p : Square a₀₋ a₁₋ a₋₀ a₋₁) (q : Square a₁₋ a₂₋ b₋₀ b₋₁)
+       → Square a₀₋ a₂₋ (a₋₀ ∙ b₋₀) (a₋₁ ∙ b₋₁)
+  (p ∙v q) i j = ((λ i → p i j) ∙ (λ i → q i j)) i
+
+  -- "Direct" composition
+  _∙v'_ : (p : Square a₀₋ a₁₋ a₋₀ a₋₁) (q : Square a₁₋ a₂₋ b₋₀ b₋₁)
+        → Square a₀₋ a₂₋ (a₋₀ ∙ b₋₀) (a₋₁ ∙ b₋₁)
+  (p ∙v' q) i =
+    comp (λ k → compPath-filler a₋₀ b₋₀ k i ≡ compPath-filler a₋₁ b₋₁ k i)
+         (λ where k (i = i0) → a₀₋
+                  k (i = i1) → q k)
+         (p i)
+
+  -- The two ways of composing squares are equal, because they are
+  -- correct "lids" for the same box
+  ∙v≡∙v' : (p : Square a₀₋ a₁₋ a₋₀ a₋₁) (q : Square a₁₋ a₂₋ b₋₀ b₋₁)
+         → p ∙v q ≡ p ∙v' q
+  ∙v≡∙v' p q l i = outS
+    (comp-unique {A = λ k → compPath-filler a₋₀ b₋₀ k i ≡ compPath-filler a₋₁ b₋₁ k i}
+                 (λ where k (i = i0) → a₀₋
+                          k (i = i1) → q k)
+                 (inS (p i))
+                 (λ k → inS λ j → compPath-filler (λ i → p i j) (λ i → q i j) k i))
+    (~ l)
 
 -- Inspect
 
@@ -579,13 +617,53 @@ module whiskSq (A : I → I → Type ℓ)
   (p₋₀ : PathP (λ i → a₋₀ i ≡ a₋₀' i) p₀₀ p₁₀) (p₋₁ : PathP (λ i → a₋₁ i ≡ a₋₁' i) p₀₁ p₁₁)
     where
 
-
- sq' : SquareP A a₀₋' a₁₋' a₋₀' a₋₁'
- sq' i j =
-   hcomp (λ l →
+ cyl : ∀ i j → I → Partial (~ i ∨ i ∨ ~ j ∨ j) (A i j)
+ cyl i j =
+   (λ l →
       λ { (i = i0) → p₀₋ j l
         ; (i = i1) → p₁₋ j l
         ; (j = i0) → p₋₀ i l
         ; (j = i1) → p₋₁ i l
         })
+
+ sq' : SquareP A a₀₋' a₁₋' a₋₀' a₋₁'
+ sq' i j =
+   hcomp (cyl i j )
      (sq i j)
+
+ sq'-fill : PathP
+           (λ k → SquareP A
+                   (flipSquareP p₀₋ k)
+                   (flipSquareP p₁₋ k)
+                   (flipSquareP p₋₀ k)
+                   (flipSquareP p₋₁ k))
+           sq sq'
+ sq'-fill k i j = hfill (cyl i j) (inS (sq i j)) k
+
+compPath→Square-faces : {a b c d : A} (p : a ≡ c) (q : b ≡ d) (r : a ≡ b) (s : c ≡ d)
+  → (i j k : I) → Partial (i ∨ ~ i ∨ j ∨ ~ j) A
+compPath→Square-faces p q r s i j k = λ where
+  (i = i0) → r (j ∧ k)
+  (i = i1) → s (j ∨ ~ k)
+  (j = i0) → compPath-filler p s (~ k) i
+  (j = i1) → compPath-filler' r q (~ k) i
+
+compPath→Square : {a b c d : A} {p : a ≡ c} {q : b ≡ d} {r : a ≡ b} {s : c ≡ d}
+  → p ∙ s ≡ r ∙ q → Square r s p q
+compPath→Square {p = p} {q = q} {r = r} {s = s} P i j =
+  hcomp (compPath→Square-faces p q r s i j) (P j i)
+
+Square→compPath : {a b c d : A} {p : a ≡ c} {q : b ≡ d} {r : a ≡ b} {s : c ≡ d}
+  → Square r s p q → p ∙ s ≡ r ∙ q
+Square→compPath {p = p} {q = q} {r = r} {s = s} sq i j =
+  hcomp (λ k → compPath→Square-faces p q r s j i (~ k)) (sq j i)
+
+Square→compPathΩ² : {a : A} (sq : Square (λ _ → a) refl refl refl)
+             → Square→compPath sq ≡ cong (_∙ refl) (flipSquare sq)
+Square→compPathΩ² {a = a} sq k i j =
+  hcomp (λ r → λ {(i = i0) → rUnit (λ _ → a) r j
+                 ; (i = i1) → rUnit (λ _ → a) r j
+                 ; (j = i0) → a
+                 ; (j = i1) → a
+                 ; (k = i1) → cong (λ x → rUnit x r) (flipSquare sq) i j})
+        (sq j i)

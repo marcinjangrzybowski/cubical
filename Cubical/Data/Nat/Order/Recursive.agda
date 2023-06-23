@@ -33,6 +33,8 @@ open import Cubical.Induction.WellFounded
 
 open import Cubical.Relation.Nullary
 
+open import Cubical.Reflection.StrictEquiv
+
 import Cubical.Data.List as L
 
 
@@ -160,6 +162,19 @@ n≤k+n {k} n = transport (λ i → n ≤ +-comm n k i) (k≤k+n n)
 ≤-split {zero} {suc n} m≤n = inl _
 ≤-split {suc m} {suc n} m≤n
   = Sum.map (idfun _) (cong suc) (≤-split {m} {n} m≤n)
+
+∸< : suc m < n → n ∸ (suc m) < n
+∸< {zero} {n = suc n} x = ≤-refl n
+∸< {suc m} {n = suc n} x = <-weaken {n ∸ (suc m)} (∸< {m} {n} x) 
+
+∸<≡ : suc m < n → (n ∸ (suc m)) + suc m ≡ n
+∸<≡ {zero} {suc n} x = +-comm n 1
+∸<≡ {suc m} {suc n} x = +-suc (n ∸ suc m) (suc m) ∙ cong suc (∸<≡ {m} {n} x)
+
+∸<≡' : suc m < n → m + (n ∸ suc (suc m)) + 2 ≡ n
+∸<≡' {zero} {suc (suc n)} x = +-comm n 2
+∸<≡' {suc m} {suc n} x = cong suc (∸<≡' {m} {n} x)
+
 
 module WellFounded where
   wf-< : WellFounded _<_
@@ -441,6 +456,32 @@ commT→< (suc n) (suc (suc m)) x = commT→< n (suc m) x
 -- weakFin : ∀ n → Σ ℕ λ k → (suc k < n) → Fin n
 -- weakFin n = {!!}
 
+equivPathP : ∀ {ℓ ℓ'} → {A : I → Type ℓ} {B : I → Type ℓ'}
+            {f₀ : A i0 → B i0} {f₁ : A i1 → B i1}
+          → PathP (λ i → A i → B i)
+                f₀
+                f₁
+          → ∀ isEquivF₀ isEquivF₁ 
+          → PathP (λ i → A i ≃ B i)
+                (f₀ , isEquivF₀)
+                (f₁ , isEquivF₁)
+fst (equivPathP f isEquivF₀ isEquivF₁ i) = f i
+snd (equivPathP f isEquivF₀ isEquivF₁ i) =
+  isProp→PathP (λ i → isPropIsEquiv (f i))
+     isEquivF₀ isEquivF₁ i
+
+equivPathP' : ∀ {ℓ ℓ'} → {A : I → Type ℓ} {B : I → Type ℓ'}
+           (e₀ : A i0 ≃ B i0) (e₁ : A i1 ≃ B i1)
+         → PathP (λ i → A i → B i)
+               (fst e₀)
+               (fst e₁)
+         → PathP (λ i → A i ≃ B i)
+               e₀
+               e₁
+equivPathP' e₀ e₁ p =
+  equivPathP p (snd e₀) (snd e₁)
+
+
 𝑮 : ∀ {ℓ ℓ'} {A : Type ℓ} {B₀ B₁ : Type ℓ'} {C : Type ℓ} →
       A ≃ B₀ → (B₀ ≡ B₁) → C ≃ B₁
       → A ≡ C
@@ -448,6 +489,71 @@ commT→< (suc n) (suc (suc m)) x = commT→< n (suc m) x
   Glue (p i)
      λ { (i = i0) → _ , e₀
         ;(i = i1) → _ , e₁ }
+
+𝑮-unglue≃ : ∀ {ℓ } {A : Type ℓ} {B₀ B₁ : Type ℓ} {C : Type ℓ} →
+      (e₀ : A ≃ B₀)
+      → (p : B₀ ≡ B₁)
+      → (e₁ : C ≃ B₁)
+      → PathP (λ i →
+          𝑮 e₀ p e₁ i ≃
+            p i)
+         e₀ e₁
+𝑮-unglue≃ e₀ p e₁  =
+  equivPathP (λ i → unglue (i ∨ (~ i)))
+    (snd e₀) (snd e₁)
+
+𝑮-isEquiv= : ∀ {ℓ ℓ'} {A : Type ℓ} {B₀ B₁ : Type ℓ'} {C : Type ℓ} →
+      (e₀ : A ≃ B₀) (isEq₀ : isEquiv (fst e₀))
+      → (p : B₀ ≡ B₁)
+      → (e₁ : C ≃ B₁) (isEq₁ : isEquiv (fst e₁))
+      → Square
+          (𝑮 e₀ p e₁)
+          (𝑮 (fst e₀ , isEq₀) p (fst e₁ , isEq₁))
+          refl
+          refl
+𝑮-isEquiv= e₀ isEq₀ p e₁ isEq₁ i =
+  𝑮 (fst e₀ , isPropIsEquiv  _ (snd e₀) isEq₀ i)
+   p (fst e₁ , isPropIsEquiv  _ (snd e₁) isEq₁ i)
+
+𝑮-isEquivIso : ∀ {ℓ ℓ'} {A : Type ℓ} {B₀ B₁ : Type ℓ'} {C : Type ℓ} →
+      (e₀ : A ≃ B₀) (isEq₀ : isEquiv (fst e₀))
+      → (p : B₀ ≡ B₁)
+      → (e₁ : C ≃ B₁) (isEq₁ : isEquiv (fst e₁))
+      → --PathP
+         (∀ i → 
+           (𝑮 e₀ p e₁ i) 
+          ≃ (𝑮 (fst e₀ , isEq₀) p (fst e₁ , isEq₁) i))
+          -- (idEquiv _)
+          -- (idEquiv _)
+𝑮-isEquivIso e₀ isEq₀ p e₁ isEq₁ i = w'
+  where
+  w : Iso (𝑮 e₀ p e₁ i) (𝑮 (fst e₀ , isEq₀) p (fst e₁ , isEq₁) i)
+  Iso.fun w x =
+    glue (λ {(i = i0) → x
+           ; (i = i1) → x })
+     (unglue (i ∨ ~ i) x) 
+  Iso.inv w x =
+    glue (λ {(i = i0) → x
+           ; (i = i1) → x })
+     (unglue (i ∨ ~ i) x)
+  Iso.rightInv w b = refl
+  Iso.leftInv w a = refl
+
+  unquoteDecl w' = declStrictIsoToEquiv w' w
+
+
+𝑮-isEquiv≃ : ∀ {ℓ ℓ'} {A : Type ℓ} {B₀ B₁ : Type ℓ'} {C : Type ℓ} →
+      (e₀ : A ≃ B₀) (isEq₀ : isEquiv (fst e₀))
+      → (p : B₀ ≡ B₁)
+      → (e₁ : C ≃ B₁) (isEq₁ : isEquiv (fst e₁))
+      → PathP (λ i → 
+          (𝑮 e₀ p e₁ i) ≃ 
+          (𝑮 (fst e₀ , isEq₀) p (fst e₁ , isEq₁) i))
+          (idfun _ , snd (𝑮-isEquivIso e₀ isEq₀ p e₁ isEq₁ i0))
+          (idfun _ , snd (𝑮-isEquivIso e₀ isEq₀ p e₁ isEq₁ i1))
+𝑮-isEquiv≃ e₀ isEq₀ p e₁ isEq₁ i =
+  𝑮-isEquivIso e₀ isEq₀ p e₁ isEq₁ i
+
 
 
 isOfHLevelGlue : {A : Type ℓ} (φ : I) → 
@@ -560,30 +666,6 @@ isOfHLevel𝑮 m p i =
 --      λ { (i = i0) → _ , e₀
 --         ;(i = i1) → _ , e₁ }
 
-equivPathP : ∀ {ℓ ℓ'} → {A : I → Type ℓ} {B : I → Type ℓ'}
-            {f₀ : A i0 → B i0} {f₁ : A i1 → B i1}
-          → PathP (λ i → A i → B i)
-                f₀
-                f₁
-          → ∀ isEquivF₀ isEquivF₁ 
-          → PathP (λ i → A i ≃ B i)
-                (f₀ , isEquivF₀)
-                (f₁ , isEquivF₁)
-fst (equivPathP f isEquivF₀ isEquivF₁ i) = f i
-snd (equivPathP f isEquivF₀ isEquivF₁ i) =
-  isProp→PathP (λ i → isPropIsEquiv (f i))
-     isEquivF₀ isEquivF₁ i
-
-equivPathP' : ∀ {ℓ ℓ'} → {A : I → Type ℓ} {B : I → Type ℓ'}
-           (e₀ : A i0 ≃ B i0) (e₁ : A i1 ≃ B i1)
-         → PathP (λ i → A i → B i)
-               (fst e₀)
-               (fst e₁)
-         → PathP (λ i → A i ≃ B i)
-               e₀
-               e₁
-equivPathP' e₀ e₁ p =
-  equivPathP p (snd e₀) (snd e₁)
 
 
 cong₃ : ∀ {ℓ ℓ' ℓ'' ℓ'''} → {A : Type ℓ}
@@ -1359,27 +1441,185 @@ module _ {ℓ} {A : Type ℓ} where
          (glue (λ {(j = i0) → _ ;(j = i1) → _ }) (x'' , x' , x , z))
         }) (glue (λ {(j = i0) → _ ;(j = i1) → _ }) (x'' , x , x' , z))
 
+
+-- ua-glueEquiv : ∀ {A B : Type ℓ} (e : A ≃ B) →
+--                     PathP (λ i → B ≃ ua e i)
+--                        e
+--                        (idEquiv _)
+-- fst (ua-glueEquiv e i) = ? --ua-unglue e i
+-- snd (ua-glueEquiv e i) = ?
+--   -- isProp→PathP (λ i → isPropIsEquiv (ua-unglue e i))
+--   --  (snd e) (idIsEquiv _) i
+
+
 module hex (A : Type ℓ) (B : Type ℓ) where
 
- hexSq : Square {A = Type ℓ}
+ hlpIso : Iso (A × A × A × B) (A × A × A × B)
+ Iso.fun hlpIso = λ x → fst (snd (snd x)) , fst (snd x) , fst x , snd (snd (snd x))
+ Iso.inv hlpIso = λ y → fst (snd (snd y)) , fst (snd y) , fst y , snd (snd (snd y))
+ Iso.rightInv hlpIso _ = refl
+ Iso.leftInv hlpIso _ = refl
+
+ unquoteDecl hlp≃ = declStrictIsoToEquiv hlp≃ hlpIso
+
+ module zz (i : I) where
+
+  isoHlpI0 : Iso (A × ua (Σ-swap-01-≃ {A = A} {A} {B}) i) (ua hlp≃ i)
+  Iso.fun (isoHlpI0) =
+      λ (x , x*) →
+        let (x' , x'' , x''') = unglue (i ∨ ~ i) (x*)
+        in glue (λ {(i = i0) → _ ;(i = i1) → _ })
+             (x' , x , x'' , x''')
+         -- ((λ (x , x' , x'' , x''') →
+         --      glue (λ {(i = i0) → _ ;(i = i1) → _ }) (x' , x , x'' , x'''))
+         --              ∘' map-snd (ua-ungluePathExt (Σ-swap-01-≃) i))
+  Iso.inv (isoHlpI0) =
+      λ x →
+      let x' = unglue (i ∨ ~ i) x
+      in fst (snd x') ,
+              glue 
+              (λ { (i = i0)
+                     →  fst (snd (snd x')) , fst x' , snd (snd (snd x'))
+                       
+                       
+                 ; (i = i1)
+                     → ((fst x' , fst (snd (snd x')) , snd (snd (snd x'))))
+                 })
+              (fst x' , fst (snd (snd x')) , snd (snd (snd x')))
+  Iso.rightInv (isoHlpI0) b = refl
+  Iso.leftInv (isoHlpI0) a = refl
+
+
+
+  unquoteDecl hlp≃I0' = declStrictIsoToEquiv hlp≃I0' isoHlpI0  
+
+  isoHlpI1 : Iso (ua (Σ-swap-01-≃ {A = A} {A} {A × B}) i) (ua hlp≃ i)
+  Iso.fun (isoHlpI1) xx =
+    let (x , x' , x'' , x''') = unglue (i ∨ ~ i) xx
+    in glue (λ {(i = i0) → _ ;(i = i1) → _ }) (x , x'' , x' , x''')
+  Iso.inv (isoHlpI1) xx =
+    let (x , x' , x'' , x''') = unglue (i ∨ ~ i) xx
+    in glue (λ {(i = i0) → _ ;(i = i1) → _ }) (x , x'' , x' , x''')
+      
+  Iso.rightInv (isoHlpI1) b = refl
+  Iso.leftInv (isoHlpI1) a = refl
+
+  unquoteDecl hlp≃I1' = declStrictIsoToEquiv hlp≃I1' isoHlpI1  
+
+
+ hlp≃I0 : PathP (λ i → (A × ua (Σ-swap-01-≃ {A = A} {A} {B}) i) ≃ (ua hlp≃ i))
+            ((λ x → fst (snd x) , fst x , fst (snd (snd x)) , snd (snd (snd x)))
+              , snd (zz.hlp≃I0' i0) )
+            ((λ x → fst (snd x) , fst x , fst (snd (snd x)) , snd (snd (snd x)))
+              , snd (zz.hlp≃I0' i1))
+ hlp≃I0 i = zz.hlp≃I0' i
+
+ hlp≃I1 : PathP (λ i → (ua (Σ-swap-01-≃ {A = A} {A} {A × B}) i) ≃ (ua hlp≃ i))
+            ((λ x → fst x , fst (snd (snd x)) , fst (snd x) , snd (snd (snd x)))
+               , snd (zz.hlp≃I1' i0))
+            ((λ x → fst x , fst (snd (snd x)) , fst (snd x) , snd (snd (snd x)))
+               , snd (zz.hlp≃I1' i1))
+ hlp≃I1 i = zz.hlp≃I1' i
+  
+
+
+
+ hexSq* : Square {A = Type ℓ}
+          (λ i₁ →  A × ua (Σ-swap-01-≃ {A = A} {A} {B}) i₁)
+          (ua Σ-swap-01-≃)           
+          (𝑮 (hlp≃I0 i0) (λ _ → A × A × A × B) (hlp≃I1 i0))
+          (𝑮 (hlp≃I0 i1) (λ _ → A × A × A × B) (hlp≃I1 i1))
+
+ hexSq* = 
+   let z = ua (hlp≃)
+   in λ j i →
+        Glue (z i)
+             λ {  (j = i0) →
+                   A × ua (Σ-swap-01-≃ {A = A} {A} {B}) i , hlp≃I0 i
+                ; (j = i1) →
+                   ua (Σ-swap-01-≃ {A = A} {A} {A × B}) i , hlp≃I1 i
+                }
+
+ unglueHex* : SquareP (λ j i → hexSq* j i → A × A × A × B)
+                (λ i → ua-ungluePathExt hlp≃ i ∘' fst (hlp≃I0 i) )
+                (λ i → ua-ungluePathExt hlp≃ i ∘' fst (hlp≃I1 i))
+                (λ j → fst hlp≃ ∘' unglue (~ j ∨ j))
+                (λ j → unglue (~ j ∨ j))
+ unglueHex* j i x = 
+   unglue (i ∨ ~ i) (unglue (~ j ∨ j) x)
+
+
+ hexSq hexSq' : Square {A = Type ℓ}
            (λ i₁ →  A × ua (Σ-swap-01-≃ {A = A} {A} {B}) i₁)
            (ua Σ-swap-01-≃)           
            (𝑮 Σ-swap-01-≃ (λ _ → A × A × A × B)
              (≃-× (idEquiv A) Σ-swap-01-≃))
            (𝑮  Σ-swap-01-≃ (λ _ → A × A × A × B)
             (≃-× (idEquiv A) Σ-swap-01-≃))
- hexSq = 
-   let z = ua (≃-× (idEquiv A) Σ-swap-01-≃
-             ∙ₑ (Σ-swap-01-≃ {A = A} {A} {A × B})
-             ∙ₑ ≃-× (idEquiv A) Σ-swap-01-≃)
-   in flipSquare
-       (congP₂ (λ i → 𝑮-refl {B = z i})
-          (equivPathP' _ _ λ i → (λ (x , x' , x'' , x''') →
-             glue (λ {(i = i0) → _ ;(i = i1) → _ }) (x' , x , x'' , x'''))
-                     ∘' map-snd (ua-ungluePathExt (Σ-swap-01-≃) i))
-          (equivPathP' _ _  λ i → (λ (x , x' , x'' , x''') →
-             glue (λ {(i = i0) → _ ;(i = i1) → _ }) (x , x'' , x' , x'''))
-                     ∘' ua-ungluePathExt (Σ-swap-01-≃) i))
+ hexSq' =  flipSquare
+    (cong₂ (λ p q →
+         𝑮 {A = A × A × A × B} {C = A × A × A × B}
+          (_ , p)
+         (λ _ → A × A × A × B)
+         ((λ x →
+             fst x , fst (snd (snd x)) , fst (snd x) , snd (snd (snd x)))
+          , q)
+         )
+      (isPropIsEquiv  _ _ _) (isPropIsEquiv  _ _ _)
+     ◁ flipSquare hexSq* ▷
+     cong₂ (λ p q →
+         𝑮 {A = A × A × A × B} {C = A × A × A × B}
+          (_ , p)
+         (λ _ → A × A × A × B)
+         ((λ x →
+             fst x , fst (snd (snd x)) , fst (snd x) , snd (snd (snd x)))
+          , q)
+         )
+      (isPropIsEquiv  _ _ _) (isPropIsEquiv  _ _ _))
+
+ hexSq j i =
+        Glue (A × A × A × B)
+             λ {  (i = i0) → 𝑮 Σ-swap-01-≃ (λ _ → A × A × A × B)
+             (≃-× (idEquiv A) Σ-swap-01-≃) j ,
+                   𝑮-unglue≃ Σ-swap-01-≃ (λ _ → A × A × A × B)
+             (≃-× (idEquiv A) Σ-swap-01-≃) j ∙ₑ
+                      Σ-swap-02-≃ 
+                ; (i = i1) → 𝑮  Σ-swap-01-≃ (λ _ → A × A × A × B)
+            (≃-× (idEquiv A) Σ-swap-01-≃) j ,
+                   𝑮-unglue≃  Σ-swap-01-≃ (λ _ → A × A × A × B)
+            (≃-× (idEquiv A) Σ-swap-01-≃) j
+                ; (j = i0) →
+                   A × ua (Σ-swap-01-≃ {A = A} {A} {B}) i ,
+                        equivPathP (λ i → (λ (x , x' , x'') → x' , x , x'')
+                          ∘' map-snd (ua-unglue Σ-swap-01-≃ i))
+                          (snd (𝑮-unglue≃ Σ-swap-01-≃ (λ _ → A × A × A × B)
+             (≃-× (idEquiv A) Σ-swap-01-≃) i0 ∙ₑ
+                      Σ-swap-02-≃ )) (snd (𝑮-unglue≃  Σ-swap-01-≃ (λ _ → A × A × A × B)
+            (≃-× (idEquiv A) Σ-swap-01-≃) i0)) i
+
+                                              
+                ; (j = i1) →
+                   ua (Σ-swap-01-≃ {A = A} {A} {A × B}) i ,
+                     equivPathP (λ i → ((λ (x , x' , x'' , x''') →
+                       x , x'' , x' , x''')
+                          ∘' (ua-unglue Σ-swap-01-≃ i)))
+                          (snd (𝑮-unglue≃ Σ-swap-01-≃ (λ _ → A × A × A × B)
+             (≃-× (idEquiv A) Σ-swap-01-≃) i1 ∙ₑ
+                      Σ-swap-02-≃ ))
+                          (snd (𝑮-unglue≃  Σ-swap-01-≃ (λ _ → A × A × A × B)
+            (≃-× (idEquiv A) Σ-swap-01-≃) i1)) i
+                     -- ((λ (x , x' , x'' , x''') → x , x'' , x' , x''')
+                     --      ∘' (ua-unglue Σ-swap-01-≃ i)) ,
+                     -- {!!}
+                }
+
+ unglueHex : SquareP (λ j i → hexSq j i → A × A × A × B)
+                (λ i → ua-ungluePathExt hlp≃ i ∘' fst (hlp≃I0 i) )
+                (λ i → ua-ungluePathExt hlp≃ i ∘' fst (hlp≃I1 i))
+                (λ j → fst hlp≃ ∘' unglue (~ j ∨ j))
+                (λ j → unglue (~ j ∨ j))
+ unglueHex j i = 
+   unglue (i ∨ ~ i ∨ j ∨ ~ j)
 
 
 Glue' : ∀ {ℓ ℓ'} → (A : Type ℓ) {φ : I}
