@@ -128,9 +128,163 @@ lenFCSG⊥ = RecSetFCSG.f w
  RecSetFCSG.·a-assoc w = +-assoc
  RecSetFCSG.·a-comm w = +-sym
  RecSetFCSG.·a-hexDiag w a b c =
-  +-sym _ _ ∙∙ +-assoc _ _ _ ∙∙ +-sym _ _  
- RecSetFCSG.·a-pentagon-diag w _ _ _ _ =
-   sym (+-assoc _ _ _) ∙ sym (+-assoc _ _ _)
+    (sym (+-assoc _ _ _)) ∙∙ +-sym _ _ ∙∙ sym (+-assoc _ _ _)
+ RecSetFCSG.·a-pentagon-diag w a b c d =
+    cong (_+ d) (sym (+-assoc _ _ _))
+      ∙∙ sym (+-assoc _ _ _) ∙∙ cong (a +_) (sym (+-assoc _ _ _))
+   -- sym (+-assoc _ _ _) ∙ sym (+-assoc _ _ _)
+  
+-- -- j = i0 ⊢ (+-assoc n m o i)
+-- -- j = i1 ⊢ (+-assoc m o n (~ i))
+-- -- i = i0 ⊢ (+-sym n (m + o) j)
+-- -- i = i1 ⊢ (hcomp
+-- --           (doubleComp-faces (+-sym (n + m) o) (+-sym (o + n) m) j)
+-- --           (+-assoc o n m j))
+-- -- —————————————————————————————
+
+-- fromFCSG-hexup : ∀ {n} {m} {o} → 
+--  (a : ℙrmₐ n)
+--  (b : ℙrmₐ m)
+--  (c : ℙrmₐ o)
+--  → (s : Square (+-sym n (m + o))
+--              ((+-sym (n + m) o)  ∙∙ +-assoc _ _ _ ∙∙ (+-sym (o + n) m))
+--               (+-assoc n m o) (sym (+-assoc m o n)))
+--  →
+--   SquareP (λ i j → ℙrmₐ {true} (s i j))
+--       (𝕡·-comm a (𝕡· b c))
+--       (λ i →
+--          comp
+--          (λ k →
+--             ℙrmₐ {true}
+--             (doubleCompPath-filler
+--              (+-sym (n + m) (o))
+--              (+-assoc (o) (n) (m))
+--              (+-sym (o + n) (m)) k i))
+--          (λ { k (i = i0) → 𝕡·-comm (𝕡· a b) c (~ k)
+--             ; k (i = i1) → 𝕡·-comm (𝕡· c a) b k
+--             })
+--          (𝕡·-assoc c a b i))
+--       (𝕡·-assoc a b c) (symP (𝕡·-assoc b c a))
+-- fromFCSG-hexup {n} {m} {o} = ℙrmElimProp₃.f₃ w
+--  where
+
+--  zz : (a : ℙrmₐ n)
+--       (b : ℙrmₐ m)
+--       (c : ℙrmₐ o)
+--        → (s : Square (+-sym n (m + o))
+--              ((+-sym (n + m) o)  ∙∙ +-assoc _ _ _ ∙∙ (+-sym (o + n) m))
+--               (+-assoc n m o) (sym (+-assoc m o n)))
+--        → SquareP (λ j i → ℙrmₐ {true}
+--             (doubleCompPath-filler
+--              (+-sym (n + m) (o))
+--              (+-assoc (o) (n) (m))
+--              (+-sym (o + n) (m)) j i))
+         
+--          (λ i → 𝕡·-assoc c a b i)
+--          (λ i →
+--          comp
+--          (λ k →
+--             ℙrmₐ {true}
+--             (doubleCompPath-filler
+--              (+-sym (n + m) (o))
+--              (+-assoc (o) (n) (m))
+--              (+-sym (o + n) (m)) k i))
+--          (λ { k (i = i0) → 𝕡·-comm (𝕡· a b) c (~ k)
+--             ; k (i = i1) → 𝕡·-comm (𝕡· c a) b k
+--             })
+--          (𝕡·-assoc c a b i))
+--          (λ j → 𝕡·-comm (𝕡· a b) c (~ j))
+--          (λ j → 𝕡·-comm (𝕡· c a) b j)
+--  zz a b c s j i = 
+--          fill
+--          (λ k →
+--             ℙrmₐ {true}
+--             (doubleCompPath-filler
+--              (+-sym (n + m) (o))
+--              (+-assoc (o) (n) (m))
+--              (+-sym (o + n) (m)) k i))
+--          (λ { k (i = i0) → 𝕡·-comm (𝕡· a b) c (~ k)
+--             ; k (i = i1) → 𝕡·-comm (𝕡· c a) b k
+--             })
+--          (inS (𝕡·-assoc c a b i)) j
+
+--  w : ℙrmElimProp₃ λ {n} {m} {o} (a : ℙrmₐ n) (b : ℙrmₐ m) (c : ℙrmₐ o)
+--              → (s : Square (+-sym n (m + o))
+--                         ((+-sym (n + m) o)  ∙∙ +-assoc _ _ _ ∙∙ (+-sym (o + n) m))
+--                          (+-assoc n m o) (sym (+-assoc m o n)))
+--             →
+--              SquareP (λ i j → ℙrmₐ {true} (s i j))
+--                  (𝕡·-comm a (𝕡· b c))
+--                  (λ i →
+--                     comp
+--                     (λ k →
+--                        ℙrmₐ {true}
+--                        (doubleCompPath-filler
+--                         (+-sym (n + m) (o))
+--                         (+-assoc (o) (n) (m))
+--                         (+-sym (o + n) (m)) k i))
+--                     (λ { k (i = i0) → 𝕡·-comm (𝕡· a b) c (~ k)
+--                        ; k (i = i1) → 𝕡·-comm (𝕡· c a) b k
+--                        })
+--                     (𝕡·-assoc c a b i))
+--                  (𝕡·-assoc a b c) (symP (𝕡·-assoc b c a))
+--  ℙrmElimProp₃.asquash₃ w _ _ _ = isPropΠ λ _ →
+--   {!!}
+--  ℙrmElimProp₃.abase₃ w _ =
+--    {!!} ◁ {!!} ▷ {!!}
+
+
+-- ∀ l c r →
+--       ((l · c) · r) ≡ (c · (r · l))
+
+-- 𝕡·-hexDiag : ∀ {n m o} → (l : ℙrmₐ {true} n)
+--          (c : ℙrmₐ {true} m)
+--          (r : ℙrmₐ {true} o) →
+--          (p : n + m + o ≡ m + (o + n)) → 
+--      PathP (λ i → ℙrmₐ {true} (p i))
+--        (𝕡· (𝕡· l c) r)
+--        (𝕡· c (𝕡· r l))
+-- 𝕡·-hexDiag =  ℙrmElimSet₃.f₃ w
+--  where
+--  open ℙrmElimSet₃
+--  open AB
+--  w : ℙrmElimSet₃ λ {n m o} (l : ℙrmₐ {true} n)
+--          (c : ℙrmₐ {true} m)
+--          (r : ℙrmₐ {true} o) →
+--          (p : n + m + o ≡ m + (o + n)) → 
+--      PathP (λ i → ℙrmₐ {true} (p i))
+--        (𝕡· (𝕡· l c) r)
+--        (𝕡· c (𝕡· r l))
+--  asquash₃ w _ _ _ =
+--    isSetΠ λ _ → isOfHLevelPathP' 2 (𝕡squash _) _ _ 
+--  abase₃ w _ _ = 𝕡base
+--  aloopₙ w = {!!}
+--  aloopₘ w = {!!}
+--  aloopₒ w = {!!}
+ 
+--  asquash₃ w _ _ _ =
+--   isOfHLevelPathP' 2 (𝕡squash _) _ _ 
+--  abase₃ w _ = 𝕡base
+--  aloopₙ w ab = flipSquareP (congP (λ _ → 𝕡loop)
+--    (congP₂ (λ _ → 𝕒𝕓 (lPad ab) (l ab) (r ab))
+--          (cong just +-+ₐ≡ₐ+-+')
+--            (isSet→SquareP (λ _ _ → isSetℕₐ⁺¹)
+--             _ _ _ _)))
+   
+
+--  aloopₘ  w {n} {m} {o} ab =
+--    flipSquareP (congP (λ _ → 𝕡loop)
+--      (congP (λ _ → 𝕒𝕓 (just (n ₐ+ lPad ab)) (l ab) (r ab)
+--              (just (rPad ab +ₐ o)))
+--        (isSet→SquareP (λ _ _ → isSetℕₐ⁺¹)
+--             _ _ _ _)))
+--  aloopₒ w {n} {m} {o} ab = flipSquareP (congP (λ _ → 𝕡loop)
+--     (congP₂ (λ i x → 𝕒𝕓 {n = +-assoc n m o i} x (l ab) (r ab)
+--              (rPad ab))
+--              (cong just +-ₐ+≡ₐ+-+')
+--        (isSet→SquareP (λ _ _ → isSetℕₐ⁺¹)
+--             _ _ _ _)))
+
 
 fromFCSG : ∀ x → ℙrmₐ {true} (lenFCSG⊥ x)
 fromFCSG = ElimFCSG.f w
@@ -145,26 +299,85 @@ fromFCSG = ElimFCSG.f w
  ElimFCSG.·a-hexDiag w {n} {m} {o} a b c i =
    comp (λ k → ℙrmₐ {true} (
               (doubleCompPath-filler
-                 (+-sym (lenFCSG⊥ n + lenFCSG⊥ m) (lenFCSG⊥ o))
-                (+-assoc _ _ _)
-                (+-sym _ _) k i)))
-        (λ k → λ { (i = i0) → 𝕡·-comm (𝕡· a b) c (~ k)
-                 ; (i = i1) → 𝕡·-comm (𝕡· c a) b k
+                 (sym (+-assoc (lenFCSG⊥ n) (lenFCSG⊥ m) (lenFCSG⊥ o)))
+                 (+-sym (lenFCSG⊥ n) (lenFCSG⊥ m + lenFCSG⊥ o))
+                 (sym (+-assoc _ _ _))
+                 k i)))
+        (λ k → λ { (i = i0) → 𝕡·-assoc a b c k
+                 ; (i = i1) → 𝕡·-assoc b c a (~ k)
                })
-        (𝕡·-assoc c a b i)
+        (𝕡·-comm a (𝕡· b c) i)
 
- ElimFCSG.·a-hex-up w {n} {m} {o} a b c  = 
-   {!zz!}           
- ElimFCSG.·a-hex-down w = {!!}
- ElimFCSG.·a-pentagon-diag w {n} {m} {o} {p}  xs ys zs ws i =
+ ElimFCSG.·a-hex-up w {n} {m} {o} a b c j i =
+   comp (λ k →  ℙrmₐ {true}
+                (isGroupoid→isGroupoid' (isSet→isGroupoid isSetℕₐ⁺¹)
+                 (λ _ i → +-sym (lenFCSG⊥ n) (lenFCSG⊥ m + lenFCSG⊥ o) i)
+                 (λ j i → (lenFCSG⊥ (·-hex-up n m o j i)))
+                 (λ k i → (+-sym (lenFCSG⊥ n) (lenFCSG⊥ m + lenFCSG⊥ o) i))
+                 (λ k i → (doubleCompPath-filler
+                             (sym (+-assoc (lenFCSG⊥ n) (lenFCSG⊥ m) (lenFCSG⊥ o)))
+                             (+-sym (lenFCSG⊥ n) (lenFCSG⊥ m + lenFCSG⊥ o))
+                             (sym (+-assoc _ _ _))
+                             k i))
+                 (λ k j → +-assoc (lenFCSG⊥ n) (lenFCSG⊥ m) (lenFCSG⊥ o) (k ∧ j))
+                 (λ k j → +-assoc (lenFCSG⊥ m) (lenFCSG⊥ o) (lenFCSG⊥ n) (~ k ∨ ~ j)) k j i)
+                 )
+      (λ k → λ { (i = i0) → 𝕡·-assoc a b c (k ∧ j)
+                 ; (i = i1) → 𝕡·-assoc b c a (~ k ∨ ~ j)
+                 ; (j = i0) → (𝕡·-comm a (𝕡· b c) i)
+                 })
+     (𝕡·-comm a (𝕡· b c) i)
+             
+ ElimFCSG.·a-hex-down w {n} {m} {o} a b c = {!!}
+
+
+ ElimFCSG.·a-pentagon-diag w {n} {m} {o} {p}  xs ys zs ws i = 
       comp (λ k → ℙrmₐ {true} (
-              (compPath-filler
-                 (sym (+-assoc _ (lenFCSG⊥ o) (lenFCSG⊥ p)))
-                   (sym (+-assoc (lenFCSG⊥ n) (lenFCSG⊥ m) _)) k i)))
-        (λ k → λ { (i = i0) → 𝕡· (𝕡· (𝕡· xs ys) zs) ws 
-                 ; (i = i1) → 𝕡·-assoc xs ys (𝕡· zs ws) (~ k)
+              (doubleCompPath-filler
+                 (cong (_+ (lenFCSG⊥ p)) (sym (+-assoc _ (lenFCSG⊥ m) (lenFCSG⊥ o))))
+                 (sym (+-assoc _ _ _))
+                 (cong ((lenFCSG⊥ n) +_) (sym (+-assoc _ _ _))) k i)))
+        (λ k → λ { (i = i0) → 𝕡· (𝕡·-assoc xs ys zs k) ws 
+                 ; (i = i1) → 𝕡· xs (𝕡·-assoc ys zs ws (~ k))
                })
-        (𝕡·-assoc (𝕡· xs ys) zs ws (~ i))
+        (𝕡·-assoc xs (𝕡· ys zs) ws (~ i))
 
  ElimFCSG.·a-pentagon-△ w = {!!}
- ElimFCSG.·a-pentagon-□ w = {!!}
+
+
+ ElimFCSG.·a-pentagon-□ w {n} {m} {o} {p} xs ys zs ws j i =
+     comp (λ k → ℙrmₐ {true}
+        (isGroupoid→isGroupoid' (isSet→isGroupoid isSetℕₐ⁺¹)
+            (λ j i → (+-assoc (lenFCSG⊥ n) (lenFCSG⊥ m + lenFCSG⊥ o)
+                    (lenFCSG⊥ p) (~ i)))
+            (λ j i → (lenFCSG⊥ (·-pentagon-□ n m o p j i)))
+            (doubleCompPath-filler _ _ _)
+            (λ k i → (+-assoc (lenFCSG⊥ n) (lenFCSG⊥ m + lenFCSG⊥ o)
+                 (lenFCSG⊥ p) (~ i)))
+            (λ k j → (+-assoc (lenFCSG⊥ n) (lenFCSG⊥ m) (lenFCSG⊥ o) (k ∧ ~ j)
+                     + lenFCSG⊥ p))
+            (λ k j → (lenFCSG⊥ n +
+                      +-assoc (lenFCSG⊥ m) (lenFCSG⊥ o) (lenFCSG⊥ p) (~ k ∨ j)))
+            k j i))
+        (λ k → λ { (i = i0) → 𝕡· (𝕡·-assoc xs ys zs (k ∧ ~ j)) ws 
+                 ; (i = i1) → 𝕡· xs (𝕡·-assoc ys zs ws (~ k ∨ j))
+                 ; (j = i1) → 𝕡·-assoc xs (𝕡· ys zs) ws (~ i)
+               })
+        (𝕡·-assoc xs (𝕡· ys zs) ws (~ i))
+
+
+repℕ : ℕ.ℕ → FCSG⊤
+repℕ ℕ.zero = ●
+repℕ (ℕ.suc x) = ● · repℕ x
+
+repFCSG : (x : ℕₐ⁺¹) → singl (repℕ (ℕ.predℕ (ℕₐ⁺¹→ℕ x)))
+repFCSG = ℕₐ⁺¹elim.f w
+ where
+ w : ℕₐ⁺¹elim (λ z → singl (repℕ (ℕ.predℕ (ℕₐ⁺¹→ℕ z))))
+ ℕₐ⁺¹elim.aOne w = _ , refl
+ (w ℕₐ⁺¹elim.a+ x) x₁ =
+  (fst x · fst x₁) ,
+    {!!} ∙ cong₂ _·_ (snd x) (snd x₁)
+ ℕₐ⁺¹elim.a-assoc w = {!!}
+ ℕₐ⁺¹elim.a-sym w = {!!}
+ ℕₐ⁺¹elim.asquash w = {!!}

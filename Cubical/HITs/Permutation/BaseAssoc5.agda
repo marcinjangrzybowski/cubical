@@ -1049,7 +1049,28 @@ record ℙrmElimSet₃ (A : {n m o : ℕₐ⁺¹} →
 
  f₃ :  ∀ {n m o} → ∀ x y z → A {n} {m} {o} x y z
  f₃ x y = ℙrmElimSet.f (ℙrmElimSet.f (ℙrmElimSet.f f''' x) y)
- 
+
+record ℙrmElimProp₃ (A : {n m o : ℕₐ⁺¹} →
+                ℙrmₐ {true} n →
+                ℙrmₐ {true} m →
+                ℙrmₐ {true} o → Type ℓ) : Type ℓ where
+ no-eta-equality
+ field
+  asquash₃ : ∀ {n m o} → ∀ x y z → isProp (A {n} {m} {o} x y z)
+
+  abase₃ : ∀ {n m o} → A {n} {m} {o} 𝕡base 𝕡base 𝕡base
+  
+
+ f₃ : ∀ {n m o} → ∀ x y z → A {n} {m} {o} x y z 
+ f₃ = ℙrmElimSet₃.f₃ w
+  where
+  w : ℙrmElimSet₃ A
+  ℙrmElimSet₃.asquash₃ w _ _ _ = isProp→isSet (asquash₃ _ _ _)
+  ℙrmElimSet₃.abase₃ w = abase₃
+  ℙrmElimSet₃.aloopₙ w _ = isProp→PathP (λ i → asquash₃ _ _ _) _ _ 
+  ℙrmElimSet₃.aloopₘ w _ = isProp→PathP (λ i → asquash₃ _ _ _) _ _ 
+  ℙrmElimSet₃.aloopₒ w _ = isProp→PathP (λ i → asquash₃ _ _ _) _ _ 
+
 record ℙrmElimProp (n : ℕₐ⁺¹) (A : ℙrmₐ {true} n → Type ℓ) : Type ℓ where
  no-eta-equality
  field
@@ -1531,6 +1552,49 @@ record ElimSetFCSG {ℓ} (A : FCSG⊤ → Type ℓ) : Type ℓ where
   ElimFCSG.·a-pentagon-□ w _ _ _ _ =
     isSet→SquareP (λ _ _ → asquash _)
       _ _ _ _
+
+-- record RecSetFCSG' {ℓ} (A : Type ℓ) : Type ℓ where
+--  no-eta-equality
+--  field
+--   asquash : isSet A
+--   ●a : A
+--   ·a : A → A → A
+--   ·a-assoc : ∀ a b c → (·a a (·a b c)) ≡ (·a (·a a b) c)
+--   ·a-comm : ∀ a b → (·a a b) ≡ (·a b a)
+--   -- ·a-hexDiag : ∀ a b c →  
+--   --                    (·a (·a a b) c)
+--   --                 ≡ (·a b (·a c a))
+--   -- ·a-pentagon-diag : ∀ xs ys zs ws
+--   --     → (·a (·a (·a xs ys) zs) ws) ≡ (·a xs (·a ys (·a zs ws)))
+
+--  f : FCSG⊤ → A
+--  f ● = ●a
+--  f (x · x₁) = ·a (f x) (f x₁)
+--  f (·-assoc x x₁ x₂ i) =
+--    ·a-assoc (f x) (f x₁) (f x₂) i
+--  f (·-comm x x₁ i) =
+--    ·a-comm (f x) (f x₁) i
+--  f (·-comminvol x x₁ i i₁) =
+--    asquash (·a (f x) (f x₁)) (·a (f x₁) (f x))
+--      (·a-comm (f x) (f x₁)) (sym (·a-comm (f x₁) (f x))) i i₁
+--  f (·-hex-diag x x₁ x₂ i) = ({!!} ∙∙ {!!} ∙∙ {!!}) i
+--       -- ·a-hexDiag (f x) (f x₁) (f x₂) i
+--  f (·-hex-up x x₁ x₂ i i₁) = {!!}
+--     -- ·a-hex-up (f x) (f x₁) (f x₂) i i₁
+--  f (·-hex-down x x₁ x₂ i i₁) = {!!}
+--        -- ·a-hex-down (f x) (f x₁) (f x₂) i i₁
+--  f (·-pentagon-diag x x₁ x₂ x₃ i) =
+--      ·a-pentagon-diag (f x) (f x₁) (f x₂) (f x₃) i 
+--  f (·-pentagon-△ x x₁ x₂ x₃ i i₁) = {!!}
+--      -- ·a-pentagon-△ (f x) (f x₁) (f x₂) (f x₃) i i₁
+--  f (·-pentagon-□ x x₁ x₂ x₃ i i₁) = {!!}
+--      -- ·a-pentagon-□ (f x) (f x₁) (f x₂) (f x₃) i i₁
+--  f (trunc x x₁ x₂ y x₃ y₁ i i₁ x₄) =
+--      isOfHLevel→isOfHLevelDep 3 (λ _ → isSet→isGroupoid asquash)
+--       _ _ _ _
+--      (λ i j → f (x₃ i j)) (λ i j → f (y₁ i j))
+--      (trunc x x₁ x₂ y x₃ y₁) i i₁ x₄
+
 
 record RecSetFCSG {ℓ} (A : Type ℓ) : Type ℓ where
  no-eta-equality
