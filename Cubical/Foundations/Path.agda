@@ -667,3 +667,243 @@ Square→compPathΩ² {a = a} sq k i j =
                  ; (j = i1) → a
                  ; (k = i1) → cong (λ x → rUnit x r) (flipSquare sq) i j})
         (sq j i)
+
+
+module CompCube 
+  {a₀₀₀ a₀₀₁ : A} {a₀₀₋ : a₀₀₀ ≡ a₀₀₁}
+  {a₀₁₀ a₀₁₁ : A} {a₀₁₋ : a₀₁₀ ≡ a₀₁₁}
+  {a₀₋₀ : a₀₀₀ ≡ a₀₁₀} {a₀₋₁ : a₀₀₁ ≡ a₀₁₁}
+  {a₀₋₋ : Square a₀₀₋ a₀₁₋ a₀₋₀ a₀₋₁}
+  {a₁₀₀ a₁₀₁ : A} {a₁₀₋ : a₁₀₀ ≡ a₁₀₁}
+  {a₁₁₀ a₁₁₁ : A} {a₁₁₋ : a₁₁₀ ≡ a₁₁₁}
+  {a₁₋₀ : a₁₀₀ ≡ a₁₁₀} {a₁₋₁ : a₁₀₁ ≡ a₁₁₁}
+  {a₁₋₋ : Square a₁₀₋ a₁₁₋ a₁₋₀ a₁₋₁}
+  {a₋₀₀ : a₀₀₀ ≡ a₁₀₀} {a₋₀₁ : a₀₀₁ ≡ a₁₀₁}
+  {a₋₀₋ : Square a₀₀₋ a₁₀₋ a₋₀₀ a₋₀₁}
+  {a₋₁₀ : a₀₁₀ ≡ a₁₁₀} {a₋₁₁ : a₀₁₁ ≡ a₁₁₁}
+  {a₋₁₋ : Square a₀₁₋ a₁₁₋ a₋₁₀ a₋₁₁}
+  {a₋₋₀ : Square a₀₋₀ a₁₋₀ a₋₀₀ a₋₁₀}
+  {a₋₋₁ : Square a₀₋₁ a₁₋₁ a₋₀₁ a₋₁₁}
+  {a'₀₀₀ a'₀₀₁ : A} {a'₀₀₋ : a'₀₀₀ ≡ a'₀₀₁}
+  {a'₀₁₀ a'₀₁₁ : A} {a'₀₁₋ : a'₀₁₀ ≡ a'₀₁₁}
+  {a'₀₋₀ : a'₀₀₀ ≡ a'₀₁₀} {a'₀₋₁ : a'₀₀₁ ≡ a'₀₁₁}
+  {a'₀₋₋ : Square a'₀₀₋ a'₀₁₋ a'₀₋₀ a'₀₋₁}
+  {a'₁₀₀ a'₁₀₁ : A} {a'₁₀₋ : a'₁₀₀ ≡ a'₁₀₁}
+  {a'₁₁₀ a'₁₁₁ : A} {a'₁₁₋ : a'₁₁₀ ≡ a'₁₁₁}
+  {a'₁₋₀ : a'₁₀₀ ≡ a'₁₁₀} {a'₁₋₁ : a'₁₀₁ ≡ a'₁₁₁}
+  {a'₁₋₋ : Square a'₁₀₋ a'₁₁₋ a'₁₋₀ a'₁₋₁}
+  {a'₋₀₀ : a'₀₀₀ ≡ a'₁₀₀} {a'₋₀₁ : a'₀₀₁ ≡ a'₁₀₁}
+  {a'₋₀₋ : Square a'₀₀₋ a'₁₀₋ a'₋₀₀ a'₋₀₁}
+  {a'₋₁₀ : a'₀₁₀ ≡ a'₁₁₀} {a'₋₁₁ : a'₀₁₁ ≡ a'₁₁₁}
+  {a'₋₁₋ : Square a'₀₁₋ a'₁₁₋ a'₋₁₀ a'₋₁₁}
+  {a'₋₋₀ : Square a'₀₋₀ a'₁₋₀ a'₋₀₀ a'₋₁₀}
+  {a'₋₋₁ : Square a'₀₋₁ a'₁₋₁ a'₋₀₁ a'₋₁₁}
+
+  {p₀₀₀ : a₀₀₀ ≡ a'₀₀₀} {p₀₀₁ : a₀₀₁ ≡ a'₀₀₁}
+  {p₀₀₋ : Square a₀₀₋ a'₀₀₋ p₀₀₀ p₀₀₁ }
+  {p₀₁₀ : a₀₁₀ ≡ a'₀₁₀} {p₀₁₁ : a₀₁₁ ≡ a'₀₁₁}
+  {p₀₁₋ : Square a₀₁₋ a'₀₁₋ p₀₁₀ p₀₁₁ }
+  {p₀₋₀ : Square a₀₋₀ a'₀₋₀ p₀₀₀ p₀₁₀ }
+  {p₀₋₁ : Square a₀₋₁ a'₀₋₁ p₀₀₁ p₀₁₁ }
+
+  {p₁₀₀ : a₁₀₀ ≡ a'₁₀₀} {p₁₀₁ : a₁₀₁ ≡ a'₁₀₁}
+  {p₁₀₋ : Square a₁₀₋ a'₁₀₋ p₁₀₀ p₁₀₁ }
+  {p₁₁₀ : a₁₁₀ ≡ a'₁₁₀} {p₁₁₁ : a₁₁₁ ≡ a'₁₁₁}
+  {p₁₁₋ : Square a₁₁₋ a'₁₁₋ p₁₁₀ p₁₁₁ }
+  {p₁₋₀ : Square a₁₋₀ a'₁₋₀ p₁₀₀ p₁₁₀ }
+  {p₁₋₁ : Square a₁₋₁ a'₁₋₁ p₁₀₁ p₁₁₁ }
+
+  {p₋₀₀ : Square a₋₀₀ a'₋₀₀ p₀₀₀ p₁₀₀ }
+  {p₋₀₁ : Square a₋₀₁ a'₋₀₁ p₀₀₁ p₁₀₁ }
+  {p₋₁₀ : Square a₋₁₀ a'₋₁₀ p₀₁₀ p₁₁₀ }
+  {p₋₁₁ : Square a₋₁₁ a'₋₁₁ p₀₁₁ p₁₁₁ }
+  
+
+
+
+  where
+
+ cu : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁ →
+      Cube a₀₋₋ a'₀₋₋ p₀₀₋ p₀₁₋ p₀₋₀ p₀₋₁ → 
+      Cube a₁₋₋ a'₁₋₋ p₁₀₋ p₁₁₋ p₁₋₀ p₁₋₁ →
+      Cube a₋₀₋ a'₋₀₋ p₀₀₋ p₁₀₋ p₋₀₀ p₋₀₁ →
+      Cube a₋₁₋ a'₋₁₋ p₀₁₋ p₁₁₋ p₋₁₀ p₋₁₁ →
+      Cube a₋₋₀ a'₋₋₀ p₀₋₀ p₁₋₀ p₋₀₀ p₋₁₀ →
+      Cube a₋₋₁ a'₋₋₁ p₀₋₁ p₁₋₁ p₋₀₁ p₋₁₁ →
+      Cube a'₀₋₋ a'₁₋₋ a'₋₀₋ a'₋₁₋ a'₋₋₀ a'₋₋₁
+ cu cu cu₀₋₋ cu₁₋₋ cu₋₀₋ cu₋₁₋ cu₋₋₀ cu₋₋₁ i j k =
+   hcomp
+      (λ l → λ {
+          (i = i0) → cu₀₋₋ l j k
+         ;(i = i1) → cu₁₋₋ l j k                      
+         ;(j = i0) → cu₋₀₋ l i k
+         ;(j = i1) → cu₋₁₋ l i k
+         ;(k = i0) → cu₋₋₀ l i j
+         ;(k = i1) → cu₋₋₁ l i j })
+     (cu i j k)
+
+
+CubeP : ∀ (A : I → I → I → Type ℓ) 
+  {a₀₀₀ : A i0 i0 i0} {a₀₀₁ : A i0 i0 i1}
+  {a₀₀₋ : PathP (λ j → A i0 i0 j) a₀₀₀ a₀₀₁}
+  {a₀₁₀ : A i0 i1 i0} {a₀₁₁ : A i0 i1 i1}
+  {a₀₁₋ : PathP (λ j → A i0 i1 j) a₀₁₀ a₀₁₁}
+  {a₀₋₀ : PathP (λ i → A i0 i i0) a₀₀₀ a₀₁₀}
+  {a₀₋₁ : PathP (λ i → A i0 i i1) a₀₀₁ a₀₁₁}
+  → (SquareP (λ i j → A i0 i j) a₀₀₋ a₀₁₋ a₀₋₀ a₀₋₁)
+  →
+  {a₁₀₀ : A i1 i0 i0} {a₁₀₁ : A i1 i0 i1}
+  {a₁₀₋ : PathP (λ j → A i1 i0 j) a₁₀₀ a₁₀₁}
+  {a₁₁₀ : A i1 i1 i0} {a₁₁₁ : A i1 i1 i1}
+  {a₁₁₋ : PathP (λ j → A i1 i1 j) a₁₁₀ a₁₁₁}
+  {a₁₋₀ : PathP (λ i → A i1 i i0) a₁₀₀ a₁₁₀}
+  {a₁₋₁ : PathP (λ i → A i1 i i1) a₁₀₁ a₁₁₁}
+  →  (SquareP (λ i j → A i1 i j) a₁₀₋ a₁₁₋ a₁₋₀ a₁₋₁)
+  →
+  {a₋₀₀ : PathP (λ j → A j i0 i0) a₀₀₀ a₁₀₀}
+  {a₋₀₁ : PathP (λ j → A j i0 i1) a₀₀₁ a₁₀₁}
+
+  → (SquareP (λ i j → A i i0 j) a₀₀₋ a₁₀₋ a₋₀₀ a₋₀₁)
+  → 
+  {a₋₁₀ : PathP (λ j → A j i1 i0) a₀₁₀ a₁₁₀}
+  {a₋₁₁ : PathP (λ j → A j i1 i1) a₀₁₁ a₁₁₁}
+ → (SquareP (λ i j → A i i1 j) a₀₁₋ a₁₁₋ a₋₁₀ a₋₁₁)
+ → (SquareP (λ i j → A i j i0) a₀₋₀ a₁₋₀ a₋₀₀ a₋₁₀)
+ → (SquareP (λ i j → A i j i1) a₀₋₁ a₁₋₁ a₋₀₁ a₋₁₁)
+
+  → Type ℓ
+CubeP A a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁ = 
+  PathP (λ i → SquareP (λ j k → A i j k)  (a₋₀₋ i) (a₋₁₋ i) (a₋₋₀ i) (a₋₋₁ i))
+    a₀₋₋ a₁₋₋
+
+
+module WhiskCube (A : I → I → I → Type ℓ)
+  {a₀₀₀ : A i0 i0 i0} {a₀₀₁ : A i0 i0 i1}
+  {a₀₀₋ : PathP (λ j → A i0 i0 j) a₀₀₀ a₀₀₁}
+  {a₀₁₀ : A i0 i1 i0} {a₀₁₁ : A i0 i1 i1}
+  {a₀₁₋ : PathP (λ j → A i0 i1 j) a₀₁₀ a₀₁₁}
+  {a₀₋₀ : PathP (λ i → A i0 i i0) a₀₀₀ a₀₁₀}
+  {a₀₋₁ : PathP (λ i → A i0 i i1) a₀₀₁ a₀₁₁}
+  {a₀₋₋ : SquareP (λ i j → A i0 i j) a₀₀₋ a₀₁₋ a₀₋₀ a₀₋₁}  
+  {a₁₀₀ : A i1 i0 i0} {a₁₀₁ : A i1 i0 i1}
+  {a₁₀₋ : PathP (λ j → A i1 i0 j) a₁₀₀ a₁₀₁}
+  {a₁₁₀ : A i1 i1 i0} {a₁₁₁ : A i1 i1 i1}
+  {a₁₁₋ : PathP (λ j → A i1 i1 j) a₁₁₀ a₁₁₁}
+  {a₁₋₀ : PathP (λ i → A i1 i i0) a₁₀₀ a₁₁₀}
+  {a₁₋₁ : PathP (λ i → A i1 i i1) a₁₀₁ a₁₁₁}
+  {a₁₋₋ : SquareP (λ i j → A i1 i j) a₁₀₋ a₁₁₋ a₁₋₀ a₁₋₁}
+  {a₋₀₀ : PathP (λ j → A j i0 i0) a₀₀₀ a₁₀₀}
+  {a₋₀₁ : PathP (λ j → A j i0 i1) a₀₀₁ a₁₀₁}
+  {a₋₀₋ : SquareP (λ i j → A i i0 j) a₀₀₋ a₁₀₋ a₋₀₀ a₋₀₁}
+  {a₋₁₀ : PathP (λ j → A j i1 i0) a₀₁₀ a₁₁₀}
+  {a₋₁₁ : PathP (λ j → A j i1 i1) a₀₁₁ a₁₁₁}
+  {a₋₁₋ : SquareP (λ i j → A i i1 j) a₀₁₋ a₁₁₋ a₋₁₀ a₋₁₁}
+  {a₋₋₀ : SquareP (λ i j → A i j i0) a₀₋₀ a₁₋₀ a₋₀₀ a₋₁₀}
+  {a₋₋₁ : SquareP (λ i j → A i j i1) a₀₋₁ a₁₋₁ a₋₀₁ a₋₁₁}
+
+  {a'₀₀₀ : A i0 i0 i0} {a'₀₀₁ : A i0 i0 i1}
+  {a'₀₀₋ : PathP (λ j → A i0 i0 j) a'₀₀₀ a'₀₀₁}
+  {a'₀₁₀ : A i0 i1 i0} {a'₀₁₁ : A i0 i1 i1}
+  {a'₀₁₋ : PathP (λ j → A i0 i1 j) a'₀₁₀ a'₀₁₁}
+  {a'₀₋₀ : PathP (λ i → A i0 i i0) a'₀₀₀ a'₀₁₀}
+  {a'₀₋₁ : PathP (λ i → A i0 i i1) a'₀₀₁ a'₀₁₁}
+  {a'₀₋₋ : SquareP (λ i j → A i0 i j) a'₀₀₋ a'₀₁₋ a'₀₋₀ a'₀₋₁}  
+  {a'₁₀₀ : A i1 i0 i0} {a'₁₀₁ : A i1 i0 i1}
+  {a'₁₀₋ : PathP (λ j → A i1 i0 j) a'₁₀₀ a'₁₀₁}
+  {a'₁₁₀ : A i1 i1 i0} {a'₁₁₁ : A i1 i1 i1}
+  {a'₁₁₋ : PathP (λ j → A i1 i1 j) a'₁₁₀ a'₁₁₁}
+  {a'₁₋₀ : PathP (λ i → A i1 i i0) a'₁₀₀ a'₁₁₀}
+  {a'₁₋₁ : PathP (λ i → A i1 i i1) a'₁₀₁ a'₁₁₁}
+  {a'₁₋₋ : SquareP (λ i j → A i1 i j) a'₁₀₋ a'₁₁₋ a'₁₋₀ a'₁₋₁}
+  {a'₋₀₀ : PathP (λ j → A j i0 i0) a'₀₀₀ a'₁₀₀}
+  {a'₋₀₁ : PathP (λ j → A j i0 i1) a'₀₀₁ a'₁₀₁}
+  {a'₋₀₋ : SquareP (λ i j → A i i0 j) a'₀₀₋ a'₁₀₋ a'₋₀₀ a'₋₀₁}
+  {a'₋₁₀ : PathP (λ j → A j i1 i0) a'₀₁₀ a'₁₁₀}
+  {a'₋₁₁ : PathP (λ j → A j i1 i1) a'₀₁₁ a'₁₁₁}
+  {a'₋₁₋ : SquareP (λ i j → A i i1 j) a'₀₁₋ a'₁₁₋ a'₋₁₀ a'₋₁₁}
+  {a'₋₋₀ : SquareP (λ i j → A i j i0) a'₀₋₀ a'₁₋₀ a'₋₀₀ a'₋₁₀}
+  {a'₋₋₁ : SquareP (λ i j → A i j i1) a'₀₋₁ a'₁₋₁ a'₋₀₁ a'₋₁₁}
+
+  {p₀₀₀ : a₀₀₀ ≡ a'₀₀₀} {p₀₀₁ : a₀₀₁ ≡ a'₀₀₁}
+  {p₀₀₋ : SquareP (λ i j → A i0 i0 j) a₀₀₋ a'₀₀₋ p₀₀₀ p₀₀₁ }
+  {p₀₁₀ : a₀₁₀ ≡ a'₀₁₀} {p₀₁₁ : a₀₁₁ ≡ a'₀₁₁}
+  {p₀₁₋ : SquareP (λ i j → A i0 i1 j) a₀₁₋ a'₀₁₋ p₀₁₀ p₀₁₁ }
+  {p₀₋₀ : SquareP (λ i j → A i0 j i0) a₀₋₀ a'₀₋₀ p₀₀₀ p₀₁₀ }
+  {p₀₋₁ : SquareP (λ i j → A i0 j i1) a₀₋₁ a'₀₋₁ p₀₀₁ p₀₁₁ }
+
+  {p₁₀₀ : a₁₀₀ ≡ a'₁₀₀} {p₁₀₁ : a₁₀₁ ≡ a'₁₀₁}
+  {p₁₀₋ : SquareP (λ i j → A i1 i0 j) a₁₀₋ a'₁₀₋ p₁₀₀ p₁₀₁ }
+  {p₁₁₀ : a₁₁₀ ≡ a'₁₁₀} {p₁₁₁ : a₁₁₁ ≡ a'₁₁₁}
+  {p₁₁₋ : SquareP (λ i j → A i1 i1 j) a₁₁₋ a'₁₁₋ p₁₁₀ p₁₁₁ }
+  {p₁₋₀ : SquareP (λ i j → A i1 j i0) a₁₋₀ a'₁₋₀ p₁₀₀ p₁₁₀ }
+  {p₁₋₁ : SquareP (λ i j → A i1 j i1) a₁₋₁ a'₁₋₁ p₁₀₁ p₁₁₁ }
+
+  {p₋₀₀ : SquareP (λ i j → A j i0 i0) a₋₀₀ a'₋₀₀ p₀₀₀ p₁₀₀ }
+  {p₋₀₁ : SquareP (λ i j → A j i0 i1) a₋₀₁ a'₋₀₁ p₀₀₁ p₁₀₁ }
+  {p₋₁₀ : SquareP (λ i j → A j i1 i0) a₋₁₀ a'₋₁₀ p₀₁₀ p₁₁₀ }
+  {p₋₁₁ : SquareP (λ i j → A j i1 i1) a₋₁₁ a'₋₁₁ p₀₁₁ p₁₁₁ }
+
+  (a₋₋₋ : CubeP A a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁) 
+  (a₀₋₋ : CubeP (λ _ j k → A i0 j k) a₀₋₋ a'₀₋₋ p₀₀₋ p₀₁₋ p₀₋₀ p₀₋₁) 
+  (a₁₋₋ : CubeP (λ _ j k → A i1 j k) a₁₋₋ a'₁₋₋ p₁₀₋ p₁₁₋ p₁₋₀ p₁₋₁)
+  (a₋₀₋ : CubeP (λ _ i k → A i i0 k) a₋₀₋ a'₋₀₋ p₀₀₋ p₁₀₋ p₋₀₀ p₋₀₁)
+  (a₋₁₋ : CubeP (λ _ i k → A i i1 k) a₋₁₋ a'₋₁₋ p₀₁₋ p₁₁₋ p₋₁₀ p₋₁₁)
+  (a₋₋₀ : CubeP (λ _ i j → A i j i0) a₋₋₀ a'₋₋₀ p₀₋₀ p₁₋₀ p₋₀₀ p₋₁₀)
+  (a₋₋₁ : CubeP (λ _ i j → A i j i1) a₋₋₁ a'₋₋₁ p₀₋₁ p₁₋₁ p₋₀₁ p₋₁₁) 
+  
+   where
+
+ cu : CubeP A a'₀₋₋ a'₁₋₋ a'₋₀₋ a'₋₁₋ a'₋₋₀ a'₋₋₁
+ cu i j k =
+   hcomp
+      (λ l → λ {
+          (i = i0) → a₀₋₋ l j k
+         ;(i = i1) → a₁₋₋ l j k                      
+         ;(j = i0) → a₋₀₋ l i k
+         ;(j = i1) → a₋₁₋ l i k
+         ;(k = i0) → a₋₋₀ l i j
+         ;(k = i1) → a₋₋₁ l i j })
+     (a₋₋₋ i j k)
+
+module CompPSq (A : I → I → I → Type ℓ)
+  {a₀₀₀ : A i0 i0 i0} {a₀₀₁ : A i0 i0 i1}
+  {a₀₀₋ : PathP (λ j → A i0 i0 j) a₀₀₀ a₀₀₁}
+  {a₀₁₀ : A i0 i1 i0} {a₀₁₁ : A i0 i1 i1}
+  {a₀₁₋ : PathP (λ j → A i0 i1 j) a₀₁₀ a₀₁₁}
+  {a₀₋₀ : PathP (λ i → A i0 i i0) a₀₀₀ a₀₁₀}
+  {a₀₋₁ : PathP (λ i → A i0 i i1) a₀₀₁ a₀₁₁}
+  (a₀₋₋ : SquareP (λ i j → A i0 i j) a₀₀₋ a₀₁₋ a₀₋₀ a₀₋₁)  
+  {a₁₀₀ : A i1 i0 i0} {a₁₀₁ : A i1 i0 i1}
+  {a₁₀₋ : PathP (λ j → A i1 i0 j) a₁₀₀ a₁₀₁}
+  {a₁₁₀ : A i1 i1 i0} {a₁₁₁ : A i1 i1 i1}
+  {a₁₁₋ : PathP (λ j → A i1 i1 j) a₁₁₀ a₁₁₁}
+  {a₁₋₀ : PathP (λ i → A i1 i i0) a₁₀₀ a₁₁₀}
+  {a₁₋₁ : PathP (λ i → A i1 i i1) a₁₀₁ a₁₁₁}
+  (a₁₋₋ : SquareP (λ i j → A i1 i j) a₁₀₋ a₁₁₋ a₁₋₀ a₁₋₁)
+  {a₋₀₀ : PathP (λ j → A j i0 i0) a₀₀₀ a₁₀₀}
+  {a₋₀₁ : PathP (λ j → A j i0 i1) a₀₀₁ a₁₀₁}
+  (a₋₀₋ : SquareP (λ i j → A i i0 j) a₀₀₋ a₁₀₋ a₋₀₀ a₋₀₁)
+  {a₋₁₀ : PathP (λ j → A j i1 i0) a₀₁₀ a₁₁₀}
+  {a₋₁₁ : PathP (λ j → A j i1 i1) a₀₁₁ a₁₁₁}
+  (a₋₁₋ : SquareP (λ i j → A i i1 j) a₀₁₋ a₁₁₋ a₋₁₀ a₋₁₁)
+  (a₋₋₀ : SquareP (λ i j → A i j i0) a₀₋₀ a₁₋₀ a₋₀₀ a₋₁₀)
+ where
+
+ cu : SquareP (λ i j → A i j i1) a₀₋₁ a₁₋₁ a₋₀₁ a₋₁₁
+ cu i j = comp (A i j)
+   (λ k → λ {(i = i0) → a₀₋₋ j k
+             ;(i = i1) → a₁₋₋ j k
+             ;(j = i0) → a₋₀₋ i k
+             ;(j = i1) → a₋₁₋ i k
+             }) (a₋₋₀ i j)
+
+ fl : CubeP (λ k i j → A i j k)
+       a₋₋₀ cu (λ i j → a₀₋₋ j i) (λ i j → a₁₋₋ j i)
+               (λ i j → a₋₀₋ j i) (λ i j → a₋₁₋ j i)
+ fl k' i j = fill (A i j)
+     (λ k → λ {(i = i0) → a₀₋₋ j k
+             ;(i = i1) → a₁₋₋ j k
+             ;(j = i0) → a₋₀₋ i k
+             ;(j = i1) → a₋₁₋ i k
+             }) (inS (a₋₋₀ i j)) k'
+

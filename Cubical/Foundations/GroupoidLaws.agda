@@ -166,13 +166,19 @@ assocP {A = A} {B = B} {C = C} p q r k i =
 
 -- some exchange law for doubleCompPath and refl
 
-invSides-filler : {x y z : A} (p : x ≡ y) (q : x ≡ z) → Square p (sym q) q (sym p)
-invSides-filler {x = x} p q i j =
-  hcomp (λ k → λ { (i = i0) → p (k ∧ j)
+
+invSides-filler-faces : {x y z : A} (p : x ≡ y) (q : x ≡ z) → ∀ i j → I →
+        Partial (i ∨ ~ i ∨ j ∨ ~ j) A
+        
+invSides-filler-faces p q i j = 
+   (λ k → λ { (i = i0) → p (k ∧ j)
                  ; (i = i1) → q (~ j ∧ k)
                  ; (j = i0) → q (i ∧ k)
                  ; (j = i1) → p (~ i ∧ k)})
-        x
+                 
+invSides-filler : {x y z : A} (p : x ≡ y) (q : x ≡ z) → Square p (sym q) q (sym p)
+invSides-filler {x = x} p q i j =
+  hcomp (invSides-filler-faces p q i j) x
 
 leftright : {ℓ : Level} {A : Type ℓ} {x y z : A} (p : x ≡ y) (q : y ≡ z) →
             (refl ∙∙ p ∙∙ q) ≡ (p ∙∙ q ∙∙ refl)

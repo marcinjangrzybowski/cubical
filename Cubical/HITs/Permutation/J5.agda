@@ -1,5 +1,5 @@
 {-# OPTIONS --safe #-}
-module Cubical.HITs.Permutation.J3 where
+module Cubical.HITs.Permutation.J5 where
 
 open import Cubical.Foundations.Everything
 open import Cubical.Functions.FunExtEquiv
@@ -12,6 +12,12 @@ data J₃S¹ : Type where
   loop₂ : Square loop loop loop loop
   loop₃ : Cube loop₂ loop₂ loop₂ loop₂  loop₂ loop₂
   trunc : is2Groupoid J₃S¹
+
+tied : Square {A = J₃S¹} (refl {x = base}) refl refl refl
+tied i j =
+  hcomp
+    (λ l → invSides-filler-faces loop (sym loop) (~ i) j (~ l))
+    (loop₂ i j)
 
 record J₃S¹-elim {ℓ} (A : J₃S¹ → Type ℓ) : Type ℓ where
  no-eta-equality
@@ -55,20 +61,14 @@ record J₃S¹-elimGrp {ℓ} (A : J₃S¹ → Type ℓ) : Type ℓ where
  J₃S¹-elim.abase r = abase
  J₃S¹-elim.aloop r = aloop
  J₃S¹-elim.aloop₂ r = aloop₂
- J₃S¹-elim.aloop₃ r = {!!}
-   -- isProp→PathP (λ i → {!!})
-   --  _ _
-   -- isGroupoid→isGroupoid' (atrunc (loop₃ k j i))
-   --   (λ i₁ i₂ → {!!})
-   --   {!!}
-   --   {!!}
-   --   {!!}
-   --   {!!}
-   --   {!!} k j i
-  -- let z = 
-  --         isOfHLevel→isOfHLevelDep 3 {!!} --atrunc
-  --           _ _ _ _ {!!} {!!} {!loop₃!} k j i
-  -- in {!z!}
+ J₃S¹-elim.aloop₃ r = 
+   isProp→PathP (λ i →
+     isOfHLevelPathP' 1
+       (isOfHLevelPathP' 2 (atrunc _)
+         _ _)
+       _ _ )
+    _ _
+
  J₃S¹-elim.atrunc r = isGroupoid→is2Groupoid ∘ atrunc
 
  f : ∀ x → A x
@@ -579,14 +579,14 @@ CodeJ₃S¹ x = fst (fromIsGrp₄ (CodeJ₃S¹* x) (CodeJ₃S¹** x))
 
 
 
-p∙[p⁻∙q]≡q : ∀ {ℓ} {A : Type ℓ} → {x y : A} → (p q : x ≡ y) → 
-              p ∙ (sym p ∙ q) ≡ q
-p∙[p⁻∙q]≡q p q i j =
+p∙'[p⁻∙'q]≡q : ∀ {ℓ} {A : Type ℓ} → {x y : A} → (p q : x ≡ y) → 
+              p ∙' (sym p ∙' q) ≡ q
+p∙'[p⁻∙'q]≡q p q i j =
    hcomp ( λ k → 
-          λ { (j = i0) → p i0
-            ; (j = i1) → compPath-filler' (sym p) q (~ i) k
-            ; (i = i1) → q (k ∧ j)
-            }) (p (j ∧ ~ i))
+          λ { (j = i0) → p (~ i ∧ ~ k)
+            ; (j = i1) → q i1
+            ; (i = i1) → q j
+            }) (compPath'-filler (sym p) q (~ i) j)
 
 encode : ∀ x → base ≡ x → CodeJ₃S¹ x
 encode x p = subst CodeJ₃S¹ p 𝟘
@@ -602,40 +602,55 @@ module hlp∙ {ℓ} {A : Type ℓ} {a b c d e f : A}  {p : a ≡ c} {q : b ≡ d
  sq S Q  i = (λ j' → S (j' ∧ ~ i) (j' ∧ i))
            ∙ (λ j' → S (j' ∨ ~ i) (j' ∨ i)) ∙ Q i
 
+module hlp∙' {ℓ} {A : Type ℓ} {a b c d e f : A}  {p : a ≡ c} {q : b ≡ d} {r : a ≡ b} {s : c ≡ d} {u : e ≡ f} {v : d ≡ e} {w : d ≡ f} where
+
+ sq : (S : Square r s p q) → (Q : Square v w refl u)
+         → Square (p ∙' (s ∙' v))
+                  (r ∙' (q ∙' w))
+                 (λ _ → a)
+                 u
+ sq S Q  i = (λ j' → S (j' ∧ ~ i) (j' ∧ i))
+           ∙' ((λ j' → S (j' ∨ ~ i) (j' ∨ i)) ∙' Q i)
+
 
 loopSq : ∀ q → Square {A = J₃S¹}
-             (loop ∙ loop ∙ q)
-             (loop ∙ loop ∙ q)
+             (loop ∙' (loop ∙' q))
+             (loop ∙' (loop ∙' q))
              (λ _ → base)
              (λ _ → base)
-loopSq q = hlp∙.sq loop₂ refl 
+loopSq q = hlp∙'.sq loop₂ refl 
 
+
+
+loopCuHlp : (q : Path J₃S¹ base base) →
+        PathP (λ i →
+                Square (loop₂ i ∙' (loop₂ i ∙' compPath'-filler loop q (~ i)))
+                  (loop₂ i ∙' (loop₂ i ∙' compPath'-filler loop q (~ i)))
+                 (λ _ → loop i)
+                 λ _ → base
+              )
+            (hlp∙'.sq loop₂ λ _ → loop ∙' q)
+            (hlp∙'.sq loop₂ λ _ → q)
+loopCuHlp q i j l = hlp∙'.sq (loop₃ i) (λ _ → compPath'-filler loop q (~ i))
+                        j l
 
 loopCu : (q : Path J₃S¹ base base) → Square {A = Path J₃S¹ base base}
-           (loopSq (loop ∙ q))
-           (λ j → loop ∙ loopSq (q) j)
-           (refl {x = loop ∙ loop ∙ loop ∙ q})
-           (refl {x = loop ∙ loop ∙ loop ∙ q})
-loopCu q i j k =
-    hcomp (λ l → λ {
-          (i = i0) → loopSq (loop ∙ q) j (k ∧ l)
-         ;(k = i0) → ff (~ k) i l
-         ;(k = i1) → hlp∙.sq (loop₃ i) (λ _ → compPath-filler' loop q (~ i))
-                        j l
-         ;(j = i0) → ff (~ k) i l
-         ;(j = i1) → ff (~ k) i l
-         ;(i = i1) → compPath-filler loop (loopSq q j) l k
-         })
-         (loop (i ∧ k))
-
- where
-  ff = whiskSq.sq'-fill (λ _ _ → J₃S¹)
-    (λ i l → (loop₂ i ∙ loop₂ i ∙ compPath-filler' loop q (~ i)) l)
-     
-     (λ l k → (loop ∙ loop ∙ loop ∙ q) ((~ k) ∧ l))
-     (λ l k → compPath-filler loop (loop ∙ loop ∙ q) l (~ k))
-     (λ i k → loop (i ∧ (~ k)))
-     λ i → sym (loop ∙ (loop ∙ loop ∙ q))
+           (loopSq (loop ∙' q))
+           (λ j → loop ∙' loopSq (q) j)
+           (refl {x = loop ∙' (loop ∙' (loop ∙' q))})
+           (refl {x = loop ∙' (loop ∙' (loop ∙' q))})
+loopCu q = CompCube.cu (refl {x = loopSq q})
+               (symP (loopCuHlp q))
+               (λ i j → compPath'-filler loop (loopSq q j) i)
+               ((congP (λ _ → flipSquareP) (flipSquareP
+                 (symP-fromGoal (whiskSq.sq'-fill (λ _ _ → J₃S¹)
+                   (λ i i₁ → base) _ _ _ _)))))
+               (((congP (λ _ → flipSquareP) (flipSquareP
+                 (symP-fromGoal (whiskSq.sq'-fill (λ _ _ → J₃S¹)
+                  (λ i i₁ → base) _ _ _ _))))))
+               (congP (λ _ → flipSquare) (flipSquareP
+                 (refl {x = whiskSq.sq' _ _ _ _ _ _})))
+               (refl {x = refl {x = refl {x = base}}})
 
 CoLoop : Co → Path J₃S¹ base base
 CoLoop = Co-rec.f w
@@ -643,10 +658,10 @@ CoLoop = Co-rec.f w
  open Co-rec
  w : Co-rec _
  abase w = refl
- a↑ w = loop ∙_
- a↓ w = sym loop ∙_
- a↓↑ w a = p∙[p⁻∙q]≡q (sym loop) a
- a↑↓ w a = p∙[p⁻∙q]≡q loop a
+ a↑ w = loop ∙'_
+ a↓ w = sym loop ∙'_
+ a↓↑ w a = p∙'[p⁻∙'q]≡q (sym loop) a
+ a↑↓ w a = p∙'[p⁻∙'q]≡q loop a
  a♯ w = loopSq
  a↑♯≡♯↑ w = loopCu
  atrunc w = trunc base base
@@ -660,11 +675,11 @@ CoLoopComm = Co-elimSet.f wcomm
  where
  wcomm : Co-elimSet _
  Co-elimSet.abase wcomm i _ = loop i
- Co-elimSet.a↑ wcomm s j = (loop₂ j ∙ s j)
- Co-elimSet.a↓ wcomm s j = sym (loop₂ j) ∙ s j
- Co-elimSet.a↓↑ wcomm s i j = p∙[p⁻∙q]≡q (sym (loop₂ j)) (s j) i
- Co-elimSet.a↑↓ wcomm s i j = p∙[p⁻∙q]≡q (loop₂ j) (s j) i
- Co-elimSet.a♯ wcomm s i j = hlp∙.sq (loop₃ j) (λ _ → s j) i
+ Co-elimSet.a↑ wcomm s j = (loop₂ j ∙' s j)
+ Co-elimSet.a↓ wcomm s j = sym (loop₂ j) ∙' s j
+ Co-elimSet.a↓↑ wcomm s i j = p∙'[p⁻∙'q]≡q (sym (loop₂ j)) (s j) i
+ Co-elimSet.a↑↓ wcomm s i j = p∙'[p⁻∙'q]≡q (loop₂ j) (s j) i
+ Co-elimSet.a♯ wcomm s i j = hlp∙'.sq (loop₃ j) (λ _ → s j) i
  Co-elimSet.atrunc wcomm x =
    isOfHLevelPathP' 2
     (trunc base base)
@@ -682,8 +697,8 @@ CoLoopComm₂' = Co-elimProp.f w
  open Co-elimProp
  w : Co-elimProp _
  abase w i i₁ = refl
- a↑ w x i i₁  = loop₃ i i₁ ∙ x i i₁ 
- a↓ w x i i₁ = sym (loop₃ i i₁) ∙ x i i₁
+ a↑ w x i i₁  = loop₃ i i₁ ∙' x i i₁ 
+ a↓ w x i i₁ = sym (loop₃ i i₁) ∙' x i i₁
  atrunc w x =
    isOfHLevelPathP' 1
     (isOfHLevelPathP' 2 (trunc base base) _ _)
@@ -711,7 +726,7 @@ CoLoopComm₂' = Co-elimProp.f w
 
 
 CoLoopSq' : SquareP (λ i j → Co≡ i → J₃S¹ )
-   (λ j p → (loop ∙ CoLoop p) j)
+   (λ j p → (loop ∙' CoLoop p) j)
    (λ j p → CoLoop p j)
    (λ i p → base)
    (λ i p → base)
@@ -721,13 +736,15 @@ CoLoopSq' = λ i j → (λ x → CoLoop x j) ∘' ung↑ i
 CoLoopSqI0 : Square {A = Co → J₃S¹}
                refl
                (λ l p → loop (~ l))
-               (λ i p → ((λ i → loop i) ∙ CoLoop p) i)
+               (λ i p → ((λ i → loop i) ∙' CoLoop p) i)
                λ i p → CoLoop p i
-CoLoopSqI0 = (λ j l p → hcomp (λ l' →  λ {
-             (j = i0) → base
-            ;(j = i1) → CoLoopComm p (~ l) l'
-            ;(l = i1) → CoLoop p (j ∧ l')
-            }) (loop (j ∧ (~ l))))
+CoLoopSqI0 j l p =
+   hcomp (λ l' →  λ {
+             (j = i0) → loop (~ l ∧ ~ l')
+            ;(j = i1) → loop (~ l)
+            ;(l = i1) → CoLoop p j
+            })
+            (CoLoopComm p (~ l) j)
 
 record OfType : Type₁ where
  constructor ofType
@@ -736,19 +753,19 @@ record OfType : Type₁ where
    a : A
 
 
-module CoLoopSqM = whiskSq (λ z j → Co≡ z → J₃S¹)
-    CoLoopSq'
-    CoLoopSqI0    
-    (λ j _ p → CoLoop p j)
-    (λ _ _ _ → base)
-    (λ i l _ → loop (i ∨ ~ l) )
-
 -- module CoLoopSqM = whiskSq (λ z j → Co≡ z → J₃S¹)
 --     CoLoopSq'
---     (λ j l p → compPath-filler' loop (CoLoop p) (~ l) j)    
---     (λ j l p → CoLoopComm p l j )
---     (λ _ l _ → loop l)
---     (λ i l p → loop (l ∧ i) )
+--     CoLoopSqI0    
+--     (λ j _ p → CoLoop p j)
+--     (λ _ _ _ → base)
+--     (λ i l _ → loop (i ∨ ~ l) )
+
+module CoLoopSqM = whiskSq (λ z j → Co≡ z → J₃S¹)
+    CoLoopSq'
+    (λ j l p → compPath'-filler loop (CoLoop p) (~ l) j)    
+    (λ j l p → CoLoopComm p l j )
+    (λ _ l _ → loop l)
+    (λ i l p → loop (l ∧ i) )
 
 
 CoLoopSq : SquareP (λ i j → Co≡ i → J₃S¹ )
@@ -786,364 +803,331 @@ CoLoopSq = CoLoopSqM.sq'
 -- --     (isOfHLevelPathP' 2 (trunc base base) _ _)
 -- --      _ _
 
+-- tied-lem : Cube
+--                (λ i → (λ i₁ → loop₂ (i₁ ∧ ~ i) (i₁ ∧ i))
+--                   ∙∙ refl ∙∙ (λ j' → loop₂ (j' ∨ ~ i) (j' ∨ i)))
+--                   (λ i → loop ∙∙ tied i ∙∙ loop)
+--                   refl
+--                   refl
+--                   refl
+--                   refl
+-- tied-lem l i =
+--   (λ i₁ → {!!})
+--    ∙∙ {!!}
+--    ∙∙ λ i₁ → {!!}
 
+CoLoopCu'-hlp : SquareP (λ _ i → CodeJ₃S¹ (loop i) → base ≡ base)
+                   (λ i x → (loop ∙∙ (loop ∙' (CoLoop (ung↑ i x))) ∙∙ tied i))                   
+                   ((λ i x → (λ i₁ → loop₂ (i₁ ∧ ~ i) (i₁ ∧ i))
+                  ∙' ((λ j' → loop₂ (j' ∨ ~ i) (j' ∨ i))
+                   ∙' CoLoop (ung↑ i x)) ))
+
+                   refl
+                   refl
+CoLoopCu'-hlp k i x = {!!}
 
 CoLoopCu' : SquareP (λ j i → CodeJ₃S¹ (loop₂ j i) →
                 base
                 ≡
                 base)
-              {a₀₀ = λ x → loop ∙ loop ∙ loop ∙ CoLoop x}
-              {a₀₁ = λ x → loop ∙ loop ∙ CoLoop x}
+              {a₀₀ = λ x → loop ∙' (loop ∙' (loop ∙' CoLoop x))}
+              {a₀₁ = λ x → loop ∙' (loop ∙' CoLoop x)}
               (λ i x → (λ i₁ → loop₂ (i₁ ∧ ~ i) (i₁ ∧ i))
-                  ∙ (λ j' → loop₂ (j' ∨ ~ i) (j' ∨ i))
-                   ∙ CoLoop (ung↑ i x) )
-              {a₁₀ = λ x → loop ∙ loop ∙ CoLoop x}
-              {a₁₁ = λ x → loop ∙ CoLoop x}
-              (λ i x → loop ∙ CoLoop (ung↑ i x))
-              (λ j x → loop ∙ loop ∙ CoLoop (ung↑ j x))
-              (λ j x → loop ∙ CoLoop (ung↑ j x))
+                  ∙' ((λ j' → loop₂ (j' ∨ ~ i) (j' ∨ i))
+                   ∙' CoLoop (ung↑ i x)) )
+              {a₁₀ = λ x → loop ∙' (loop ∙' CoLoop x)}
+              {a₁₁ = λ x → loop ∙' CoLoop x}
+              (λ i x → loop ∙' CoLoop (ung↑ i x))
+              (λ j x → loop ∙' (loop ∙' CoLoop (ung↑ j x)))
+              (λ j x → loop ∙' CoLoop (ung↑ j x))
 CoLoopCu' j i x k = CoLoop (ung♯ j i x) k
 
--- CoLoopCu'* : SquareP (λ j i → CodeJ₃S¹ (loop₂ j i) →
---                 base
---                 ≡
---                 base)
---               {a₀₀ = λ x → (loop ∙ loop) ∙ loop ∙ CoLoop x}
---               {a₀₁ = λ x → loop ∙ loop ∙ CoLoop x}
---               (λ i x → ((λ i₁ → loop₂ (i₁ ∧ ~ i) (i₁ ∧ i))
---                   ∙ (λ j' → loop₂ (j' ∨ ~ i) (j' ∨ i)))
---                    ∙ CoLoop (ung↑ i x) )
---               {a₁₀ = λ x → (loop ∙ loop) ∙ CoLoop x}
---               {a₁₁ = λ x → loop ∙ CoLoop x}
---               (λ i x → loop ∙ CoLoop (ung↑ i x))
---               (λ j x → (loop ∙ loop) ∙ CoLoop (ung↑ j x))
---               (λ j x → loop ∙ CoLoop (ung↑ j x))
--- CoLoopCu'* j i x k = {!!}
+
+CoLoopCu'* : SquareP (λ i j → CodeJ₃S¹ (loop₂ i j) →
+                base
+                ≡
+                tied j i)
+              {a₀₀ = λ x → loop ∙' (loop ∙' (loop ∙' CoLoop x))}
+              {a₀₁ = λ x → loop ∙' (loop ∙' CoLoop x)}
+              (λ j x → loop ∙' (loop ∙' CoLoop (ung↑ j x)))
+              {a₁₀ = λ x → loop ∙' (loop ∙' CoLoop x)}
+              {a₁₁ = λ x → loop ∙' CoLoop x}
+              (λ i x → loop ∙' CoLoop (ung↑ i x))
+              (λ j x → loop ∙' (loop ∙' CoLoop (ung↑ j x)))
+              (λ j x → loop ∙' CoLoop (ung↑ j x))
+CoLoopCu'* =
+  congSqP (λ _ _ → funExt⁻)
+    (WhiskCube.cu (λ z z₁ i → (x : CodeJ₃S¹ (loop₂ z z₁)) → J₃S¹)
+      (λ i j k x → (CoLoopCu'-hlp ◁ CoLoopCu') i j x k)
+      (λ l j k x → (loop ∙∙ (loop ∙' (CoLoop (ung↑ j x)))
+                 ∙∙ λ i' → tied j (i' ∧ ~ l) ) k)
+      (λ _ j k x → (loop ∙' CoLoop (ung↑ j x)) k)
+      (λ _ j k x → (loop ∙' (loop ∙' CoLoop (ung↑ j x))) k)
+      (λ _ j k x → (loop ∙' CoLoop (ung↑ j x)) k)
+      (λ _ _ _ _ → base)
+      λ l i j _ → tied j (i ∨ ~ l))
 
 
-
-CoLoopCu* : SquareP (λ j i → Co → base ≡ base)
-               (λ i x → loop ∙ loop ∙ loop ∙ CoLoop x)
-               (λ i x → loop ∙ loop ∙ loop ∙ CoLoop x )
-               (λ j x → (λ i₁ → loop₂ (i₁ ∧ ~ j) (i₁ ∧ j))
-                  ∙ (λ j' → loop₂ (j' ∨ ~ j) (j' ∨ j))
-                   ∙ loop ∙ CoLoop x)
-               (λ j x → loop ∙ loopSq (CoLoop x) j)
-CoLoopCu* j i x = CoLoop (↑♯≡♯↑ x i j) 
-
--- CoLoopCu''K0 : Cube ? ? ? ? ? ?
--- CoLoopCu''K0 = ?
-
--- l = i0 ⊢ base
--- l = i1 ⊢ loop₂ i j
--- j = i0 ⊢ ?14 (i = i) (x = x) (l = l) (l' = i1)
--- j = i1 ⊢ loop₂ i l
--- i = i0 ⊢ ?10 (j = j) (x = x) (l = l) (l' = i1)
-
-CoLoopCuJ1∨I1 : {!!}
-CoLoopCuJ1∨I1 = {!!}
-
-CoLoopCu'' : SquareP (λ i j → CodeJ₃S¹ (loop₂ i j) → base ≡ loop₂ i j)
+CoLoopCu : SquareP (λ i j → CodeJ₃S¹ (loop₂ i j) → base ≡ loop₂ i j)
       (λ i p j → CoLoopSq i j p)
       (λ i p j → CoLoopSq i j p)
       (λ i p j → CoLoopSq i j p)
       (λ i p j → CoLoopSq i j p)
-CoLoopCu'' i j x k = hcomp
-     (λ l → λ {
-       (i = i0) →
-         hcomp  (λ l' →
-           λ {(j = i0) → {!!}
-             ;(j = i1) → {!!}
-             ;(k = i0) → {!!}
-             ;(k = i1) → {!!}
-             ;(l = i0) → compPath-filler'
-                ((λ i₁ → loop₂ (i₁ ∧ ~ j) (i₁ ∧ j)))
-                 ((λ j' → loop₂ (j' ∨ ~ j) (j' ∨ j)) ∙ CoLoop (ung↑ j x)) l' k
-             })
-             (compPath-filler'
-                 (λ j' → loop₂ (j' ∨ ~ j) (j' ∨ j))  (CoLoop (ung↑ j x)) (~ l) k)
-      ;(j = i0) →
-          hcomp  (λ l' →
-           λ {(i = i0) → {!!}
-             ;(i = i1) → {!!}
-             ;(k = i0) → {!!}
-             ;(k = i1) → {!!}
-             ;(l = i0) → compPath-filler' loop (loop ∙ CoLoop (ung↑ i x)) l' k
-            })
-            (compPath-filler' loop (CoLoop (ung↑ i x)) (~ l) k)
-      ;(i = i1) →
-          hcomp  (λ l' →
-           λ {(j = i0) → {!!}
-             ;(j = i1) → {!!}
-             ;(k = i0) → {!!}
-             ;(k = i1) → loop (j ∨ ~ l' ∨ ~ l)
-             ;(l = i0) → compPath-filler' loop (CoLoop (ung↑ j x)) l' k
-             })
-             (CoLoopSq' j k x)
-      ;(j = i1)(i = i0) → (loop ∙ CoLoop x) k
-      ;(j = i1) → 
-          hcomp  (λ l' →
-           λ {(i = i0) → {!!}
-             ;(i = i1) → {!!} 
-             ;(k = i0) → {!!}
-             ;(k = i1) → loop (i ∨ ~ l' ∨ ~ l) 
-             ;(l = i0) → compPath-filler' loop (CoLoop (ung↑ i x)) l' k
+CoLoopCu =
+  let ss : CubeP (λ l j k → ua ↑≃ j → J₃S¹)
+              _ _ _ _ _ _
+      ss = λ l j k x →
+              hcomp  (λ l' →
+           λ { (j = i1) →
+                   whiskSq.sq'-fill
+                  _ (λ i j → compPath-filler' (sym loop) refl j (~ i))
+                    (λ l' ~k → 
+                   compPath'-filler loop (loop ∙' CoLoop (idfun Co x)) l' (~ ~k))
+                     (λ l' ~k → CoLoopComm x l' (~ ~k)  )
+                     (λ l ~k →
+                       compPath'-filler loop (CoLoop ( x)) (~ l) (~ ~k))
+                     (λ l ~k →
+                       (((λ l → compPath'-filler loop (CoLoop (↑ x))
+                           (~ l) (~ (~k))))
+                        ∙∙ flipSquare (CoLoopComm (↑ x)) (~ ~k) ∙∙ λ l → CoLoopSqM.sq'-fill l i0 (~ ~k) x) (l))
+                      (~ k) l l'
+
              
-            }) (CoLoopSq' i k x)
-      ;(k = i0) → base
+             ;(l = i0) → compPath'-filler loop (loop ∙' CoLoop (ung↑ j x)) l' k
+             ;(l = i1) → CoLoopSqM.sq'-fill l' j k x
+            })
+            (compPath'-filler loop (CoLoop (ung↑ j x)) (~ l) k)
+      sss : ∀ l j k x → J₃S¹
+      sss l j k x = ((λ l → compPath'-filler loop (CoLoop (ung↑ j x)) (~ l) k)
+                    ∙∙ flipSquare (CoLoopComm (ung↑ j x)) k ∙∙ λ l → CoLoopSqM.sq'-fill l j k x) l
+  in
+    λ i j x k → 
+     hcomp
+        (λ l → λ {
+          (i = i0) → ss l j k x
+         ;(j = i0) → ss l i k x          
+         ;(i = i1) → sss l j k x
+         ;(j = i1) → sss l i k x
+      ;(k = i0)(i = i0)(j = i1) → (loop ∙∙ loop ∙∙ loop) l
+      ;(k = i0)(i = i1)(j = i0) → (loop ∙∙ loop ∙∙ loop) l
+      ;(k = i0)(i = i0)(j = i0) → (loop ∙∙ loop ∙∙ loop) l
+      ;(k = i0)(i = i1)(j = i1) → (loop ∙∙ loop ∙∙ loop) l
+      ;(k = i0) →
+          hcomp
+            (λ l' → λ {
+              (i = i0) → ss l (j ∨ ~ l') i0 {!x!}
+             ;(i = i1) → sss l (j ∧  l') i0 {!!}
+             ;(j = i0) → ss l (i ∨ ~ l') i0 {!!}
+             ;(j = i1) → sss l (i ∧  l') i0 {!!}
+             ;(l = i0) → base
+             ;(l = i1) → base
+             })
+            ((loop ∙∙ loop ∙∙ loop) l)
       ;(k = i1) → {!!} 
       
          })
-         ((CoLoop (ung♯ i j x)) k)
-     -- (CoLoop (ung♯ i j x) k)
-     -- 
+         (CoLoopCu'* i j x k)
 
-
--- CoLoopCu : SquareP (λ j i → CodeJ₃S¹ (loop₂ j i) → base ≡ loop₂ j i)
---       (λ i p j → CoLoopSq i j p)
---       (λ i p j → CoLoopSq i j p)
---       (λ i p j → CoLoopSq i j p)
---       (λ i p j → CoLoopSq i j p)
--- CoLoopCu i j x k =
---    hcomp
---      (λ l → λ {
---        (i = i0) → {!!}
---       ;(i = i1) → {!!}
---       ;(j = i0) → {!!}
---       ;(j = i1) → {!!}
---       ;(k = i0) → {!!}
---       ;(k = i1) → {!loop₂ (i ∨ l) (j ∧ l)!}
-      
---          })
---      {!CoLoop (ung♯ i j x) k!}
-
--- -- -- --  --  SquarePCong≃
--- -- -- --  --     (λ j i → preCompEquiv
--- -- -- --  --      (unglueEquiv Co _ (CodeJ₃S¹-pa j i)))
--- -- -- --  --   (funExtSq _ _ _ _ (Co-elimProp.f w))
--- -- -- --  -- where
--- -- -- --  -- open Co-elimProp
--- -- -- --  -- w : Co-elimProp _
--- -- -- --  -- abase w i j k =
--- -- -- --  --   hcomp
--- -- -- --  --     (λ l → λ {
--- -- -- --  --       (i = i0)(j = i0) → {!compPath-filler' loop (CoLoop 𝟘) l (~ k)!}
--- -- -- --  --      ;(i = i1)(j = i0) → {!!}
--- -- -- --  --      ;(i = i0)(j = i1) → {!!}
--- -- -- --  --      ;(i = i1)(j = i1) → {!!}
--- -- -- --  --      ;(k = i0) → {!!}
--- -- -- --  --      ;(k = i1) → {!loop₂ (i ∨ l) (j ∧ l)!}
-      
--- -- -- --  --         })
--- -- -- --  --     {!!}
--- -- -- --  -- a↑ w = {!!}
--- -- -- --  -- a↓ w = {!!}
--- -- -- --  -- atrunc w _ =
--- -- -- --  --   isOfHLevelPathP' 1
--- -- -- --  --    (isOfHLevelPathP' 2
--- -- -- --  --      (trunc base base)
--- -- -- --  --      _ _)
--- -- -- --  --    _ _
  
--- -- decode : ∀ x → CodeJ₃S¹ x → base ≡ x
--- -- decode = J₃S¹-elimGrp.f w
--- --  where
--- --  w : J₃S¹-elimGrp (λ z → CodeJ₃S¹ z → base ≡ z)
--- --  J₃S¹-elimGrp.abase w = CoLoop
--- --  J₃S¹-elimGrp.aloop w i p j = CoLoopSq i j p 
--- --  J₃S¹-elimGrp.aloop₂ w = CoLoopCu
--- --  J₃S¹-elimGrp.atrunc w x = isGroupoidΠ λ _ → trunc base x
+decode : ∀ x → CodeJ₃S¹ x → base ≡ x
+decode = J₃S¹-elimGrp.f w
+ where
+ w : J₃S¹-elimGrp (λ z → CodeJ₃S¹ z → base ≡ z)
+ J₃S¹-elimGrp.abase w = CoLoop
+ J₃S¹-elimGrp.aloop w i p j = CoLoopSq i j p 
+ J₃S¹-elimGrp.aloop₂ w = CoLoopCu
+ J₃S¹-elimGrp.atrunc w x = isGroupoidΠ λ _ → trunc base x
 
--- -- decode↑ : ∀ x → decode base (↑ x) ≡ loop ∙ decode base x
--- -- decode↑ x = refl
+-- decode↑ : ∀ x → decode base (↑ x) ≡ loop ∙ decode base x
+-- decode↑ x = refl
 
--- -- subst-CodeJ₃S¹-loop-base : ∀ x → subst CodeJ₃S¹ loop x ≡ ↑ x
--- -- subst-CodeJ₃S¹-loop-base x = refl
+-- -- -- subst-CodeJ₃S¹-loop-base : ∀ x → subst CodeJ₃S¹ loop x ≡ ↑ x
+-- -- -- subst-CodeJ₃S¹-loop-base x = refl
 
--- -- comm-lopp-decode : ∀ x → loop ∙ decode base x ≡ decode base x ∙ loop
--- -- comm-lopp-decode = Co-elimSet.f w
--- --  where
--- --  open Co-elimSet
--- --  w : Co-elimSet _
--- --  abase w i = (λ j → loop (j ∧ (~ i))) ∙ λ j → loop (j ∨ (~ i))
--- --  a↑ w p = cong (loop ∙_) p ∙ assoc _ _ _
+comm-lopp-decode : ∀ x → loop ∙' decode base x ≡ decode base x ∙' loop
+comm-lopp-decode = Co-elimSet.f w
+ where
+ open Co-elimSet
+ w : Co-elimSet _
+ abase w i = (λ j → loop (j ∧ (~ i))) ∙' λ j → loop (j ∨ (~ i))
+ a↑ w p = cong (loop ∙'_) p ∙' sym (congP (λ _ → sym) (assoc _ _ _))
    
--- --  a↓ w p = {!!}
--- --  a↓↑ w = {!!}
--- --  a↑↓ w = {!!}
--- --  a♯ w = {!!}
--- --  atrunc w x = trunc _ _ _ _
+ a↓ w p = {!!} ∙ cong ((sym loop) ∙'_) p ∙' sym (congP (λ _ → sym) (assoc _ _ _))
+ a↓↑ w = {!!}
+ a↑↓ w = {!!}
+ a♯ w = {!!}
+ atrunc w x = trunc _ _ _ _
  
--- -- encode-base-[decode-base-↑] : ∀ x →
--- --   encode base (decode base (↑ x)) ≡
--- --      ↑ (encode base (decode base x))
--- -- encode-base-[decode-base-↑] x =       
--- --    cong (encode base) (comm-lopp-decode x)
--- --    ∙ substComposite CodeJ₃S¹ (decode base x) loop 𝟘 
+-- encode-base-[decode-base-↑] : ∀ x →
+--   encode base (decode base (↑ x)) ≡
+--      ↑ (encode base (decode base x))
+-- encode-base-[decode-base-↑] x =       
+--    cong (encode base) (comm-lopp-decode x)
+--    ∙ ? --substComposite CodeJ₃S¹ (decode base x) loop 𝟘 
 
--- -- decode-encode : ∀ x y → decode x (encode x y) ≡ y
--- -- decode-encode _ = J (λ x y → decode x (encode x y) ≡ y) refl
+decode-encode : ∀ x y → decode x (encode x y) ≡ y
+decode-encode _ = J (λ x y → decode x (encode x y) ≡ y) refl
 
--- -- encode-decode : ∀ x y → encode x (decode x y) ≡ y
--- -- encode-decode = J₃S¹-elimSet.f w
--- --  where
--- --  open J₃S¹-elimSet
--- --  w : J₃S¹-elimSet _
--- --  abase w = Co-elimSet.f ww
--- --   where
--- --   ww : Co-elimSet _
--- --   Co-elimSet.abase ww = refl
--- --   Co-elimSet.a↑ ww {x} p = encode-base-[decode-base-↑] x ∙ cong ↑ p
--- --   Co-elimSet.a↓ ww p = {!!} ∙ cong ↓ p
--- --   Co-elimSet.a↓↑ ww p = {!!}
--- --   Co-elimSet.a↑↓ ww p = {!!}
--- --   Co-elimSet.a♯ ww p = {!!}
--- --   Co-elimSet.atrunc ww x = trunc _ _
--- --  aloop w = {!!}
--- --  atrunc w x = isSetΠ λ _ → snd (fromIsGrp₄ (CodeJ₃S¹* x) (CodeJ₃S¹** x)) _ _
+-- encode-decode : ∀ x y → encode x (decode x y) ≡ y
+-- encode-decode = J₃S¹-elimSet.f w
+--  where
+--  open J₃S¹-elimSet
+--  w : J₃S¹-elimSet _
+--  abase w = Co-elimSet.f ww
+--   where
+--   ww : Co-elimSet _
+--   Co-elimSet.abase ww = refl
+--   Co-elimSet.a↑ ww {x} p = encode-base-[decode-base-↑] x ∙ cong ↑ p
+--   Co-elimSet.a↓ ww p = {!!} ∙ cong ↓ p
+--   Co-elimSet.a↓↑ ww p = {!!}
+--   Co-elimSet.a↑↓ ww p = {!!}
+--   Co-elimSet.a♯ ww p = {!!}
+--   Co-elimSet.atrunc ww x = trunc _ _
+--  aloop w = {!!}
+--  atrunc w x = isSetΠ λ _ → snd (fromIsGrp₄ (CodeJ₃S¹* x) (CodeJ₃S¹** x)) _ _
 
--- -- -- -- -- -- -- -- -- -- loop₃' : Cube loop₂ loop₂ loop₂ loop₂ loop₂ loop₂
--- -- -- -- -- -- -- -- -- -- loop₃' = loop₃
+-- -- -- -- -- -- -- -- -- -- -- loop₃' : Cube loop₂ loop₂ loop₂ loop₂ loop₂ loop₂
+-- -- -- -- -- -- -- -- -- -- -- loop₃' = loop₃
 
--- -- -- -- -- -- -- -- -- -- J₃S¹-hexa₀ J₃S¹-hexa₁ : (loop ∙∙ loop ∙∙ loop) ≡ (loop ∙∙ loop ∙∙ loop)
--- -- -- -- -- -- -- -- -- -- J₃S¹-hexa₀ = {!!}
--- -- -- -- -- -- -- -- -- -- J₃S¹-hexa₁ = {!!}
+-- -- -- -- -- -- -- -- -- -- -- J₃S¹-hexa₀ J₃S¹-hexa₁ : (loop ∙∙ loop ∙∙ loop) ≡ (loop ∙∙ loop ∙∙ loop)
+-- -- -- -- -- -- -- -- -- -- -- J₃S¹-hexa₀ = {!!}
+-- -- -- -- -- -- -- -- -- -- -- J₃S¹-hexa₁ = {!!}
 
--- -- -- -- -- -- -- -- -- -- J₃S¹-hexa : Path ((loop ∙∙ loop ∙∙ loop) ≡ (loop ∙∙ loop ∙∙ loop))
--- -- -- -- -- -- -- -- -- --             {!!} {!!}
--- -- -- -- -- -- -- -- -- -- J₃S¹-hexa = {!!}
+-- -- -- -- -- -- -- -- -- -- -- J₃S¹-hexa : Path ((loop ∙∙ loop ∙∙ loop) ≡ (loop ∙∙ loop ∙∙ loop))
+-- -- -- -- -- -- -- -- -- -- --             {!!} {!!}
+-- -- -- -- -- -- -- -- -- -- -- J₃S¹-hexa = {!!}
 
--- -- -- -- -- -- -- -- -- -- infixl 6 _⊕_
+-- -- -- -- -- -- -- -- -- -- -- infixl 6 _⊕_
 
--- -- -- -- -- -- -- -- -- -- infixl 10 ─_
+-- -- -- -- -- -- -- -- -- -- -- infixl 10 ─_
 
 
--- -- -- -- -- -- -- -- -- -- data ℤᵍ : Type where
--- -- -- -- -- -- -- -- -- --  zero one  : ℤᵍ
--- -- -- -- -- -- -- -- -- --  _⊕_ : ℤᵍ → ℤᵍ → ℤᵍ
--- -- -- -- -- -- -- -- -- --  ─_ : ℤᵍ → ℤᵍ
--- -- -- -- -- -- -- -- -- --  ⊕─ : ∀ x → x ⊕ ─ x ≡ zero
+-- -- -- -- -- -- -- -- -- -- -- data ℤᵍ : Type where
+-- -- -- -- -- -- -- -- -- -- --  zero one  : ℤᵍ
+-- -- -- -- -- -- -- -- -- -- --  _⊕_ : ℤᵍ → ℤᵍ → ℤᵍ
+-- -- -- -- -- -- -- -- -- -- --  ─_ : ℤᵍ → ℤᵍ
+-- -- -- -- -- -- -- -- -- -- --  ⊕─ : ∀ x → x ⊕ ─ x ≡ zero
 
--- -- -- -- -- -- -- -- -- --  ⊕-assoc : ∀ x y z → x ⊕ (y ⊕ z) ≡ x ⊕ y ⊕ z
+-- -- -- -- -- -- -- -- -- -- --  ⊕-assoc : ∀ x y z → x ⊕ (y ⊕ z) ≡ x ⊕ y ⊕ z
  
--- -- -- -- -- -- -- -- -- --  zero-⊕ : ∀ x → zero ⊕ x ≡ x
--- -- -- -- -- -- -- -- -- --  ⊕-zero : ∀ x → x ⊕ zero ≡ x
+-- -- -- -- -- -- -- -- -- -- --  zero-⊕ : ∀ x → zero ⊕ x ≡ x
+-- -- -- -- -- -- -- -- -- -- --  ⊕-zero : ∀ x → x ⊕ zero ≡ x
 
--- -- -- -- -- -- -- -- -- --  ⊕-triangle : ∀ x y  →
--- -- -- -- -- -- -- -- -- --     Square                      
--- -- -- -- -- -- -- -- -- --         (⊕-assoc x zero y)
--- -- -- -- -- -- -- -- -- --         refl
--- -- -- -- -- -- -- -- -- --         (cong (x ⊕_) (zero-⊕ y))
--- -- -- -- -- -- -- -- -- --         (cong (_⊕ y) (⊕-zero x))
+-- -- -- -- -- -- -- -- -- -- --  ⊕-triangle : ∀ x y  →
+-- -- -- -- -- -- -- -- -- -- --     Square                      
+-- -- -- -- -- -- -- -- -- -- --         (⊕-assoc x zero y)
+-- -- -- -- -- -- -- -- -- -- --         refl
+-- -- -- -- -- -- -- -- -- -- --         (cong (x ⊕_) (zero-⊕ y))
+-- -- -- -- -- -- -- -- -- -- --         (cong (_⊕ y) (⊕-zero x))
         
 
 
--- -- -- -- -- -- -- -- -- --  ⊕-penta-diag : ∀ x y z w →
--- -- -- -- -- -- -- -- -- --    x ⊕ y ⊕ z ⊕ w ≡ x ⊕ (y ⊕ (z ⊕ w))
--- -- -- -- -- -- -- -- -- --  ⊕-penta-△ : ∀ x y z w →
--- -- -- -- -- -- -- -- -- --    Square
--- -- -- -- -- -- -- -- -- --      refl
--- -- -- -- -- -- -- -- -- --      (⊕-penta-diag x y z w)
--- -- -- -- -- -- -- -- -- --      (⊕-assoc _ _ _)
--- -- -- -- -- -- -- -- -- --      (sym (⊕-assoc _ _ _))
--- -- -- -- -- -- -- -- -- --  ⊕-penta-□ : ∀ x y z w →
--- -- -- -- -- -- -- -- -- --     Square
--- -- -- -- -- -- -- -- -- --      (sym (⊕-assoc _ _ _))
--- -- -- -- -- -- -- -- -- --      (⊕-penta-diag x y z w)
--- -- -- -- -- -- -- -- -- --      (cong (_⊕ w) (⊕-assoc _ _ _))
--- -- -- -- -- -- -- -- -- --      (cong (x ⊕_) (sym (⊕-assoc _ _ _)))
+-- -- -- -- -- -- -- -- -- -- --  ⊕-penta-diag : ∀ x y z w →
+-- -- -- -- -- -- -- -- -- -- --    x ⊕ y ⊕ z ⊕ w ≡ x ⊕ (y ⊕ (z ⊕ w))
+-- -- -- -- -- -- -- -- -- -- --  ⊕-penta-△ : ∀ x y z w →
+-- -- -- -- -- -- -- -- -- -- --    Square
+-- -- -- -- -- -- -- -- -- -- --      refl
+-- -- -- -- -- -- -- -- -- -- --      (⊕-penta-diag x y z w)
+-- -- -- -- -- -- -- -- -- -- --      (⊕-assoc _ _ _)
+-- -- -- -- -- -- -- -- -- -- --      (sym (⊕-assoc _ _ _))
+-- -- -- -- -- -- -- -- -- -- --  ⊕-penta-□ : ∀ x y z w →
+-- -- -- -- -- -- -- -- -- -- --     Square
+-- -- -- -- -- -- -- -- -- -- --      (sym (⊕-assoc _ _ _))
+-- -- -- -- -- -- -- -- -- -- --      (⊕-penta-diag x y z w)
+-- -- -- -- -- -- -- -- -- -- --      (cong (_⊕ w) (⊕-assoc _ _ _))
+-- -- -- -- -- -- -- -- -- -- --      (cong (x ⊕_) (sym (⊕-assoc _ _ _)))
 
--- -- -- -- -- -- -- -- -- --  -- ⊕-comm : ∀ x y → x ⊕ y ≡ y ⊕ x
--- -- -- -- -- -- -- -- -- --  -- ⊕-hexa-diag : ∀ x y z → x ⊕ y ⊕ z ≡ y ⊕ (z ⊕ x)
--- -- -- -- -- -- -- -- -- --  -- ⊕-hexa-↑ : ∀ x y z →
--- -- -- -- -- -- -- -- -- --  --   Square
--- -- -- -- -- -- -- -- -- --  --      (⊕-comm x (y ⊕ z))
--- -- -- -- -- -- -- -- -- --  --      (⊕-hexa-diag x y z)
--- -- -- -- -- -- -- -- -- --  --      (⊕-assoc _ _ _)
--- -- -- -- -- -- -- -- -- --  --      (sym (⊕-assoc _ _ _))
--- -- -- -- -- -- -- -- -- --  -- ⊕-hexa-↓ : ∀ x y z →
--- -- -- -- -- -- -- -- -- --  --    Square
--- -- -- -- -- -- -- -- -- --  --       (⊕-hexa-diag x y z)
--- -- -- -- -- -- -- -- -- --  --       (sym (⊕-assoc _ _ _))
--- -- -- -- -- -- -- -- -- --  --       (cong (_⊕ z) (⊕-comm _ _))
--- -- -- -- -- -- -- -- -- --  --       (cong (y ⊕_) (⊕-comm _ _))
+-- -- -- -- -- -- -- -- -- -- --  -- ⊕-comm : ∀ x y → x ⊕ y ≡ y ⊕ x
+-- -- -- -- -- -- -- -- -- -- --  -- ⊕-hexa-diag : ∀ x y z → x ⊕ y ⊕ z ≡ y ⊕ (z ⊕ x)
+-- -- -- -- -- -- -- -- -- -- --  -- ⊕-hexa-↑ : ∀ x y z →
+-- -- -- -- -- -- -- -- -- -- --  --   Square
+-- -- -- -- -- -- -- -- -- -- --  --      (⊕-comm x (y ⊕ z))
+-- -- -- -- -- -- -- -- -- -- --  --      (⊕-hexa-diag x y z)
+-- -- -- -- -- -- -- -- -- -- --  --      (⊕-assoc _ _ _)
+-- -- -- -- -- -- -- -- -- -- --  --      (sym (⊕-assoc _ _ _))
+-- -- -- -- -- -- -- -- -- -- --  -- ⊕-hexa-↓ : ∀ x y z →
+-- -- -- -- -- -- -- -- -- -- --  --    Square
+-- -- -- -- -- -- -- -- -- -- --  --       (⊕-hexa-diag x y z)
+-- -- -- -- -- -- -- -- -- -- --  --       (sym (⊕-assoc _ _ _))
+-- -- -- -- -- -- -- -- -- -- --  --       (cong (_⊕ z) (⊕-comm _ _))
+-- -- -- -- -- -- -- -- -- -- --  --       (cong (y ⊕_) (⊕-comm _ _))
 
--- -- -- -- -- -- -- -- -- --  ⊕-comm : one ⊕ one ≡ one ⊕ one
--- -- -- -- -- -- -- -- -- --  ⊕-comm-assoc : one ⊕ (one ⊕ one) ≡ one ⊕ one ⊕ one 
+-- -- -- -- -- -- -- -- -- -- --  ⊕-comm : one ⊕ one ≡ one ⊕ one
+-- -- -- -- -- -- -- -- -- -- --  ⊕-comm-assoc : one ⊕ (one ⊕ one) ≡ one ⊕ one ⊕ one 
 
--- -- -- -- -- -- -- -- -- --  ⊕-comp : Square
--- -- -- -- -- -- -- -- -- --            {!!}
--- -- -- -- -- -- -- -- -- --            {!!}
--- -- -- -- -- -- -- -- -- --            {!!}
--- -- -- -- -- -- -- -- -- --            {!!}
+-- -- -- -- -- -- -- -- -- -- --  ⊕-comp : Square
+-- -- -- -- -- -- -- -- -- -- --            {!!}
+-- -- -- -- -- -- -- -- -- -- --            {!!}
+-- -- -- -- -- -- -- -- -- -- --            {!!}
+-- -- -- -- -- -- -- -- -- -- --            {!!}
 
--- -- -- -- -- -- -- -- -- --  -- ⊕-hexa-diag : one ⊕ one ⊕ one ≡ one ⊕ (one ⊕ one)
--- -- -- -- -- -- -- -- -- --  -- ⊕-hexa-L : 
--- -- -- -- -- -- -- -- -- --  --   Square
--- -- -- -- -- -- -- -- -- --  --      (cong (one ⊕_) ⊕-comm)
--- -- -- -- -- -- -- -- -- --  --      (cong (_⊕ one) ⊕-comm)
--- -- -- -- -- -- -- -- -- --  --      (⊕-assoc _ _ _ )
--- -- -- -- -- -- -- -- -- --  --      ({!!})
+-- -- -- -- -- -- -- -- -- -- --  -- ⊕-hexa-diag : one ⊕ one ⊕ one ≡ one ⊕ (one ⊕ one)
+-- -- -- -- -- -- -- -- -- -- --  -- ⊕-hexa-L : 
+-- -- -- -- -- -- -- -- -- -- --  --   Square
+-- -- -- -- -- -- -- -- -- -- --  --      (cong (one ⊕_) ⊕-comm)
+-- -- -- -- -- -- -- -- -- -- --  --      (cong (_⊕ one) ⊕-comm)
+-- -- -- -- -- -- -- -- -- -- --  --      (⊕-assoc _ _ _ )
+-- -- -- -- -- -- -- -- -- -- --  --      ({!!})
  
--- -- -- -- -- -- -- -- -- --  -- ⊕-hexa-↓ : ∀ x y z →
--- -- -- -- -- -- -- -- -- --  --    Square
--- -- -- -- -- -- -- -- -- --  --       (⊕-hexa-diag x y z)
--- -- -- -- -- -- -- -- -- --  --       (sym (⊕-assoc _ _ _))
--- -- -- -- -- -- -- -- -- --  --       (cong (_⊕ z) (⊕-comm _ _))
--- -- -- -- -- -- -- -- -- --  --       (cong (y ⊕_) (⊕-comm _ _))
+-- -- -- -- -- -- -- -- -- -- --  -- ⊕-hexa-↓ : ∀ x y z →
+-- -- -- -- -- -- -- -- -- -- --  --    Square
+-- -- -- -- -- -- -- -- -- -- --  --       (⊕-hexa-diag x y z)
+-- -- -- -- -- -- -- -- -- -- --  --       (sym (⊕-assoc _ _ _))
+-- -- -- -- -- -- -- -- -- -- --  --       (cong (_⊕ z) (⊕-comm _ _))
+-- -- -- -- -- -- -- -- -- -- --  --       (cong (y ⊕_) (⊕-comm _ _))
 
 
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ : ℤᵍ → Co ≃ Co
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ zero = idEquiv _
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ one = ↑≃
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (x ⊕ x₁) = ℤᵍ→Co≃ x ∙ₑ ℤᵍ→Co≃ x₁
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (─ x) = invEquiv (ℤᵍ→Co≃ x)
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕─ x i) = {!!}
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-assoc x x₁ x₂ i) =
--- -- -- -- -- -- -- -- -- --   compEquiv-assoc (ℤᵍ→Co≃ x) (ℤᵍ→Co≃ x₁) (ℤᵍ→Co≃ x₂) i
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (zero-⊕ x i) = {!!}
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-zero x i) = {!!}
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-triangle x x₁ i i₁) = {!!}
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-penta-diag x x₁ x₂ x₃ i) = {!!}
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-penta-△ x x₁ x₂ x₃ i i₁) = {!!}
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-penta-□ x x₁ x₂ x₃ i i₁) = {!!}
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-comm i) = ♯≃ i
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-comm-assoc i) = {!!}
--- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-comp i i₁) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ : ℤᵍ → Co ≃ Co
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ zero = idEquiv _
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ one = ↑≃
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (x ⊕ x₁) = ℤᵍ→Co≃ x ∙ₑ ℤᵍ→Co≃ x₁
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (─ x) = invEquiv (ℤᵍ→Co≃ x)
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕─ x i) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-assoc x x₁ x₂ i) =
+-- -- -- -- -- -- -- -- -- -- --   compEquiv-assoc (ℤᵍ→Co≃ x) (ℤᵍ→Co≃ x₁) (ℤᵍ→Co≃ x₂) i
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (zero-⊕ x i) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-zero x i) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-triangle x x₁ i i₁) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-penta-diag x x₁ x₂ x₃ i) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-penta-△ x x₁ x₂ x₃ i i₁) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-penta-□ x x₁ x₂ x₃ i i₁) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-comm i) = ♯≃ i
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-comm-assoc i) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ→Co≃ (⊕-comp i i₁) = {!!}
 
--- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' : Co → ℤᵍ
--- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' base = zero
--- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (↑ x) = one ⊕ ℤᵍ←Co≃' x
--- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (↓ x) = (─ one) ⊕ ℤᵍ←Co≃' x
--- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (↓↑ x i) = ({!!} ∙  ((⊕-assoc (─ one) one (ℤᵍ←Co≃' x))) ∙
--- -- -- -- -- -- -- -- -- --                             cong (_⊕ (ℤᵍ←Co≃' x)) {!⊕─ !}
--- -- -- -- -- -- -- -- -- --                              ∙ {!!}) i
--- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (↑↓ x i) = (((⊕-assoc (one) (─ one) (ℤᵍ←Co≃' x))) ∙
--- -- -- -- -- -- -- -- -- --                             cong (_⊕ (ℤᵍ←Co≃' x)) (⊕─ one )
--- -- -- -- -- -- -- -- -- --                              ∙ zero-⊕ (ℤᵍ←Co≃' x)) i
--- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (♯ x i) = {!!}
--- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (⇅⇅⇅-diag x i) = {!!}
--- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (⇅⇅⇅-U x i i₁) = {!!}
--- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (⇅⇅⇅-D x i i₁) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' : Co → ℤᵍ
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' base = zero
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (↑ x) = one ⊕ ℤᵍ←Co≃' x
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (↓ x) = (─ one) ⊕ ℤᵍ←Co≃' x
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (↓↑ x i) = ({!!} ∙  ((⊕-assoc (─ one) one (ℤᵍ←Co≃' x))) ∙
+-- -- -- -- -- -- -- -- -- -- --                             cong (_⊕ (ℤᵍ←Co≃' x)) {!⊕─ !}
+-- -- -- -- -- -- -- -- -- -- --                              ∙ {!!}) i
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (↑↓ x i) = (((⊕-assoc (one) (─ one) (ℤᵍ←Co≃' x))) ∙
+-- -- -- -- -- -- -- -- -- -- --                             cong (_⊕ (ℤᵍ←Co≃' x)) (⊕─ one )
+-- -- -- -- -- -- -- -- -- -- --                              ∙ zero-⊕ (ℤᵍ←Co≃' x)) i
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (♯ x i) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (⇅⇅⇅-diag x i) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (⇅⇅⇅-U x i i₁) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃' (⇅⇅⇅-D x i i₁) = {!!}
 
 
--- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃ : Co ≃ Co → ℤᵍ
--- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃ e = ℤᵍ←Co≃' (fst e base)
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃ : Co ≃ Co → ℤᵍ
+-- -- -- -- -- -- -- -- -- -- -- ℤᵍ←Co≃ e = ℤᵍ←Co≃' (fst e base)
 
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ : ℤᵍ → Path J₃S¹ base base
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ zero = refl
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ one = loop
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (x ⊕ x₁) = toJ₃S¹ x ∙ toJ₃S¹ x₁
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (─ x) = sym (toJ₃S¹ x)
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕─ x i) = rCancel (toJ₃S¹ x) i
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-comm x x₁ i) = {!PathP→comm loop₂!}
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-assoc x x₁ x₂ i) = {!!}
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (zero-⊕ x i) = {!!}
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-zero x i) = {!!}
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-triangle x x₁ i i₁) = {!!}
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-penta-diag x x₁ x₂ x₃ i) = {!!}
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-penta-△ x x₁ x₂ x₃ i i₁) = {!!}
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-penta-□ x x₁ x₂ x₃ i i₁) = {!!}
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-hexa-diag x x₁ x₂ i) = {!!}
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-hexa-↑ x x₁ x₂ i i₁) = {!!}
--- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-hexa-↓ x x₁ x₂ i i₁) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ : ℤᵍ → Path J₃S¹ base base
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ zero = refl
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ one = loop
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (x ⊕ x₁) = toJ₃S¹ x ∙ toJ₃S¹ x₁
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (─ x) = sym (toJ₃S¹ x)
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕─ x i) = rCancel (toJ₃S¹ x) i
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-comm x x₁ i) = {!PathP→comm loop₂!}
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-assoc x x₁ x₂ i) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (zero-⊕ x i) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-zero x i) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-triangle x x₁ i i₁) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-penta-diag x x₁ x₂ x₃ i) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-penta-△ x x₁ x₂ x₃ i i₁) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-penta-□ x x₁ x₂ x₃ i i₁) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-hexa-diag x x₁ x₂ i) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-hexa-↑ x x₁ x₂ i i₁) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- -- toJ₃S¹ (⊕-hexa-↓ x x₁ x₂ i i₁) = {!!}

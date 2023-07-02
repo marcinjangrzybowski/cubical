@@ -386,6 +386,27 @@ funExtSq : {A : Type ℓ} {B : A → I → I → Type ℓ₁}
         f₋₁ 
 funExtSq f₀₋ f₁₋ f₋₀ f₋₁ x i j a = x a i j
 
+implicitFunExtSq : {A : Type ℓ} {B : A → I → I → Type ℓ₁}
+  {f₀₀ : {x : A} → B x i0 i0}
+  {f₀₁ : {x : A} → B x i0 i1}
+  {f₁₀ : {x : A} → B x i1 i0}
+  {f₁₁ : {x : A} → B x i1 i1}
+  (f₀₋ : PathP (λ j → {x : A} → B x i0 j) f₀₀ f₀₁)
+  (f₁₋ : PathP (λ j → {x : A} → B x i1 j) f₁₀ f₁₁)
+  (f₋₀ : PathP (λ i → {x : A} → B x i i0) f₀₀ f₁₀)
+  (f₋₁ : PathP (λ i → {x : A} → B x i i1) f₀₁ f₁₁)  
+  → (∀ a → SquareP (λ i j → B a i j)
+              (implicitFunExt⁻ f₀₋)
+              (implicitFunExt⁻ f₁₋)
+              (implicitFunExt⁻ f₋₀)
+              (implicitFunExt⁻ f₋₁))
+  → SquareP (λ i j → ∀ {a} → B a i j)
+        f₀₋
+        f₁₋
+        f₋₀
+        f₋₁ 
+implicitFunExtSq f₀₋ f₁₋ f₋₀ f₋₁ x i j {a} = x a i j
+
 
 module _ {A : I → I → Type ℓ} {B : Type ℓ₁}
   {f₀₀ : (x : A i0 i0) → B}
