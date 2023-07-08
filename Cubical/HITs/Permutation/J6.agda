@@ -646,7 +646,7 @@ loopCu : (q : Path J₃S¹ base base) → Square {A = Path J₃S¹ base base}
            (λ j → loop ∙' loopSq (q) j)
            (refl {x = loop ∙' (loop ∙' (loop ∙' q))})
            (refl {x = loop ∙' (loop ∙' (loop ∙' q))})
-loopCu q = ?
+loopCu q = {!!}
 -- CoLoop : Co → Path J₃S¹ base base
 -- CoLoop = Co-rec.f w
 --  where
@@ -1017,14 +1017,14 @@ loopCu q = ?
 -- -- -- -- -- -- --  --      _ _)
 -- -- -- -- -- -- --  --    _ _
  
--- -- -- -- -- decode : ∀ x → CodeJ₃S¹ x → base ≡ x
--- -- -- -- -- decode = J₃S¹-elimGrp.f w
--- -- -- -- --  where
--- -- -- -- --  w : J₃S¹-elimGrp (λ z → CodeJ₃S¹ z → base ≡ z)
--- -- -- -- --  J₃S¹-elimGrp.abase w = CoLoop
--- -- -- -- --  J₃S¹-elimGrp.aloop w i p j = CoLoopSq i j p 
--- -- -- -- --  J₃S¹-elimGrp.aloop₂ w = CoLoopCu
--- -- -- -- --  J₃S¹-elimGrp.atrunc w x = isGroupoidΠ λ _ → trunc base x
+decode : ∀ x → CodeJ₃S¹ x → base ≡ x
+decode = J₃S¹-elimGrp.f w
+ where
+ w : J₃S¹-elimGrp (λ z → CodeJ₃S¹ z → base ≡ z)
+ J₃S¹-elimGrp.abase w = CoLoop
+ J₃S¹-elimGrp.aloop w i p j = CoLoopSq i j p 
+ J₃S¹-elimGrp.aloop₂ w = CoLoopCu
+ J₃S¹-elimGrp.atrunc w x = isGroupoidΠ λ _ → trunc base x
 
 -- -- -- -- -- decode↑ : ∀ x → decode base (↑ x) ≡ loop ∙ decode base x
 -- -- -- -- -- decode↑ x = refl

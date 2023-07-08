@@ -147,6 +147,8 @@ isSetℕₐ = isOfHLevelMaybe 0 isSetℕₐ⁺¹
 record ℕₐ⁺¹elim (A : ℕₐ⁺¹ → Type ℓ) : Type ℓ where
  no-eta-equality
  field
+   asquash : ∀ x → (isSet (A x))
+
    aOne : A one
    _a+_ : ∀ {n m} → A n → A m → A (n + m)
    a-assoc : ∀ {n m o} (x : A n) (y : A m) (z : A o)
@@ -157,7 +159,6 @@ record ℕₐ⁺¹elim (A : ℕₐ⁺¹ → Type ℓ) : Type ℓ where
                  → PathP (λ i → A (+-sym n m i))
                    (x a+ y)
                    (y a+ x)                   
-   asquash : ∀ x → (isSet (A x))
 
  f : ∀ x → A x
  f one = aOne
@@ -169,6 +170,149 @@ record ℕₐ⁺¹elim (A : ℕₐ⁺¹ → Type ℓ) : Type ℓ where
       _ _
      (cong f x₃) (cong f y)
      (isSetℕₐ⁺¹' x x₁ x₂ x₃ y) i i₁
+
+isSetℕₐ⁺¹elim : ∀ {ℓ} {A : ℕₐ⁺¹ → Type ℓ} → isSet (ℕₐ⁺¹elim A)
+isSetℕₐ⁺¹elim {A = A} =
+  isSetRetract ff gg fg
+    (isSetΣ (isProp→isSet (isPropΠ λ _ → isPropIsSet))
+      λ sq → isSetΣ (sq _)
+        λ _ → isSetΣ (isSetImplicitΠ λ _ → isSetImplicitΠ λ _  →
+              isSetΠ2 λ _ _ → sq _)
+               λ _ → isProp→isSet
+                 (isProp×
+                  (isPropImplicitΠ2 λ _ _ →
+                   isPropImplicitΠ λ _ →
+                     isPropΠ3 λ _ _ _ →
+                      isOfHLevelPathP' 1 (sq _) _ _)
+                  (isPropImplicitΠ2 λ _ _ →
+                     isPropΠ2 λ _ _ →
+                      isOfHLevelPathP' 1 (sq _) _ _)))
+
+ where
+ open ℕₐ⁺¹elim
+ ff : ℕₐ⁺¹elim _ →
+          (∀ x → (isSet (A x))) ×
+          Σ (A one) (λ x' →
+               Σ (∀ {n m} → A n → A m → A (n + m))
+                λ xx' →  Σ
+                 (∀ {n m o} (x : A n) (y : A m) (z : A o)
+                 → PathP (λ i → A (+-assoc n m o i))
+                   (xx' x (xx' y z))
+                   (xx' (xx' x y) z))
+                 λ _ → ∀ {n m} (x : A n) (y : A m)
+                 → PathP (λ i → A (+-sym n m i))
+                   (xx' x y)
+                   (xx' y x)) 
+ ff x = (asquash x) ,
+        ((aOne x) ,
+        ((_a+_ x) ,
+        a-assoc x ,
+         a-sym x))
+
+ gg : _ → ℕₐ⁺¹elim A
+ asquash (gg (fst₁ , x)) = fst₁
+ aOne (gg (fst₁ , x)) = fst x
+ _a+_ (gg (fst₁ , x)) = fst (snd x)
+ a-assoc (gg (fst₁ , x)) = fst (snd (snd x))
+ a-sym (gg (fst₁ , x)) = snd (snd (snd x))
+
+ fg : (x : ℕₐ⁺¹elim (λ z → A z)) → gg (ff x) ≡ x
+ asquash (fg x i) = asquash x
+ aOne (fg x i) = aOne x
+ _a+_ (fg x i) = x a+_
+ a-assoc (fg x i) = a-assoc x
+ a-sym (fg x i) = a-sym x
+
+ 
+-- record ℕₐ⁺¹elim₂ (A : ℕₐ⁺¹ → ℕₐ⁺¹ → Type ℓ) : Type ℓ where
+--  no-eta-equality
+--  field
+--    aOne' : A one one
+--    a+ : ∀ {n m o} → A o n → A o m → A o (n + m)
+--    +a : ∀ {n m o} → A n o  → A m o  → A (n + m) o
+--    a-assoc+ : ∀ {n m o p} → (x : A p n) (y : A p m) (z : A p o) →
+--       PathP (λ i → A p (+-assoc n m o i)) (a+ x (a+ y z))
+--       (a+ (a+ x y) z)
+--    a-+assoc : ∀ {n m o} → (x : A n one) (y : A m one) (z : A o one) →
+--       PathP (λ i → A (+-assoc n m o i) one)
+--       ((+a x (+a y z)))
+--       (+a (+a x y) z)
+--    a-sym+ : ∀ {n m o} → (x : A o n) (y : A o m) →
+--       PathP (λ i → A o (+-sym n m i)) (a+ x y) (a+ y x)              
+--    asquash₂ : ∀ x y → (isSet (A x y))
+
+--  open ℕₐ⁺¹elim
+
+--  f'one : ℕₐ⁺¹elim (λ z → A one z)
+--  aOne f'one = aOne'
+--  _a+_ f'one = a+
+--  a-assoc f'one = a-assoc+
+--  a-sym f'one = a-sym+
+--  asquash f'one x = asquash₂ one x
+
+--  f'+ : ∀ {n m}
+--      → ℕₐ⁺¹elim (λ z → A n z)
+--      → ℕₐ⁺¹elim (λ z → A m z)
+--      → ℕₐ⁺¹elim (λ z → A (n + m) z)
+--  aOne (f'+ n' m') = +a (aOne n') (aOne m')
+--  _a+_ (f'+ {n = n} {m} n' m') =
+--    a+ {o = n + m} 
+--  a-assoc (f'+ n' m') = a-assoc+ 
+--  a-sym (f'+ n' m') = a-sym+
+--  asquash (f'+ n' m') x = asquash₂ _ _
+
+--  f'assoc : ∀ {n m o} → (x : ℕₐ⁺¹elim (λ z → A n z)) (y : ℕₐ⁺¹elim (λ z → A m z))
+--       (z : ℕₐ⁺¹elim (λ z₁ → A o z₁)) →
+--       PathP (λ i → ℕₐ⁺¹elim (λ z₁ → A (+-assoc n m o i) z₁))
+--       (f'+ x (f'+ y z)) (f'+ (f'+ x y) z)
+--  asquash (f'assoc x y z i) x₁ = asquash₂ (+-assoc _ _ _ i) x₁
+--  aOne (f'assoc {n = n} {m} {o} x y z i) = 
+--    a-+assoc {n} {m} {o}
+--     (aOne x) (aOne y) (aOne z) i 
+--  _a+_ (f'assoc x y z i) x' y' =
+--     a+ x' y'
+--  a-assoc (f'assoc {n'} {m'} {o'} x y z i) =
+--    {!!}
+--    -- isSet→SquareP (λ i j → asquash₂ (+-assoc n' m' o' i) (+-assoc n m o j))
+--    --    (λ i₁ → a-assoc+ {!!} {!!} {!!} i₁)
+--    --    {!!}
+--    --    {!!}
+--    --    {!!} i j
+
+-- -- Goal: A (+-assoc n' m' o' i) (+-assoc n m o j)
+-- -- ———— Boundary (wanted) —————————————————————————————————————
+-- -- j = i0 ⊢ a+ x' (a+ y' z')
+-- -- j = i1 ⊢ a+ (a+ x' y') z'
+-- -- i = i0 ⊢ a-assoc+ x' y' z' j
+-- -- i = i1 ⊢ a-assoc+ x' y' z' j
+
+--    -- isSet→SquareP (λ i j → asquash₂ (+-assoc _ _ _ i) (+-assoc _ _ _ j))
+--    --   (λ j → {!a-assoc+ x' y' z' j!} )
+--    --   (a-assoc+ _ _ _)
+--    --   (λ i → {!!})
+--    --   {!!} i j
+
+-- -- j = i0 ⊢ a+ x' (a+ y' z')
+-- -- j = i1 ⊢ a+ (a+ x' y') z'
+-- -- i = i0 ⊢ a-assoc+ x' y' z' j
+-- -- i = i1 ⊢ a-assoc+ x' y' z' j
+
+--  a-sym (f'assoc x y z i) x' y' j =
+--    {!!}
+
+--  f' : ℕₐ⁺¹elim (λ x → ℕₐ⁺¹elim (λ z → A x z))
+--  aOne f' = f'one
+--  _a+_ f' = f'+
+--  a-assoc f' = f'assoc
+--   -- isProp→PathP (λ _ → {!isSetℕₐ⁺¹elim!})
+--   --  _ _
+--  a-sym f' = {!!}
+--  asquash f' = {!!}
+ 
+--  f₂ : ∀ x y → A x y
+--  f₂ x = ℕₐ⁺¹elim.f (ℕₐ⁺¹elim.f f' x)
+
+
 
 record ℕₐ⁺¹elimProp (A : ℕₐ⁺¹ → Type ℓ) : Type ℓ where
  no-eta-equality
@@ -627,12 +771,14 @@ suc' = just ∘ Mb.rec one suc
 --  w (just x) (just x₁) p = ( sym (+-assoc _ _ _) ∙ sym (+-assoc _ _ _) ∙ cong suc (+-assoc _ _ _)) ∙ cong suc p
 
 
-m+AB : ∀ m {n} → AB n → AB (m + n)
-AB.lPad (m+AB m x) = (m ₐ⊹ AB.lPad x)
-AB.l (m+AB m x) = AB.l x
-AB.r (m+AB m x) = AB.r x
-AB.rPad (m+AB m x) = AB.rPad x
-AB.<n (m+AB m {n} (𝕒𝕓 lPad l r rPad <n)) = w lPad rPad <n
+
+
+m+AB* : ∀ m {n} m+n → (m + n ≡ m+n) → AB n → AB (m+n)
+AB.lPad (m+AB* m m+n p x) = m ₐ⊹ AB.lPad x
+AB.l (m+AB* m m+n p x) = AB.l x
+AB.r (m+AB* m m+n p x) = AB.r x
+AB.rPad (m+AB* m m+n p x) = AB.rPad x
+AB.<n (m+AB* m {n} m+n p (𝕒𝕓 lPad l r rPad <n)) = w lPad rPad <n ∙ p
  where
  w : ∀ lPad rPad → lPad +ₐ (l + r) ₐ+ rPad ≡ n
      →  m ₐ+  lPad + (l + r) ₐ+ rPad ≡ m + n
@@ -641,19 +787,25 @@ AB.<n (m+AB m {n} (𝕒𝕓 lPad l r rPad <n)) = w lPad rPad <n
  w (just x) nothing p = sym (+-assoc _ _ _) ∙ cong (m +_) p
  w (just x) (just x₁) p = ( sym (+-assoc _ _ _) ∙ sym (+-assoc _ _ _) ∙ cong (m +_) (+-assoc _ _ _)) ∙ cong (m +_) p
 
+m+AB : ∀ m {n} → AB n → AB (m + n)
+m+AB m = m+AB* m _ refl
 
-AB+m : ∀ m {n} → AB n → AB (n + m)
-AB.lPad (AB+m m x) = AB.lPad x
-AB.l (AB+m m x) = AB.l x
-AB.r (AB+m m x) = AB.r x
-AB.rPad (AB+m m x) = AB.rPad x ⊹ₐ m
-AB.<n (AB+m m {n} (𝕒𝕓 lPad l r rPad <n)) = w lPad rPad <n
+AB+m* : ∀ m {n} n+m → (n + m ≡ n+m) → AB n → AB (n+m)
+AB.lPad (AB+m* m _ _ x) = AB.lPad x
+AB.l (AB+m* m  _ _ x) = AB.l x
+AB.r (AB+m* m  _ _ x) = AB.r x
+AB.rPad (AB+m* m  _ _ x) = AB.rPad x ⊹ₐ m
+AB.<n (AB+m* m {n} _ p (𝕒𝕓 lPad l r rPad <n)) = w lPad rPad <n ∙ p
  where
  w : ∀ lPad rPad → lPad +ₐ (l + r) ₐ+ rPad ≡ n
      →  lPad +ₐ (l + r) + (rPad +ₐ m) ≡ n + m
  w _ nothing p = cong (_+ m) p
  w _ (just x) p = +-assoc _ _ _ ∙ cong (_+ m) p
-    
+
+
+AB+m : ∀ m {n} → AB n → AB (n + m)
+AB+m m = AB+m* m _ refl
+
 
 MbAB : ℕₐ⁺¹ → Type
 MbAB = Maybe ∘' AB
@@ -790,6 +942,61 @@ data ℙrmₐ {trunc} n where
 --     (λ i₂ x₆ → f (y₁ i₂ x₆))
 --       i i₁ x₅
 
+
+record ℙrmElim (n : ℕₐ⁺¹) (A : ℙrmₐ {true} n → Type ℓ) : Type ℓ where
+ no-eta-equality
+ constructor 𝕡rmElim
+ field
+  asquash : ∀ p → isGroupoid (A p)
+
+  abase : A 𝕡base
+  aloop : (ab : AB n)
+    → PathP (λ i → A (𝕡loop ab i)) abase abase
+  ainvol : (p₀₋ p₁₋ : AB n) → ∀ g →
+             SquareP (λ i j → A (𝕡invol p₀₋ p₁₋ g i j) )
+               (aloop p₀₋) (symP (aloop p₁₋)) refl refl
+  ahex :  (p₀₋ p₁₋ p₋₁ : AB n) → ∀ g →
+      SquareP (λ i j → A (𝕡hex p₀₋ p₁₋ p₋₁ g i j))
+        (aloop p₀₋)
+        (aloop p₁₋)
+        refl
+        (aloop p₋₁)
+  acomm : (pᵢ₋ p₋ᵢ : AB n) → ∀ g →
+      SquareP (λ i j → A (𝕡comm pᵢ₋ p₋ᵢ g i j))
+       (aloop pᵢ₋)
+       (aloop pᵢ₋)
+       (aloop p₋ᵢ)
+       (aloop p₋ᵢ)
+
+  aover : (p₀₋ p₁₋ p₋ᵢ : AB n) → ∀ g
+     → SquareP (λ i j → A (𝕡over p₀₋ p₁₋ p₋ᵢ g i j))
+       (aloop p₀₋)
+       (aloop p₁₋)
+       (aloop p₋ᵢ)
+       (aloop p₋ᵢ)
+
+
+
+
+ f : (p : ℙrmₐ {true} n) → A p 
+ f 𝕡base = abase
+ f (𝕡loop x i) = aloop x i
+ f (𝕡invol p₀₋ p₁₋ x i i₁) = ainvol p₀₋ p₁₋ x i i₁
+
+ f (𝕡hex p₀₋ p₁₋ p₋₁ x i i₁) = ahex p₀₋ p₁₋ p₋₁ x i i₁
+
+ f (𝕡comm pᵢ₋ p₋ᵢ x i i₁) = acomm pᵢ₋ p₋ᵢ x i i₁
+
+ f (𝕡over p₀₋ p₁₋ p₋ᵢ x i i₁) = aover p₀₋ p₁₋ p₋ᵢ x i i₁
+ f (𝕡squash x x₁ x₂ x₃ y x₄ y₁ i i₁ x₅) =   
+     isOfHLevel→isOfHLevelDep 3
+      (asquash) _ _ _ _
+     (λ i₂ x₆ → f (x₄ i₂ x₆))
+     (λ i₂ x₆ → f (y₁ i₂ x₆))
+     (𝕡squash x x₁ x₂ x₃ y x₄ y₁)
+       i i₁ x₅
+
+
 record ℙrmRecElimN (A : ℕₐ⁺¹ → Type ℓ) : Type ℓ where
  no-eta-equality
  field
@@ -899,6 +1106,7 @@ isSetℙrmElimSet = isSetRetract
  where
  w : (x : ℙrmElimSet _ _) →
        uncurry (uncurry 𝕡rmElimSet) (invEq Σ-assoc-≃ _) ≡ x
+ 
  ℙrmElimSet.asquash (w x i) = ℙrmElimSet.asquash x
  ℙrmElimSet.abase (w x i) = ℙrmElimSet.abase x
  ℙrmElimSet.aloop (w x i) = ℙrmElimSet.aloop x
@@ -1084,6 +1292,27 @@ record ℙrmElimProp (n : ℕₐ⁺¹) (A : ℙrmₐ {true} n → Type ℓ) : Ty
 
  f : (p : ℙrmₐ {true} n) → A p
  f =  ℙrmElimSet.f fR
+
+
+
+
++𝕡* : ∀ n {m} → ℙrmₐ {true} m → ℙrmₐ {true} (n + m) 
++𝕡* n = ℙrmRecElimN.f w
+ where
+ open ℙrmRecElimN
+ w : ℙrmRecElimN (λ m → ℙrmₐ (n + m))
+ abase w _ = 𝕡base
+ aloop w m x = 𝕡loop (m+AB n x)
+ ainvol w _ _ _ g =  𝕡invol _ _ (map-fst (cong (n ₐ⊹_)) g)   
+ ahex w m _ _ _ g = 𝕡hex _ _ _ (map-fst (cong (n ₐ⊹_)) g)    
+ acomm w m _ _ g = 𝕡comm _ _
+    (map-snd (λ p → cong (n ₐ⊹_) p ∙ cong just +-+ₐ≡ₐ+-+) g)    
+ aover w m _ _ p₋ᵢ g = 𝕡over _ _ _
+   (map-snd (λ {a} → map-fst (λ q → cong (n ₐ⊹_) q ∙
+       cong just (ₐ+ₐ-assoc'  n (p₋ᵢ .AB.lPad) (fst a))))
+     g)
+
+ asquash w _ = 𝕡squash _
 
 
 +𝕡 : ∀ n {m} → ℙrmₐ {true} m → ℙrmₐ {true} (n + m) 
@@ -1498,6 +1727,70 @@ record ElimFCSG {ℓ} (A : FCSG⊤ → Type ℓ) : Type ℓ where
       _ _ _ _
      (λ i j → f (x₃ i j)) (λ i j → f (y₁ i j))
      (trunc x x₁ x₂ y x₃ y₁) i i₁ x₄
+
+record RecFCSG {ℓ} (A : Type ℓ) : Type ℓ where
+ no-eta-equality
+ field
+  asquash : isGroupoid A
+  ●a : A
+  ·a : A → A → A
+  ·a-assoc : ∀ a b c → (·a a (·a b c)) ≡ (·a (·a a b) c)
+  ·a-comm : ∀ a b → (·a a b) ≡ (·a b a)
+  ·a-comminvol : ∀ a b → (·a-comm a b) ≡ sym (·a-comm b a)
+  ·a-hexDiag : ∀ a b c →  
+                     (·a (·a a b) c)
+                  ≡ (·a b (·a c a))
+  ·a-pentagon-diag : ∀ xs ys zs ws
+      → (·a (·a (·a xs ys) zs) ws) ≡ (·a xs (·a ys (·a zs ws)))
+  ·a-hex-up : ∀ l c r →
+        Square
+        (·a-comm l (·a c r))
+        (·a-hexDiag l c r)
+        (·a-assoc l c r)
+        (sym (·a-assoc c r l))
+  ·a-hex-down : ∀ l c r →
+    Square 
+        (·a-hexDiag l c r)
+        (sym (·a-assoc c l r))
+        (cong (λ x → ·a x r) (·a-comm l c))
+        (cong (·a c) (·a-comm r l))
+  ·a-pentagon-△ : ∀ xs ys zs ws →
+         Square refl (·a-pentagon-diag xs ys zs ws)
+         (·a-assoc _ _ _) (sym (·a-assoc _ _ _))
+  ·a-pentagon-□ : ∀ xs ys zs ws →
+             Square (·a-pentagon-diag xs ys zs ws)
+          (sym (·a-assoc xs (·a ys zs) ws))
+          (sym (cong (λ x → ·a x ws) (·a-assoc _ _ _)))           
+          ((cong (·a xs) (·a-assoc _ _ _)))
+  
+
+
+ f : FCSG⊤ → A
+ f ● = ●a
+ f (x · x₁) = ·a (f x) (f x₁)
+ f (·-assoc x x₁ x₂ i) =
+   ·a-assoc (f x) (f x₁) (f x₂) i
+ f (·-comm x x₁ i) =
+   ·a-comm (f x) (f x₁) i
+ f (·-comminvol x x₁ i i₁) =
+   ·a-comminvol (f x) (f x₁) i i₁
+ f (·-hex-diag x x₁ x₂ i) =
+      ·a-hexDiag (f x) (f x₁) (f x₂) i
+ f (·-hex-up x x₁ x₂ i i₁) =
+    ·a-hex-up (f x) (f x₁) (f x₂) i i₁
+ f (·-hex-down x x₁ x₂ i i₁) =
+       ·a-hex-down (f x) (f x₁) (f x₂) i i₁
+ f (·-pentagon-diag x x₁ x₂ x₃ i) =
+     ·a-pentagon-diag (f x) (f x₁) (f x₂) (f x₃) i 
+ f (·-pentagon-△ x x₁ x₂ x₃ i i₁) =
+     ·a-pentagon-△ (f x) (f x₁) (f x₂) (f x₃) i i₁
+ f (·-pentagon-□ x x₁ x₂ x₃ i i₁) = 
+     ·a-pentagon-□ (f x) (f x₁) (f x₂) (f x₃) i i₁
+ f (trunc x x₁ x₂ y x₃ y₁ i i₁ x₄) =
+     (asquash)
+      _ _ _ _
+     (λ i j → f (x₃ i j)) (λ i j → f (y₁ i j))
+      i i₁ x₄
 
  
 record ElimSetFCSG {ℓ} (A : FCSG⊤ → Type ℓ) : Type ℓ where

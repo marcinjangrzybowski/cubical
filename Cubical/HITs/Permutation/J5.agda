@@ -915,7 +915,7 @@ CoLoopCu =
       ;(k = i0) →
           hcomp
             (λ l' → λ {
-              (i = i0) → ss l (j ∨ ~ l') i0 {!x!}
+              (i = i0) → ss l (j ∨ ~ l') i0 {!!}
              ;(i = i1) → sss l (j ∧  l') i0 {!!}
              ;(j = i0) → ss l (i ∨ ~ l') i0 {!!}
              ;(j = i1) → sss l (i ∧  l') i0 {!!}
