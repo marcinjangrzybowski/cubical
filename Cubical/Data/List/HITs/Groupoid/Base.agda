@@ -904,13 +904,26 @@ module _ {A : Type ℓ} where
   --     w nothing = []
   --     w (just x) = [ x ]
 
-  -- bind : ∀ {ℓ'} → {B : Type ℓ'} → List A → (A → List B) → List B
-  -- bind x f =
-  --   Elim.f (λ _ → trunc)
-  --    []
-  --    f (_++_)
-  --    ++-unit-r ++-unit-l ++-assoc ++-triangle ++-pentagon-diag ++-pentagon-△ ++-pentagon-□
-  --    x
+  bind : ∀ {ℓ'} → {B : Type ℓ'} → List A → (A → List B) → List B
+  bind x f = f' x
+   where
+   f' : List _ → List _
+   f' [] = []
+   f' [ x ] = f x
+   f' (x ++ x₁) = f' x ++ f' x₁ 
+   f' (++-unit-r x i) = ++-unit-r (f' x) i
+   f' (++-unit-l x i) = ++-unit-l (f' x) i
+   f' (++-assoc x x₁ x₂ i) = ++-assoc (f' x) (f' x₁) (f' x₂) i
+   f' (++-triangle x x₁ i i₁) = ++-triangle (f' x) (f' x₁) i i₁
+   f' (++-pentagon-diag x x₁ x₂ x₃ i) = ++-pentagon-diag (f' x) (f' x₁) (f' x₂) (f' x₃) i
+   f' (++-pentagon-△ x x₁ x₂ x₃ i i₁) = ++-pentagon-△ (f' x) (f' x₁) (f' x₂) (f' x₃) i i₁
+   f' (++-pentagon-□ x x₁ x₂ x₃ i i₁) = ++-pentagon-□ (f' x) (f' x₁) (f' x₂) (f' x₃) i i₁
+   f' (trunc x x₁ x₂ y x₃ y₁ i i₁ x₄) =
+     trunc (f' x) (f' x₁)
+            (λ i → f' (x₂ i) ) (λ i → f' (y i))
+            (λ i j → f' (x₃ i j))
+            (λ i j → f' (y₁ i j))
+            i i₁ x₄
 
   -- map-List : ∀ {ℓ'} → {B : Type ℓ'} → (A → B) → List A → List B
   -- map-List f =

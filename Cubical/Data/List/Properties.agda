@@ -205,6 +205,13 @@ lookupMb x [] = nothing
 lookupMb zero (a ∷ _) = just a
 lookupMb (suc x) (_ ∷ l) = lookupMb x l
 
+
+IsoListUnitℕ : Iso (List Unit) ℕ
+Iso.fun IsoListUnitℕ = length
+Iso.inv IsoListUnitℕ x = iter x (tt ∷_) [] 
+Iso.rightInv IsoListUnitℕ = ℕ.elim refl λ _ → cong suc
+Iso.leftInv IsoListUnitℕ = ind refl (cong (tt ∷_))
+
 -- foldr : ∀ {ℓ'} {B : Type ℓ'} → (A → B → B) → B → List A → B
 
 -- foldr-map : ∀ {ℓA ℓB ℓC} {A : Type ℓA} {B : Type ℓB} {C : Type ℓC}

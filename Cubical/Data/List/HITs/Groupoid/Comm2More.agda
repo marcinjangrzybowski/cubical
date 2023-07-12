@@ -27,6 +27,7 @@ import Cubical.Data.List.Properties as BP
 import Cubical.Functions.Logic as L
 
 open import Cubical.Data.List.HITs.Groupoid.Base
+open import Cubical.Data.List.HITs.Groupoid.BaseMore
 
 open import Cubical.Data.List.HITs.Groupoid.Comm2
 
@@ -162,15 +163,29 @@ module _ {A : Type ℓ} where
     whiskSq.sq' _
       
       (𝕡hexD ls xs ys zs (rs ++ l))
+      
       (flipSquare (doubleCompPath-filler
         (((λ i → 𝕡base ((ls ++ xs ++ ++-assoc ys zs rs (~ i)) ++ l)) ∙∙
            (λ i → 𝕡base (++-pentagon-diag ls xs (ys ++ zs) rs (~ i) ++ l)) ∙∙
            (λ i → 𝕡base (++-assoc ((ls ++ xs) ++ ys ++ zs) rs l i)) ∙∙
            (λ i → 𝕡base (++-pentagon-diag ls xs (ys ++ zs) (rs ++ l) i)) ∙∙
            λ i → 𝕡base (ls ++ xs ++ ++-assoc ys zs (rs ++ l) i)))
-           _ _))
+           _ λ i → 𝕡base (++-assoc (((ls ++ ys) ++ zs) ++ xs) rs l (~ i))))
+      -- (λ i j → hcomp
+      --     (λ k → λ {
+      --       (j = i0) → 𝕡hexDiag ls xs ys zs (rs ++ l) i
+      --      ;(i = i0) → {!!}
+      --      ;(i = i1) → 𝕡base (++-assoc (((ls ++ ys) ++ zs) ++ xs) rs l (~ j ∨ ~ k))
+      --       }) (𝕡hexDiag ls xs ys zs (rs ++ l) i))
+      --       (λ j i → {!!})
+      -- ( {!!}
+      --    -- ((refl ∙∙₂ refl ∙∙₂ sym (cong-∙∙ 𝕡base _ _ _) ∙∙₂ refl ∙∙₂
+      --    --  (refl ∙∙₂ sym (cong-∙∙ 𝕡base _ _ _) ∙∙₂ refl)) ∙
+      --    --    (refl ∙∙₂ sym (cong-∙∙ 𝕡base _ _ _) ∙∙₂ refl))
+      --      ◁ {!!} ▷ (cong-∙∙ 𝕡base _ _ _))
+      
       {!!}
-      ( doubleCompPath-filler _ _ _)
+      {!!} --( doubleCompPath-filler _ _ _)
       (flipSquare (doubleCompPath-filler _ _ _)) -- (flipSquare (doubleCompPath-filler _ _ _))
       
  
@@ -200,8 +215,8 @@ module _ {A : Type ℓ} where
         (r21 rℙ⊕ (xs ++ ys ++ zs ++ ws))
         (r21 rℙ⊕ (((xs ++ zs) ++ ys) ++ ws))
   Recℙ.bloop (w xs ys zs ws i) xs₁ ys₁ zs₁ ws₁ j =
-    {!hcomp ?
-       ?!}
+    hcomp {!!}
+       {!!}
   Recℙ.bhexDiag (w xs ys zs ws i) = {!!}
  trunncHlp2 rℙ⊕ x = Recℙ.isOfHLevelH2 _ 2 𝕡trunc
  Recℙ.binvol (Elimℙ.bbase (r31 rℙ⊕) l) xs ys zs ws =
