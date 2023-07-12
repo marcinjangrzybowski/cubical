@@ -967,6 +967,36 @@ module _ {A : Type ℓ} where
 
 
    open H2 public
+
+   H2* : Type (ℓ-max ℓ ℓb)
+   H2* = ∀ xs ys zs ws → bbase ((xs ++ (ys ++ zs)) ++ ws) ≡ bbase ((xs ++ (zs ++ ys)) ++ ws)
+
+   fromH2* : H2* → H2
+   bloopL (fromH2* x) = x
+   bloopR (fromH2* x) xs ys zs ws =
+     cong bbase (sym (++-assoc _ _ _))
+      ∙∙ x xs ys zs ws ∙∙
+     cong bbase  (++-assoc _ _ _)
+   bhexDiagAB (fromH2* x) ls xs ys zs rs = 
+      cong bbase (
+              cong (λ x → ls ++ x ++ rs) (++-assoc _ _ _)  ∙
+             sym (++-assoc _ _ _))
+       ∙∙ x ls xs (ys ++ zs) rs ∙∙
+      cong bbase (cong (λ x → (ls ++ x) ++ rs) (++-assoc _ _ _))
+   bhexDiagBC (fromH2* x) ls xs ys zs rs =
+     cong bbase (
+        cong (ls ++_) (sym (++-assoc _ _ _))
+        ∙∙ cong (ls ++_) (cong (_++ rs) (++-assoc _ _ _) ) ∙∙ (sym (++-assoc _ _ _))
+          )
+       ∙∙ x ls xs (ys ++ zs) rs ∙∙
+        cong bbase (cong (_++ rs) (cong (ls ++_) (++-assoc _ _ _) ∙ sym (++-assoc _ _ _)))
+   bhexDiagCD (fromH2* x) ls xs ys zs rs =
+        x ls xs ys (zs ++ rs) ∙
+        cong bbase (sym (++-assoc _ _ _) ∙∙
+          cong (_++ rs) (cong (_++ zs) (sym (++-assoc _ _ _))) ∙∙ cong (_++ rs) (++-assoc _ _ _))
+
+
+
    private
     isOfHLevelH2' : ∀ n → (isOfHLevel (suc n) B) →
                          isOfHLevel n H2
