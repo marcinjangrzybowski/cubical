@@ -96,8 +96,8 @@ module _ {ℓ : Level}{A B : Type ℓ} where
                   ; (j = i1) → (Iso.leftInv e) (s i) k
                   }) (Iso.inv e (sq i j))
 
-
-module _ {ℓ : Level}{A : Type ℓ} (isGroupoidA : isGroupoid A) where
+-- (isGroupoidA : isGroupoid A)
+module _ {ℓ : Level}{A : Type ℓ}  where
 
  tabuRecFun : ∀ k → (Σ (B.List A) (λ xs → k ≡ B.length xs)) → (A ×^ k)
  tabuRecFun zero x = tt*
@@ -129,8 +129,8 @@ module _ {ℓ : Level}{A : Type ℓ} (isGroupoidA : isGroupoid A) where
  Iso.leftInv (tabuRec k) = tabuRecRet k
 
 
- tabuRec' : ∀ k → Iso (Σ (List A) (λ xs → k ≡ length xs)) (A ×^ k)
- tabuRec' k = compIso (List-IsoL isGroupoidA k) (tabuRec k)
+ -- tabuRec' : ∀ k → Iso (Σ (List A) (λ xs → k ≡ length xs)) (A ×^ k)
+ -- tabuRec' k = compIso (List-IsoL isGroupoidA k) (tabuRec k)
 
  -- viaTabu : ∀ k → (v : A ×^ k) → (xs ys : List A)
  --                 → (p : k ≡ length xs) → (q : k ≡ length ys)
@@ -169,21 +169,21 @@ module _ {ℓ : Level}{A : Type ℓ} (isGroupoidA : isGroupoid A) where
   g (suc (suc zero)) = zs
   g (suc (suc (suc x))) = ws
 
- fL : B.List A → ℕ → List A
+ fL : B.List (List A) → ℕ → List A
  fL B.[] x₁ = []
- fL (x B.∷ x₂) zero = [ x ]
+ fL (x B.∷ x₂) zero = x
  fL (x B.∷ x₂) (suc x₁) = fL x₂ x₁
 
  Listₐ-sqHlp : (g : ℕ → List A) →
                {a₀₀ a₀₁ : List ℕ} {a₀₋ : a₀₀ ≡ a₀₁}
                  {a₁₀ a₁₁ : List ℕ} {a₁₋ : a₁₀ ≡ a₁₁}
               {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁}
-        → Square
+        → Square {A = B.List ℕ}
              (cong (Iso.fun (isoList (isSet→isGroupoid isSetℕ))) a₀₋)
              (cong (Iso.fun (isoList (isSet→isGroupoid isSetℕ))) a₁₋)
              (cong (Iso.fun (isoList (isSet→isGroupoid isSetℕ))) a₋₀)
              (cong (Iso.fun (isoList (isSet→isGroupoid isSetℕ))) a₋₁)
-        → Square
+        → Square {A = List A}
              (cong (flip bind g) a₀₋)
              (cong (flip bind g) a₁₋)
              (cong (flip bind g) a₋₀)

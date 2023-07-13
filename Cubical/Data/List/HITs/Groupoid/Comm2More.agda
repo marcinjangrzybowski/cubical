@@ -90,6 +90,17 @@ module _ {ℓ'} {A : Type ℓ} {B : ℙ A → Type ℓ'} (q : Elimℙ.H1 B) wher
 
 module _ {A : Type ℓ} where
 
+ hexDiagL : ∀ (ls xs ys zs rs l : List A) →
+         ((ls ++ xs ++ ys ++ zs ++ rs) ++ l) ≡
+         (ls ++ xs ++ ys ++ zs ++ rs ++ l)
+ hexDiagL ls xs ys zs rs l =
+      (λ i → ++-assoc ls (++-pentagon-diag xs ys zs rs (~ i)) l i)
+       ∙∙ (cong (ls ++_) (++-pentagon-diag _ _ _ _ ))
+       ∙∙ cong (ls ++_) (++-assoc _ _ _)
+
+
+module _ {A : Type ℓ} where
+
 
 
 
@@ -124,71 +135,138 @@ module _ {A : Type ℓ} where
  --       λ i → (++-pentagon-diag xs ys zs (ws ++ l) (~ i))
  -- hlp1 xs ys zs ws l = {!!}
 
- sqHlp1 : {!!}
- sqHlp1 = {!!}
+ -- sqHlp1 : {!!}
+ -- sqHlp1 = {!!}
+
+ -- biAssoc : (ls xs ys zs rs l : List A) →
+ --     {!!} ≡ {!!}
+ -- biAssoc ls xs ys zs rs l i =
+ --   ++-assoc (++-assoc zs rs l i) xs ys  i
+ 
+ 
+
+ hexUL : ∀ (ls xs ys zs rs l : List A) →  Square {A = List A}
+      (λ i →
+         ((λ i₁ → ++-pentagon-diag ls xs (ys ++ zs) rs (~ i₁) ++ l) ∙∙
+          ++-assoc ((ls ++ xs) ++ ys ++ zs) rs l ∙∙
+          ++-pentagon-diag ls xs (ys ++ zs) (rs ++ l))
+         i)
+      (λ i → hexDiagL ls xs ys zs rs l i)
+      (λ i → (ls ++ xs ++ ++-assoc ys zs rs i) ++ l)
+      (λ i → ls ++ xs ++ ++-assoc ys zs (rs ++ l) i)
+ hexUL ls xs ys zs rs l =
+   let p : _
+       p = (Listₐ-sqHlp
+                (fL (ls B.∷ xs B.∷ ys B.∷ zs B.∷ rs B.∷ l B.∷ B.[]))
+                {a₀₋ = (λ i →
+                ((λ i₁ → ++-pentagon-diag [ 0 ] [ 1 ] ([ 2 ] ++ [ 3 ]) [ 4 ] (~ i₁) ++ [ 5 ]) ∙∙
+                 ++-assoc (([ 0 ] ++ [ 1 ]) ++ [ 2 ] ++ [ 3 ]) [ 4 ] [ 5 ] ∙∙
+                 ++-pentagon-diag [ 0 ] [ 1 ] ([ 2 ] ++ [ 3 ]) ([ 4 ] ++ [ 5 ]))
+                i)}
+                {a₁₋ = hexDiagL [ 0 ] [ 1 ] [ 2 ] [ 3 ] [ 4 ] [ 5 ]}
+                {a₋₀ = λ i → ([ 0 ] ++ [ 1 ] ++ ++-assoc [ 2 ] [ 3 ] [ 4 ] i) ++ [ 5 ]}
+                {a₋₁ = λ i → [ 0 ] ++ [ 1 ] ++ ++-assoc [ 2 ] [ 3 ] ([ 4 ] ++ [ 5 ]) i}
+                refl) 
+   in  sym (cong-∙∙ _ _ _ _) ◁ p ▷ cong-∙∙ _ _ _ _
+
+ hexDlem1 : ∀ (ls xs ys zs rs l : List A) →  Square {A = List A}
+      (λ k → (ls ++ xs ++ ys ++ ++-assoc zs rs l (~ k)))
+      (λ k → (hexDiagL ls xs ys zs rs l (~ k)))
+      (λ k' → (ls ++ xs ++ ys ++ zs ++ rs ++ l))
+      (λ k' → (((λ i₁ →
+              ++-pentagon-diag ls xs ys (zs ++ rs) (~ i₁) ++ l)
+           ∙∙ ++-assoc ((ls ++ xs) ++ ys) (zs ++ rs) l ∙∙
+           ++-pentagon-diag ls xs ys ((zs ++ rs) ++ l))
+          (~ k')))
+ hexDlem1 ls xs ys zs rs l =
+      whiskSq.sq' _
+       ((Listₐ-sqHlp
+                (fL (ls B.∷ xs B.∷ ys B.∷ zs B.∷ rs B.∷ l B.∷ B.[]))
+                {a₀₋ = (λ k → ([ 0 ] ++ [ 1 ] ++ [ 2 ]  ++ ++-assoc [ 3 ] [ 4 ] [ 5 ] (~ k)))}
+                {a₁₋ =  (λ k → (hexDiagL [ 0 ] [ 1 ] [ 2 ] [ 3 ] [ 4 ] [ 5 ] (~ k)))}
+                {a₋₀ = refl}
+                λ i i₁ → 0 B.∷ 1 B.∷ 2 B.∷ 3 B.∷ 4 B.∷ 5 B.∷ B.[]) )
+       (λ j i → ls ++ xs ++ ys ++ ++-assoc zs rs l (~ j))
+       (flipSquare (cong-∙∙ _ _ _ _))
+       (λ i i₁ → ls ++ xs ++ ys ++ zs ++ rs ++ l)
+       (flipSquare (cong-∙∙ _
+          (λ i →
+              ++-pentagon-diag [ 0 ] [ 1 ] [ 2 ] (([ 3 ] ++ [ 4 ]) ++ [ 5 ])
+              (~ i))
+              (λ i →
+                  ++-assoc (([ 0 ] ++ [ 1 ]) ++ [ 2 ]) ([ 3 ] ++ [ 4 ]) [ 5 ] (~ i))
+          (λ i → ++-pentagon-diag [ 0 ] [ 1 ] [ 2 ] ([ 3 ] ++ [ 4 ]) (~ (~ i)) ++ [ 5 ])))
+
+
+ hexDlem2 : ∀ (ls xs ys zs rs l : List A) →  Square {A = List A}
+
+      (λ k → hcomp
+          (doubleComp-faces (λ _ → ((ls ++ ys) ++ xs) ++ zs ++ rs ++ l)
+           (λ i₁ → ++-assoc ((ls ++ ys) ++ xs) (zs ++ rs) l (~ i₁)) k)
+          (((ls ++ ys) ++ xs) ++ ++-assoc zs rs l (~ k)))
+      (λ k → ((λ i₁ →
+              ++-pentagon-diag (ls ++ ys) xs zs rs (~ i₁) ++ l)
+           ∙∙ ++-assoc (((ls ++ ys) ++ xs) ++ zs) rs l ∙∙
+           ++-pentagon-diag (ls ++ ys) xs zs (rs ++ l))
+          (~ k))
+           (++-assoc (ls ++ ys) xs (zs ++ rs ++ l))
+      (λ j → ++-assoc (ls ++ ys) xs (zs ++ rs) j ++ l)
+ hexDlem2 ls xs ys zs rs l =
+     (sym (cong-∙∙ _ _ _ _)) ◁
+      (Listₐ-sqHlp
+                (fL (ls B.∷ ys B.∷ xs B.∷ zs B.∷ rs B.∷ l B.∷ B.[]))
+                {a₀₋ = (λ i → (([ 0 ] ++ [ 1 ]) ++ [ 2 ]) ++ ++-assoc [ 3 ] [ 4 ] [ 5 ] (~ i)) ∙
+                       sym (++-assoc (([ 0 ] ++ [ 1 ]) ++ [ 2 ]) ([ 3 ] ++ [ 4 ] ) [ 5 ])}
+                {a₁₋ =  sym ((λ i → ++-pentagon-diag ([ 0 ] ++ [ 1 ]) [ 2 ] [ 3 ] [ 4 ] (~ i) ++ [ 5 ])
+                      ∙∙ ++-assoc ((([ 0 ] ++ [ 1 ]) ++ [ 2 ]) ++ [ 3 ]) [ 4 ] [ 5 ]
+                           ∙∙ ++-pentagon-diag ([ 0 ] ++ [ 1 ]) [ 2 ] [ 3 ] ([ 4 ] ++ [ 5 ]))}
+                {a₋₀ = ++-assoc ([ 0 ] ++ [ 1 ]) [ 2 ] ([ 3 ] ++ [ 4 ] ++ [ 5 ])}
+                {a₋₁ = λ i → ++-assoc ([ 0 ] ++ [ 1 ]) [ 2 ] ([ 3 ] ++ [ 4 ]) i  ++ [ 5 ]}
+                λ i i₁ → 0 B.∷ 1 B.∷ 2 B.∷ 3 B.∷ 4 B.∷ 5 B.∷ B.[])
+      ▷  (cong-∙∙ _ _ _ _)
+ 
+
+
 
  rℙ⊕ : Recℙ2' A (ℙ A) 𝕡trunc
  r11 rℙ⊕ x y = 𝕡base (x ++ y)
  Recℙ.bloop (r12 rℙ⊕) xs ys zs ws =
    funExt λ l →
-       (cong 𝕡base (cong (_++ l) (sym (++-pentagon-diag _ _ _ _)))
-        ∙∙  cong 𝕡base (++-assoc _ _ _) ∙∙ cong 𝕡base (++-pentagon-diag _ _ _ _)) ∙∙
+       (cong 𝕡base ( (cong (_++ l) (sym (++-pentagon-diag _ _ _ _)))
+        ∙∙   (++-assoc _ _ _) ∙∙  (++-pentagon-diag _ _ _ _))) ∙∙
          𝕡loop xs ys zs (ws ++ l)
         ∙∙ cong 𝕡base (sym (++-assoc _ _ _))
  Recℙ.bhexDiag (r12 rℙ⊕) ls xs ys zs rs =
     funExt λ l →
- 
-          ((λ i → 𝕡base ((ls ++ xs ++ ++-assoc ys zs rs (~ i)) ++ l)) ∙∙
-           (λ i → 𝕡base (++-pentagon-diag ls xs (ys ++ zs) rs (~ i) ++ l)) ∙∙
-           (λ i → 𝕡base (++-assoc ((ls ++ xs) ++ ys ++ zs) rs l i)) ∙∙
-           (λ i → 𝕡base (++-pentagon-diag ls xs (ys ++ zs) (rs ++ l) i)) ∙∙
-           λ i → 𝕡base (ls ++ xs ++ ++-assoc ys zs (rs ++ l) i))
-          -- ( cong 𝕡base ( cong (_++ l) (sym (++-pentagon-diag _ _ _ _))) ∙∙
-          -- cong 𝕡base (++-assoc _ _ _)
-          --  ∙∙ cong 𝕡base (cong (((ls ++ xs) ++ ys) ++_) (++-assoc _ _ _))
-          --  ∙ cong 𝕡base (++-pentagon-diag _ _ _ _)  )
+          (cong 𝕡base (hexDiagL ls xs ys zs rs l))
        ∙∙ 𝕡hexDiag ls xs ys zs (rs ++ l) ∙∙
        cong 𝕡base (sym (++-assoc _ _ _))
  Recℙ.binvol (r13 rℙ⊕) xs ys zs ws =
    funExtSq _ _ _ _ λ l →
-     (symP (doubleCompPath-filler _ _ _))
+     congSq 𝕡base (symP (doubleCompPath-filler _ _ _)) 
       ∙∙₂ 𝕡invol _ _ _ _ ∙∙₂
-      (doubleCompPath-filler _ _ _)
+      congSq 𝕡base (doubleCompPath-filler _ _ _)
  Recℙ.bhexU (r13 rℙ⊕) ls xs ys zs rs = funExtSq _ _ _ _ λ l → 
-    (doubleCompPath-filler _ _ _)
+    (congSq 𝕡base (hexUL ls xs ys zs rs l))
      ∙∙₂ 𝕡hexU _ _ _ _ _ ∙∙₂
      congSq 𝕡base λ i i₁ → ++-assoc (++-assoc ls ys zs (~ i) ++ xs) rs l (~ i₁)
- Recℙ.bhexD (r13 rℙ⊕) ls xs ys zs rs = funExtSq _ _ _ _ λ l →
-    
-    whiskSq.sq' _
-      
-      (𝕡hexD ls xs ys zs (rs ++ l))
-      
-      (flipSquare (doubleCompPath-filler
-        (((λ i → 𝕡base ((ls ++ xs ++ ++-assoc ys zs rs (~ i)) ++ l)) ∙∙
-           (λ i → 𝕡base (++-pentagon-diag ls xs (ys ++ zs) rs (~ i) ++ l)) ∙∙
-           (λ i → 𝕡base (++-assoc ((ls ++ xs) ++ ys ++ zs) rs l i)) ∙∙
-           (λ i → 𝕡base (++-pentagon-diag ls xs (ys ++ zs) (rs ++ l) i)) ∙∙
-           λ i → 𝕡base (ls ++ xs ++ ++-assoc ys zs (rs ++ l) i)))
-           _ λ i → 𝕡base (++-assoc (((ls ++ ys) ++ zs) ++ xs) rs l (~ i))))
-      -- (λ i j → hcomp
-      --     (λ k → λ {
-      --       (j = i0) → 𝕡hexDiag ls xs ys zs (rs ++ l) i
-      --      ;(i = i0) → {!!}
-      --      ;(i = i1) → 𝕡base (++-assoc (((ls ++ ys) ++ zs) ++ xs) rs l (~ j ∨ ~ k))
-      --       }) (𝕡hexDiag ls xs ys zs (rs ++ l) i))
-      --       (λ j i → {!!})
-      -- ( {!!}
-      --    -- ((refl ∙∙₂ refl ∙∙₂ sym (cong-∙∙ 𝕡base _ _ _) ∙∙₂ refl ∙∙₂
-      --    --  (refl ∙∙₂ sym (cong-∙∙ 𝕡base _ _ _) ∙∙₂ refl)) ∙
-      --    --    (refl ∙∙₂ sym (cong-∙∙ 𝕡base _ _ _) ∙∙₂ refl))
-      --      ◁ {!!} ▷ (cong-∙∙ 𝕡base _ _ _))
-      
-      {!!}
-      {!!} --( doubleCompPath-filler _ _ _)
-      (flipSquare (doubleCompPath-filler _ _ _)) -- (flipSquare (doubleCompPath-filler _ _ _))
-      
- 
+ Recℙ.bhexD (r13 rℙ⊕) ls xs ys zs rs i j l = 
+    hcomp
+      (λ k → λ {
+          (j = i0) → hcomp
+                      (λ k' → λ {
+                            (k = i0) → 𝕡loop ls xs ys (zs ++ rs ++ l) i
+                           ;(i = i0) → 𝕡base (hexDlem1 ls xs ys zs rs l k' k) 
+                           ;(i = i1) → 𝕡base (compPath-filler
+                                  (λ i₁ → ((ls ++ ys) ++ xs) ++ ++-assoc zs rs l (~ i₁))
+                                  (λ i₁ → ++-assoc ((ls ++ ys) ++ xs) (zs ++ rs) l (~ i₁)) k' k)
+                             })
+                      (𝕡loop ls xs ys (++-assoc zs rs l (~ k)) i)
+         ;(j = i1)(i = i0) → 𝕡base (++-assoc (((ls ++ ys) ++ zs) ++ xs) rs l (~ k))
+         ;(i = i1) → 𝕡base (hexDlem2 ls xs ys zs rs l j k)  
+         })
+      (𝕡hexD ls xs ys zs (rs ++ l) i j)
+
  truncHlp1 rℙ⊕ = isGroupoidΠ λ _ → 𝕡trunc 
  Recℙ.bloop (r21 rℙ⊕ l) xs ys zs ws =
     cong 𝕡base (sym (++-assoc _ _ _))
@@ -214,10 +292,8 @@ module _ {A : Type ℓ} where
             (Recℙ.f₃ (r13 rℙ⊕) (truncHlp1 rℙ⊕) (𝕡loop xs ys zs ws i))))
         (r21 rℙ⊕ (xs ++ ys ++ zs ++ ws))
         (r21 rℙ⊕ (((xs ++ zs) ++ ys) ++ ws))
-  Recℙ.bloop (w xs ys zs ws i) xs₁ ys₁ zs₁ ws₁ j =
-    hcomp {!!}
-       {!!}
-  Recℙ.bhexDiag (w xs ys zs ws i) = {!!}
+  Recℙ.bloop (w xs ys zs ws i) xs₁ ys₁ zs₁ ws₁ j = {!!}
+  Recℙ.bhexDiag (w xs ys zs ws i) ls xs₁ ys₁ zs₁ rs i₁ = {!!}
  trunncHlp2 rℙ⊕ x = Recℙ.isOfHLevelH2 _ 2 𝕡trunc
  Recℙ.binvol (Elimℙ.bbase (r31 rℙ⊕) l) xs ys zs ws =
    doubleCompPath-filler _ _ _
@@ -227,7 +303,11 @@ module _ {A : Type ℓ} where
    (congSq 𝕡base λ i i₁ → ++-assoc l ls (xs ++ ++-assoc ys zs rs i) (~ i₁))
     ∙∙₂ 𝕡hexU _ _ _ _ _ ∙∙₂
     doubleCompPath-filler _ _ _
- Recℙ.bhexD (Elimℙ.bbase (r31 rℙ⊕) a) = {!!}
+ Recℙ.bhexD (Elimℙ.bbase (r31 rℙ⊕) a) ls xs ys zs rs i i₁ = {!!}
+
+
+ _ℙ⊕_ : ℙ A → ℙ A → ℙ A
+ _ℙ⊕_ = Recℙ2'.f2 rℙ⊕ 
 
 --  r11 rℙ⊕ x y = 𝕡base (x ++ y)
 --  Recℙ.bloopL (r12 rℙ⊕) xs ys zs ws =

@@ -640,6 +640,43 @@ module whiskSq (A : I → I → Type ℓ)
            sq sq'
  sq'-fill k i j = hfill (cyl i j) (inS (sq i j)) k
 
+
+module whiskSqComp (A : Type ℓ)
+  {a₀₀ : A} {a₀₁ : A} {a₀₋ : PathP (λ j → A) a₀₀ a₀₁}
+  {a₁₀ : A} {a₁₁ : A} {a₁₋ : PathP (λ j → A) a₁₀ a₁₁}
+  {a₋₀ : PathP (λ i → A) a₀₀ a₁₀} {a₋₁ : PathP (λ i → A) a₀₁ a₁₁}
+  {a₀₀' : A} {a₀₁' : A} {a₀₋' : PathP (λ j → A) a₀₀' a₀₁'}
+  {a₁₀' : A} {a₁₁' : A} 
+  {a₋₀' : PathP (λ i → A) a₀₀' a₁₀'} {a₋₁' : PathP (λ i → A) a₀₁' a₁₁'}
+  (sq : Square a₀₋ a₁₋ a₋₀ a₋₁)
+  {p₀₀ : a₀₀ ≡ a₀₀'} {p₀₁ : a₀₁ ≡ a₀₁'} (p₀₋ : PathP (λ j → a₀₋ j ≡ a₀₋' j) p₀₀ p₀₁)
+  {p₁₀ : a₁₀ ≡ a₁₀'} {p₁₁ : a₁₁ ≡ a₁₁'} 
+  (p₋₀ : PathP (λ i → a₋₀ i ≡ a₋₀' i) p₀₀ p₁₀) (p₋₁ : PathP (λ i → a₋₁ i ≡ a₋₁' i) p₀₁ p₁₁)
+    where
+
+ cyl : ∀ i j → I → Partial (~ i ∨ ~ j ∨ j) A
+ cyl i j =
+   (λ l →
+      λ { (i = i0) → p₀₋ j l
+        ; (j = i0) → p₋₀ i l
+        ; (j = i1) → p₋₁ i l
+        })
+
+ sq' : Square a₀₋' (sym p₁₀ ∙∙ a₁₋ ∙∙ p₁₁) a₋₀' a₋₁'
+ sq' i j =
+   hcomp (cyl i j )
+     (sq i j)
+
+ -- sq'-fill : PathP
+ --           (λ k → SquareP A
+ --                   (flipSquareP p₀₋ k)
+ --                   (flipSquareP p₁₋ k)
+ --                   (flipSquareP p₋₀ k)
+ --                   (flipSquareP p₋₁ k))
+ --           sq sq'
+ -- sq'-fill k i j = hfill (cyl i j) (inS (sq i j)) k
+
+
 compPath→Square-faces : {a b c d : A} (p : a ≡ c) (q : b ≡ d) (r : a ≡ b) (s : c ≡ d)
   → (i j k : I) → Partial (i ∨ ~ i ∨ j ∨ ~ j) A
 compPath→Square-faces p q r s i j k = λ where
