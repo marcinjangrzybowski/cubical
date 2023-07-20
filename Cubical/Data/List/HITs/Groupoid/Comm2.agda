@@ -510,7 +510,16 @@ data ℙ {ℓ} (A : Type ℓ) : Type ℓ where
  𝕡hexDiag : ∀ ls xs ys zs rs  →
       𝕡base (ls ++ xs ++ ys ++ zs ++ rs) ≡
       𝕡base ((((ls ++ ys) ++ zs) ++ xs) ++ rs)
-      
+
+ 𝕡commDiag : ∀ xs ys zs ws++xs' ys' zs' ws'  →
+      𝕡base (xs ++ ys ++ zs ++ ws++xs' ++ ys' ++ zs' ++ ws') ≡
+      𝕡base ((((((xs ++ zs) ++ ys) ++ ws++xs') ++ zs') ++ ys') ++ ws')
+
+ 𝕡commDiag' : ∀ xs ys zs ws++xs' ys' zs' ws'  →
+      𝕡base (xs ++ ys ++ zs ++ ws++xs' ++ ys' ++ zs' ++ ws') ≡
+      𝕡base ((((((xs ++ ys) ++ zs) ++ ws++xs') ++ ys') ++ zs') ++ ws')
+
+
 
  𝕡hexU : ∀ ls xs ys zs rs  →
    Square          
@@ -529,13 +538,27 @@ data ℙ {ℓ} (A : Type ℓ) : Type ℓ where
      (𝕡loop ls xs ys (zs ++  rs))
      (sym (𝕡loop (ls ++ ys) xs zs rs))
 
- -- 𝕡comm : ∀ xs ys zs ws++xs' ys' zs' ws' →
- --   Square
- --       (𝕡loop xs ys zs (ws++xs' ++ ys' ++ zs' ++ ws')) --𝕡loop xs ys zs (ws ++ xs' ++ ys' ++ zs' ++ ws')
- --       ({!
- --       !}) --𝕡loop xs ys zs (ws ++ ((xs' ++ zs') ++ ys') ++ ws')
- --       (cong 𝕡base (sym (++-pentagon-diag _ _ _ _))) --(𝕡loop ((xs ++ ys ++ zs ++ ws) ++ xs') ys' zs' ws')
- --       (cong 𝕡base (sym (++-assoc _ _ _))) --(𝕡loop ((((xs ++ zs) ++ ys) ++ ws) ++ xs) ys' zs' ws')
+ 𝕡commA : ∀ xs ys zs ws++xs' ys' zs' ws' →
+   Square
+       (𝕡commDiag xs ys zs ws++xs' ys' zs' ws') --𝕡loop xs ys zs (ws ++ xs' ++ ys' ++ zs' ++ ws')
+       (cong 𝕡base (sym (++-assoc _ _ _)))
+       (𝕡loop xs ys zs (ws++xs' ++ ys' ++ zs' ++ ws'))
+       (sym (𝕡loop _ ys' zs' ws'))
+
+ 𝕡commB : ∀ xs ys zs ws++xs' ys' zs' ws' →
+   Square
+       (𝕡commDiag' xs ys zs ws++xs' ys' zs' ws') --𝕡loop xs ys zs (ws ++ xs' ++ ys' ++ zs' ++ ws')
+       (cong 𝕡base (sym (++-assoc _ _ _)))
+       (cong 𝕡base (sym (++-pentagon-diag _ _ _ _)))
+       (cong 𝕡base (++-pentagon-diag _ _ _ _))
+
+ 𝕡comm : ∀ xs ys zs ws++xs' ys' zs' ws' →
+    Square
+      (𝕡commDiag xs ys zs ws++xs' ys' zs' ws')
+      (sym (𝕡commDiag xs zs ys ws++xs' zs' ys' ws'))
+      (𝕡commDiag' xs ys zs ws++xs' ys' zs' ws')
+      (sym (𝕡commDiag' xs zs ys ws++xs' zs' ys' ws'))
+
  𝕡trunc : isGroupoid (ℙ A)
      
      
@@ -561,6 +584,17 @@ module _ {A : Type ℓ} where
        PathP (λ i → B (𝕡hexDiag ls xs ys zs rs i))
           (bbase (ls ++ xs ++ ys ++ zs ++ rs))
           (bbase ((((ls ++ ys) ++ zs) ++ xs) ++ rs))
+     bcommDiag : ∀ xs ys zs ws++xs' ys' zs' ws'  →
+          PathP (λ i → B (𝕡commDiag xs ys zs ws++xs' ys' zs' ws' i))
+         (bbase (xs ++ ys ++ zs ++ ws++xs' ++ ys' ++ zs' ++ ws'))
+         (bbase ((((((xs ++ zs) ++ ys) ++ ws++xs') ++ zs') ++ ys') ++ ws'))
+
+     bcommDiag' : ∀ xs ys zs ws++xs' ys' zs' ws'  →
+         PathP (λ i → B (𝕡commDiag' xs ys zs ws++xs' ys' zs' ws' i))         
+          (bbase (xs ++ ys ++ zs ++ ws++xs' ++ ys' ++ zs' ++ ws'))
+          (bbase ((((((xs ++ ys) ++ zs) ++ ws++xs') ++ ys') ++ zs') ++ ws'))
+
+
 
     record H3 : Type (ℓ-max ℓ ℓb) where
      no-eta-equality
@@ -585,7 +619,30 @@ module _ {A : Type ℓ} where
           (cong bbase λ i → ++-assoc (ls ++ ys) xs (zs ++ rs) i)
           (bloop ls xs ys (zs ++ rs))
           (symP (bloop (ls ++ ys) xs zs rs))
-          
+
+
+      bcommA : ∀ xs ys zs ws++xs' ys' zs' ws' →
+        SquareP (λ i j → B (𝕡commA xs ys zs ws++xs' ys' zs' ws' i j))          
+            (bcommDiag xs ys zs ws++xs' ys' zs' ws') --𝕡loop xs ys zs (ws ++ xs' ++ ys' ++ zs' ++ ws')
+            (cong bbase (sym (++-assoc _ _ _)))
+            (bloop xs ys zs (ws++xs' ++ ys' ++ zs' ++ ws'))
+            (symP (bloop _ ys' zs' ws'))
+
+      bcommB : ∀ xs ys zs ws++xs' ys' zs' ws' → 
+        SquareP (λ i j → B (𝕡commB xs ys zs ws++xs' ys' zs' ws' i j))          
+            (bcommDiag' xs ys zs ws++xs' ys' zs' ws') --𝕡loop xs ys zs (ws ++ xs' ++ ys' ++ zs' ++ ws')
+            (cong bbase (sym (++-assoc _ _ _)))
+            (cong bbase (sym (++-pentagon-diag _ _ _ _)))
+            (cong bbase (++-pentagon-diag _ _ _ _))
+
+      bcomm : ∀ xs ys zs ws++xs' ys' zs' ws' →
+        SquareP (λ i j → B (𝕡comm xs ys zs ws++xs' ys' zs' ws' i j))          
+           (bcommDiag xs ys zs ws++xs' ys' zs' ws')
+           (symP (bcommDiag xs zs ys ws++xs' zs' ys' ws'))
+           (bcommDiag' xs ys zs ws++xs' ys' zs' ws')
+           (symP (bcommDiag' xs zs ys ws++xs' zs' ys' ws'))
+
+
      module _ (isGroupoidB : ∀ x → isGroupoid (B x)) where
       f₃ : ∀ x → B x
       f₃ (𝕡base x) = bbase x
@@ -594,6 +651,12 @@ module _ {A : Type ℓ} where
       f₃ (𝕡hexDiag ls xs ys zs rs i) = bhexDiag ls xs ys zs rs i
       f₃ (𝕡hexU ls xs ys zs rs i i₁) = bhexU ls xs ys zs rs i i₁
       f₃ (𝕡hexD ls xs ys zs rs i i₁) = bhexD ls xs ys zs rs i i₁
+      f₃ (𝕡commDiag xs ys zs ws++xs' ys' zs' ws' i) = (bcommDiag xs ys zs ws++xs' ys' zs' ws' i)
+      f₃ (𝕡commDiag' xs ys zs ws++xs' ys' zs' ws' i) = (bcommDiag' xs ys zs ws++xs' ys' zs' ws' i)
+      f₃ (𝕡commA xs ys zs ws++xs' ys' zs' ws' i i₁) = (bcommA xs ys zs ws++xs' ys' zs' ws' i i₁)
+      f₃ (𝕡commB xs ys zs ws++xs' ys' zs' ws' i i₁) = (bcommB xs ys zs ws++xs' ys' zs' ws' i i₁)
+      f₃ (𝕡comm xs ys zs ws++xs' ys' zs' ws' i i₁) = (bcomm xs ys zs ws++xs' ys' zs' ws' i i₁)
+
       f₃ (𝕡trunc x y p q r s i₀ i₁ i₂) = 
          (isOfHLevel→isOfHLevelDep (suc (suc (suc zero))) isGroupoidB)
               (f₃ x) (f₃ y)
@@ -611,10 +674,12 @@ module _ {A : Type ℓ} where
      isOfHLevelH3' n hLevB =
        isOfHLevelRetract
          n {B = _}
-         (λ x → ((x .binvol , x .bhexU) , x .bhexD))
-         (u u h3)
+         (λ x → (((((x .binvol , x .bhexU) , x .bhexD) , x .bcommA) , x .bcommB) , x .bcomm))
+         (u u u u u h3)
          h
-         (isOfHLevel× n
+
+         (isOfHLevel× n (isOfHLevel× n
+         (isOfHLevel× n (isOfHLevel× n
            (isOfHLevel× n
              (isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n
                   λ _ _ → isOfHLevelPathP' n
@@ -628,6 +693,18 @@ module _ {A : Type ℓ} where
                   λ _ _ → isOfHLevelPathP' n
                            (isOfHLevelPathP' (suc n)
                                (λ _ _ → hLevB _ _ _) _ _) _ _  )))
+             (isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ n λ _ →
+                 isOfHLevelPathP' n
+                           (isOfHLevelPathP' (suc n)
+                               (λ _ _ → hLevB _ _ _) _ _) _ _  ))
+             ((isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ n λ _ →
+                 isOfHLevelPathP' n
+                           (isOfHLevelPathP' (suc n)
+                               (λ _ _ → hLevB _ _ _) _ _) _ _  )))
+             ((isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ n λ _ →
+                 isOfHLevelPathP' n
+                           (isOfHLevelPathP' (suc n)
+                               (λ _ _ → hLevB _ _ _) _ _) _ _  )))
 
       where
        u_ = uncurry
@@ -635,7 +712,9 @@ module _ {A : Type ℓ} where
        binvol (h x i) = binvol x
        bhexU (h x i) = bhexU x
        bhexD (h x i) = bhexD x
-       
+       bcommA (h x i) = bcommA x
+       bcommB (h x i) = bcommB x
+       bcomm (h x i) = bcomm x
 
     isOfHLevelH3 = isOfHLevelH3'
 
@@ -647,7 +726,10 @@ module _ {A : Type ℓ} where
      binvol r₂ _ _ _ _ = isSet→SquareP (λ _ _ → isSetB _) _ _ _ _
      bhexU r₂ _ _ _ _ _ = isSet→SquareP (λ _ _ → isSetB _) _ _ _ _
      bhexD r₂ _ _ _ _ _ = isSet→SquareP (λ _ _ → isSetB _) _ _ _ _
-
+     bcommA r₂ _ _ _ _ _ _ _ = isSet→SquareP (λ _ _ → isSetB _) _ _ _ _
+     bcommB r₂ _ _ _ _ _ _ _ = isSet→SquareP (λ _ _ → isSetB _) _ _ _ _
+     bcomm r₂ _ _ _ _ _ _ _ = isSet→SquareP (λ _ _ → isSetB _) _ _ _ _
+  
      f₂ : ∀ x → B x
      f₂ = f₃ r₂ (isSet→isGroupoid ∘ isSetB)
 
@@ -660,14 +742,21 @@ module _ {A : Type ℓ} where
     isOfHLevelH2' n hLevB =
       isOfHLevelRetract
         n {B = _}
-        (λ x → (x .bloop , x .bhexDiag))
-        (u h2)
+        (λ x → (((x .bloop , x .bhexDiag) , x .bcommDiag) , x .bcommDiag')) 
+        (u u u h2)
         h
+        (isOfHLevel× n (isOfHLevel× n
         (isOfHLevel× n
           (isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n
                  λ _ _ → isOfHLevelPathP' n (hLevB _) _ _ )
                  (isOfHLevelΠ n λ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n
                  λ _ _ → isOfHLevelPathP' n
+                          (hLevB _) _ _  ))
+            (isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ n λ _ →
+              isOfHLevelPathP' n
+                          (hLevB _) _ _  ))
+            (isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ n λ _ →
+               isOfHLevelPathP' n
                           (hLevB _) _ _  ))
        
      where
@@ -675,7 +764,9 @@ module _ {A : Type ℓ} where
       h : ∀ x → _
       bloop (h x i) = bloop x
       bhexDiag (h x i) = bhexDiag x
-
+      bcommDiag (h x i) = bcommDiag x
+      bcommDiag' (h x i) = bcommDiag' x
+      
    isOfHLevelH2 = isOfHLevelH2'
 
    module _ (isPropB : ∀ x → isProp (B x)) where
@@ -683,6 +774,8 @@ module _ {A : Type ℓ} where
     r₁ : H2
     bloop r₁ _ _ _ _ = isProp→PathP (λ _ → isPropB _) _ _
     bhexDiag r₁ _ _ _ _ _ = isProp→PathP (λ _ → isPropB _) _ _
+    bcommDiag r₁ _ _ _ _ _ _ _ = isProp→PathP (λ _ → isPropB _) _ _
+    bcommDiag' r₁ _ _ _ _ _ _ _ = isProp→PathP (λ _ → isPropB _) _ _
     
     f₁ : ∀ x → B x
     f₁ = f₂ r₁ (isProp→isSet ∘ isPropB)
@@ -723,6 +816,15 @@ module _ {A : Type ℓ} where
      bhexDiag :  ∀ ls xs ys zs rs  →
           (bbase (ls ++ xs ++ ys ++ zs ++ rs)) ≡ 
           (bbase ((((ls ++ ys) ++ zs) ++ xs) ++ rs))
+     bcommDiag : ∀ xs ys zs ws++xs' ys' zs' ws'  →
+          (bbase (xs ++ ys ++ zs ++ ws++xs' ++ ys' ++ zs' ++ ws')) ≡
+         (bbase ((((((xs ++ zs) ++ ys) ++ ws++xs') ++ zs') ++ ys') ++ ws'))
+
+     bcommDiag' : ∀ xs ys zs ws++xs' ys' zs' ws'  →
+          (bbase (xs ++ ys ++ zs ++ ws++xs' ++ ys' ++ zs' ++ ws')) ≡ 
+          (bbase ((((((xs ++ ys) ++ zs) ++ ws++xs') ++ ys') ++ zs') ++ ws'))
+
+
 
     record H3 : Type (ℓ-max ℓ ℓb) where
      no-eta-equality
@@ -747,7 +849,29 @@ module _ {A : Type ℓ} where
           (cong bbase λ i → ++-assoc (ls ++ ys) xs (zs ++ rs) i)
           (bloop ls xs ys (zs ++ rs))
           (symP (bloop (ls ++ ys) xs zs rs))
-          
+      bcommA : ∀ xs ys zs ws++xs' ys' zs' ws' →
+        Square
+            (bcommDiag xs ys zs ws++xs' ys' zs' ws') --𝕡loop xs ys zs (ws ++ xs' ++ ys' ++ zs' ++ ws')
+            (cong bbase (sym (++-assoc _ _ _)))
+            (bloop xs ys zs (ws++xs' ++ ys' ++ zs' ++ ws'))
+            (sym (bloop _ ys' zs' ws'))
+
+      bcommB : ∀ xs ys zs ws++xs' ys' zs' ws' → 
+        Square
+            (bcommDiag' xs ys zs ws++xs' ys' zs' ws') --𝕡loop xs ys zs (ws ++ xs' ++ ys' ++ zs' ++ ws')
+            (cong bbase (sym (++-assoc _ _ _)))
+            (cong bbase (sym (++-pentagon-diag _ _ _ _)))
+            (cong bbase (++-pentagon-diag _ _ _ _))
+
+      bcomm : ∀ xs ys zs ws++xs' ys' zs' ws' →
+        Square
+           (bcommDiag xs ys zs ws++xs' ys' zs' ws')
+           (sym (bcommDiag xs zs ys ws++xs' zs' ys' ws'))
+           (bcommDiag' xs ys zs ws++xs' ys' zs' ws')
+           (sym (bcommDiag' xs zs ys ws++xs' zs' ys' ws'))
+
+
+
      module _ (isGroupoidB : isGroupoid B) where
       f₃ : ℙ A → B
       f₃ (𝕡base x) = bbase x
@@ -756,6 +880,11 @@ module _ {A : Type ℓ} where
       f₃ (𝕡hexDiag ls xs ys zs rs i) = bhexDiag ls xs ys zs rs i
       f₃ (𝕡hexU ls xs ys zs rs i i₁) = bhexU ls xs ys zs rs i i₁
       f₃ (𝕡hexD ls xs ys zs rs i i₁) = bhexD ls xs ys zs rs i i₁
+      f₃ (𝕡commDiag xs ys zs ws++xs' ys' zs' ws' i) = (bcommDiag xs ys zs ws++xs' ys' zs' ws' i)
+      f₃ (𝕡commDiag' xs ys zs ws++xs' ys' zs' ws' i) = (bcommDiag' xs ys zs ws++xs' ys' zs' ws' i)
+      f₃ (𝕡commA xs ys zs ws++xs' ys' zs' ws' i i₁) = (bcommA xs ys zs ws++xs' ys' zs' ws' i i₁)
+      f₃ (𝕡commB xs ys zs ws++xs' ys' zs' ws' i i₁) = (bcommB xs ys zs ws++xs' ys' zs' ws' i i₁)
+      f₃ (𝕡comm xs ys zs ws++xs' ys' zs' ws' i i₁) = (bcomm xs ys zs ws++xs' ys' zs' ws' i i₁)
       f₃ (𝕡trunc x y p q r s i₀ i₁ i₂) = 
          isGroupoidB
               (f₃ x) (f₃ y)
@@ -771,10 +900,11 @@ module _ {A : Type ℓ} where
      isOfHLevelH3' n hLevB =
        isOfHLevelRetract
          n {B = _}
-         (λ x → ((x .binvol , x .bhexU) , x .bhexD))
-         (u u h3)
+         (λ x → (((((x .binvol , x .bhexU) , x .bhexD) , x .bcommA) , x .bcommB) , x .bcomm))
+         (u u u u u h3)
          h
-         (isOfHLevel× n
+         (isOfHLevel× n (isOfHLevel× n
+         (isOfHLevel× n (isOfHLevel× n
            (isOfHLevel× n
              (isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n
                   λ _ _ → isOfHLevelPathP' n
@@ -788,6 +918,18 @@ module _ {A : Type ℓ} where
                   λ _ _ → isOfHLevelPathP' n
                            (isOfHLevelPathP' (suc n)
                                (λ _ _ → hLevB _ _) _ _) _ _  )))
+             (isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ n λ _ →
+                 isOfHLevelPathP' n
+                           (isOfHLevelPathP' (suc n)
+                               (λ _ _ → hLevB _ _) _ _) _ _  ))
+             ((isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ n λ _ →
+                 isOfHLevelPathP' n
+                           (isOfHLevelPathP' (suc n)
+                               (λ _ _ → hLevB _ _) _ _) _ _  )))
+             ((isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ n λ _ →
+                 isOfHLevelPathP' n
+                           (isOfHLevelPathP' (suc n)
+                               (λ _ _ → hLevB _ _) _ _) _ _  )))
 
       where
        u_ = uncurry
@@ -795,7 +937,10 @@ module _ {A : Type ℓ} where
        binvol (h x i) = binvol x
        bhexU (h x i) = bhexU x
        bhexD (h x i) = bhexD x
-       
+       bcommA (h x i) = bcommA x
+       bcommB (h x i) = bcommB x
+       bcomm (h x i) = bcomm x
+
 
     isOfHLevelH3 = isOfHLevelH3'
 
@@ -804,10 +949,13 @@ module _ {A : Type ℓ} where
 
 
      r₂ : H3
-     binvol r₂ _ _ _ _ = isSet→SquareP (λ _ _ → isSetB) _ _ _ _
-     bhexU r₂ _ _ _ _ _ = isSet→SquareP (λ _ _ → isSetB) _ _ _ _
-     bhexD r₂ _ _ _ _ _ = isSet→SquareP (λ _ _ → isSetB) _ _ _ _
-
+     binvol r₂ _ _ _ _ = isSet→isSet' isSetB _ _ _ _
+     bhexU r₂ _ _ _ _ _ = isSet→isSet' isSetB _ _ _ _
+     bhexD r₂ _ _ _ _ _ = isSet→isSet' isSetB _ _ _ _
+     bcommA r₂ _ _ _ _ _ _ _ = isSet→isSet' isSetB _ _ _ _
+     bcommB r₂ _ _ _ _ _ _ _ = isSet→isSet' isSetB _ _ _ _
+     bcomm r₂ _ _ _ _ _ _ _ = isSet→isSet' isSetB _ _ _ _
+     
      f₂ : ℙ A → B
      f₂ = f₃ r₂ (isSet→isGroupoid isSetB)
 
@@ -820,14 +968,21 @@ module _ {A : Type ℓ} where
     isOfHLevelH2' n hLevB =
       isOfHLevelRetract
         n {B = _}
-        (λ x → (x .bloop , x .bhexDiag))
-        (u h2)
+        (λ x → (((x .bloop , x .bhexDiag) , x .bcommDiag) , x .bcommDiag')) 
+        (u u u h2)
         h
+        (isOfHLevel× n (isOfHLevel× n
         (isOfHLevel× n
           (isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n
                  λ _ _ → isOfHLevelPathP' n (hLevB) _ _ )
                  (isOfHLevelΠ n λ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n
                  λ _ _ → isOfHLevelPathP' n
+                          (hLevB) _ _  ))
+            (isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ n λ _ →
+              isOfHLevelPathP' n
+                          (hLevB) _ _  ))
+            (isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ2 n λ _ _ → isOfHLevelΠ n λ _ →
+               isOfHLevelPathP' n
                           (hLevB) _ _  ))
        
      where
@@ -835,15 +990,19 @@ module _ {A : Type ℓ} where
       h : ∀ x → _
       bloop (h x i) = bloop x
       bhexDiag (h x i) = bhexDiag x
-
+      bcommDiag (h x i) = bcommDiag x
+      bcommDiag' (h x i) = bcommDiag' x
+      
    isOfHLevelH2 = isOfHLevelH2'
 
    module _ (isPropB : isProp B) where
 
     r₁ : H2
-    bloop r₁ _ _ _ _ = isProp→PathP (λ _ → isPropB) _ _
-    bhexDiag r₁ _ _ _ _ _ = isProp→PathP (λ _ → isPropB) _ _
-    
+    bloop r₁ _ _ _ _ = isPropB _ _
+    bhexDiag r₁ _ _ _ _ _ = isPropB _ _
+    bcommDiag r₁ _ _ _ _ _ _ _ = isPropB _ _
+    bcommDiag' r₁ _ _ _ _ _ _ _ = isPropB _ _
+  
     f₁ : ∀ x → B
     f₁ = f₂ r₁ (isProp→isSet isPropB)
   open H1 public
