@@ -32,6 +32,11 @@ _∘_ : (g : {a : A} → (b : B a) → C a b) → (f : (a : A) → B a) → (a :
 g ∘ f = λ x → g (f x)
 {-# INLINE _∘_ #-}
 
+_∘'_ : {B : Type ℓ'} {C : Type ℓ''} (g : B → C) → (f : A → B) → A → C
+g ∘' f = λ x → g (f x)
+{-# INLINE _∘'_ #-}
+
+
 ∘-assoc : (h : {a : A} {b : B a} → (c : C a b) → D a b c)
           (g : {a : A} → (b : B a) → C a b)
           (f : (a : A) → B a)

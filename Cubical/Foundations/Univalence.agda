@@ -315,8 +315,32 @@ uaInvEquiv : ∀ {A B : Type ℓ} → (e : A ≃ B) → ua (invEquiv e) ≡ sym 
 uaInvEquiv {B = B} = EquivJ (λ _ e → ua (invEquiv e) ≡ sym (ua e))
                             (cong ua (invEquivIdEquiv B))
 
-uaCompEquiv : ∀ {A B C : Type ℓ} → (e : A ≃ B) (f : B ≃ C) → ua (compEquiv e f) ≡ ua e ∙ ua f
-uaCompEquiv {B = B} {C} = EquivJ (λ _ e → (f : B ≃ C) → ua (compEquiv e f) ≡ ua e ∙ ua f)
-                                 (λ f → cong ua (compEquivIdEquiv f)
-                                        ∙ sym (cong (λ x → x ∙ ua f) uaIdEquiv
-                                        ∙ sym (lUnit (ua f))))
+uaCompEquivSides : ∀ {ℓ} {B C D : Type ℓ} → (f : B ≃ C) (g : C ≃ D) →
+  ∀ i j → I → Partial (~ i ∨ j ∨ ~ j) (Type ℓ)
+uaCompEquivSides {B = B} {D = D} f g i j l =
+
+         λ { (i = i0) →
+                Glue D
+                  λ { (l = i0) → ua f j , equivFun g ∘ ua-unglue f j ,
+                                    isProp→PathP
+                                     (λ j → isPropIsEquiv (equivFun g ∘ ua-unglue f j))
+                                       (snd (f ∙ₑ g)) (snd g)
+                                       j
+                     ; (j = i0) → B , f ∙ₑ g 
+                     ; (j = i1) → ua g l , ua-unglue g l ,
+                                   isProp→PathP
+                                     (λ l → isPropIsEquiv (ua-unglue g l))
+                                       (snd g)
+                                       (idIsEquiv _)
+                                       l
+                     }
+           ; (j = i0) → B
+           ; (j = i1) → ua g l
+           }
+
+uaCompEquiv : ∀ {ℓ} {B C D : Type ℓ} (f : B ≃ C) (g : C ≃ D) →
+     ua (f ∙ₑ g) ≡  ua f ∙ ua g
+uaCompEquiv  {B = B} {C} {D} f g i j =
+     hcomp
+       (uaCompEquivSides f g i j)
+        (ua f j)
