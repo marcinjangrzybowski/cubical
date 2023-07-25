@@ -1,10 +1,9 @@
 {-# OPTIONS --safe --lossy-unification #-} 
-module Cubical.Algebra.Group.Presentation.Base where
+module Cubical.Algebra.Group.Presentation.RelIndex where
 
 open import Cubical.Data.Sigma
 
 open import Cubical.Foundations.Everything
-open import Cubical.Foundations.Powerset
 -- open import Cubical.Foundations.Function
 -- open import Cubical.Foundations.HLevels
 -- open import Cubical.Foundations.Isomorphism
@@ -21,11 +20,11 @@ open import Cubical.Algebra.Group.Properties
 open import Cubical.HITs.EilenbergMacLane1
 
 open import Cubical.HITs.GroupoidTruncation as GT
-
+open import Cubical.Homotopy.Loopspace
 
 private
   variable
-    ℓ : Level
+    ℓ ℓ' : Level
 
 p∙'[p⁻∙'q]≡q : ∀ {ℓ} {A : Type ℓ} → {x y : A} → (p q : x ≡ y) → 
               p ∙' (sym p ∙' q) ≡ q
@@ -49,6 +48,7 @@ module hlp∙' {ℓ} {A : Type ℓ} {a b c d e f : A}  {p : a ≡ c} {q : b ≡ 
  sq S Q  i = (λ j' → S (j' ∧ ~ i) (j' ∧ i))
            ∙' ((λ j' → S (j' ∨ ~ i) (j' ∨ i)) ∙' Q i)
 
+-- infix 4 <_∣_>
 
 module _ (IxG : Type ℓ) where
 
@@ -72,7 +72,7 @@ module _ (IxG : Type ℓ) where
   field
    fc₀₋ fc₁₋ fc₋₀ fc₋₁ : Fc
 
-  module Faces' {A : Type ℓ} {base : A} (loop : IxG → base ≡ base) where
+  module Faces' {A : Type (ℓ-max ℓ ℓ')} {base : A} (loop : IxG → base ≡ base) where
    pa : Fc → base ≡ base
    pa (fc x x₁) = 𝟚.if x then loop x₁ else sym (loop x₁)
    pa cns = refl
@@ -83,7 +83,7 @@ module _ (IxG : Type ℓ) where
    pa₋₀ = pa fc₋₀
    pa₋₁ = pa fc₋₁
 
-   SqTy : Type ℓ
+   SqTy : Type (ℓ-max ℓ ℓ')
    SqTy = Square pa₀₋ pa₁₋ pa₋₀ pa₋₁
    
   module Faces {ℓa} {A : Type ℓa} {base : A} (pa : Fc → base ≡ base) where
@@ -103,11 +103,11 @@ module _ (IxG : Type ℓ) where
 
 
    
- module Pres (rels : ℙ Sq) where
+ module Pres {IxR : Type ℓ'} (rels : IxR → Sq) where
 
   
 
-  data T : Type ℓ 
+  data T : Type (ℓ-max ℓ ℓ') 
 
   infixr 5 _∷_ _fc∷_ 
 
@@ -117,14 +117,13 @@ module _ (IxG : Type ℓ) where
    ε : T
    _∷_ : (𝟚 × IxG) → T → T
    inv∷ : ∀ b ixG xs → ((𝟚.not b) , ixG) ∷ (b , ixG) ∷ xs ≡ xs
-   rel : ∀ s → s ∈ rels → ∀ x →
-          fc₋₁ s fc∷ fc₀₋ s fc∷ x ≡
-          fc₁₋ s fc∷ fc₋₀ s fc∷ x
+   rel : (ixR : IxR) → ∀ x →
+          fc₋₁ (rels ixR) fc∷ fc₀₋ (rels ixR) fc∷ x ≡
+          fc₁₋ (rels ixR) fc∷ fc₋₀ (rels ixR) fc∷ x
    trunc : isSet T   
 
   _fc∷_ = FcCons.fcCons _∷_
 
-  IxR = Σ _ (_∈ rels)
 
   ∷iso : IxG → Iso T T
   Iso.fun (∷iso x) = (true , x) ∷_
@@ -159,23 +158,23 @@ module _ (IxG : Type ℓ) where
   invFC∷' (fc true x₁) xs = inv∷ _ _ _
   invFC∷' cns xs = refl
   
-  relInv : (ixR : IxR) → 
-         notFC (fc₀₋ (fst ixR)) fc∷ notFC (fc₋₁ (fst ixR)) fc∷ ε ≡
-         notFC (fc₋₀ (fst ixR)) fc∷ notFC (fc₁₋ (fst ixR)) fc∷ ε
-  relInv ixR@(s , s∈) = 
-      sym (invFC∷ (fc₋₀ (fst ixR)) _) ∙∙
-       cong (notFC (fc₋₀ (fst ixR)) fc∷_)
-         (sym (invFC∷ (fc₁₋ (fst ixR)) _))
-       ∙∙ cong ((notFC (fc₋₀ (fst ixR)) fc∷_) ∘'
-          (notFC (fc₁₋ (fst ixR)) fc∷_)) (sym (rel s s∈
-            (notFC (fc₀₋ (fst ixR)) fc∷ (notFC (fc₋₁ (fst ixR)) fc∷ ε)))) ∙∙
-       cong ((notFC (fc₋₀ (fst ixR)) fc∷_)
-            ∘' ((notFC (fc₁₋ (fst ixR)) fc∷_)
-              ∘' ((fc₋₁ (fst ixR)) fc∷_)))
-              (invFC∷' (fc₀₋ (fst ixR)) _) ∙∙
-         cong ((notFC (fc₋₀ (fst ixR)) fc∷_)
-            ∘' ((notFC (fc₁₋ (fst ixR)) fc∷_)))
-             (invFC∷' (fc₋₁ (fst ixR)) _)
+  relInv : (ixR : IxR) → ∀ xs → 
+         notFC (fc₀₋ (rels ixR)) fc∷ notFC (fc₋₁ (rels ixR)) fc∷ xs ≡
+         notFC (fc₋₀ (rels ixR)) fc∷ notFC (fc₁₋ (rels ixR)) fc∷ xs
+  relInv ixR xs = 
+      sym (invFC∷ (fc₋₀ (rels ixR)) _) ∙∙
+       cong (notFC (fc₋₀ (rels ixR)) fc∷_)
+         (sym (invFC∷ (fc₁₋ (rels ixR)) _))
+       ∙∙ cong ((notFC (fc₋₀ (rels ixR)) fc∷_) ∘'
+          (notFC (fc₁₋ (rels ixR)) fc∷_)) (sym (rel ixR
+            (notFC (fc₀₋ (rels ixR)) fc∷ (notFC (fc₋₁ (rels ixR)) fc∷ xs)))) ∙∙
+       cong ((notFC (fc₋₀ (rels ixR)) fc∷_)
+            ∘' ((notFC (fc₁₋ (rels ixR)) fc∷_)
+              ∘' ((fc₋₁ (rels ixR)) fc∷_)))
+              (invFC∷' (fc₀₋ (rels ixR)) _) ∙∙
+         cong ((notFC (fc₋₀ (rels ixR)) fc∷_)
+            ∘' ((notFC (fc₁₋ (rels ixR)) fc∷_)))
+             (invFC∷' (fc₋₁ (rels ixR)) _)
   
   ∷fcIso : Fc → Iso T T
   Iso.fun (∷fcIso x) = x fc∷_
@@ -197,9 +196,9 @@ module _ (IxG : Type ℓ) where
   ∷inv≃P b ixG = funExt (ua-gluePath _ ∘ (inv∷ b ixG))
  
 
-  rel≃ : ∀ ixR → ∷fc≃ (fc₀₋ (fst ixR)) ∙ₑ ∷fc≃ (fc₋₁ (fst ixR))
-               ≡ ∷fc≃ (fc₋₀ (fst ixR)) ∙ₑ ∷fc≃ (fc₁₋ (fst ixR))
-  rel≃ (s , s∈)  = equivEq (funExt (rel s s∈))
+  rel≃ : ∀ ixR → ∷fc≃ (fc₀₋ (rels ixR)) ∙ₑ ∷fc≃ (fc₋₁ (rels ixR))
+               ≡ ∷fc≃ (fc₋₀ (rels ixR)) ∙ₑ ∷fc≃ (fc₁₋ (rels ixR))
+  rel≃ ixR  = equivEq (funExt (rel ixR))
 
   
 
@@ -214,18 +213,18 @@ module _ (IxG : Type ℓ) where
   mkFc≡uaLem (fc true x₁) = cong ua (equivEq refl)
   mkFc≡uaLem cns =  sym uaIdEquiv ∙ cong ua (equivEq refl)
 
-  rel≡Sq : ∀ ixR → F≡.SqTy (fst ixR)
+  rel≡Sq : ∀ ixR → F≡.SqTy (rels ixR)
   rel≡Sq ixR = flipSquare (compPath→Square
     (
        ((cong₂ _∙_
-         (mkFc≡uaLem (fc₀₋ (fst ixR)))
-         (mkFc≡uaLem (fc₋₁ (fst ixR)))
+         (mkFc≡uaLem (fc₀₋ (rels ixR)))
+         (mkFc≡uaLem (fc₋₁ (rels ixR)))
          ∙ sym (uaCompEquiv _ _))
         ◁ cong ua (  (rel≃ ixR)) ▷
          (uaCompEquiv _ _ ∙
            cong₂ _∙_
-            (sym (mkFc≡uaLem (fc₋₀ (fst ixR))))
-            (sym (mkFc≡uaLem (fc₁₋ (fst ixR))))
+            (sym (mkFc≡uaLem (fc₋₀ (rels ixR))))
+            (sym (mkFc≡uaLem (fc₁₋ (rels ixR))))
                      ))))
     
     -- {!!} ◁  {!!} ▷ {!!} 
@@ -237,7 +236,7 @@ module _ (IxG : Type ℓ) where
     --      ; (j = i1) → pa₋₁ i , {!!}
     --      }
     where
-    open F≡ (fst ixR)
+    open F≡ (rels ixR)
 
     
   module FcConsDep {ℓ*} {XS : T → Type ℓ*}
@@ -247,7 +246,7 @@ module _ (IxG : Type ℓ) where
    fcConsDep cns x₁ = x₁
 
 
-  record RecT {ℓ*} (A : Type ℓ*) : Type (ℓ-max ℓ* ℓ) where
+  record RecT {ℓ*} (A : Type ℓ*) : Type (ℓ-max ℓ* (ℓ-max ℓ ℓ')) where
    no-eta-equality
    field
     isSetA : isSet A
@@ -260,9 +259,9 @@ module _ (IxG : Type ℓ) where
    _fc∷A_ : Fc → A → A
    _fc∷A_ = FcCons.fcCons (uncurry ∷A) 
    field
-    relA : ∀ (ixR : IxR) a →
-          fc₋₁ (fst ixR) fc∷A fc₀₋ (fst ixR) fc∷A a ≡
-          fc₁₋ (fst ixR) fc∷A fc₋₀ (fst ixR) fc∷A a
+    relA : ∀ ixR a →
+          fc₋₁ (rels ixR) fc∷A fc₀₋ (rels ixR) fc∷A a ≡
+          fc₁₋ (rels ixR) fc∷A fc₋₀ (rels ixR) fc∷A a
 
    
 
@@ -270,7 +269,7 @@ module _ (IxG : Type ℓ) where
    f ε = εA
    f (x ∷ x₁) = ∷A (fst x) (snd x) (f x₁)
    f (inv∷ b ixG x i) = inv∷A b ixG (f x) i
-   f (rel s s∈ x i) with fc₋₀ s | fc₋₁ s | fc₀₋ s | fc₁₋ s | relA (s , s∈) (f x)
+   f (rel ixR x i) with fc₋₀ (rels ixR) | fc₋₁ (rels ixR) | fc₀₋ (rels ixR) | fc₁₋ (rels ixR) | relA ixR (f x)
    ... | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | fc x₇ x₈ | q = q i
    ... | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | cns | q = q i
    ... | fc x₁ x₂ | fc x₃ x₄ | cns | fc x₅ x₆ | q = q i
@@ -291,14 +290,14 @@ module _ (IxG : Type ℓ) where
      isSetA _ _ (cong f p) (cong f q) i i₁
 
 
-  record ElimT {ℓ*} (A : T → Type ℓ*) : Type (ℓ-max ℓ* ℓ) where
+  record ElimT {ℓ*} (A : T → Type ℓ*) : Type (ℓ-max ℓ* (ℓ-max ℓ ℓ')) where
    no-eta-equality
    field
     isSetA : ∀ x → isSet (A x)
     εA : A ε
     ∷A : ∀ {xs} → ∀ b x → A xs → A ((b , x) ∷ xs)
 
-    inv∷A : ∀ b (ixG : IxG) → ∀ {xs} a →
+    inv∷A : ∀ b ixG → ∀ {xs} a →
       PathP (λ i → A (inv∷ b ixG xs i))
        (∷A (𝟚.not b) ixG (∷A b ixG a)) a
 
@@ -307,10 +306,10 @@ module _ (IxG : Type ℓ) where
    _fc∷A_ = FcConsDep.fcConsDep (λ {xs} → uncurry (∷A {xs}))
    
    field
-    relA : ∀ (ixR : IxR) {xs} (a : A xs) →
-          PathP (λ i → A (rel _ (snd ixR) xs i ))
-          (fc₋₁ (fst ixR) fc∷A fc₀₋ (fst ixR) fc∷A a)
-          (fc₁₋ (fst ixR) fc∷A fc₋₀ (fst ixR) fc∷A a)
+    relA : ∀ ixR {xs} (a : A xs) →
+          PathP (λ i → A (rel ixR xs i ))
+          (fc₋₁ (rels ixR) fc∷A fc₀₋ (rels ixR) fc∷A a)
+          (fc₁₋ (rels ixR) fc∷A fc₋₀ (rels ixR) fc∷A a)
 
    
 
@@ -318,7 +317,7 @@ module _ (IxG : Type ℓ) where
    f ε = εA
    f (x ∷ x₁) = ∷A (fst x) (snd x) (f x₁)
    f (inv∷ b ixG x i) = inv∷A b ixG (f x) i
-   f (rel s s∈ x i) with fc₋₀ s | fc₋₁ s | fc₀₋ s | fc₁₋ s | relA (s , s∈) (f x)
+   f (rel ixR x i) with fc₋₀ (rels ixR) | fc₋₁ (rels ixR) | fc₀₋ (rels ixR) | fc₁₋ (rels ixR) | relA ixR (f x)
    ... | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | fc x₇ x₈ | q = q i
    ... | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | cns | q = q i
    ... | fc x₁ x₂ | fc x₃ x₄ | cns | fc x₅ x₆ | q = q i
@@ -341,7 +340,7 @@ module _ (IxG : Type ℓ) where
      
 
 
-  record ElimPropT {ℓ*} (A : T → Type ℓ*) : Type (ℓ-max ℓ* ℓ) where
+  record ElimPropT {ℓ*} (A : T → Type ℓ*) : Type (ℓ-max ℓ* (ℓ-max ℓ ℓ')) where
    no-eta-equality
    field
     isPropA : ∀ x → isProp (A x)
@@ -367,8 +366,10 @@ module _ (IxG : Type ℓ) where
   RecT.εA (·R y) = y
   RecT.∷A (·R y) = curry _∷_
   RecT.inv∷A (·R y) = inv∷
-  RecT.relA (·R y) = uncurry rel
+  RecT.relA (·R y) = rel
+
   
+
   _·_ : T → T → T
   x · y = RecT.f (·R y) x
 
@@ -424,14 +425,14 @@ module _ (IxG : Type ℓ) where
 
   
 
-  rel' : ∀ ixR → (fc→T (notFC (fc₀₋ (fst ixR))) ·
-        fc→T (notFC (fc₋₁ (fst ixR))))
-       ≡ (fc→T (notFC (fc₋₀ (fst ixR))) · fc→T (notFC (fc₁₋ (fst ixR))))
+  rel' : ∀ ixR → (fc→T (notFC (fc₀₋ (rels ixR))) ·
+        fc→T (notFC (fc₋₁ (rels ixR))))
+       ≡ (fc→T (notFC (fc₋₀ (rels ixR))) · fc→T (notFC (fc₁₋ (rels ixR))))
   rel' ixR =
-     invRLem' (notFC (fc₀₋ (fst ixR))) (notFC (fc₋₁ (fst ixR)))
-      ∙∙  (relInv ixR) ∙∙
-      sym (invRLem' ((notFC (fc₋₀ (fst ixR))))
-           ((notFC (fc₁₋ (fst ixR)))))
+     invRLem' (notFC (fc₀₋ (rels ixR))) (notFC (fc₋₁ (rels ixR)))
+      ∙∙  (relInv ixR ε) ∙∙
+      sym (invRLem' ((notFC (fc₋₀ (rels ixR))))
+           ((notFC (fc₁₋ (rels ixR)))))
 
 
   invR : RecT T
@@ -446,12 +447,12 @@ module _ (IxG : Type ℓ) where
         ∙∙ ·IdR _
   RecT.relA invR ixR a =
     (λ i →
-      invRLem i (fc₋₁ (fst ixR)) (invRLem i (fc₀₋ (fst ixR)) a)) 
+      invRLem i (fc₋₁ (rels ixR)) (invRLem i (fc₀₋ (rels ixR)) a)) 
      ∙∙ sym (·assoc a _ _) ∙∙
        cong (a ·_) (rel' ixR)
        ∙∙ (·assoc a _ _) ∙∙
     (λ i →
-      invRLem (~ i) (fc₁₋ (fst ixR)) (invRLem (~ i) (fc₋₀ (fst ixR)) a))
+      invRLem (~ i) (fc₁₋ (rels ixR)) (invRLem (~ i) (fc₋₀ (rels ixR)) a))
 
   inv : T → T
   inv = RecT.f invR
@@ -477,7 +478,7 @@ module _ (IxG : Type ℓ) where
        cong ((inv xs) ·_) (inv∷ b x _) ∙∙ p 
 
 
-  GroupT : Group ℓ
+  GroupT : Group (ℓ-max ℓ ℓ')
   GroupT = makeGroup
     ε
     _·_
@@ -486,7 +487,7 @@ module _ (IxG : Type ℓ) where
 
 
 
-  data 𝔹T : Type ℓ
+  data 𝔹T : Type (ℓ-max ℓ ℓ')
 
   base' : 𝔹T
   loop' : IxG → base' ≡ base'
@@ -500,17 +501,28 @@ module _ (IxG : Type ℓ) where
    loop : IxG → base ≡ base
    relSq : (r : IxR) →
      Square {A = 𝔹T}
-       (pa₀₋ (fst r))
-       (pa₁₋ (fst r))
-       (pa₋₀ (fst r))
-       (pa₋₁ (fst r))
+       (pa₀₋ (rels r))
+       (pa₁₋ (rels r))
+       (pa₋₀ (rels r))
+       (pa₋₁ (rels r))
    trunc : isGroupoid 𝔹T
+
 
   base' = base
   loop' = loop
+  
+  Ω𝔹T : Group (ℓ-max ℓ ℓ') 
+  fst Ω𝔹T = ⟨ Ω (𝔹T , base) ⟩
+  GroupStr.1g (snd Ω𝔹T) = refl
+  GroupStr._·_ (snd Ω𝔹T) = _∙_
+  GroupStr.inv (snd Ω𝔹T) = sym
+  GroupStr.isGroup (snd Ω𝔹T) =
+   makeIsGroup (trunc _ _)
+      assoc (sym ∘ rUnit) (sym ∘ lUnit)
+       rCancel lCancel
 
 
-  record Rec𝔹T' {ℓa} (A : Type ℓa) : Type (ℓ-max ℓa ℓ) where
+  record Rec𝔹T' {ℓa} (A : Type ℓa) : Type (ℓ-max ℓa (ℓ-max ℓ ℓ')) where
    no-eta-equality
    field
     baseA : A
@@ -521,13 +533,13 @@ module _ (IxG : Type ℓ) where
    field
     relSqA : (r : IxR) →
       Square {A = A}
-        (Faces.pa₀₋ (fst r) {base = baseA} fcA)
-        (Faces.pa₁₋ (fst r) {base = baseA} fcA)
-        (Faces.pa₋₀ (fst r) {base = baseA} fcA)
-        (Faces.pa₋₁ (fst r) {base = baseA} fcA)
+        (Faces.pa₀₋ (rels r) {base = baseA} fcA)
+        (Faces.pa₁₋ (rels r) {base = baseA} fcA)
+        (Faces.pa₋₀ (rels r) {base = baseA} fcA)
+        (Faces.pa₋₁ (rels r) {base = baseA} fcA)
 
 
-  record Rec𝔹T {ℓa} (A : Type ℓa) : Type (ℓ-max ℓa ℓ) where
+  record Rec𝔹T {ℓa} (A : Type ℓa) : Type (ℓ-max ℓa (ℓ-max ℓ ℓ')) where
    no-eta-equality
    field
     isGroupoidA : isGroupoid A 
@@ -539,16 +551,16 @@ module _ (IxG : Type ℓ) where
    field
     relSqA : (r : IxR) →
       Square {A = A}
-        (Faces.pa₀₋ (fst r) {base = baseA} fcA)
-        (Faces.pa₁₋ (fst r) {base = baseA} fcA)
-        (Faces.pa₋₀ (fst r) {base = baseA} fcA)
-        (Faces.pa₋₁ (fst r) {base = baseA} fcA)
+        (Faces.pa₀₋ (rels r) {base = baseA} fcA)
+        (Faces.pa₁₋ (rels r) {base = baseA} fcA)
+        (Faces.pa₋₀ (rels r) {base = baseA} fcA)
+        (Faces.pa₋₁ (rels r) {base = baseA} fcA)
                 
    f : 𝔹T → A
    f base = baseA
    f (loop x i) = loopA x i
    -- f (loopSym b ixG i i₁) = loopSymA b ixG i i₁
-   f (relSq ixR i j) with fc₋₀ (fst ixR) | fc₋₁ (fst ixR) | fc₀₋ (fst ixR) | fc₁₋ (fst ixR) | relSqA ixR
+   f (relSq ixR i j) with fc₋₀ (rels ixR) | fc₋₁ (rels ixR) | fc₀₋ (rels ixR) | fc₁₋ (rels ixR) | relSqA ixR
    ... | fc false x₁ | fc false x₃ | fc false x₅ | fc false x₇ | q = q i j
    ... | fc false x₁ | fc false x₃ | fc false x₅ | fc true x₇ | q = q i j
    ... | fc false x₁ | fc false x₃ | fc true x₅ | fc false x₇ | q = q i j
@@ -636,7 +648,7 @@ module _ (IxG : Type ℓ) where
        (λ i j → f (r i j)) (λ i j → f (s i j))
        i i₁ i₂ 
 
-  record Elim𝔹T {ℓa} (A : 𝔹T → Type ℓa) : Type (ℓ-max ℓa ℓ) where
+  record Elim𝔹T {ℓa} (A : 𝔹T → Type ℓa) : Type (ℓ-max ℓa (ℓ-max ℓ ℓ')) where
    no-eta-equality
    field
     isGroupoidA : ∀ x → isGroupoid (A x) 
@@ -652,16 +664,16 @@ module _ (IxG : Type ℓ) where
    field
     relSqA : (r : IxR) →
       SquareP (λ i j → A (relSq r i j))
-        (fcA (fc₀₋ (fst r)))
-        (fcA (fc₁₋ (fst r)))
-        (fcA (fc₋₀ (fst r)))
-        (fcA (fc₋₁ (fst r)))
+        (fcA (fc₀₋ (rels r)))
+        (fcA (fc₁₋ (rels r)))
+        (fcA (fc₋₀ (rels r)))
+        (fcA (fc₋₁ (rels r)))
         
    f : ∀ x → A x
    f base = baseA
    f (loop x i) = loopA x i
    -- f (loopSym b ixG i i₁) = loopSymA b ixG i i₁
-   f (relSq ixR i j) with fc₋₀ (fst ixR) | fc₋₁ (fst ixR) | fc₀₋ (fst ixR) | fc₁₋ (fst ixR) |  relSqA ixR
+   f (relSq ixR i j) with fc₋₀ (rels ixR) | fc₋₁ (rels ixR) | fc₀₋ (rels ixR) | fc₁₋ (rels ixR) |  relSqA ixR
    ... | fc false x₁ | fc false x₃ | fc false x₅ | fc false x₇ | q = q i j
    ... | fc false x₁ | fc false x₃ | fc false x₅ | fc true x₇ | q = q i j
    ... | fc false x₁ | fc false x₃ | fc true x₅ | fc false x₇ | q = q i j
@@ -752,7 +764,7 @@ module _ (IxG : Type ℓ) where
         i i₁ i₂ 
 
 
-  record ElimSet𝔹T {ℓa} (A : 𝔹T → Type ℓa) : Type (ℓ-max ℓa ℓ) where
+  record ElimSet𝔹T {ℓa} (A : 𝔹T → Type ℓa) : Type (ℓ-max ℓa (ℓ-max ℓ ℓ')) where
    no-eta-equality
    field
     isSetA : ∀ x → isSet (A x) 
@@ -771,7 +783,7 @@ module _ (IxG : Type ℓ) where
    f = Elim𝔹T.f r
 
 
-  record ElimProp𝔹T {ℓa} (A : 𝔹T → Type ℓa) : Type (ℓ-max ℓa ℓ) where
+  record ElimProp𝔹T {ℓa} (A : 𝔹T → Type ℓa) : Type (ℓ-max ℓa (ℓ-max ℓ ℓ')) where
    no-eta-equality
    field
     isPropA : ∀ x → isProp (A x) 
@@ -817,11 +829,11 @@ module _ (IxG : Type ℓ) where
     f' bt =  hSet₃ (f₃ bt) (p' bt)
 
 
-  CodeHR : Rec𝔹T (∥ Type ℓ ∥₃)
+  CodeHR : Rec𝔹T (∥ Type (ℓ-max ℓ ℓ') ∥₃)
   Rec𝔹T.isGroupoidA CodeHR = squash₃
   Rec𝔹T.baseA CodeHR = ∣ T ∣₃
   Rec𝔹T.loopA CodeHR = (cong ∣_∣₃) ∘ ua ∘ ∷≃  
-  Rec𝔹T.relSqA CodeHR ixR i j with fc₋₀ (fst ixR) | fc₋₁ (fst ixR) | fc₀₋ (fst ixR) | fc₁₋ (fst ixR) | (rel≡Sq ixR)
+  Rec𝔹T.relSqA CodeHR ixR i j with fc₋₀ (rels ixR) | fc₋₁ (rels ixR) | fc₀₋ (rels ixR) | fc₁₋ (rels ixR) | (rel≡Sq ixR)
   ... | fc false x₁ | fc false x₃ | fc false x₅ | fc false x₇ | q = ∣ q i j ∣₃
   ... | fc false x₁ | fc false x₃ | fc false x₅ | fc true x₇ | q = ∣ q i j ∣₃
   ... | fc false x₁ | fc false x₃ | fc true x₅ | fc false x₇ | q = ∣ q i j ∣₃
@@ -906,14 +918,14 @@ module _ (IxG : Type ℓ) where
   
 
 
-  CodeH₃ : 𝔹T → ∥ Type ℓ ∥₃
+  CodeH₃ : 𝔹T → ∥ Type (ℓ-max ℓ ℓ') ∥₃
   
   CodeH₃ = Rec𝔹T.f CodeHR
 
-  CodeH : 𝔹T → hSet ℓ
+  CodeH : 𝔹T → hSet (ℓ-max ℓ ℓ')
   CodeH = 𝔹T→hSet.f' CodeH₃ trunc
 
-  Code : 𝔹T → Type ℓ
+  Code : 𝔹T → Type (ℓ-max ℓ ℓ')
   Code = fst ∘ CodeH
 
   encode : ∀ x → base ≡ x → Code x
@@ -951,9 +963,9 @@ module _ (IxG : Type ℓ) where
   RecT.inv∷A decode-baseR true _ _ =
     p∙'[p⁻∙'q]≡q _ _
   RecT.relA decode-baseR ixR a =
-     drb-lem (fc₋₁ (fst ixR)) (fc₀₋ (fst ixR)) a
+     drb-lem (fc₋₁ (rels ixR)) (fc₀₋ (rels ixR)) a
       ∙∙ (hlp∙'.sq ((λ i i₁ → relSq ixR (~ i) (~ i₁))) λ _ → a) ∙∙
-      sym (drb-lem (fc₁₋ (fst ixR)) (fc₋₀ (fst ixR)) a)
+      sym (drb-lem (fc₁₋ (rels ixR)) (fc₋₀ (rels ixR)) a)
     
   decodeLoop : ∀ ixG →
       PathP (λ i → (Code (loop ixG i)) → base ≡ loop ixG i)
