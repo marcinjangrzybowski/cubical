@@ -102,13 +102,56 @@ module _ {IxG : Type ℓ} {IxR : Type ℓ'} where
       (cong (_·'' xs) (comm·η b x y) ∙ sym (·assoc relsAb y ((b , x) ∷ ε) xs)) 
 
 
+  invAbR : RecT relsAb (T relsAb)
+  RecT.isSetA invAbR = trunc
+  RecT.εA invAbR = ε
+  RecT.∷A invAbR b x = (𝟚.not b , x) ∷_
+  RecT.inv∷A invAbR b x xs = inv∷ (𝟚.not b) x xs
+  RecT.relA invAbR ixR xs =
+    lem∷fc _ _ ∙∙ relInv relsAb ixR xs ∙∙ sym (lem∷fc _ _)
+   where
+   open Cubical.Algebra.Group.Presentation.RelIndex.FcCons
+   lem∷fc : ∀ f₀ f₁ → fcCons IxG
+      (uncurry (λ b x → _∷_ (𝟚.not b , x))) f₁
+      (fcCons IxG
+       (uncurry (λ b x → _∷_ (𝟚.not b , x))) f₀ xs)
+      ≡
+      (_fc∷_ relsAb)
+      (notFC relsAb f₀)
+      ((_fc∷_ relsAb)
+       (notFC relsAb f₁)
+       xs)
+       -- 
+   lem∷fc (fc x x₁) (fc x₂ x₃) = head-comm-η _ _ _ 
+   lem∷fc (fc x x₁) cns = refl
+   lem∷fc cns (fc x x₁) = refl
+   lem∷fc cns cns = refl
+
+  invAb : T relsAb → T relsAb
+  invAb = RecT.f _ invAbR
+  
+  invAb≡inv : ∀ x → invAb x ≡ inv _ x
+  invAb≡inv = ElimPropT.f _ w
+   where
+   w : ElimPropT _ _
+   ElimPropT.isPropA w _ = trunc _ _
+   ElimPropT.εA w = refl
+   ElimPropT.∷A w {xs} b x p =
+    cong ((𝟚.not b , x) ∷_) p ∙ comm·'' _ _
+
   AbGroupT : AbGroup _
   fst AbGroupT = _
-  AbGroupStr.0g (snd AbGroupT) = _
+  AbGroupStr.0g (snd AbGroupT) = ε
   AbGroupStr._+_ (snd AbGroupT) = _
-  AbGroupStr.- snd AbGroupT = _
+  AbGroupStr.- snd AbGroupT = invAb
   IsAbGroup.isGroup (AbGroupStr.isAbGroup (snd AbGroupT)) =
-    GroupStr.isGroup (snd (GroupT relsAb))
+    makeIsGroup
+      trunc
+      (·assoc _)
+      (·IdR _) (·IdL _)
+      (λ x → cong (x ·''_) (invAb≡inv x) ∙ ·InvR _ x)
+      (λ x → cong (_·'' x) (invAb≡inv x) ∙ ·InvL _ x)
+
   IsAbGroup.+Comm (AbGroupStr.isAbGroup (snd AbGroupT)) = comm·''
 
   T→AbT : T rels → T relsAb 
@@ -133,21 +176,25 @@ module _ {IxG : Type ℓ} {IxR : Type ℓ'} where
    isPropA w _ = isPropΠ λ _ → trunc _ _
    εA w _ = refl
    ∷A w b x p y = cong (_ ∷_) (p y)
-  
-  T→AbT-Mor : IsGroupHom (snd (GroupT rels)) T→AbT (snd (GroupT relsAb))
+
+
+   
+  T→AbT-Mor : IsGroupHom (snd (GroupT rels)) T→AbT
+    (AbGroupStr→GroupStr (snd (AbGroupT)))
   IsGroupHom.pres· T→AbT-Mor = pres·
 
   IsGroupHom.pres1 T→AbT-Mor = refl
-  IsGroupHom.presinv T→AbT-Mor = ElimPropT.f q w
+  IsGroupHom.presinv T→AbT-Mor = ElimPropT.f rels w
    where
-   q = _
-   open ElimPropT q
+
+   open ElimPropT relsAb
    w : ElimPropT _ _
    isPropA w _ = trunc _ _
    εA w = refl
-   ∷A w b x p = pres· _ _ ∙ 
-    cong (_·'' (((𝟚.not b , x) ∷ ε))) p
-
+   ∷A w {xs} b x p =
+     pres· _ _ ∙∙
+    comm·'' _ _ ∙∙ cong ((𝟚.not b , x) ∷_) p
+ 
   Ab→Ab' : Abelianization (GroupT rels) → T relsAb
   Ab→Ab' = recAb
    _
@@ -241,19 +288,22 @@ module _ {IxG : Type ℓ} {IxR : Type ℓ'} where
    εA w = refl
    ∷A w {xs} b x p = cong (η ((b , x) ∷ ε) ·Ab_) p
 
+
+  
   IsoAbAb' : Iso (Abelianization (GroupT rels)) (T relsAb)
   Iso.fun IsoAbAb' = Ab→Ab'
   Iso.inv IsoAbAb' = Ab'→Ab
   Iso.rightInv IsoAbAb' = retAb'→Ab
   Iso.leftInv IsoAbAb' = secAb'→Ab
 
-  Ab'→Ab-hom : IsGroupHom (snd (AbGroup→Group (asAbelianGroup))) Ab→Ab' (snd (GroupT relsAb))
+  Ab'→Ab-hom : IsGroupHom (snd (AbGroup→Group (asAbelianGroup))) Ab→Ab'
+    (AbGroupStr→GroupStr (snd (AbGroupT)))
   IsGroupHom.pres· Ab'→Ab-hom =
     elimProp2Ab _ (λ _ _ → trunc _ _) pres·
   IsGroupHom.pres1 Ab'→Ab-hom = refl
-  IsGroupHom.presinv Ab'→Ab-hom =
+  IsGroupHom.presinv Ab'→Ab-hom = 
     elimPropAb _ (λ _ → trunc _ _) (IsGroupHom.presinv T→AbT-Mor)
 
-  AbGroupIsoAb'Ab : AbGroupIso asAbelianGroup AbGroupT
-  fst AbGroupIsoAb'Ab = IsoAbAb'
-  snd AbGroupIsoAb'Ab = Ab'→Ab-hom
+  -- AbGroupIsoAb'Ab : AbGroupIso asAbelianGroup AbGroupT
+  -- fst AbGroupIsoAb'Ab = IsoAbAb'
+  -- snd AbGroupIsoAb'Ab = Ab'→Ab-hom

@@ -112,5 +112,4 @@ module Braid/Symmetric (hasInvol : 𝟚) (n : ℕ) where
 
  
 
-
 module Braid = Braid/Symmetric false

@@ -25,10 +25,10 @@ open import Cubical.HITs.EilenbergMacLane1
 
 open import Cubical.HITs.GroupoidTruncation as GT
 
-open import Cubical.HITs.S1
 
 
 open import Cubical.Algebra.Group.Presentation.RelIndex
+open import Cubical.Algebra.AbGroup
 
 open import Cubical.Algebra.Group.Presentation.Examples.Permutation
 
@@ -49,6 +49,15 @@ module _ (n : ℕ) where
  open Braid n public
  open PresentationAbelianization σ-r public
  open Pres G {IxR = _} relsAb public
+
+
+𝟚→ℤ : 𝟚 → ℤ
+𝟚→ℤ true = pos 1
+𝟚→ℤ false = neg 1
+
+not-𝟚→ℤ : ∀ b → - (𝟚→ℤ (𝟚.not b)) ≡ 𝟚→ℤ b
+not-𝟚→ℤ false = refl
+not-𝟚→ℤ true = refl
 
 𝟚→ℤ+ : 𝟚 → ℤ → ℤ
 𝟚→ℤ+ false = predℤ
@@ -77,6 +86,8 @@ module _ (n : ℕ) where
  relA w (inl (σₖ x , σₖₗ x₁ x₂)) a = refl
  relA w (inl (σₖₗ x x₁ , σₖ x₂)) a = refl
  relA w (inl (σₖₗ x x₁ , σₖₗ x₂ x₃)) a = refl
+
+
 
 ηsk≡ηk : ∀ n k k< → Path (T (suc (suc n)) )
        ((true , σₖ (k , <-weaken k<)) ∷ ε) ((true , σₖ (suc k , k<)) ∷ ε) 
@@ -157,27 +168,12 @@ Iso.inv (IsoAb𝔹ₙℤ n) = ℤ→𝔹ₙ n
 Iso.rightInv (IsoAb𝔹ₙℤ n) = sec𝔹ₙℤ n
 Iso.leftInv (IsoAb𝔹ₙℤ n) = ret𝔹ₙℤ n
 
--- Ghom : ∀ n → IsGroupHom (snd ℤGroup) (ℤ→𝔹ₙ n) (snd (GroupT (suc (suc n))))  
--- Ghom n = w
---  where
---  w' : ∀ x y → _
---  w' (pos zero) y = {!!}
---  w' (pos (suc n)) y =
---    {!!} ∙ cong ((true , G.σₖ (0 , tt)) ∷_) (w' (pos n) y) 
---  w' (negsuc n) y = {!!}
-
---  w : IsGroupHom _ _ _
---  IsGroupHom.pres· w = w'
-  
---  IsGroupHom.pres1 w = refl
---  IsGroupHom.presinv w = {!!}
-
-Ghom : ∀ n → IsGroupHom (snd (GroupT (suc (suc n)))) (𝔹ₙ→ℤ n) (snd ℤGroup)  
+Ghom : ∀ n → IsGroupHom
+  (AbGroupStr→GroupStr (snd (AbGroupT (suc (suc n))))) (𝔹ₙ→ℤ n) (snd ℤGroup)  
 Ghom n = w
  where
- 
- w : IsGroupHom _ _ _
- IsGroupHom.pres· w = ElimPropT.f (suc (suc n)) w'
+ pres+ : _
+ pres+ = ElimPropT.f (suc (suc n)) w'
   where
   open Pres.ElimPropT
   w' : ElimPropT (suc (suc n)) _
@@ -195,68 +191,31 @@ Ghom n = w
     cong (sucℤ ∘ sucℤ) (x₁ x₂)
      ∙∙ cong (sucℤ) (sucℤ+ _ _) 
      ∙∙ sucℤ+ _ _
-  
+
+ w : IsGroupHom _ _ _
+ IsGroupHom.pres· w = pres+  
  IsGroupHom.pres1 w = refl
  IsGroupHom.presinv w = ElimPropT.f (suc (suc n)) w'
   where
   open Pres.ElimPropT
+
+  lem-η-inv : ∀ b x → 𝔹ₙ→ℤ n ((𝟚.not b , x) ∷ ε) ≡ - 𝔹ₙ→ℤ n ((b , x) ∷ ε)
+  lem-η-inv false (σₖ x) = refl
+  lem-η-inv true (σₖ x) = refl
+  lem-η-inv false (σₖₗ x x₁) = refl
+  lem-η-inv true (σₖₗ x x₁) = refl
+  
   w' : ElimPropT (suc (suc n)) _
   isPropA w' _ = isSetℤ _ _
   εA w' = refl
-  ∷A w' b x x₁ = {!!}
-  -- ∷A w' true x x₁ = {!!}
+  ∷A w' {xs} b x p = 
+      ((pres+ ((𝟚.not b , x) ∷ ε) (invAb _ xs))
+    ∙∙ (cong₂ (_+_) (lem-η-inv b x) p)
+    ∙∙ (sym (-Dist+ (𝔹ₙ→ℤ n ((b , x) ∷ ε)) (𝔹ₙ→ℤ n xs))))
+    ∙ sym (cong (-_) (pres+ _ _))
 
 
--- Ab𝔹ₙ→S¹ : ∀ n → Ab𝑩ₙ (suc (suc n)) → ℤ   
--- Ab𝔹ₙ→S¹ n =
---  recAb _ isSetℤ
---    (𝔹ₙ→ℤ n)
---    λ a b c → {!!}
---    -- cong (𝔹ₙ→ℤ n a +_) {!!} --(+Comm (𝔹ₙ→ℤ n b) (𝔹ₙ→ℤ n c))
---   -- λ a b c → cong (cong (𝔹ₙ→S¹ n) a ∙_)
---   --   (comm-ΩS¹ (cong (𝔹ₙ→S¹ n) b) (cong (𝔹ₙ→S¹ n) c))
 
-
--- -- 𝔹ₙ→S¹ : ∀ n → 𝔹T (suc (suc n)) → S¹   
--- -- 𝔹ₙ→S¹ n = Rec𝔹T.f (suc (suc n)) w
--- --  where
--- --  open Rec𝔹T
--- --  w : Pres.Rec𝔹T _ _ _
--- --  isGroupoidA w = isGroupoidS¹
--- --  baseA w = base
--- --  loopA w (σₖ x) = loop
--- --  loopA w (σₖₗ x x₁) = loop ∙ loop
--- --  relSqA w (comp-σ k l) i j =
--- --    hcomp
--- --      (λ i' → λ { (j = i0) → base
--- --                ; (j = i1) → loop (i ∧ i')
--- --                ; (i = i0) → loop j })
--- --      (loop j)
--- --  relSqA w (comm-σ k l x) = refl
--- --  relSqA w (braid-σ x) i j = 
--- --    hcomp (λ k → λ { (i = i0) → loop j
--- --                    ; (i = i1) →
--- --                      (invSides-filler (S¹.loop) (sym (S¹.loop))) (~ k) j 
-
--- --                    })
--- --           ((invSides-filler (S¹.loop) (sym (S¹.loop))) (~ i) j )
-
--- -- S¹→𝔹ₙ : ∀ n → S¹ → 𝔹T (suc (suc n))   
--- -- S¹→𝔹ₙ n base = base
--- -- S¹→𝔹ₙ n (loop i) = loop (σₖ (zero , tt)) i
-
-
--- -- Ab𝔹ₙ→S¹ : ∀ n → Ab𝑩ₙ (suc (suc n)) → ΩS¹   
--- -- Ab𝔹ₙ→S¹ n =
--- --  recAb _ isSetΩS¹ (cong (𝔹ₙ→S¹ n))
--- --   λ a b c → cong (cong (𝔹ₙ→S¹ n) a ∙_)
--- --     (comm-ΩS¹ (cong (𝔹ₙ→S¹ n) b) (cong (𝔹ₙ→S¹ n) c))
-
--- -- S¹→Ab𝔹ₙ : ∀ n → ΩS¹ → Ab𝑩ₙ (suc (suc n))   
--- -- S¹→Ab𝔹ₙ n = Abelianization.η ∘ cong (S¹→𝔹ₙ n)
-
--- -- secS¹→Ab𝔹ₙ : ∀ n → section (Ab𝔹ₙ→S¹ n) (S¹→Ab𝔹ₙ n)
--- -- secS¹→Ab𝔹ₙ n b = {!!}
-
--- -- retS¹→Ab𝔹ₙ : ∀ n → retract (Ab𝔹ₙ→S¹ n) (S¹→Ab𝔹ₙ n)
--- -- retS¹→Ab𝔹ₙ n a = {!!}
+ GroupIsoAb𝔹ₙℤ : GroupIso (AbGroup→Group (AbGroupT (suc (suc n)))) ℤGroup
+ fst GroupIsoAb𝔹ₙℤ = IsoAb𝔹ₙℤ _
+ snd GroupIsoAb𝔹ₙℤ = Ghom n
