@@ -293,7 +293,8 @@ module MinimalPred {ℓ ℓ'} (A : Type ℓ)
             (push {n = n} (a , b))
  wSq' n a b b' zero p (inl x) = Empty.rec (<→≢ x (sym p))
  wSq' n a b b' (suc nn) p (inl x) i j =
-    hcomp
+  let bs = <B {a = a} (<-weaken {n} {suc n} (≤-refl n)) b
+  in hcomp
       (λ k → λ {
         (i = i0) → wInl n a b (j ∨ ~ k)
        ;(j = i0) →
@@ -308,26 +309,27 @@ module MinimalPred {ℓ ℓ'} (A : Type ℓ)
                 ((fst
            (snd
             (Minimal.→Least B?
-             (suc n , snd (map-snd (<B {a = a} {n = suc n}
-                    (<-weaken {m = n} {suc n} (≤-refl n))) (a , b)))))))
+             (suc n , bs)))))
                  ((<B {a = a} {n = n} x
            (fst
             (snd
-             (Minimal.→Least B?
-              (suc n ,
-               snd (map-snd (<B {a = a} (<-weaken {n} {suc n} (≤-refl n)))
-                 (a , b))))))))
-                 (≤-split x) (~ k))
+             (Minimal.→Least B? (suc n , bs)))))) (≤-split x) (~ k))
               })
              (w
-              {!!} n {!!} {!!} {!a!} {!!} {!!} {!!} (~ k) ) 
-       ;(j = i1) →
+              {!!} n {!!} {!!} a {!!} {!!} {!!} (~ k) ) 
+       ;(j = i1) →  
            hcomp
              (λ k' → λ {
                (k = i0) → push (a , b) i
               ;(k = i1) → push (a , b) i
               ;(i = i0) → inl (a , b)
-              ;(i = i1) → inl (a , {!!})
+              ;(i = i1) → inl (a ,
+                 isSet→SquareP
+                   (λ _ _ → isProp→isSet (snd (B a (suc n))))
+                   (λ _ → bs)
+                   (λ _ → bs)
+                   (λ _ → bs)
+                   ({!cong₂ (<B) ? ?!}) k k' )
               })
              (push (a , b) i) 
        })
