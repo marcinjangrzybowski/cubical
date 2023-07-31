@@ -5,6 +5,9 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Transport
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Structure
+open import Cubical.Foundations.Univalence
 
 open import Cubical.Data.Empty as Empty
 open import Cubical.Data.Sigma
@@ -17,6 +20,10 @@ open import Cubical.Data.Nat.Properties
 open import Cubical.Induction.WellFounded
 
 open import Cubical.Relation.Nullary
+
+open import Cubical.HITs.PropositionalTruncation renaming (rec to rec₁)
+open import Cubical.HITs.SequentialColimit
+
 
 infix 4 _≤_ _<_
 
@@ -125,6 +132,16 @@ n≤k+n {k} n = transport (λ i → n ≤ +-comm n k i) (k≤k+n n)
 ≤-split {suc m} {suc n} m≤n
   = Sum.map (idfun _) (cong suc) (≤-split {m} {n} m≤n)
 
+¬<-≥ : ∀ m n → ¬ m < n → n ≤ m
+¬<-≥ m n ¬m<n with m ≟ n 
+... | lt x = Empty.rec (¬m<n x)
+... | eq x = subst (_≤ m) x (≤-refl m)
+... | gt x = <-weaken {n} {m} x
+
+≤-∸+ : ∀ {m n} → m ≤ n → (n ∸ m) + m ≡ n 
+≤-∸+ {zero} _ = +-zero _
+≤-∸+ {suc m} {suc n} p = +-suc _ _ ∙ cong suc (≤-∸+ {m} p)
+
 module WellFounded where
   wf-< : WellFounded _<_
   wf-rec-< : ∀ n → WFRec _<_ (Acc _<_) n
@@ -189,4 +206,210 @@ module Minimal where
     .fst → Least→ ∘ →Least dP
     .snd x y → cong Least→ (isPropΣLeast pP (→Least dP x) (→Least dP y))
 
-open Minimal using (Decidable→Collapsible) public
+  ΣLeast≡∃P : (∀ m → isProp (P m)) → (∀ m → Dec (P m)) →
+                Σ _ (Least P) ≡ ∃ _ P 
+  ΣLeast≡∃P pP dec =
+   hPropExt (isPropΣLeast pP) squash₁
+    (∣_∣₁ ∘ Least→)
+    (rec₁ (isPropΣLeast pP) (→Least dec))
+  
+module MinimalPred {ℓ ℓ'} (A : Type ℓ)
+ (B : A → ℕ → hProp ℓ')
+ (<B : ∀ {a m n} → m ≤ n → ⟨ B a m ⟩ → ⟨ B a n ⟩)
+ (B? : ∀ {a} n → Dec ⟨ B a n ⟩) where
+ 
+ ⟨B⟩ : A → ℕ → Type ℓ'
+ ⟨B⟩ = λ a n → fst (B a n)
+ 
+ open Sequence
+ 
+ S : Sequence (ℓ-max ℓ ℓ')
+ space S n = Σ _ λ a → ⟨B⟩ a n
+ Sequence.map S {n} = map-snd (<B (<-weaken {n} (≤-refl n)))
+
+
+ lim→→ΣLeast : (Lim→ S) → (Σ A λ a → Σ ℕ (Minimal.Least (⟨B⟩ a)))
+ fst (lim→→ΣLeast (inl (a , _))) = a
+ snd (lim→→ΣLeast (inl (_ , b))) = Minimal.→Least B? (_ , b)
+ fst (lim→→ΣLeast (push (a , _) _)) = a
+ snd (lim→→ΣLeast (push {n = n} (a , b) i)) = 
+   Minimal.isPropΣLeast (snd ∘ B a)
+     (Minimal.→Least B? (_ , b))
+     (Minimal.→Least B? (suc n , <B ((<-weaken {n} (≤-refl n))) b)) i
+
+ ΣLeast→lim→ : (Σ A λ a → Σ ℕ (Minimal.Least (⟨B⟩ a))) → (Lim→ S)
+ ΣLeast→lim→ (a , (_ , b , _)) = inl (a , b)
+
+ secLim→→ΣLeast : section lim→→ΣLeast ΣLeast→lim→
+ secLim→→ΣLeast (a , b) =
+   cong (a ,_) (Minimal.isPropΣLeast (snd ∘ B a) _ _)
+
+ w : ∀ m n n-m (m+n≡ : n ≡ (n-m) + m) a bₘ b → (m < n) ⊎ (m ≡ n) →
+       Path (Lim→ S)
+        (inl {n = m} (a , bₘ)) (inl {n = n} (a , b)) 
+ w m (suc n) zero m+n≡ a bₘ b (inl x) = Empty.rec (<→≢ x (sym m+n≡))
+ w m (suc n) (suc n-m) m+n≡ a bₘ b (inl x) =
+   let bₙ = <B x bₘ
+   in w m
+       n n-m (injSuc m+n≡)
+        a bₘ bₙ
+             (≤-split x) ∙∙
+        push {n = n} (a , bₙ)
+        ∙∙ cong {B = λ _ → Lim→ S}
+           (λ b → inl (a , b))
+          (snd (B a (suc n)) (<B (<-weaken {m = n} {n = suc n} (≤-refl n)) bₙ)
+                             b)           
+ w m n _ _ a bₘ b (inr x) i =
+  inl (a , isProp→PathP (λ i → snd (B a (x i))) bₘ b i)
+
+
+ -- wSq : ∀ m n n-m (m+n≡ : n ≡ (n-m) + m) sn-m sn-m≡ a bₘ  b b' m≤n m≤sn →
+ --       Square
+ --          (w m n n-m m+n≡ a bₘ b  m≤n)
+ --          {!!}
+ --          {!!}
+ --          (push {n = n} (a , b))
+        
+ -- wSq m n n-m m+n≡ sn-m sn-m≡ a bₘ b m≤n m≤sn i j = {!!}
+
+ wInl : ∀ n a b → ΣLeast→lim→ (lim→→ΣLeast (inl {n = n} (a , b))) ≡ inl (a , b) 
+ wInl n a b =
+  let n₀ = fst (Minimal.→Least B? (n , b))
+      q = ( (¬<-≥ n n₀
+           λ p → snd (snd (Minimal.→Least B? (n , b)))
+             n p b))
+  in w n₀ n (n ∸ n₀)
+      (sym (≤-∸+ {n₀} {n} q)) a _ _
+        (≤-split q)
+
+ wSq' : ∀ n a (b : ⟨B⟩ a n) (b' : ⟨ B a (suc n) ⟩) → ∀ nn p p' →
+         Square
+            (wInl n a b)
+            (w _ (suc n)
+                nn
+                p _ _ _ p')
+            
+            (λ i → ΣLeast→lim→ (lim→→ΣLeast (push (a , b) i)))
+            (push {n = n} (a , b))
+ wSq' n a b b' zero p (inl x) = Empty.rec (<→≢ x (sym p))
+ wSq' n a b b' (suc nn) p (inl x) i j =
+    hcomp
+      (λ k → λ {
+        (i = i0) → wInl n a b (j ∨ ~ k)
+       ;(j = i0) →
+           hcomp
+             (λ k' → λ {
+               (k = i0) → {!!}
+              ;(k = i1) → {!!}
+              ;(i = i0) → wInl n a b (~ k)
+              ;(i = i1) → (w (fst (Minimal.→Least B? (suc n , _))) n
+                nn
+                (injSuc p) a
+                ((fst
+           (snd
+            (Minimal.→Least B?
+             (suc n , snd (map-snd (<B {a = a} {n = suc n}
+                    (<-weaken {m = n} {suc n} (≤-refl n))) (a , b)))))))
+                 ((<B {a = a} {n = n} x
+           (fst
+            (snd
+             (Minimal.→Least B?
+              (suc n ,
+               snd (map-snd (<B {a = a} (<-weaken {n} {suc n} (≤-refl n)))
+                 (a , b))))))))
+                 (≤-split x) (~ k))
+              })
+             (w
+              {!!} n {!!} {!!} {!a!} {!!} {!!} {!!} (~ k) ) 
+       ;(j = i1) →
+           hcomp
+             (λ k' → λ {
+               (k = i0) → push (a , b) i
+              ;(k = i1) → push (a , b) i
+              ;(i = i0) → inl (a , b)
+              ;(i = i1) → inl (a , {!!})
+              })
+             (push (a , b) i) 
+       })
+      (push (a , b) (i ∧ j))
+ wSq' n a b b' nn p (inr x) =
+  let (n₀ , n₀L) = Minimal.→Least B? (n , b)
+      (n₀' , n₀L') = Minimal.→Least B? (suc n , snd (S .Sequence.map (a , b)))
+      q = ( (¬<-≥ n n₀
+           λ p → snd (snd (Minimal.→Least B? (n , b)))
+             n p b))
+  in Empty.rec (<→≢ {n₀} {suc n} q
+        (Minimal.Least-unique _ _ n₀L n₀L' ∙ x))
+
+ retLim→→ΣLeast : retract lim→→ΣLeast ΣLeast→lim→
+ retLim→→ΣLeast (inl {n} (a , b)) = wInl n a b
+
+ retLim→→ΣLeast (push {n = n} (a , b) i) j =
+   wSq' n a b (<B ((<-weaken {n} (≤-refl n))) b)
+    ((suc n ∸ fst (Minimal.→Least (B? {a = a}) (suc n ,
+      snd (S .Sequence.map (a , b)))) ))
+    ((λ i₁ →
+            ≤-∸+
+            {fst
+             (Minimal.→Least {ℓ'}
+              {λ z →
+                 ⟨_⟩ {ℓ'} {ℓ'} {isOfHLevel {ℓ'} 1}
+                 (B (fst (S .Sequence.map {n} (a , b))) z)}
+              (B? {fst (S .Sequence.map {n} (a , b))})
+              (suc n , snd (S .Sequence.map {n} (a , b))))}
+            {suc n}
+            (¬<-≥ (suc n)
+             (fst
+              (Minimal.→Least {ℓ'}
+               {λ z →
+                  ⟨_⟩ {ℓ'} {ℓ'} {isOfHLevel {ℓ'} 1}
+                  (B (fst (S .Sequence.map {n} (a , b))) z)}
+               (B? {fst (S .Sequence.map {n} (a , b))})
+               (suc n , snd (S .Sequence.map {n} (a , b)))))
+             (λ p →
+                snd
+                (snd
+                 (Minimal.→Least {ℓ'}
+                  {λ z →
+                     ⟨_⟩ {ℓ'} {ℓ'} {isOfHLevel {ℓ'} 1}
+                     (B (fst (S .Sequence.map {n} (a , b))) z)}
+                  (B? {fst (S .Sequence.map {n} (a , b))})
+                  (suc n , snd (S .Sequence.map {n} (a , b)))))
+                (suc n) p (snd (S .Sequence.map {n} (a , b)))))
+            (~ i₁)))
+    ((≤-split
+          {fst
+           (Minimal.→Least {ℓ'}
+            {λ z →
+               ⟨_⟩ {ℓ'} {ℓ'} {isOfHLevel {ℓ'} 1}
+               (B (fst (S .Sequence.map {n} (a , b))) z)}
+            (B? {fst (S .Sequence.map {n} (a , b))})
+            (suc n , snd (S .Sequence.map {n} (a , b))))}
+          {suc n}
+          (¬<-≥ (suc n)
+           (fst
+            (Minimal.→Least {ℓ'}
+             {λ z →
+                ⟨_⟩ {ℓ'} {ℓ'} {isOfHLevel {ℓ'} 1}
+                (B (fst (S .Sequence.map {n} (a , b))) z)}
+             (B? {fst (S .Sequence.map {n} (a , b))})
+             (suc n , snd (S .Sequence.map {n} (a , b)))))
+           (λ p →
+              snd
+              (snd
+               (Minimal.→Least {ℓ'}
+                {λ z →
+                   ⟨_⟩ {ℓ'} {ℓ'} {isOfHLevel {ℓ'} 1}
+                   (B (fst (S .Sequence.map {n} (a , b))) z)}
+                (B? {fst (S .Sequence.map {n} (a , b))})
+                (suc n , snd (S .Sequence.map {n} (a , b)))))
+              (suc n) p (snd (S .Sequence.map {n} (a , b))))))) i j
+
+
+--  XX : Iso (Lim→ S) (Σ A λ a → Σ ℕ (Minimal.Least (⟨B⟩ a)))
+--  Iso.fun XX = lim→→ΣLeast
+--  Iso.inv XX = ΣLeast→lim→
+--  Iso.rightInv XX = secLim→→ΣLeast
+--  Iso.leftInv XX = retLim→→ΣLeast
+
+-- open Minimal using (Decidable→Collapsible) public
