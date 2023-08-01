@@ -288,3 +288,16 @@ Decₚ P = Dec ⟨ P ⟩ , isPropDec (isProp⟨⟩ P)
 ⊓-∀-distrib P Q =
   ⇒∶ (λ {(p , q) a → p a , q a})
   ⇐∶ λ pq → (fst ∘ pq ) , (snd ∘ pq)
+
+mutex⊎ : (P : hProp ℓ) (Q : hProp ℓ')
+     → ⟨ ¬ (P ⊓ Q) ⟩ → hProp (ℓ-max ℓ ℓ')
+mutex⊎ P Q ¬P⊓Q = ⟨ P ⟩ ⊎ ⟨ Q ⟩ ,
+ λ  {(inl p) → λ  {(inl p') → cong _⊎_.inl (snd P p p')
+                  ;(inr q) → ⊥.rec (¬P⊓Q (p , q))}
+    ;(inr q) → λ  {(inl p) → ⊥.rec (¬P⊓Q (p , q))
+                  ;(inr q') → cong _⊎_.inr (snd Q q q')}}
+ where
+ open _⊎_
+
+
+ 

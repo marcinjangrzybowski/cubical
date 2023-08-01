@@ -5,6 +5,11 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Transport
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Structure
+open import Cubical.Foundations.Univalence
+
+open import Cubical.Functions.Logic using (mutex⊎)
 
 open import Cubical.Data.Empty as Empty
 open import Cubical.Data.Sigma
@@ -17,6 +22,10 @@ open import Cubical.Data.Nat.Properties
 open import Cubical.Induction.WellFounded
 
 open import Cubical.Relation.Nullary
+
+open import Cubical.HITs.PropositionalTruncation renaming (rec to rec₁)
+open import Cubical.HITs.SequentialColimit
+
 
 infix 4 _≤_ _<_
 
@@ -49,6 +58,9 @@ isProp≤ : isProp (m ≤ n)
 isProp≤ {zero} = isPropUnit
 isProp≤ {suc m} {zero}  = isProp⊥
 isProp≤ {suc m} {suc n} = isProp≤ {m} {n}
+
+isProp< : isProp (m < n)
+isProp< {m} {n} = isProp≤ {m = suc m} {n = n}
 
 ≤-k+ : m ≤ n → k + m ≤ k + n
 ≤-k+ {k = zero}  m≤n = m≤n
@@ -135,6 +147,20 @@ right-≤-max (suc n) (suc m) = right-≤-max n m
 ≤-split {suc m} {suc n} m≤n
   = Sum.map (idfun _) (cong suc) (≤-split {m} {n} m≤n)
 
+≤-fromsplit : (m < n) ⊎ (m ≡ n) → m ≤ n 
+≤-fromsplit {m = m} (inl x) = <-weaken {m = m} x
+≤-fromsplit {m = m} (inr x) = subst (m ≤_) x (≤-refl m)
+
+¬<-≥ : ∀ m n → ¬ m < n → n ≤ m
+¬<-≥ m n ¬m<n with m ≟ n 
+... | lt x = Empty.rec (¬m<n x)
+... | eq x = subst (_≤ m) x (≤-refl m)
+... | gt x = <-weaken {n} {m} x
+
+≤-∸+ : ∀ {m n} → m ≤ n → (n ∸ m) + m ≡ n 
+≤-∸+ {zero} _ = +-zero _
+≤-∸+ {suc m} {suc n} p = +-suc _ _ ∙ cong suc (≤-∸+ {m} p)
+
 module WellFounded where
   wf-< : WellFounded _<_
   wf-rec-< : ∀ n → WFRec _<_ (Acc _<_) n
@@ -151,22 +177,22 @@ wf-elim = WFI.induction WellFounded.wf-<
 wf-rec : (∀ n → (∀ m → m < n → R) → R) → ℕ → R
 wf-rec {R = R} = wf-elim {P = λ _ → R}
 
-module Minimal where
-  Least : ∀{ℓ} → (ℕ → Type ℓ) → (ℕ → Type ℓ)
-  Least P m = P m × (∀ n → n < m → ¬ P n)
+module Minimal (P : ℕ → Type ℓ) where
+  Least : (ℕ → Type ℓ)
+  Least m = P m × (∀ n → n < m → ¬ P n)
 
-  isPropLeast : (∀ m → isProp (P m)) → ∀ m → isProp (Least P m)
+  isPropLeast : (∀ m → isProp (P m)) → ∀ m → isProp (Least m)
   isPropLeast pP m
     = isPropΣ (pP m) (λ _ → isPropΠ3 λ _ _ _ → isProp⊥)
 
-  Least→ : Σ _ (Least P) → Σ _ P
+  Least→ : Σ _ Least → Σ _ P
   Least→ = map-snd fst
 
   search
     : (∀ m → Dec (P m))
-    → ∀ n → (Σ[ m ∈ ℕ ] Least P m) ⊎ (∀ m → m < n → ¬ P m)
+    → ∀ n → (Σ[ m ∈ ℕ ] Least m) ⊎ (∀ m → m < n → ¬ P m)
   search dec zero = inr (λ _ b _ → b)
-  search {P = P} dec (suc n) with search dec n
+  search dec (suc n) with search dec n
   ... | inl tup = inl tup
   ... | inr ¬P<n with dec n
   ... | yes Pn = inl (n , Pn , ¬P<n)
@@ -175,18 +201,18 @@ module Minimal where
           (inl m<n) → ¬P<n m m<n
           (inr m≡n) → subst⁻ (¬_ ∘ P) m≡n ¬Pn
 
-  →Least : (∀ m → Dec (P m)) → Σ _ P → Σ _ (Least P)
+  →Least : (∀ m → Dec (P m)) → Σ _ P → Σ _ Least
   →Least dec (n , Pn) with search dec n
   ... | inl least = least
   ... | inr ¬P<n  = n , Pn , ¬P<n
 
-  Least-unique : ∀ m n → Least P m → Least P n → m ≡ n
+  Least-unique : ∀ m n → Least m → Least n → m ≡ n
   Least-unique m n (Pm , ¬P<m) (Pn , ¬P<n) with m ≟ n
   ... | lt m<n = Empty.rec (¬P<n m m<n Pm)
   ... | eq m≡n = m≡n
   ... | gt n<m = Empty.rec (¬P<m n n<m Pn)
 
-  isPropΣLeast : (∀ m → isProp (P m)) → isProp (Σ _ (Least P))
+  isPropΣLeast : (∀ m → isProp (P m)) → isProp (Σ _ Least)
   isPropΣLeast pP (m , LPm) (n , LPn)
     = ΣPathP λ where
         .fst → Least-unique m n LPm LPn
@@ -199,4 +225,133 @@ module Minimal where
     .fst → Least→ ∘ →Least dP
     .snd x y → cong Least→ (isPropΣLeast pP (→Least dP x) (→Least dP y))
 
-open Minimal using (Decidable→Collapsible) public
+  ΣLeast≡∃P : (∀ m → isProp (P m)) → (∀ m → Dec (P m)) →
+                Σ _ Least ≡ ∃ _ P 
+  ΣLeast≡∃P pP dec =
+   hPropExt (isPropΣLeast pP) squash₁
+    (∣_∣₁ ∘ Least→)
+    (rec₁ (isPropΣLeast pP) (→Least dec))
+  
+module MinimalPred {ℓ ℓ'} (A : Type ℓ)
+ (B : A → ℕ → hProp ℓ')
+ (<B : ∀ {a m n} → m ≤ n → ⟨ B a m ⟩ → ⟨ B a n ⟩)
+ (B? : ∀ {a} n → Dec ⟨ B a n ⟩) where
+ 
+ 
+ open Sequence
+
+
+ S : Sequence (ℓ-max ℓ ℓ')
+ space S n = Σ _ λ a → (fst (B a n))
+ Sequence.map S {n} = map-snd (<B (<-weaken {n} (≤-refl n)))
+
+ module _ {a : A} where
+  open Minimal (fst ∘ (B a)) public
+
+ lim→→ΣLeast : (Lim→ S) → (Σ A λ a → Σ ℕ Least)
+ fst (lim→→ΣLeast (inl (a , _))) = a
+ snd (lim→→ΣLeast (inl (_ , b))) = →Least B? (_ , b)
+ fst (lim→→ΣLeast (push (a , _) _)) = a
+ snd (lim→→ΣLeast (push {n = n} (a , b) i)) = 
+   isPropΣLeast (snd ∘ B a)
+     (→Least B? (_ , b))
+     (→Least B? (suc n , <B ((<-weaken {n} (≤-refl n))) b)) i
+
+ ΣLeast→lim→ : (Σ A λ a → Σ ℕ Least) → (Lim→ S)
+ ΣLeast→lim→ (a , (_ , b , _)) = inl (a , b)
+
+ secLim→→ΣLeast : section lim→→ΣLeast ΣLeast→lim→
+ secLim→→ΣLeast (a , b) =
+   cong (a ,_) (isPropΣLeast (snd ∘ B a) _ _)
+
+ 
+ ML = λ (a : A) → Σ _ (Least {a})
+
+ ml : ∀ a n b → ML a
+ ml a n b = →Least (B? {a = a}) (n , b)
+
+ ml< : ∀ n a b → (fst (ml a n b) < n) ⊎ (fst (ml a n b) ≡ n)
+ ml< n a b =
+   ≤-split (( (¬<-≥ n (fst (ml a n b))
+           λ p → snd (snd (→Least B? (n , b)))
+             n p b)))
+
+
+ wInl : ∀ a ((m , (bₘ , _)) : ML a) n bₙ → (m < n) ⊎ (m ≡ n)
+       → Path (Lim→ S) (inl {n = m} (a , bₘ)) (inl {n = n} (a , bₙ))
+ wInl a (m , bₘ , _) n bₙ (inr x) i =
+    inl (a , isProp→PathP (λ i → snd (B a (x i)))
+     bₘ bₙ i)
+ wInl a ml@(m , bₘ , _) (suc n) bₛₙ (inl x) =
+   let bₙ = <B x bₘ
+   in  wInl a ml n bₙ (≤-split x)
+        ∙∙ push _
+        ∙∙ λ i → inl (a , snd (B a (suc n))
+             (<B (<-weaken {m = n} (≤-refl n)) bₙ)
+             bₛₙ i)
+
+
+ wSq : ∀ a n (bₙ : ⟨ B a n ⟩) (bₛₙ : ⟨ B a (suc n) ⟩) → ∀ ml ml' p p'
+         →
+         Square
+            (wInl a ml n bₙ p)
+            (wInl a ml' (suc n) _ p')
+            
+            (λ i → ΣLeast→lim→ ( a , isPropΣLeast (snd ∘ B a) ml ml' i ))
+            (push {n = n} (a , bₙ))
+ 
+ wSq a n bₙ bₛₙ mlₙ mlₛₙ x₁ (inr x) =
+   Empty.rec (<→≢ (≤-fromsplit x₁)
+    (cong fst (isPropΣLeast (snd ∘ B a) mlₙ mlₛₙ) ∙ x))
+   
+ wSq a n bₙ bₛₙ mlₙ mlₛₙ p (inl x) i j =
+  let bₙ≡ = snd (B a n) bₙ (<B x (fst (snd mlₛₙ)))
+      ml= = isPropΣLeast (snd ∘ B a) mlₙ mlₛₙ
+
+  in hcomp
+       (λ k → λ {
+         (i = i0) → wInl a mlₙ n bₙ p (j ∨ ~ k)
+        ;(j = i0) → wInl a
+                    (ml= i)
+                    n (bₙ≡ i)                     
+                    (isProp→PathP
+                      (λ i → snd (mutex⊎
+                         (_ , isProp< {fst (ml= i)} {n})
+                         (_ , isSetℕ (fst (ml= i)) _)
+                         (uncurry <→≢)))
+                       p
+                       (≤-split {fst mlₛₙ} {n} x) i)
+                    (~ k)
+        ;(j = i1) → _▷_ {A = λ i' → Path (Lim→ S)
+                (push (a , bₙ≡ i) i')
+                (push (a , bₙ) i')}
+                {a₁' = λ i' → inl {n = suc n}
+                  (a , snd (B a (suc n))
+                    (<B (<-weaken {m = n} (≤-refl n))
+          (snd (B a n) bₙ (<B x (fst (snd mlₛₙ))) i))
+          (<B (<-weaken {m = n} (≤-refl n)) bₙ) i')}
+            (λ i' k → push {n = n} (a , bₙ≡ (i ∧ ~ k)) i' )
+             (congP {B = λ i' z → Path (Lim→ S) _ _}
+               (λ i → cong (inl ∘ (a ,_)))
+              (isProp→isSet (snd (B a (suc n))) _ _ _ _ )) i k
+          })
+       (push (a , bₙ≡ i) (i ∧ j))
+ 
+ retLim→→ΣLeast : retract lim→→ΣLeast ΣLeast→lim→
+ retLim→→ΣLeast (inl {n} (a , b)) =
+   wInl a (ml a n b) n b (ml< n a b) 
+
+ retLim→→ΣLeast (push {n = n} (a , b) i) j =
+   let bₛₙ = (<B ((<-weaken {n} (≤-refl n))) b)
+   in wSq a n b bₛₙ
+     (ml a n b) (ml a (suc n) bₛₙ) (ml< n a b) (ml< (suc n) a bₛₙ) i j 
+
+ IsoLim→ΣLeast : Iso (Lim→ S) (Σ A λ a → Σ ℕ Least)
+ Iso.fun IsoLim→ΣLeast = lim→→ΣLeast
+ Iso.inv IsoLim→ΣLeast = ΣLeast→lim→
+ Iso.rightInv IsoLim→ΣLeast = secLim→→ΣLeast
+ Iso.leftInv IsoLim→ΣLeast = retLim→→ΣLeast
+
+ isoIsoLim→∃P : (Lim→ S) ≡ (Σ A λ _ → ∃ ℕ (fst ∘ (B _)))
+ isoIsoLim→∃P = isoToPath IsoLim→ΣLeast ∙
+   cong (Σ A) (funExt λ a → ΣLeast≡∃P (snd ∘ B a) B?)

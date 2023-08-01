@@ -260,6 +260,8 @@ n∸n (suc n) = n∸n n
 ∸-distribʳ zero    (suc n) k = sym (zero∸ (k + n · k))
 ∸-distribʳ (suc m) (suc n) k = ∸-distribʳ m n k ∙ sym (∸-cancelˡ k (m · k) (n · k))
 
++-cancel-∸ : ∀ m n k → m ≡ n + k → m ∸ k ≡ n
++-cancel-∸ m n k p = cong (_∸ k) p ∙ +∸ n k
 
 
 -- factorial:
