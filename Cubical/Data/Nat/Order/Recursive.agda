@@ -9,6 +9,8 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Univalence
 
+open import Cubical.Functions.Logic using (mutex⊎)
+
 open import Cubical.Data.Empty as Empty
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum as Sum
@@ -56,6 +58,9 @@ isProp≤ : isProp (m ≤ n)
 isProp≤ {zero} = isPropUnit
 isProp≤ {suc m} {zero}  = isProp⊥
 isProp≤ {suc m} {suc n} = isProp≤ {m} {n}
+
+isProp< : isProp (m < n)
+isProp< {m} {n} = isProp≤ {m = suc m} {n = n}
 
 ≤-k+ : m ≤ n → k + m ≤ k + n
 ≤-k+ {k = zero}  m≤n = m≤n
@@ -131,6 +136,10 @@ n≤k+n {k} n = transport (λ i → n ≤ +-comm n k i) (k≤k+n n)
 ≤-split {zero} {suc n} m≤n = inl _
 ≤-split {suc m} {suc n} m≤n
   = Sum.map (idfun _) (cong suc) (≤-split {m} {n} m≤n)
+
+≤-fromsplit : (m < n) ⊎ (m ≡ n) → m ≤ n 
+≤-fromsplit {m = m} (inl x) = <-weaken {m = m} x
+≤-fromsplit {m = m} (inr x) = subst (m ≤_) x (≤-refl m)
 
 ¬<-≥ : ∀ m n → ¬ m < n → n ≤ m
 ¬<-≥ m n ¬m<n with m ≟ n 
@@ -218,17 +227,16 @@ module MinimalPred {ℓ ℓ'} (A : Type ℓ)
  (<B : ∀ {a m n} → m ≤ n → ⟨ B a m ⟩ → ⟨ B a n ⟩)
  (B? : ∀ {a} n → Dec ⟨ B a n ⟩) where
  
- ⟨B⟩ : A → ℕ → Type ℓ'
- ⟨B⟩ = λ a n → fst (B a n)
  
  open Sequence
- 
+
+
  S : Sequence (ℓ-max ℓ ℓ')
- space S n = Σ _ λ a → ⟨B⟩ a n
+ space S n = Σ _ λ a → (fst (B a n))
  Sequence.map S {n} = map-snd (<B (<-weaken {n} (≤-refl n)))
 
 
- lim→→ΣLeast : (Lim→ S) → (Σ A λ a → Σ ℕ (Minimal.Least (⟨B⟩ a)))
+ lim→→ΣLeast : (Lim→ S) → (Σ A λ a → Σ ℕ (Minimal.Least (fst ∘ (B a))))
  fst (lim→→ΣLeast (inl (a , _))) = a
  snd (lim→→ΣLeast (inl (_ , b))) = Minimal.→Least B? (_ , b)
  fst (lim→→ΣLeast (push (a , _) _)) = a
@@ -237,237 +245,101 @@ module MinimalPred {ℓ ℓ'} (A : Type ℓ)
      (Minimal.→Least B? (_ , b))
      (Minimal.→Least B? (suc n , <B ((<-weaken {n} (≤-refl n))) b)) i
 
- ΣLeast→lim→ : (Σ A λ a → Σ ℕ (Minimal.Least (⟨B⟩ a))) → (Lim→ S)
+ ΣLeast→lim→ : (Σ A λ a → Σ ℕ (Minimal.Least (fst ∘ B a))) → (Lim→ S)
  ΣLeast→lim→ (a , (_ , b , _)) = inl (a , b)
 
  secLim→→ΣLeast : section lim→→ΣLeast ΣLeast→lim→
  secLim→→ΣLeast (a , b) =
    cong (a ,_) (Minimal.isPropΣLeast (snd ∘ B a) _ _)
 
- w : ∀ m n n-m (m+n≡ : n ≡ (n-m) + m) a bₘ b → (m < n) ⊎ (m ≡ n) →
-       Path (Lim→ S)
-        (inl {n = m} (a , bₘ)) (inl {n = n} (a , b)) 
- w m (suc n) zero m+n≡ a bₘ b (inl x) = Empty.rec (<→≢ x (sym m+n≡))
- w m (suc n) (suc n-m) m+n≡ a bₘ b (inl x) =
-   let bₙ = <B x bₘ
-   in w m
-       n n-m (injSuc m+n≡)
-        a bₘ bₙ
-             (≤-split x) ∙∙
-        push {n = n} (a , bₙ)
-        ∙∙ cong {B = λ _ → Lim→ S}
-           (λ b → inl (a , b))
-          (snd (B a (suc n)) (<B (<-weaken {m = n} {n = suc n} (≤-refl n)) bₙ)
-                             b)           
- w m n _ _ a bₘ b (inr x) i =
-  inl (a , isProp→PathP (λ i → snd (B a (x i))) bₘ b i)
+ 
+ ML = λ (a : A) → Σ _ (Minimal.Least (fst ∘ B a))
 
+ ml : ∀ a n b → ML a
+ ml a n b = Minimal.→Least (B? {a = a}) (n , b)
 
- -- wSq : ∀ m n n-m (m+n≡ : n ≡ (n-m) + m) sn-m sn-m≡ a bₘ  b b' m≤n m≤sn →
- --       Square
- --          (w m n n-m m+n≡ a bₘ b  m≤n)
- --          {!!}
- --          {!!}
- --          (push {n = n} (a , b))
-        
- -- wSq m n n-m m+n≡ sn-m sn-m≡ a bₘ b m≤n m≤sn i j = {!!}
-
- wInl : ∀ n a b → ΣLeast→lim→ (lim→→ΣLeast (inl {n = n} (a , b))) ≡ inl (a , b) 
- wInl n a b =
-  let n₀ = fst (Minimal.→Least B? (n , b))
-      q = ( (¬<-≥ n n₀
+ ml< : ∀ n a b → (fst (ml a n b) < n) ⊎ (fst (ml a n b) ≡ n)
+ ml< n a b =
+   ≤-split (( (¬<-≥ n (fst (ml a n b))
            λ p → snd (snd (Minimal.→Least B? (n , b)))
-             n p b))
-  in w n₀ n (n ∸ n₀)
-      (sym (≤-∸+ {n₀} {n} q)) a _ _
-        (≤-split q)
+             n p b)))
 
- wSq' : ∀ n a (b : ⟨B⟩ a n) (b' : ⟨ B a (suc n) ⟩) → ∀ nn p p' →
+
+ wInl : ∀ a ((m , (bₘ , _)) : ML a) n bₙ → (m < n) ⊎ (m ≡ n)
+       → Path (Lim→ S) (inl {n = m} (a , bₘ)) (inl {n = n} (a , bₙ))
+ wInl a (m , bₘ , _) n bₙ (inr x) i =
+    inl (a , isProp→PathP (λ i → snd (B a (x i)))
+     bₘ bₙ i)
+ wInl a ml@(m , bₘ , _) (suc n) bₛₙ (inl x) =
+   let bₙ = <B x bₘ
+   in  wInl a ml n bₙ (≤-split x)
+        ∙∙ push _
+        ∙∙ λ i → inl (a , snd (B a (suc n))
+             (<B (<-weaken {m = n} (≤-refl n)) bₙ)
+             bₛₙ i)
+
+
+ wSq : ∀ a n (bₙ : ⟨ B a n ⟩) (bₛₙ : ⟨ B a (suc n) ⟩) → ∀ ml ml' p p'
+         →
          Square
-            (wInl n a b)
-            (w _ (suc n)
-                nn
-                p _ _ _ p')
+            (wInl a ml n bₙ p)
+            (wInl a ml' (suc n) _ p')
             
-            (λ i → ΣLeast→lim→ (lim→→ΣLeast (push (a , b) i)))
-            (push {n = n} (a , b))
- wSq' n a b b' zero p (inl x) = Empty.rec (<→≢ x (sym p))
- wSq' n a b b' (suc nn) p (inl x) i j =
-  let bs = <B {a = a} (<-weaken {n} {suc n} (≤-refl n)) b
-      b'' = <B x (fst (snd (Minimal.→Least B? (suc n , bs))))
-      bP = snd (B a n) b b''
-      mlu = Minimal.Least-unique ((fst (Minimal.→Least B? (n , b)))) (fst (Minimal.→Least B? (suc n , bs)))
-              (((snd (Minimal.→Least B? (n , b)))))
-              ((snd (Minimal.→Least B? (suc n , bs))))
-      nnP : _ ≡ _
-      nnP = λ i → +-cancel-∸ n nn (mlu i)
-             (injSuc p ∙ λ j → nn + mlu (i ∨ (~ j))) i
-      split<P : PathP (λ i → mlu i ≤ n)
-                   (((¬<-≥ n (fst (Minimal.→Least B? (n , b)))
-          (λ p₁ → snd (snd (Minimal.→Least B? (n , b))) n p₁ b))))
-                   x       
-      split<P = isProp→PathP (λ i → isProp≤ {mlu i} {n = n}) _ _
+            (λ i → ΣLeast→lim→ ( a , Minimal.isPropΣLeast (snd ∘ B a) ml ml' i ))
+            (push {n = n} (a , bₙ))
+ 
+ wSq a n bₙ bₛₙ mlₙ mlₛₙ x₁ (inr x) =
+   Empty.rec (<→≢ (≤-fromsplit x₁)
+    (cong fst (Minimal.isPropΣLeast (snd ∘ B a) mlₙ mlₛₙ) ∙ x))
+   
+ wSq a n bₙ bₛₙ mlₙ mlₛₙ p (inl x) i j =
+  let bₙ≡ = snd (B a n) bₙ (<B x (fst (snd mlₛₙ)))
+      ml= = Minimal.isPropΣLeast (snd ∘ B a) mlₙ mlₛₙ
 
   in hcomp
-      (λ k → λ {
-        (i = i0) → wInl n a b (j ∨ ~ k)
-       ;(j = i0) → 
-           -- hcomp
-           --   (λ k' → λ {
-           --     (k = i0) → inl (a , bP i)
-           --    ;(k = i1) → inl {n = mlu i} (a , {!!})
-           --    ;(i = i0) → wInl n a b (~ k)
-           --    ;(i = i1) → (w (fst (Minimal.→Least B? (suc n , _))) n
-           --      nn
-           --      (injSuc p) a
-           --      ((fst
-           -- (snd
-           --  (Minimal.→Least B?
-           --   (suc n , bs)))))
-           --       ((<B {a = a} {n = n} x
-           -- (fst
-           --  (snd
-           --   (Minimal.→Least B? (suc n , bs)))))) (≤-split x) (~ k))
-           --    })
-             (w
-              (mlu i) n (nnP i)
-                {!!}
-               -- (isProp→PathP
-               --     (λ i → isSetℕ n (nnP i + mlu i))
-               --     (sym (≤-∸+ {{!!}}
-               --      (¬<-≥ n (fst (Minimal.→Least B? (n , b)))
-               --       (λ p₁ → snd (snd (Minimal.→Least B? (n , b))) n p₁ b))))
-               --     (injSuc p)
-               --  i)
--- Goal: n ≡
---       +-cancel-∸ n nn
---       (Minimal.Least-unique (fst (Minimal.→Least B? (n , b)))
---        (fst (Minimal.→Least B? (suc n , bs)))
---        (snd (Minimal.→Least B? (n , b)))
---        (snd (Minimal.→Least B? (suc n , bs))) i)
---       (injSuc p ∙
---        (λ j₁ →
---           nn +
---           Minimal.Least-unique (fst (Minimal.→Least B? (n , b)))
---           (fst (Minimal.→Least B? (suc n , bs)))
---           (snd (Minimal.→Least B? (n , b)))
---           (snd (Minimal.→Least B? (suc n , bs))) (i ∨ ~ j₁)))
---       i
---       +
---       Minimal.Least-unique (fst (Minimal.→Least B? (n , b)))
---       (fst (Minimal.→Least B? (suc n , bs)))
---       (snd (Minimal.→Least B? (n , b)))
---       (snd (Minimal.→Least B? (suc n , bs))) i
--- ———— Boundary (wanted) —————————————————————————————————————
--- i = i0 ⊢ (λ i₁ →
---             ≤-∸+
---             (¬<-≥ n (fst (Minimal.→Least B? (n , b)))
---              (λ p₁ → snd (snd (Minimal.→Least B? (n , b))) n p₁ b))
---             (~ i₁))
--- i = i1 ⊢ (injSuc p)
-
-               a {!!} (bP i)
-                (≤-split (split<P i)) (~ k) ) 
-       ;(j = i1) →  
-           hcomp
-             (λ k' → λ {
-               (k = i0) → push (a , bP (i ∧ k')) i
-              ;(k = i1) → push (a , b) i
-              ;(i = i0) → inl {n = n} (a , b)
-              ;(i = i1) → inl {n = suc n} (a , 
-                    
-                 isSet→SquareP
-                   (λ _ _ → isProp→isSet (snd (B a (suc n))))
-                   (λ i  → <B {a = a} (<-weaken {n} {suc n} (≤-refl n)) (bP i))
-                   (λ _ → bs)
-                   (λ _ → bs)
-                   ((snd (B a (suc n)) (<B (<-weaken {m = n} {n = suc n} (≤-refl n)) _))
-                      bs ) k k'
-                   )
-              })
-             (push (a , b) i) 
-       }) ((push {n = n}
-          (a , bP i)
-          (i ∧ j)))
-
- wSq' n a b b' nn p (inr x) =
-  let (n₀ , n₀L) = Minimal.→Least B? (n , b)
-      (n₀' , n₀L') = Minimal.→Least B? (suc n , snd (S .Sequence.map (a , b)))
-      q = ( (¬<-≥ n n₀
-           λ p → snd (snd (Minimal.→Least B? (n , b)))
-             n p b))
-  in Empty.rec (<→≢ {n₀} {suc n} q
-        (Minimal.Least-unique _ _ n₀L n₀L' ∙ x))
-
+       (λ k → λ {
+         (i = i0) → wInl a mlₙ n bₙ p (j ∨ ~ k)
+        ;(j = i0) → wInl a
+                    (ml= i)
+                    n (bₙ≡ i)                     
+                    (isProp→PathP
+                      (λ i → snd (mutex⊎
+                         (_ , isProp< {fst (ml= i)} {n})
+                         (_ , isSetℕ (fst (ml= i)) _)
+                         (uncurry <→≢)))
+                       p
+                       (≤-split {fst mlₛₙ} {n} x) i)
+                    (~ k)
+        ;(j = i1) → _▷_ {A = λ i' → Path (Lim→ S)
+                (push (a , bₙ≡ i) i')
+                (push (a , bₙ) i')}
+                {a₁' = λ i' → inl {n = suc n}
+                  (a , snd (B a (suc n))
+                    (<B (<-weaken {m = n} (≤-refl n))
+          (snd (B a n) bₙ (<B x (fst (snd mlₛₙ))) i))
+          (<B (<-weaken {m = n} (≤-refl n)) bₙ) i')}
+            (λ i' k → push {n = n} (a , bₙ≡ (i ∧ ~ k)) i' )
+             (congP {B = λ i' z → Path (Lim→ S) _ _}
+               (λ i → cong (inl ∘ (a ,_)))
+              (isProp→isSet (snd (B a (suc n))) _ _ _ _ )) i k
+          })
+       (push (a , bₙ≡ i) (i ∧ j))
+ 
  retLim→→ΣLeast : retract lim→→ΣLeast ΣLeast→lim→
- retLim→→ΣLeast (inl {n} (a , b)) = wInl n a b
+ retLim→→ΣLeast (inl {n} (a , b)) =
+   wInl a (ml a n b) n b (ml< n a b) 
 
  retLim→→ΣLeast (push {n = n} (a , b) i) j =
-   wSq' n a b (<B ((<-weaken {n} (≤-refl n))) b)
-    ((suc n ∸ fst (Minimal.→Least (B? {a = a}) (suc n ,
-      snd (S .Sequence.map (a , b)))) ))
-    ((λ i₁ →
-            ≤-∸+
-            {fst
-             (Minimal.→Least {ℓ'}
-              {λ z →
-                 ⟨_⟩ {ℓ'} {ℓ'} {isOfHLevel {ℓ'} 1}
-                 (B (fst (S .Sequence.map {n} (a , b))) z)}
-              (B? {fst (S .Sequence.map {n} (a , b))})
-              (suc n , snd (S .Sequence.map {n} (a , b))))}
-            {suc n}
-            (¬<-≥ (suc n)
-             (fst
-              (Minimal.→Least {ℓ'}
-               {λ z →
-                  ⟨_⟩ {ℓ'} {ℓ'} {isOfHLevel {ℓ'} 1}
-                  (B (fst (S .Sequence.map {n} (a , b))) z)}
-               (B? {fst (S .Sequence.map {n} (a , b))})
-               (suc n , snd (S .Sequence.map {n} (a , b)))))
-             (λ p →
-                snd
-                (snd
-                 (Minimal.→Least {ℓ'}
-                  {λ z →
-                     ⟨_⟩ {ℓ'} {ℓ'} {isOfHLevel {ℓ'} 1}
-                     (B (fst (S .Sequence.map {n} (a , b))) z)}
-                  (B? {fst (S .Sequence.map {n} (a , b))})
-                  (suc n , snd (S .Sequence.map {n} (a , b)))))
-                (suc n) p (snd (S .Sequence.map {n} (a , b)))))
-            (~ i₁)))
-    ((≤-split
-          {fst
-           (Minimal.→Least {ℓ'}
-            {λ z →
-               ⟨_⟩ {ℓ'} {ℓ'} {isOfHLevel {ℓ'} 1}
-               (B (fst (S .Sequence.map {n} (a , b))) z)}
-            (B? {fst (S .Sequence.map {n} (a , b))})
-            (suc n , snd (S .Sequence.map {n} (a , b))))}
-          {suc n}
-          (¬<-≥ (suc n)
-           (fst
-            (Minimal.→Least {ℓ'}
-             {λ z →
-                ⟨_⟩ {ℓ'} {ℓ'} {isOfHLevel {ℓ'} 1}
-                (B (fst (S .Sequence.map {n} (a , b))) z)}
-             (B? {fst (S .Sequence.map {n} (a , b))})
-             (suc n , snd (S .Sequence.map {n} (a , b)))))
-           (λ p →
-              snd
-              (snd
-               (Minimal.→Least {ℓ'}
-                {λ z →
-                   ⟨_⟩ {ℓ'} {ℓ'} {isOfHLevel {ℓ'} 1}
-                   (B (fst (S .Sequence.map {n} (a , b))) z)}
-                (B? {fst (S .Sequence.map {n} (a , b))})
-                (suc n , snd (S .Sequence.map {n} (a , b)))))
-              (suc n) p (snd (S .Sequence.map {n} (a , b))))))) i j
+   let bₛₙ = (<B ((<-weaken {n} (≤-refl n))) b)
+   in wSq a n b bₛₙ
+     (ml a n b) (ml a (suc n) bₛₙ) (ml< n a b) (ml< (suc n) a bₛₙ) i j 
 
+ IsoLim→ΣLeast : Iso (Lim→ S) (Σ A λ a → Σ ℕ (Minimal.Least (fst ∘ (B a))))
+ Iso.fun IsoLim→ΣLeast = lim→→ΣLeast
+ Iso.inv IsoLim→ΣLeast = ΣLeast→lim→
+ Iso.rightInv IsoLim→ΣLeast = secLim→→ΣLeast
+ Iso.leftInv IsoLim→ΣLeast = retLim→→ΣLeast
 
---  XX : Iso (Lim→ S) (Σ A λ a → Σ ℕ (Minimal.Least (⟨B⟩ a)))
---  Iso.fun XX = lim→→ΣLeast
---  Iso.inv XX = ΣLeast→lim→
---  Iso.rightInv XX = secLim→→ΣLeast
---  Iso.leftInv XX = retLim→→ΣLeast
-
--- open Minimal using (Decidable→Collapsible) public
+ isoIsoLim→∃P : (Lim→ S) ≡ (Σ A λ _ → ∃ ℕ (fst ∘ (B _)))
+ isoIsoLim→∃P = isoToPath IsoLim→ΣLeast ∙
+   cong (Σ A) (funExt λ a → Minimal.ΣLeast≡∃P (snd ∘ B a) B?)
