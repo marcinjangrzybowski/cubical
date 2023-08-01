@@ -167,22 +167,22 @@ wf-elim = WFI.induction WellFounded.wf-<
 wf-rec : (∀ n → (∀ m → m < n → R) → R) → ℕ → R
 wf-rec {R = R} = wf-elim {P = λ _ → R}
 
-module Minimal where
-  Least : ∀{ℓ} → (ℕ → Type ℓ) → (ℕ → Type ℓ)
-  Least P m = P m × (∀ n → n < m → ¬ P n)
+module Minimal (P : ℕ → Type ℓ) where
+  Least : (ℕ → Type ℓ)
+  Least m = P m × (∀ n → n < m → ¬ P n)
 
-  isPropLeast : (∀ m → isProp (P m)) → ∀ m → isProp (Least P m)
+  isPropLeast : (∀ m → isProp (P m)) → ∀ m → isProp (Least m)
   isPropLeast pP m
     = isPropΣ (pP m) (λ _ → isPropΠ3 λ _ _ _ → isProp⊥)
 
-  Least→ : Σ _ (Least P) → Σ _ P
+  Least→ : Σ _ Least → Σ _ P
   Least→ = map-snd fst
 
   search
     : (∀ m → Dec (P m))
-    → ∀ n → (Σ[ m ∈ ℕ ] Least P m) ⊎ (∀ m → m < n → ¬ P m)
+    → ∀ n → (Σ[ m ∈ ℕ ] Least m) ⊎ (∀ m → m < n → ¬ P m)
   search dec zero = inr (λ _ b _ → b)
-  search {P = P} dec (suc n) with search dec n
+  search dec (suc n) with search dec n
   ... | inl tup = inl tup
   ... | inr ¬P<n with dec n
   ... | yes Pn = inl (n , Pn , ¬P<n)
@@ -191,18 +191,18 @@ module Minimal where
           (inl m<n) → ¬P<n m m<n
           (inr m≡n) → subst⁻ (¬_ ∘ P) m≡n ¬Pn
 
-  →Least : (∀ m → Dec (P m)) → Σ _ P → Σ _ (Least P)
+  →Least : (∀ m → Dec (P m)) → Σ _ P → Σ _ Least
   →Least dec (n , Pn) with search dec n
   ... | inl least = least
   ... | inr ¬P<n  = n , Pn , ¬P<n
 
-  Least-unique : ∀ m n → Least P m → Least P n → m ≡ n
+  Least-unique : ∀ m n → Least m → Least n → m ≡ n
   Least-unique m n (Pm , ¬P<m) (Pn , ¬P<n) with m ≟ n
   ... | lt m<n = Empty.rec (¬P<n m m<n Pm)
   ... | eq m≡n = m≡n
   ... | gt n<m = Empty.rec (¬P<m n n<m Pn)
 
-  isPropΣLeast : (∀ m → isProp (P m)) → isProp (Σ _ (Least P))
+  isPropΣLeast : (∀ m → isProp (P m)) → isProp (Σ _ Least)
   isPropΣLeast pP (m , LPm) (n , LPn)
     = ΣPathP λ where
         .fst → Least-unique m n LPm LPn
@@ -216,7 +216,7 @@ module Minimal where
     .snd x y → cong Least→ (isPropΣLeast pP (→Least dP x) (→Least dP y))
 
   ΣLeast≡∃P : (∀ m → isProp (P m)) → (∀ m → Dec (P m)) →
-                Σ _ (Least P) ≡ ∃ _ P 
+                Σ _ Least ≡ ∃ _ P 
   ΣLeast≡∃P pP dec =
    hPropExt (isPropΣLeast pP) squash₁
     (∣_∣₁ ∘ Least→)
@@ -235,33 +235,35 @@ module MinimalPred {ℓ ℓ'} (A : Type ℓ)
  space S n = Σ _ λ a → (fst (B a n))
  Sequence.map S {n} = map-snd (<B (<-weaken {n} (≤-refl n)))
 
+ module _ {a : A} where
+  open Minimal (fst ∘ (B a)) public
 
- lim→→ΣLeast : (Lim→ S) → (Σ A λ a → Σ ℕ (Minimal.Least (fst ∘ (B a))))
+ lim→→ΣLeast : (Lim→ S) → (Σ A λ a → Σ ℕ Least)
  fst (lim→→ΣLeast (inl (a , _))) = a
- snd (lim→→ΣLeast (inl (_ , b))) = Minimal.→Least B? (_ , b)
+ snd (lim→→ΣLeast (inl (_ , b))) = →Least B? (_ , b)
  fst (lim→→ΣLeast (push (a , _) _)) = a
  snd (lim→→ΣLeast (push {n = n} (a , b) i)) = 
-   Minimal.isPropΣLeast (snd ∘ B a)
-     (Minimal.→Least B? (_ , b))
-     (Minimal.→Least B? (suc n , <B ((<-weaken {n} (≤-refl n))) b)) i
+   isPropΣLeast (snd ∘ B a)
+     (→Least B? (_ , b))
+     (→Least B? (suc n , <B ((<-weaken {n} (≤-refl n))) b)) i
 
- ΣLeast→lim→ : (Σ A λ a → Σ ℕ (Minimal.Least (fst ∘ B a))) → (Lim→ S)
+ ΣLeast→lim→ : (Σ A λ a → Σ ℕ Least) → (Lim→ S)
  ΣLeast→lim→ (a , (_ , b , _)) = inl (a , b)
 
  secLim→→ΣLeast : section lim→→ΣLeast ΣLeast→lim→
  secLim→→ΣLeast (a , b) =
-   cong (a ,_) (Minimal.isPropΣLeast (snd ∘ B a) _ _)
+   cong (a ,_) (isPropΣLeast (snd ∘ B a) _ _)
 
  
- ML = λ (a : A) → Σ _ (Minimal.Least (fst ∘ B a))
+ ML = λ (a : A) → Σ _ (Least {a})
 
  ml : ∀ a n b → ML a
- ml a n b = Minimal.→Least (B? {a = a}) (n , b)
+ ml a n b = →Least (B? {a = a}) (n , b)
 
  ml< : ∀ n a b → (fst (ml a n b) < n) ⊎ (fst (ml a n b) ≡ n)
  ml< n a b =
    ≤-split (( (¬<-≥ n (fst (ml a n b))
-           λ p → snd (snd (Minimal.→Least B? (n , b)))
+           λ p → snd (snd (→Least B? (n , b)))
              n p b)))
 
 
@@ -285,16 +287,16 @@ module MinimalPred {ℓ ℓ'} (A : Type ℓ)
             (wInl a ml n bₙ p)
             (wInl a ml' (suc n) _ p')
             
-            (λ i → ΣLeast→lim→ ( a , Minimal.isPropΣLeast (snd ∘ B a) ml ml' i ))
+            (λ i → ΣLeast→lim→ ( a , isPropΣLeast (snd ∘ B a) ml ml' i ))
             (push {n = n} (a , bₙ))
  
  wSq a n bₙ bₛₙ mlₙ mlₛₙ x₁ (inr x) =
    Empty.rec (<→≢ (≤-fromsplit x₁)
-    (cong fst (Minimal.isPropΣLeast (snd ∘ B a) mlₙ mlₛₙ) ∙ x))
+    (cong fst (isPropΣLeast (snd ∘ B a) mlₙ mlₛₙ) ∙ x))
    
  wSq a n bₙ bₛₙ mlₙ mlₛₙ p (inl x) i j =
   let bₙ≡ = snd (B a n) bₙ (<B x (fst (snd mlₛₙ)))
-      ml= = Minimal.isPropΣLeast (snd ∘ B a) mlₙ mlₛₙ
+      ml= = isPropΣLeast (snd ∘ B a) mlₙ mlₛₙ
 
   in hcomp
        (λ k → λ {
@@ -334,7 +336,7 @@ module MinimalPred {ℓ ℓ'} (A : Type ℓ)
    in wSq a n b bₛₙ
      (ml a n b) (ml a (suc n) bₛₙ) (ml< n a b) (ml< (suc n) a bₛₙ) i j 
 
- IsoLim→ΣLeast : Iso (Lim→ S) (Σ A λ a → Σ ℕ (Minimal.Least (fst ∘ (B a))))
+ IsoLim→ΣLeast : Iso (Lim→ S) (Σ A λ a → Σ ℕ Least)
  Iso.fun IsoLim→ΣLeast = lim→→ΣLeast
  Iso.inv IsoLim→ΣLeast = ΣLeast→lim→
  Iso.rightInv IsoLim→ΣLeast = secLim→→ΣLeast
@@ -342,4 +344,4 @@ module MinimalPred {ℓ ℓ'} (A : Type ℓ)
 
  isoIsoLim→∃P : (Lim→ S) ≡ (Σ A λ _ → ∃ ℕ (fst ∘ (B _)))
  isoIsoLim→∃P = isoToPath IsoLim→ΣLeast ∙
-   cong (Σ A) (funExt λ a → Minimal.ΣLeast≡∃P (snd ∘ B a) B?)
+   cong (Σ A) (funExt λ a → ΣLeast≡∃P (snd ∘ B a) B?)
