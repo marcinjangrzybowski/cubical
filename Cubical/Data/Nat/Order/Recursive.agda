@@ -119,6 +119,16 @@ k≤k+n (suc k) = k≤k+n k
 n≤k+n : ∀ n → n ≤ k + n
 n≤k+n {k} n = transport (λ i → n ≤ +-comm n k i) (k≤k+n n)
 
+left-≤-max : ∀ m n → m ≤ max m n
+left-≤-max zero n = _
+left-≤-max (suc m) zero = ≤-refl m
+left-≤-max (suc m) (suc n) = left-≤-max m n
+
+right-≤-max : ∀ m n → n ≤ max m n
+right-≤-max zero m = ≤-refl m
+right-≤-max (suc n) zero = tt
+right-≤-max (suc n) (suc m) = right-≤-max n m
+
 ≤-split : m ≤ n → (m < n) ⊎ (m ≡ n)
 ≤-split {zero} {zero} m≤n = inr refl
 ≤-split {zero} {suc n} m≤n = inl _
