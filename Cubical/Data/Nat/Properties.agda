@@ -297,6 +297,7 @@ isPropEvenOrOdd n (inl x) (inr x₁) = ⊥.rec (¬evenAndOdd n (x , x₁))
 isPropEvenOrOdd n (inr x) (inl x₁) = ⊥.rec (¬evenAndOdd (suc n) (x , x₁))
 isPropEvenOrOdd n (inr x) (inr x₁) = cong inr (isPropIsEvenT (suc n) x x₁)
 
+
 module PlusBis where
 
   _+'_ : ℕ → ℕ → ℕ
@@ -340,3 +341,62 @@ compSubstℕ : ∀ {ℓ} {A : ℕ → Type ℓ} {n m l : ℕ}
 compSubstℕ {A = A} p q r {x = x} =
   sym (substComposite A p q x)
   ∙ λ i → subst A (isSetℕ _ _ (p ∙ q) r i) x
+
+infixr 4  _=→_ _sq→_  _sqP→_
+
+_=→_ : ∀ {ℓ} {A : Type ℓ} {f g : ℕ → A}
+            → f zero ≡ g zero
+            → (f ∘ suc ≡ g ∘ suc )
+            → f ≡ g
+_=→_ x x₁ i zero = x i
+_=→_ x x₁ i (suc x₂) = x₁ i x₂
+
+
+_sq→_ : ∀ {ℓ} {A : Type ℓ} {f g f' g'  : ℕ → A}
+            → {fg : f ≡ g}
+              {f'g' : f' ≡ g'}
+              {ff' : f ≡ f'}
+              {gg' : g ≡ g'}
+            → Square (funExt⁻ fg zero)
+                     (funExt⁻ f'g' zero)
+                     (funExt⁻ ff' zero)
+                     (funExt⁻ gg' zero)  
+            → Square (cong (_∘ suc) fg)
+                     (cong (_∘ suc) f'g')
+                     (cong (_∘ suc) ff')
+                     (cong (_∘ suc) gg') 
+            → Square (fg)
+                     (f'g')
+                     (ff')
+                     (gg')
+(x sq→ x₁) i i₁ zero = x i i₁
+(x sq→ x₁) i i₁ (suc x₂) = x₁ i i₁ x₂
+
+
+_sqP→_ : ∀ {ℓ} {A : I → I → ℕ → Type ℓ}
+           {f : ∀ n → A i0 i0 n}
+           {f' : ∀ n → A i1 i0 n}
+           {g : ∀ n → A i0 i1 n}
+           {g' : ∀ n → A i1 i1 n}
+
+            → {fg : PathP (λ i → ∀ n → A i0 i n) f g}
+              {f'g' : PathP (λ i → ∀ n → A i1 i n) f' g'}
+              {ff' : PathP (λ i → ∀ n → A i i0 n) f f'}
+              {gg' : PathP (λ i → ∀ n → A i i1 n) g g'}            
+            → SquareP (λ i j → A i j 0)
+                     (funExt⁻ fg zero)
+                     (funExt⁻ f'g' zero)
+                     (funExt⁻ ff' zero)
+                     (funExt⁻ gg' zero) 
+            → SquareP (λ i j → ∀ n → A i j (suc n))
+                     (congP (λ _ → _∘ suc) fg)
+                     (congP (λ _ → _∘ suc) f'g')
+                     (congP (λ _ → _∘ suc) ff')
+                     (congP (λ _ → _∘ suc) gg')
+            → SquareP (λ i j → ∀ n → A i j n)
+                     (fg)
+                     (f'g')
+                     (ff')
+                     (gg')
+(x sqP→ x₁) i i₁ zero = x i i₁
+(x sqP→ x₁) i i₁ (suc x₂) = x₁ i i₁ x₂

@@ -42,6 +42,12 @@ elim : ∀ {ℓ} {A : ℕ → Type ℓ}
 elim a₀ _ zero = a₀
 elim a₀ f (suc n) = f n (elim a₀ f n)
 
+cases : ∀ {ℓ} {A : ℕ → Type ℓ}
+  → A zero
+  → ((n : ℕ) → A (suc n))
+  → (n : ℕ) → A n
+cases a₀ f = elim a₀ λ n _ → f n 
+
 elim+2 : ∀ {ℓ} {A : ℕ → Type ℓ} → A 0 → A 1
           → ((n : ℕ) → (A (suc n) → A (suc (suc n))))
           → (n : ℕ) → A n
