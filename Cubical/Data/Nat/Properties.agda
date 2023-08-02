@@ -299,7 +299,6 @@ isPropEvenOrOdd n (inl x) (inr x₁) = ⊥.rec (¬evenAndOdd n (x , x₁))
 isPropEvenOrOdd n (inr x) (inl x₁) = ⊥.rec (¬evenAndOdd (suc n) (x , x₁))
 isPropEvenOrOdd n (inr x) (inr x₁) = cong inr (isPropIsEvenT (suc n) x x₁)
 
-
 module PlusBis where
 
   _+'_ : ℕ → ℕ → ℕ

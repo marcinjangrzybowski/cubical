@@ -1,6 +1,6 @@
 {-# OPTIONS --safe #-}
 
-module Cubical.Data.Nat.FinGenAut where
+module Cubical.Data.Nat.EventuallyConst.Automorphism where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
@@ -13,8 +13,8 @@ open import Cubical.Foundations.Structure
 
 open import Cubical.Data.Nat.Base
 open import Cubical.Data.Nat.Properties
-open import Cubical.Data.Nat.Transposition
 open import Cubical.Data.Nat.Order.Recursive
+open import Cubical.Data.Nat.EventuallyConst.Transposition
 
 import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Empty using (⊥)

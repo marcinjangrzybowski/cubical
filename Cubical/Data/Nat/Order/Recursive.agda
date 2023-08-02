@@ -9,7 +9,7 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Univalence
 
-open import Cubical.Functions.Logic using (mutex⊎)
+open import Cubical.Functions.Logic using (mutex⊎ ; ⇔toPath)
 
 open import Cubical.Data.Empty as Empty
 open import Cubical.Data.Sigma
@@ -23,7 +23,7 @@ open import Cubical.Induction.WellFounded
 
 open import Cubical.Relation.Nullary
 
-open import Cubical.HITs.PropositionalTruncation renaming (rec to rec₁)
+open import Cubical.HITs.PropositionalTruncation as PT
 open import Cubical.HITs.SequentialColimit
 
 
@@ -103,6 +103,14 @@ isProp< {m} {n} = isProp≤ {m = suc m} {n = n}
 <-weaken {zero} _ = _
 <-weaken {suc m} {suc n} = <-weaken {m}
 
+pred-≤-pred : m ≤ n → predℕ m ≤ predℕ n
+pred-≤-pred {zero} {n} x = _
+pred-≤-pred {suc m} {suc n} x = x
+
+predℕ≤→≤suc : predℕ m ≤ n → m ≤ suc n
+predℕ≤→≤suc {zero} x = tt
+predℕ≤→≤suc {suc m} x = x
+
 <-trans : k < m → m < n → k < n
 <-trans {k} {m} {n} k<m m<n
   = ≤-trans {suc k} {m} {n} k<m (<-weaken {m} m<n)
@@ -140,6 +148,23 @@ right-≤-max : ∀ m n → n ≤ max m n
 right-≤-max zero m = ≤-refl m
 right-≤-max (suc n) zero = tt
 right-≤-max (suc n) (suc m) = right-≤-max n m
+
+≤×≤→max≤ : ∀ m n k → ((m ≤ k) × (n ≤ k)) → (max m n ≤ k)
+≤×≤→max≤ zero n k x = snd x
+≤×≤→max≤ (suc m) zero k x = fst x
+≤×≤→max≤ (suc m) (suc n) (suc k) = ≤×≤→max≤ m n k
+
+max≤→≤×≤ : ∀ m n k → (max m n ≤ k) → ((m ≤ k) × (n ≤ k))
+max≤→≤×≤ zero n k x = _ , x
+max≤→≤×≤ (suc m) zero k x = x , _
+max≤→≤×≤ (suc m) (suc n) (suc k) = max≤→≤×≤ m n k
+
+
+max≤ : ∀ m n k → ((m ≤ k) × (n ≤ k)) ≡ (max m n ≤ k)
+max≤ m n k = hPropExt
+   (isProp× (isProp≤ {m} {k}) (isProp≤ {n} {k})) (isProp≤ {max m n} {k})
+   (≤×≤→max≤ m n k) (max≤→≤×≤ m n k)
+
 
 ≤-split : m ≤ n → (m < n) ⊎ (m ≡ n)
 ≤-split {zero} {zero} m≤n = inr refl
@@ -230,8 +255,12 @@ module Minimal (P : ℕ → Type ℓ) where
   ΣLeast≡∃P pP dec =
    hPropExt (isPropΣLeast pP) squash₁
     (∣_∣₁ ∘ Least→)
-    (rec₁ (isPropΣLeast pP) (→Least dec))
-  
+    (PT.rec (isPropΣLeast pP) (→Least dec))
+
+Eventually : ∀ {ℓ} → (ℕ → Type ℓ) → hProp ℓ
+Eventually B = (∃ ℕ λ n₀ → ∀ n → n₀ ≤ n → B n) , squash₁
+
+
 module MinimalPred {ℓ ℓ'} (A : Type ℓ)
  (B : A → ℕ → hProp ℓ')
  (<B : ∀ {a m n} → m ≤ n → ⟨ B a m ⟩ → ⟨ B a n ⟩)
@@ -239,8 +268,7 @@ module MinimalPred {ℓ ℓ'} (A : Type ℓ)
  
  
  open Sequence
-
-
+ 
  S : Sequence (ℓ-max ℓ ℓ')
  space S n = Σ _ λ a → (fst (B a n))
  Sequence.map S {n} = map-snd (<B (<-weaken {n} (≤-refl n)))
@@ -352,6 +380,6 @@ module MinimalPred {ℓ ℓ'} (A : Type ℓ)
  Iso.rightInv IsoLim→ΣLeast = secLim→→ΣLeast
  Iso.leftInv IsoLim→ΣLeast = retLim→→ΣLeast
 
- isoIsoLim→∃P : (Lim→ S) ≡ (Σ A λ _ → ∃ ℕ (fst ∘ (B _)))
- isoIsoLim→∃P = isoToPath IsoLim→ΣLeast ∙
-   cong (Σ A) (funExt λ a → ΣLeast≡∃P (snd ∘ B a) B?)
+ Lim→≡∃P : (Lim→ S) ≡ (Σ A λ _ → ∃ ℕ (fst ∘ (B _)))
+ Lim→≡∃P = isoToPath IsoLim→ΣLeast ∙
+   cong (Σ A) (funExt λ _ → ΣLeast≡∃P (snd ∘ B _) B?)
