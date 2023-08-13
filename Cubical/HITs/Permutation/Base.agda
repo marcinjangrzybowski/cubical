@@ -590,525 +590,527 @@ sucℙrm' {b} n = R𝕡rec.f {n = n} (Rsucℙrm' n) {squashA = w b}
   ΣPathPProp (snd ∘ (Fin×Snd (1 + n)))
     λ i → true , glue-repeat-false n k i
 
-𝕗suc : ∀ n (𝕡 : ℙrm n) → 𝔽in n 𝕡 → 𝔽in (suc n) (sucℙrm n 𝕡)
-𝕗suc n = R𝕡elimSet'.f (w n)
- where
- open R𝕡elimSet'
- w : ∀ n → R𝕡elimSet' (λ 𝕡 → 𝔽in n 𝕡 → 𝔽in (suc n) (sucℙrm n 𝕡))
- isSetA (w n) 𝕡 = isSet→ (snd (h𝔽in (suc n) (sucℙrm n 𝕡)))
- abase (w n) = sucFin×
- aloop (w n) k i (x , y) = (false , x) , y
 
 
-𝕗glue01 : ∀ n →
-       PathP (λ i → (Fin× (suc (suc n))) →
-      𝔽in (suc (suc n)) (𝕡loop (zero , _) i))
-        (idfun _)
-        (F×adjT {n = 2 + n} zero )
-𝕗glue01 n i = fst (glue-F×adjT≃ (suc (suc n)) zero i)
+-- 𝕗suc : ∀ n (𝕡 : ℙrm n) → 𝔽in n 𝕡 → 𝔽in (suc n) (sucℙrm n 𝕡)
+-- 𝕗suc n = R𝕡elimSet'.f (w n)
+--  where
+--  open R𝕡elimSet'
+--  w : ∀ n → R𝕡elimSet' (λ 𝕡 → 𝔽in n 𝕡 → 𝔽in (suc n) (sucℙrm n 𝕡))
+--  isSetA (w n) 𝕡 = isSet→ (snd (h𝔽in (suc n) (sucℙrm n 𝕡)))
+--  abase (w n) = sucFin×
+--  aloop (w n) k i (x , y) = (false , x) , y
 
-𝕗glue210 : ∀ n →
-       PathP (λ i → (Fin× (suc (suc (suc n)))) →
-      𝔽in (suc (suc (suc n))) (𝕡looop (suc zero , _) (zero , _) i))
-        (F×adjT {n = 3 + n} (suc zero))
-        (F×adjT {n = 3 + n} zero)
-𝕗glue210 n =
-   funExt λ (xs , ys) →
-    ΣPathPProp (snd ∘ Fin×Snd (3 + n))
-     (funExt⁻ (glueBiAdjT×< n) xs)
 
-𝕗glue210sym : ∀ n →
-       PathP (λ i → (Fin× (suc (suc (suc n)))) →
-      𝔽in (suc (suc (suc n))) (𝕡looop (zero , _) (suc zero , _)  i))
+-- 𝕗glue01 : ∀ n →
+--        PathP (λ i → (Fin× (suc (suc n))) →
+--       𝔽in (suc (suc n)) (𝕡loop (zero , _) i))
+--         (idfun _)
+--         (F×adjT {n = 2 + n} zero )
+-- 𝕗glue01 n i = fst (glue-F×adjT≃ (suc (suc n)) zero i)
+
+-- 𝕗glue210 : ∀ n →
+--        PathP (λ i → (Fin× (suc (suc (suc n)))) →
+--       𝔽in (suc (suc (suc n))) (𝕡looop (suc zero , _) (zero , _) i))
+--         (F×adjT {n = 3 + n} (suc zero))
+--         (F×adjT {n = 3 + n} zero)
+-- 𝕗glue210 n =
+--    funExt λ (xs , ys) →
+--     ΣPathPProp (snd ∘ Fin×Snd (3 + n))
+--      (funExt⁻ (glueBiAdjT×< n) xs)
+
+-- 𝕗glue210sym : ∀ n →
+--        PathP (λ i → (Fin× (suc (suc (suc n)))) →
+--       𝔽in (suc (suc (suc n))) (𝕡looop (zero , _) (suc zero , _)  i))
         
-        (F×adjT {n = 3 + n} zero)
-        (F×adjT {n = 3 + n} (suc zero))
-𝕗glue210sym n =
-   funExt λ (xs , ys) →
-    ΣPathPProp (snd ∘ Fin×Snd (3 + n))
-      (toPathP (ΣPathP (refl ,
-        ΣPathP (refl ,
-        ΣPathP (refl , transportRefl _)))))
-     -- (funExt⁻ (glueBiAdjT×< n) ?)
-     -- (funExt⁻ (glueBiAdjT×< n) xs)
+--         (F×adjT {n = 3 + n} zero)
+--         (F×adjT {n = 3 + n} (suc zero))
+-- 𝕗glue210sym n =
+--    funExt λ (xs , ys) →
+--     ΣPathPProp (snd ∘ Fin×Snd (3 + n))
+--       (toPathP (ΣPathP (refl ,
+--         ΣPathP (refl ,
+--         ΣPathP (refl , transportRefl _)))))
+--      -- (funExt⁻ (glueBiAdjT×< n) ?)
+--      -- (funExt⁻ (glueBiAdjT×< n) xs)
 
 
-𝕗glueBi< : ∀ n k →
-       PathP (λ i → 
-         𝔽in (suc (suc n)) (𝕡loop (suc (suc (fst k)) , snd k) i)
-           →
-      𝔽in (suc (suc n)) (𝕡looop (suc (suc (fst k)) , snd k) (zero , _) i))
-        (idfun _)
-        (F×adjT {n = 2 + n} zero)
-fst (𝕗glueBi< n k i (xs , ys)) = glueBiAdjT×<SS n k i xs
-snd (𝕗glueBi< n k i (xs , ys)) =
-  isProp→PathP
-    (λ i → isPropΠ λ ((xs , ys) : 𝔽in (suc (suc n)) (𝕡loop (suc (suc (fst k)) , snd k) i)) → snd
-      (𝔽inSnd (suc (suc n))
-       (𝕡looop (suc (suc (fst k)) , snd k) (zero , tt) i)
-       (glueBiAdjT×<SS n k i xs)))
-     snd (snd ∘ F×adjT {n = 2 + n} zero) i (xs , ys)
+-- 𝕗glueBi< : ∀ n k →
+--        PathP (λ i → 
+--          𝔽in (suc (suc n)) (𝕡loop (suc (suc (fst k)) , snd k) i)
+--            →
+--       𝔽in (suc (suc n)) (𝕡looop (suc (suc (fst k)) , snd k) (zero , _) i))
+--         (idfun _)
+--         (F×adjT {n = 2 + n} zero)
+-- fst (𝕗glueBi< n k i (xs , ys)) = glueBiAdjT×<SS n k i xs
+-- snd (𝕗glueBi< n k i (xs , ys)) =
+--   isProp→PathP
+--     (λ i → isPropΠ λ ((xs , ys) : 𝔽in (suc (suc n)) (𝕡loop (suc (suc (fst k)) , snd k) i)) → snd
+--       (𝔽inSnd (suc (suc n))
+--        (𝕡looop (suc (suc (fst k)) , snd k) (zero , tt) i)
+--        (glueBiAdjT×<SS n k i xs)))
+--      snd (snd ∘ F×adjT {n = 2 + n} zero) i (xs , ys)
 
-𝕗glueBi<sym : ∀ n k →
-       PathP (λ i → 
-         𝔽in (suc (suc n)) (𝕡loop (suc (suc (fst k)) , snd k) (~ i))
-           →
-      𝔽in (suc (suc n)) (𝕡looop  (zero , _) (suc (suc (fst k)) , snd k) i))
+-- 𝕗glueBi<sym : ∀ n k →
+--        PathP (λ i → 
+--          𝔽in (suc (suc n)) (𝕡loop (suc (suc (fst k)) , snd k) (~ i))
+--            →
+--       𝔽in (suc (suc n)) (𝕡looop  (zero , _) (suc (suc (fst k)) , snd k) i))
 
-        (F×adjT {n = 2 + n} zero)
-         (idfun _)
-fst (𝕗glueBi<sym n k i (xs , ys)) = glueBiAdjT×<SS n k (~ i) xs
-snd (𝕗glueBi<sym n k i (xs , ys)) = 
-  isProp→PathP
-    (λ i → isPropΠ λ ((xs , ys) : 𝔽in (suc (suc n)) (𝕡loop (suc (suc (fst k)) , snd k) (~ i))) → snd
-      (𝔽inSnd (suc (suc n))
-       (𝕡looop (zero , tt) (suc (suc (fst k)) , snd k) i)
-       (glueBiAdjT×<SS n k (~ i) xs)))
-      (snd ∘ F×adjT {n = 2 + n} zero) snd i (xs , ys)
-
-
-𝕗glue01-involSS : ∀ n →
-   SquareP (λ i j → Fin× (n)
-     → 𝔽in (suc (suc n)) (𝕡invol (zero , _) i j))
-     (λ i → 𝕗glue01 n i ∘' sucFin× ∘' sucFin×)
-     (λ i → 𝕗glue01 n (~ i) ∘' sucFin× ∘' sucFin×)
-     (λ _ → sucFin× ∘' sucFin×)
-     λ _ → sucFin× ∘' sucFin×
-𝕗glue01-involSS n =
-  isSet→SquareP'
-   (isSet→ (isSetFin× (2 + n)))
-   _ _ _ _
-
-𝕗glue01-invol01 : ∀ n →
-   SquareP (λ i j → 𝔽in (suc (suc n)) (𝕡invol (zero , _) i j))
-     (λ j → 𝕗glue01 n j Fin×0)
-     (λ j → (𝕗glue01 n (~ j) (sucFin× Fin×0)))
-     refl
-     refl
-𝕗glue01-invol01 n = isSet→SquareP' (isSetFin× (2 + n)) _ _ _ _
+--         (F×adjT {n = 2 + n} zero)
+--          (idfun _)
+-- fst (𝕗glueBi<sym n k i (xs , ys)) = glueBiAdjT×<SS n k (~ i) xs
+-- snd (𝕗glueBi<sym n k i (xs , ys)) = 
+--   isProp→PathP
+--     (λ i → isPropΠ λ ((xs , ys) : 𝔽in (suc (suc n)) (𝕡loop (suc (suc (fst k)) , snd k) (~ i))) → snd
+--       (𝔽inSnd (suc (suc n))
+--        (𝕡looop (zero , tt) (suc (suc (fst k)) , snd k) i)
+--        (glueBiAdjT×<SS n k (~ i) xs)))
+--       (snd ∘ F×adjT {n = 2 + n} zero) snd i (xs , ys)
 
 
-𝕗glue01-invol10 : ∀ n →
-   SquareP (λ i j → 𝔽in (suc (suc n)) (𝕡invol (zero , _) i j))
-     (λ j → 𝕗glue01 n j (sucFin× Fin×0))
-     (λ j → (𝕗glue01 n (~ j) (Fin×0)))
-     refl
-     refl
-𝕗glue01-invol10 n = isSet→SquareP' (isSetFin× (2 + n)) _ _ _ _
+-- 𝕗glue01-involSS : ∀ n →
+--    SquareP (λ i j → Fin× (n)
+--      → 𝔽in (suc (suc n)) (𝕡invol (zero , _) i j))
+--      (λ i → 𝕗glue01 n i ∘' sucFin× ∘' sucFin×)
+--      (λ i → 𝕗glue01 n (~ i) ∘' sucFin× ∘' sucFin×)
+--      (λ _ → sucFin× ∘' sucFin×)
+--      λ _ → sucFin× ∘' sucFin×
+-- 𝕗glue01-involSS n =
+--   isSet→SquareP'
+--    (isSet→ (isSetFin× (2 + n)))
+--    _ _ _ _
 
-𝕗glue01invol : ∀ n → SquareP
-    (λ i j → (𝔽in (suc (suc n)) (𝕡invol (zero , _) i j)
-       × 𝔽in (suc (suc n)) (𝕡invol (zero , _) i j))
-       × (Fin× n → 𝔽in (suc (suc n)) (𝕡invol (zero , _) i j)))
-            (λ j → (𝕗glue01 n j (Fin×0) , 𝕗glue01 n j (sucFin× Fin×0)) ,
-             𝕗glue01 n j ∘' sucFin× ∘' sucFin×)
-            (λ j → (𝕗glue01 n (~ j) (sucFin× Fin×0) , 𝕗glue01 n (~ j) (Fin×0))
-                   , 𝕗glue01 n (~ j) ∘' sucFin× ∘' sucFin×)
-                      refl
-                      refl
+-- 𝕗glue01-invol01 : ∀ n →
+--    SquareP (λ i j → 𝔽in (suc (suc n)) (𝕡invol (zero , _) i j))
+--      (λ j → 𝕗glue01 n j Fin×0)
+--      (λ j → (𝕗glue01 n (~ j) (sucFin× Fin×0)))
+--      refl
+--      refl
+-- 𝕗glue01-invol01 n = isSet→SquareP' (isSetFin× (2 + n)) _ _ _ _
+
+
+-- 𝕗glue01-invol10 : ∀ n →
+--    SquareP (λ i j → 𝔽in (suc (suc n)) (𝕡invol (zero , _) i j))
+--      (λ j → 𝕗glue01 n j (sucFin× Fin×0))
+--      (λ j → (𝕗glue01 n (~ j) (Fin×0)))
+--      refl
+--      refl
+-- 𝕗glue01-invol10 n = isSet→SquareP' (isSetFin× (2 + n)) _ _ _ _
+
+-- 𝕗glue01invol : ∀ n → SquareP
+--     (λ i j → (𝔽in (suc (suc n)) (𝕡invol (zero , _) i j)
+--        × 𝔽in (suc (suc n)) (𝕡invol (zero , _) i j))
+--        × (Fin× n → 𝔽in (suc (suc n)) (𝕡invol (zero , _) i j)))
+--             (λ j → (𝕗glue01 n j (Fin×0) , 𝕗glue01 n j (sucFin× Fin×0)) ,
+--              𝕗glue01 n j ∘' sucFin× ∘' sucFin×)
+--             (λ j → (𝕗glue01 n (~ j) (sucFin× Fin×0) , 𝕗glue01 n (~ j) (Fin×0))
+--                    , 𝕗glue01 n (~ j) ∘' sucFin× ∘' sucFin×)
+--                       refl
+--                       refl
                       
-𝕗glue01invol n = (congSqP₂ (λ _ _ → _,_)
-         (congSqP₂ (λ _ _ → _,_)
-           (𝕗glue01-invol01 n)
-           (𝕗glue01-invol10 n))
-            (𝕗glue01-involSS n))
+-- 𝕗glue01invol n = (congSqP₂ (λ _ _ → _,_)
+--          (congSqP₂ (λ _ _ → _,_)
+--            (𝕗glue01-invol01 n)
+--            (𝕗glue01-invol10 n))
+--             (𝕗glue01-involSS n))
 
-𝕗glue01comp< : ∀ n →
- SquareP
-   (λ i j →
-     ((𝔽in (suc (suc (suc n))) ((𝕡comp (1 , _) (zero , _) i j))) ×^ 3)
-      × (Fin× (n) →
-    𝔽in (suc (suc (suc n))) ((𝕡comp (1 , _) (zero , _) i j))))
-   (λ j → (𝕗0 (suc (suc n)) (𝕡loop (zero , _) j)
-        , 𝕗suc (suc (suc n)) (𝕡loop (zero , _) j) (𝕗glue01 n j (sucFin× Fin×0))
-        , 𝕗suc (suc (suc n)) (𝕡loop (zero , _) j) (𝕗glue01 n j (Fin×0)) , _) ,
-     𝕗suc (suc (suc n)) (𝕡loop (zero , _) j)
-       ∘' 𝕗glue01 n j ∘' sucFin× ∘' sucFin×)
-   (λ j → (𝕗glue01 (suc n) j (sucFin× Fin×0) ,
-           𝕗glue01 (suc n) j (Fin×0) ,
-           𝕗glue01 (suc n) j (sucFin× (sucFin× Fin×0)) , _) ,
-     𝕗glue01 (suc n) j ∘' sucFin× ∘' sucFin× ∘'  sucFin×)
-   (λ i → (𝕗glue210 n i Fin×0 ,
-          𝕗glue210 n i (sucFin× Fin×0) ,
-          𝕗glue210 n i (sucFin× (sucFin× Fin×0)) , _) ,
-     𝕗glue210 n i ∘' sucFin× ∘' sucFin× ∘' sucFin×)
-   refl
-𝕗glue01comp< n =
- isSet→SquareP'
-  (isSet× (isOfHLevel×^ 3 2 (isSetFin× (3 + n)))
-          (isSet→ (isSetFin× (3 + n)))) _ _ _ _
+-- 𝕗glue01comp< : ∀ n →
+--  SquareP
+--    (λ i j →
+--      ((𝔽in (suc (suc (suc n))) ((𝕡comp (1 , _) (zero , _) i j))) ×^ 3)
+--       × (Fin× (n) →
+--     𝔽in (suc (suc (suc n))) ((𝕡comp (1 , _) (zero , _) i j))))
+--    (λ j → (𝕗0 (suc (suc n)) (𝕡loop (zero , _) j)
+--         , 𝕗suc (suc (suc n)) (𝕡loop (zero , _) j) (𝕗glue01 n j (sucFin× Fin×0))
+--         , 𝕗suc (suc (suc n)) (𝕡loop (zero , _) j) (𝕗glue01 n j (Fin×0)) , _) ,
+--      𝕗suc (suc (suc n)) (𝕡loop (zero , _) j)
+--        ∘' 𝕗glue01 n j ∘' sucFin× ∘' sucFin×)
+--    (λ j → (𝕗glue01 (suc n) j (sucFin× Fin×0) ,
+--            𝕗glue01 (suc n) j (Fin×0) ,
+--            𝕗glue01 (suc n) j (sucFin× (sucFin× Fin×0)) , _) ,
+--      𝕗glue01 (suc n) j ∘' sucFin× ∘' sucFin× ∘'  sucFin×)
+--    (λ i → (𝕗glue210 n i Fin×0 ,
+--           𝕗glue210 n i (sucFin× Fin×0) ,
+--           𝕗glue210 n i (sucFin× (sucFin× Fin×0)) , _) ,
+--      𝕗glue210 n i ∘' sucFin× ∘' sucFin× ∘' sucFin×)
+--    refl
+-- 𝕗glue01comp< n =
+--  isSet→SquareP'
+--   (isSet× (isOfHLevel×^ 3 2 (isSetFin× (3 + n)))
+--           (isSet→ (isSetFin× (3 + n)))) _ _ _ _
 
 
-𝕗glue01comp<sym : ∀ n →
- SquareP
-   (λ i j →
-     ((𝔽in (suc (suc (suc n))) ((𝕡comp (zero , _) (1 , _) i j))) ×^ 3)
-      × (Fin× (n) →
-    𝔽in (suc (suc (suc n))) ((𝕡comp  (zero , _) (1 , _) i j))))
+-- 𝕗glue01comp<sym : ∀ n →
+--  SquareP
+--    (λ i j →
+--      ((𝔽in (suc (suc (suc n))) ((𝕡comp (zero , _) (1 , _) i j))) ×^ 3)
+--       × (Fin× (n) →
+--     𝔽in (suc (suc (suc n))) ((𝕡comp  (zero , _) (1 , _) i j))))
    
-   (λ j → (𝕗glue01 (suc n) j (sucFin× Fin×0) ,
-           𝕗glue01 (suc n) j (Fin×0) ,
-           𝕗glue01 (suc n) j (sucFin× (sucFin× Fin×0)) , _) ,
-     𝕗glue01 (suc n) (j) ∘' sucFin× ∘' sucFin× ∘'  sucFin×)
-   (λ j → (𝕗0 (suc (suc n)) (𝕡loop (zero , _) j)
-        , 𝕗suc (suc (suc n)) (𝕡loop (zero , _) j) (𝕗glue01 n j (sucFin× Fin×0))
-        , 𝕗suc (suc (suc n)) (𝕡loop (zero , _) j) (𝕗glue01 n j (Fin×0)) , _) ,
+--    (λ j → (𝕗glue01 (suc n) j (sucFin× Fin×0) ,
+--            𝕗glue01 (suc n) j (Fin×0) ,
+--            𝕗glue01 (suc n) j (sucFin× (sucFin× Fin×0)) , _) ,
+--      𝕗glue01 (suc n) (j) ∘' sucFin× ∘' sucFin× ∘'  sucFin×)
+--    (λ j → (𝕗0 (suc (suc n)) (𝕡loop (zero , _) j)
+--         , 𝕗suc (suc (suc n)) (𝕡loop (zero , _) j) (𝕗glue01 n j (sucFin× Fin×0))
+--         , 𝕗suc (suc (suc n)) (𝕡loop (zero , _) j) (𝕗glue01 n j (Fin×0)) , _) ,
       
-     𝕗suc (suc (suc n)) (𝕡loop (zero , _) j)
-       ∘' 𝕗glue01 n j ∘' sucFin× ∘' sucFin×
-       )
+--      𝕗suc (suc (suc n)) (𝕡loop (zero , _) j)
+--        ∘' 𝕗glue01 n j ∘' sucFin× ∘' sucFin×
+--        )
 
-   (λ i → (𝕗glue210sym n i Fin×0 ,
-          𝕗glue210sym n i (sucFin× Fin×0) ,
-          𝕗glue210sym n i (sucFin× (sucFin× Fin×0)) , _) ,
-           𝕗glue210sym n i ∘' sucFin× ∘' sucFin× ∘' sucFin×)
-   refl
-𝕗glue01comp<sym n = 
- isSet→SquareP'
-  (isSet× (isOfHLevel×^ 3 2 (isSetFin× (3 + n)))
-          (isSet→ (isSetFin× (3 + n)))) _ _ _ _
-
-
-
-
--- (a : 𝔽in (suc n) (𝕡invol (l , l<) j (~ i))) →
---       𝔽in (suc (suc (suc n)))
---       (𝕡comm (zero , k<) (suc (suc l) , l<) x i j)
-
-𝕗glue01commS : ∀ n l l<
- → SquareP (λ i j →
-    let Z = 𝔽in (suc (suc (n)))
-               (𝕡comm (zero , tt) (suc (suc l) , l<) _ i j)
-    in (Z × Z) ×
-     (𝔽in (n) (𝕡invol (l , l<) j (~ i)) → Z))
-      refl
-      refl
-      (λ i → (𝕗glueBi<sym (n) (l , l<) i
-           (𝕗suc (suc (n)) (𝕡loop (suc l , l<) (~ i))
-              (𝕗0 (n) (𝕡loop (l , l<) (~ i))))
-        , 𝕗glueBi<sym (n) (l , l<) i
-           (𝕗0 (1 + n) (𝕡loop (suc l , l<) (~ i))))
-        ,
-         𝕗glueBi<sym (n) (l , l<) i
-         ∘' 𝕗suc (suc (n)) (𝕡loop (suc l , l<) (~ i))
-         ∘' 𝕗suc (n) (𝕡loop (l , l<) (~ i)))
-      λ i → (
-        (𝕗glueBi< (n) (l , l<) i (𝕗0 (1 + n) (𝕡loop (suc l , l<) i)))
-         ,
-         𝕗glueBi< (n) (l , l<) i
-           (𝕗suc (suc (n)) (𝕡loop (suc l , l<) (i))
-              (𝕗0 (n) (𝕡loop (l , l<) (i))))) , (𝕗glueBi< (n) (l , l<) i ∘'
-         𝕗suc (suc (n)) (𝕡loop (suc l , l<) i)
-         ∘' 𝕗suc (n) (𝕡loop (l , l<) i))
-𝕗glue01commS n l l< =
-    isSet→SquareP'
-  (isSet× (isSet× (isSetFin× (2 + n)) (isSetFin× (2 + n)) )
-          (isSet→ (isSetFin× (2 + n)))) _ _ _ _
-
-𝕗glueBraid : ∀ n → SquareP
-  (λ i j →
-     let Z = 𝔽in (suc (suc (suc n))) (𝕡braid zero tt i j)
-     in (Z × Z × Z) × (Fin× (n) → Z))
-    (λ j → (𝕗suc (suc (suc n)) (𝕡loop (zero , _) j) (𝕗glue01 n j Fin×0)
-         , (𝕗suc (suc (suc n)) (𝕡loop (zero , _) j) (𝕗glue01 n j (sucFin× Fin×0))
-          , 𝕗0 (2 + n) (𝕡loop (zero , _) j) ))
-      , 𝕗suc (suc (suc n)) (𝕡loop (zero , _) j) ∘' 𝕗glue01 n j ∘' sucFin× ∘' sucFin× )
-    (λ j → (𝕗glue01 (suc n) j Fin×0 
-        , 𝕗glue01 (suc n) j (sucFin× Fin×0)
-         , 𝕗glue01 (suc n) j  (sucFin× (sucFin× Fin×0)) )
-      , 𝕗glue01 (suc n) j ∘' sucFin× ∘' sucFin× ∘' sucFin× )
-    (λ j → ((𝕗glue210sym n j Fin×0 
-        , 𝕗glue210sym n j (sucFin× (sucFin× Fin×0))
-         , 𝕗glue210sym n j  (sucFin× Fin×0) ))
-           , 𝕗glue210sym n j ∘' sucFin× ∘' sucFin× ∘' sucFin×)
-    λ j → ((𝕗glue210sym n j ((sucFin× (sucFin× Fin×0)))
-        , 𝕗glue210sym n j Fin×0
-         , 𝕗glue210sym n j  (sucFin× Fin×0) )) ,
-           𝕗glue210sym n j ∘' sucFin× ∘' sucFin× ∘' sucFin×
-𝕗glueBraid n =
-  isSet→SquareP'
-  (isSet× (isSet× (isSetFin× (3 + n))
-      ((isSet× (isSetFin× (3 + n)) (isSetFin× (3 + n)) )) )
-          (isSet→ (isSetFin× (3 + n)))) _ _ _ _
+--    (λ i → (𝕗glue210sym n i Fin×0 ,
+--           𝕗glue210sym n i (sucFin× Fin×0) ,
+--           𝕗glue210sym n i (sucFin× (sucFin× Fin×0)) , _) ,
+--            𝕗glue210sym n i ∘' sucFin× ∘' sucFin× ∘' sucFin×)
+--    refl
+-- 𝕗glue01comp<sym n = 
+--  isSet→SquareP'
+--   (isSet× (isOfHLevel×^ 3 2 (isSetFin× (3 + n)))
+--           (isSet→ (isSetFin× (3 + n)))) _ _ _ _
 
 
 
--- abstract
-Σ-swap-012-≡-comp-ua-glue* : ∀ {ℓ} {A : Type ℓ} → {B : Type ℓ}  →
-      SquareP (λ i j → A × A × A × B
-        → Σ-swap-012-≡-comp-ua {A = A} {B} (λ _ → A × A × A × B) i j)
-         (((λ i (a , x) →
-          a , glue
-            (λ { (i = i0) → _
-               ; (i = i1) → _
-               })
-               x)))
-         ((λ i x →
-          glue (λ { (i = i0) → _ ; (i = i1) → _ }) x))
-        (λ i x →
-          glue
-            (λ { (i = i0) → _
-               ; (i = i1) → _
-               })
-               x)
-        λ _ x → x
 
-Σ-swap-012-≡-comp-ua-glue* i j x =
-  glue
-     (λ { (i = i1)(j = i0) → _
-        ; (i = i0) → fst x ,
-           glue (λ { (j = i0) → _
-                   ; (j = i1) → _
-                   }) (snd x)
-        ; (j = i1) → _ })
-     x
+-- -- (a : 𝔽in (suc n) (𝕡invol (l , l<) j (~ i))) →
+-- --       𝔽in (suc (suc (suc n)))
+-- --       (𝕡comm (zero , k<) (suc (suc l) , l<) x i j)
 
-isContrΣ≃ : (A : (Type ℓ)) → isContr (Σ (Type ℓ) λ T → (A ≃ T))
-isContrΣ≃ A = isOfHLevelRespectEquiv 0
-  (Σ-cong-equiv-snd λ _ → univalence)
-   (isContrSingl A)
+-- 𝕗glue01commS : ∀ n l l<
+--  → SquareP (λ i j →
+--     let Z = 𝔽in (suc (suc (n)))
+--                (𝕡comm (zero , tt) (suc (suc l) , l<) _ i j)
+--     in (Z × Z) ×
+--      (𝔽in (n) (𝕡invol (l , l<) j (~ i)) → Z))
+--       refl
+--       refl
+--       (λ i → (𝕗glueBi<sym (n) (l , l<) i
+--            (𝕗suc (suc (n)) (𝕡loop (suc l , l<) (~ i))
+--               (𝕗0 (n) (𝕡loop (l , l<) (~ i))))
+--         , 𝕗glueBi<sym (n) (l , l<) i
+--            (𝕗0 (1 + n) (𝕡loop (suc l , l<) (~ i))))
+--         ,
+--          𝕗glueBi<sym (n) (l , l<) i
+--          ∘' 𝕗suc (suc (n)) (𝕡loop (suc l , l<) (~ i))
+--          ∘' 𝕗suc (n) (𝕡loop (l , l<) (~ i)))
+--       λ i → (
+--         (𝕗glueBi< (n) (l , l<) i (𝕗0 (1 + n) (𝕡loop (suc l , l<) i)))
+--          ,
+--          𝕗glueBi< (n) (l , l<) i
+--            (𝕗suc (suc (n)) (𝕡loop (suc l , l<) (i))
+--               (𝕗0 (n) (𝕡loop (l , l<) (i))))) , (𝕗glueBi< (n) (l , l<) i ∘'
+--          𝕗suc (suc (n)) (𝕡loop (suc l , l<) i)
+--          ∘' 𝕗suc (n) (𝕡loop (l , l<) i))
+-- 𝕗glue01commS n l l< =
+--     isSet→SquareP'
+--   (isSet× (isSet× (isSetFin× (2 + n)) (isSetFin× (2 + n)) )
+--           (isSet→ (isSetFin× (2 + n)))) _ _ _ _
+
+-- 𝕗glueBraid : ∀ n → SquareP
+--   (λ i j →
+--      let Z = 𝔽in (suc (suc (suc n))) (𝕡braid zero tt i j)
+--      in (Z × Z × Z) × (Fin× (n) → Z))
+--     (λ j → (𝕗suc (suc (suc n)) (𝕡loop (zero , _) j) (𝕗glue01 n j Fin×0)
+--          , (𝕗suc (suc (suc n)) (𝕡loop (zero , _) j) (𝕗glue01 n j (sucFin× Fin×0))
+--           , 𝕗0 (2 + n) (𝕡loop (zero , _) j) ))
+--       , 𝕗suc (suc (suc n)) (𝕡loop (zero , _) j) ∘' 𝕗glue01 n j ∘' sucFin× ∘' sucFin× )
+--     (λ j → (𝕗glue01 (suc n) j Fin×0 
+--         , 𝕗glue01 (suc n) j (sucFin× Fin×0)
+--          , 𝕗glue01 (suc n) j  (sucFin× (sucFin× Fin×0)) )
+--       , 𝕗glue01 (suc n) j ∘' sucFin× ∘' sucFin× ∘' sucFin× )
+--     (λ j → ((𝕗glue210sym n j Fin×0 
+--         , 𝕗glue210sym n j (sucFin× (sucFin× Fin×0))
+--          , 𝕗glue210sym n j  (sucFin× Fin×0) ))
+--            , 𝕗glue210sym n j ∘' sucFin× ∘' sucFin× ∘' sucFin×)
+--     λ j → ((𝕗glue210sym n j ((sucFin× (sucFin× Fin×0)))
+--         , 𝕗glue210sym n j Fin×0
+--          , 𝕗glue210sym n j  (sucFin× Fin×0) )) ,
+--            𝕗glue210sym n j ∘' sucFin× ∘' sucFin× ∘' sucFin×
+-- 𝕗glueBraid n =
+--   isSet→SquareP'
+--   (isSet× (isSet× (isSetFin× (3 + n))
+--       ((isSet× (isSetFin× (3 + n)) (isSetFin× (3 + n)) )) )
+--           (isSet→ (isSetFin× (3 + n)))) _ _ _ _
 
 
-module _ {ℓ} (A : Type ℓ) where 
 
- -- look𝕍 : ∀ n → ∀ 𝕡 → (𝕍 Bool n 𝕡 → A) → 𝕍 A n 𝕡
+-- -- abstract
+-- Σ-swap-012-≡-comp-ua-glue* : ∀ {ℓ} {A : Type ℓ} → {B : Type ℓ}  →
+--       SquareP (λ i j → A × A × A × B
+--         → Σ-swap-012-≡-comp-ua {A = A} {B} (λ _ → A × A × A × B) i j)
+--          (((λ i (a , x) →
+--           a , glue
+--             (λ { (i = i0) → _
+--                ; (i = i1) → _
+--                })
+--                x)))
+--          ((λ i x →
+--           glue (λ { (i = i0) → _ ; (i = i1) → _ }) x))
+--         (λ i x →
+--           glue
+--             (λ { (i = i0) → _
+--                ; (i = i1) → _
+--                })
+--                x)
+--         λ _ x → x
 
- -- open Tab×≃ {A = A}
+-- Σ-swap-012-≡-comp-ua-glue* i j x =
+--   glue
+--      (λ { (i = i1)(j = i0) → _
+--         ; (i = i0) → fst x ,
+--            glue (λ { (j = i0) → _
+--                    ; (j = i1) → _
+--                    }) (snd x)
+--         ; (j = i1) → _ })
+--      x
+
+-- isContrΣ≃ : (A : (Type ℓ)) → isContr (Σ (Type ℓ) λ T → (A ≃ T))
+-- isContrΣ≃ A = isOfHLevelRespectEquiv 0
+--   (Σ-cong-equiv-snd λ _ → univalence)
+--    (isContrSingl A)
 
 
- tab×≃ : ∀ n → (Fin× n → A) ≃ (A ×^ n)
- tab×≃ zero = isoToEquiv Tab×.IsoFin×0→AUnit*
- tab×≃ (suc n) =
-   preCompEquiv (Maybe∘Fin×≃Fin×∘suc n) ∙ₑ
-       ≃MaybeFunProd ∙ₑ ≃-× (idEquiv _) (tab×≃ n)
+-- module _ {ℓ} (A : Type ℓ) where 
 
- tab× : ∀ n → (Fin× n → A) → (A ×^ n)
- tab× = fst ∘ tab×≃
+--  -- look𝕍 : ∀ n → ∀ 𝕡 → (𝕍 Bool n 𝕡 → A) → 𝕍 A n 𝕡
+
+--  -- open Tab×≃ {A = A}
 
 
- cons𝕍 : ∀ n → ∀ 𝕡 → A → 𝕍 A n 𝕡
-     → 𝕍 A (suc n) (sucℙrm n 𝕡)
- cons𝕍 n 𝕡base = _,_
- cons𝕍 n (𝕡loop x i) = _,_
- cons𝕍 n (𝕡looop k l i) = _,_
- cons𝕍 n (𝕡comp k l i i₁) = _,_
- cons𝕍 n (𝕡invol k i i₁) = _,_
- cons𝕍 n (𝕡comm (k , k<) (suc l , l<) x i i₁) = _,_
- cons𝕍 n (𝕡braid k k< i i₁) = _,_
+--  tab×≃ : ∀ n → (Fin× n → A) ≃ (A ×^ n)
+--  tab×≃ zero = isoToEquiv Tab×.IsoFin×0→AUnit*
+--  tab×≃ (suc n) =
+--    preCompEquiv (Maybe∘Fin×≃Fin×∘suc n) ∙ₑ
+--        ≃MaybeFunProd ∙ₑ ≃-× (idEquiv _) (tab×≃ n)
+
+--  tab× : ∀ n → (Fin× n → A) → (A ×^ n)
+--  tab× = fst ∘ tab×≃
+
+
+--  cons𝕍 : ∀ n → ∀ 𝕡 → A → 𝕍 A n 𝕡
+--      → 𝕍 A (suc n) (sucℙrm n 𝕡)
+--  cons𝕍 n 𝕡base = _,_
+--  cons𝕍 n (𝕡loop x i) = _,_
+--  cons𝕍 n (𝕡looop k l i) = _,_
+--  cons𝕍 n (𝕡comp k l i i₁) = _,_
+--  cons𝕍 n (𝕡invol k i i₁) = _,_
+--  cons𝕍 n (𝕡comm (k , k<) (suc l , l<) x i i₁) = _,_
+--  cons𝕍 n (𝕡braid k k< i i₁) = _,_
  
- tab𝕍 : ∀ n → ∀ 𝕡 → (𝔽in n (toTruncℙ 𝕡) → A) → 𝕍 A n 𝕡
- tab𝕍 n = R𝕡elim.f (w n) 
-  where
-  open R𝕡elim
+--  tab𝕍 : ∀ n → ∀ 𝕡 → (𝔽in n (toTruncℙ 𝕡) → A) → 𝕍 A n 𝕡
+--  tab𝕍 n = R𝕡elim.f (w n) 
+--   where
+--   open R𝕡elim
 
-  w : ∀ n → R𝕡elim {n = n} λ 𝕡 → (𝔽in n (toTruncℙ 𝕡) → A) → 𝕍 A n 𝕡
-  isGroupoidA (w n) ()
-  abase (w n) = tab× n
+--   w : ∀ n → R𝕡elim {n = n} λ 𝕡 → (𝔽in n (toTruncℙ 𝕡) → A) → 𝕍 A n 𝕡
+--   isGroupoidA (w n) ()
+--   abase (w n) = tab× n
   
-  aloop (w (suc n)) (suc k , k<) i f =
-    f (𝕗0 n (𝕡loop (k , k<) i))
-      , aloop (w n) (k , k<) i (f ∘ 𝕗suc n (𝕡loop (k , k<) i))
-  aloop (w (suc (suc n))) (zero , tt) i f =
-    glueAdjT× (2 + n) zero i
-     (tab× (2 + n) (f ∘ 𝕗glue01 n i))
+--   aloop (w (suc n)) (suc k , k<) i f =
+--     f (𝕗0 n (𝕡loop (k , k<) i))
+--       , aloop (w n) (k , k<) i (f ∘ 𝕗suc n (𝕡loop (k , k<) i))
+--   aloop (w (suc (suc n))) (zero , tt) i f =
+--     glueAdjT× (2 + n) zero i
+--      (tab× (2 + n) (f ∘ 𝕗glue01 n i))
 
-  alooop (w (suc n)) (suc k , k<) (suc l , l<) i f =
-    f (𝕗0 n (𝕡looop (k , k<) (l , l<) i))
-    , alooop (w n) (k , k<) (l , l<) i
-       (f ∘ 𝕗suc n (𝕡looop (k , k<) (l , l<) i))
-  alooop (w (suc (suc n))) (zero , tt) (zero , tt) = 
-    congP {B = λ i _ → _ →
-             𝕍 A (suc (suc n)) (𝕡looop (zero , tt) (zero , tt) i)}
-      (λ _ g f → tab× (2 + n) (f ∘' g))
-      {idfun _} {idfun _}
-      (funExt λ x → ΣPathPProp (snd ∘ Fin×Snd (suc (suc n))) refl)
-  alooop (w (suc (suc n))) (zero , tt) (suc (suc k) , k<) i f =
-    glueBiAdjT×<SS {A = A} n (k , k<) (~ i)
-     (aloop (w (suc (suc n))) (suc (suc k) , k<) (~ i)
-        (f ∘' 𝕗glueBi<sym n (k , k<) i))
+--   alooop (w (suc n)) (suc k , k<) (suc l , l<) i f =
+--     f (𝕗0 n (𝕡looop (k , k<) (l , l<) i))
+--     , alooop (w n) (k , k<) (l , l<) i
+--        (f ∘ 𝕗suc n (𝕡looop (k , k<) (l , l<) i))
+--   alooop (w (suc (suc n))) (zero , tt) (zero , tt) = 
+--     congP {B = λ i _ → _ →
+--              𝕍 A (suc (suc n)) (𝕡looop (zero , tt) (zero , tt) i)}
+--       (λ _ g f → tab× (2 + n) (f ∘' g))
+--       {idfun _} {idfun _}
+--       (funExt λ x → ΣPathPProp (snd ∘ Fin×Snd (suc (suc n))) refl)
+--   alooop (w (suc (suc n))) (zero , tt) (suc (suc k) , k<) i f =
+--     glueBiAdjT×<SS {A = A} n (k , k<) (~ i)
+--      (aloop (w (suc (suc n))) (suc (suc k) , k<) (~ i)
+--         (f ∘' 𝕗glueBi<sym n (k , k<) i))
 
-  alooop (w (suc (suc (suc n)))) (zero , tt) (suc zero , tt) i f =  
-    glueBiAdjT×< n (~ i) (tab× (3 + n) (f ∘ 𝕗glue210sym n i))
+--   alooop (w (suc (suc (suc n)))) (zero , tt) (suc zero , tt) i f =  
+--     glueBiAdjT×< n (~ i) (tab× (3 + n) (f ∘ 𝕗glue210sym n i))
   
-  alooop (w (suc (suc n))) (suc (suc k) , k<) (zero , tt) i f =
-   glueBiAdjT×<SS {A = A} n (k , k<) i
-     (aloop (w (suc (suc n))) (suc (suc k) , k<) i
-        (f ∘' 𝕗glueBi< n (k , k<) i))
-  alooop (w (suc (suc (suc n)))) (suc zero , tt) (zero , tt) i f =
-    glueBiAdjT×< n i (tab× (3 + n) (f ∘ 𝕗glue210 n i))
+--   alooop (w (suc (suc n))) (suc (suc k) , k<) (zero , tt) i f =
+--    glueBiAdjT×<SS {A = A} n (k , k<) i
+--      (aloop (w (suc (suc n))) (suc (suc k) , k<) i
+--         (f ∘' 𝕗glueBi< n (k , k<) i))
+--   alooop (w (suc (suc (suc n)))) (suc zero , tt) (zero , tt) i f =
+--     glueBiAdjT×< n i (tab× (3 + n) (f ∘ 𝕗glue210 n i))
 
-  acomp (w (suc n)) (suc k , k<) (suc l , l<) i j f =
-    f (𝕗0 n (𝕡comp (k , k<) (l , l<) i j))
-    , acomp (w n) (k , k<) (l , l<) i j
-       (f ∘ 𝕗suc n (𝕡comp (k , k<) (l , l<) i j))
-  acomp (w (suc (suc n))) (zero , tt) (zero , tt) i j f =
-   aloop (w (suc (suc n))) (zero , tt) j (f ∘'     
-     isSet→SquareP' {A = λ i j →
-       𝔽in (suc (suc n)) (𝕡loop (zero , tt) j) →
-      𝔽in (suc (suc n)) (𝕡comp (zero , tt) (zero , tt) i j)}
-   (isSet→ (isSetFin× (2 + n)))
-    (λ _ x → x) (λ _ x → x)
-    (funExt λ x → ΣPathPProp (snd ∘ Fin×Snd (suc (suc n))) refl)
-      refl i j)
-  
-  
-  acomp (w (suc (suc n))) (zero , tt) (suc (suc l) , l<) i j f =
-    glue-biAdjT×^≡-comp<SS {n = n} l l< tt (~ i) j
-       (f (isSet→SquareP'
-           {A =
-             (λ i j → 𝔽in (suc (suc n)) (𝕡comp (zero , tt) (suc (suc l) , l<) i j))}
-           (isSetFin× (2 + n))
-           (λ j → 𝕗glue01 n j (sucFin× Fin×0))
-           (λ j → 𝕗0 (suc n) (𝕡loop ((suc l) , l<) j))
-           (λ i → 𝕗glueBi<sym n (l , l<) i (𝕗0 (suc n) (𝕡loop ((suc l) , l<) (~ i))))
-           (λ _ → Fin×0) i j)
-         , f (isSet→SquareP'
-           {A =
-             (λ i j → 𝔽in (suc (suc n)) (𝕡comp (zero , tt) (suc (suc l) , l<) i j))}
-           (isSetFin× (2 + n))
-
-           (λ j → 𝕗glue01 n j (Fin×0))
-           (λ j → 𝕗suc (suc n) (𝕡loop (suc l , l<) (j))
-                  (𝕗0 (n) (𝕡loop ((l) , l<) (j))))
-           (λ i → 𝕗glueBi<sym n (l , l<) i
-                     (𝕗suc (suc n) (𝕡loop (suc l , l<) (~ i))
-                        (𝕗0 n (𝕡loop (l , l<) (~ i)))))
-           (λ _ → sucFin× Fin×0) i j)
-         , aloop (w n) (l , l<) ((~ i) ∨ j)
-        (f ∘'
-          isSet→SquareP'
-            {A = λ i j →
-              𝔽in n (𝕡loop (l , l<) ((~ i) ∨ j)) →
-      𝔽in (suc (suc n)) (𝕡comp (zero , tt) (suc (suc l) , l<) i j)}
-            (isSet→ (isSetFin× (2 + n)))
-            (λ j → 𝕗glue01 n j ∘' sucFin× ∘' sucFin×)
-            (λ j → 𝕗suc (suc n) (𝕡loop (suc l , l<) j)
-                ∘' 𝕗suc n (𝕡loop (l , l<) j))
-            (λ i → 𝕗glueBi<sym n (l , l<) (i) ∘'
-                𝕗suc (suc n) (𝕡loop (suc l , l<) (~ i))
-                ∘' 𝕗suc n (𝕡loop (l , l<) (~ i)))
-            (λ _ → sucFin× ∘' sucFin×)
-
-            i j)
-            )
-
-  acomp (w (suc (suc (suc n)))) (zero , tt) (suc zero , l<) i j f =
-    let ((f0 , f1 , f2 , _) , fSSS) = 𝕗glue01comp<sym n i j
-    in Σ-swap-012-≡-comp-ua-glue* {A = A} {A ×^ n} (~ i) j 
-          (f f0 , f f1 , f f2 , tab× n (f ∘' fSSS))
-
-
-  acomp (w (suc (suc n))) (suc (suc k) , k<) (zero , tt) i j f =
-   glue-biAdjT×^≡-comp<SS {n = n} k k< tt i j
-      (f (isSet→SquareP'
-           {A =
-             (λ i j → 𝔽in (suc (suc n)) (𝕡comp (suc (suc k) , k<) (zero , tt) i j))}
-           (isSetFin× (2 + n))
-           (λ j → 𝕗0 (suc n) (𝕡loop ((suc k) , k<) j))
-           (λ j → 𝕗glue01 n j (sucFin× Fin×0))
-           (λ i → 𝕗glueBi< n (k , k<) i (𝕗0 (suc n) (𝕡loop ((suc k) , k<) i)))
-           (λ _ → Fin×0) i j) 
-     , f (isSet→SquareP'
-           {A =
-             (λ i j → 𝔽in (suc (suc n)) (𝕡comp (suc (suc k) , k<) (zero , tt) i j))}
-           (isSetFin× (2 + n))
-           (λ j → 𝕗suc (suc n) (𝕡loop (suc k , k<) j)
-                  (𝕗0 (n) (𝕡loop ((k) , k<) j)))
-           (λ j → 𝕗glue01 n j (Fin×0))
-           (λ i → 𝕗glueBi< n (k , k<) i
-                     (𝕗suc (suc n) (𝕡loop (suc k , k<) i)
-                        (𝕗0 n (𝕡loop (k , k<) i))))
-           (λ _ → sucFin× Fin×0) i j) 
-     , aloop (w n) (k , k<) (i ∨ j)
-        (f ∘'
-          isSet→SquareP'
-            {A = λ i j →
-              𝔽in n (𝕡loop (k , k<) (i ∨ j)) →
-      𝔽in (suc (suc n)) (𝕡comp (suc (suc k) , k<) (zero , tt) i j)}
-            (isSet→ (isSetFin× (2 + n)))
-            (λ j → 𝕗suc (suc n) (𝕡loop (suc k , k<) j)
-                ∘' 𝕗suc n (𝕡loop (k , k<) j))
-            (λ j → 𝕗glue01 n j ∘' sucFin× ∘' sucFin×)
-            (λ i → 𝕗glueBi< n (k , k<) i ∘'
-                𝕗suc (suc n) (𝕡loop (suc k , k<) i)
-                ∘' 𝕗suc n (𝕡loop (k , k<) i))
-            (λ _ → sucFin× ∘' sucFin×) i j))
-
-  acomp (w (suc (suc (suc n)))) (suc zero , tt) (zero , tt) i j f =
-    let ((f0 , f1 , f2 , _) , fSSS) = 𝕗glue01comp< n i j
-    in Σ-swap-012-≡-comp-ua-glue* {A = A} {A ×^ n} i j
-          (f f0 , f f1 , f f2 , tab× n (f ∘' fSSS))
+--   acomp (w (suc n)) (suc k , k<) (suc l , l<) i j f =
+--     f (𝕗0 n (𝕡comp (k , k<) (l , l<) i j))
+--     , acomp (w n) (k , k<) (l , l<) i j
+--        (f ∘ 𝕗suc n (𝕡comp (k , k<) (l , l<) i j))
+--   acomp (w (suc (suc n))) (zero , tt) (zero , tt) i j f =
+--    aloop (w (suc (suc n))) (zero , tt) j (f ∘'     
+--      isSet→SquareP' {A = λ i j →
+--        𝔽in (suc (suc n)) (𝕡loop (zero , tt) j) →
+--       𝔽in (suc (suc n)) (𝕡comp (zero , tt) (zero , tt) i j)}
+--    (isSet→ (isSetFin× (2 + n)))
+--     (λ _ x → x) (λ _ x → x)
+--     (funExt λ x → ΣPathPProp (snd ∘ Fin×Snd (suc (suc n))) refl)
+--       refl i j)
   
   
-  ainvol (w (suc n)) (suc k , k<) i j f =
-    f (𝕗0 n (𝕡invol (k , k<) i j))
-    , ainvol (w n) (k , k<) i j
-        (f ∘ 𝕗suc n (𝕡invol (k , k<) i j))
-  ainvol (w (suc (suc n))) (zero , tt) i j f =    
-   let ((f0 , f1) , fSS) = 𝕗glue01invol n i j
-   in Σ-swap-01-≡-invol-ua-glue {A = A} {B = A ×^ n} i j
-         (f f0 , f f1 , tab× n (f ∘' fSS))
+--   acomp (w (suc (suc n))) (zero , tt) (suc (suc l) , l<) i j f =
+--     glue-biAdjT×^≡-comp<SS {n = n} l l< tt (~ i) j
+--        (f (isSet→SquareP'
+--            {A =
+--              (λ i j → 𝔽in (suc (suc n)) (𝕡comp (zero , tt) (suc (suc l) , l<) i j))}
+--            (isSetFin× (2 + n))
+--            (λ j → 𝕗glue01 n j (sucFin× Fin×0))
+--            (λ j → 𝕗0 (suc n) (𝕡loop ((suc l) , l<) j))
+--            (λ i → 𝕗glueBi<sym n (l , l<) i (𝕗0 (suc n) (𝕡loop ((suc l) , l<) (~ i))))
+--            (λ _ → Fin×0) i j)
+--          , f (isSet→SquareP'
+--            {A =
+--              (λ i j → 𝔽in (suc (suc n)) (𝕡comp (zero , tt) (suc (suc l) , l<) i j))}
+--            (isSetFin× (2 + n))
 
-  acomm (w (suc n)) (suc k , k<) (suc (suc (suc l)) , l<) x i j f =    
-    f (𝕗0 n (𝕡comm (k , k<) (suc (suc l) , l<) x i j))
-    , acomm (w n) (k , k<) (suc (suc l) , l<) x i j
-       (f ∘ 𝕗suc n (𝕡comm (k , k<) (suc (suc l) , l<) x i j)) 
-  acomm (w (suc (suc n))) (zero , k<) (suc (suc l) , l<) x i j f =
-   let ((f0 , f1) , fSS) = 𝕗glue01commS n l l< i j
-   in glue-biAdjT×^≡-comm {n = n} (l , l<)
-      i j
-      (f f0 , f f1 , ainvol (w n) (l , l<) j (~ i) (f ∘ fSS))
+--            (λ j → 𝕗glue01 n j (Fin×0))
+--            (λ j → 𝕗suc (suc n) (𝕡loop (suc l , l<) (j))
+--                   (𝕗0 (n) (𝕡loop ((l) , l<) (j))))
+--            (λ i → 𝕗glueBi<sym n (l , l<) i
+--                      (𝕗suc (suc n) (𝕡loop (suc l , l<) (~ i))
+--                         (𝕗0 n (𝕡loop (l , l<) (~ i)))))
+--            (λ _ → sucFin× Fin×0) i j)
+--          , aloop (w n) (l , l<) ((~ i) ∨ j)
+--         (f ∘'
+--           isSet→SquareP'
+--             {A = λ i j →
+--               𝔽in n (𝕡loop (l , l<) ((~ i) ∨ j)) →
+--       𝔽in (suc (suc n)) (𝕡comp (zero , tt) (suc (suc l) , l<) i j)}
+--             (isSet→ (isSetFin× (2 + n)))
+--             (λ j → 𝕗glue01 n j ∘' sucFin× ∘' sucFin×)
+--             (λ j → 𝕗suc (suc n) (𝕡loop (suc l , l<) j)
+--                 ∘' 𝕗suc n (𝕡loop (l , l<) j))
+--             (λ i → 𝕗glueBi<sym n (l , l<) (i) ∘'
+--                 𝕗suc (suc n) (𝕡loop (suc l , l<) (~ i))
+--                 ∘' 𝕗suc n (𝕡loop (l , l<) (~ i)))
+--             (λ _ → sucFin× ∘' sucFin×)
+
+--             i j)
+--             )
+
+--   acomp (w (suc (suc (suc n)))) (zero , tt) (suc zero , l<) i j f =
+--     let ((f0 , f1 , f2 , _) , fSSS) = 𝕗glue01comp<sym n i j
+--     in Σ-swap-012-≡-comp-ua-glue* {A = A} {A ×^ n} (~ i) j 
+--           (f f0 , f f1 , f f2 , tab× n (f ∘' fSSS))
+
+
+--   acomp (w (suc (suc n))) (suc (suc k) , k<) (zero , tt) i j f =
+--    glue-biAdjT×^≡-comp<SS {n = n} k k< tt i j
+--       (f (isSet→SquareP'
+--            {A =
+--              (λ i j → 𝔽in (suc (suc n)) (𝕡comp (suc (suc k) , k<) (zero , tt) i j))}
+--            (isSetFin× (2 + n))
+--            (λ j → 𝕗0 (suc n) (𝕡loop ((suc k) , k<) j))
+--            (λ j → 𝕗glue01 n j (sucFin× Fin×0))
+--            (λ i → 𝕗glueBi< n (k , k<) i (𝕗0 (suc n) (𝕡loop ((suc k) , k<) i)))
+--            (λ _ → Fin×0) i j) 
+--      , f (isSet→SquareP'
+--            {A =
+--              (λ i j → 𝔽in (suc (suc n)) (𝕡comp (suc (suc k) , k<) (zero , tt) i j))}
+--            (isSetFin× (2 + n))
+--            (λ j → 𝕗suc (suc n) (𝕡loop (suc k , k<) j)
+--                   (𝕗0 (n) (𝕡loop ((k) , k<) j)))
+--            (λ j → 𝕗glue01 n j (Fin×0))
+--            (λ i → 𝕗glueBi< n (k , k<) i
+--                      (𝕗suc (suc n) (𝕡loop (suc k , k<) i)
+--                         (𝕗0 n (𝕡loop (k , k<) i))))
+--            (λ _ → sucFin× Fin×0) i j) 
+--      , aloop (w n) (k , k<) (i ∨ j)
+--         (f ∘'
+--           isSet→SquareP'
+--             {A = λ i j →
+--               𝔽in n (𝕡loop (k , k<) (i ∨ j)) →
+--       𝔽in (suc (suc n)) (𝕡comp (suc (suc k) , k<) (zero , tt) i j)}
+--             (isSet→ (isSetFin× (2 + n)))
+--             (λ j → 𝕗suc (suc n) (𝕡loop (suc k , k<) j)
+--                 ∘' 𝕗suc n (𝕡loop (k , k<) j))
+--             (λ j → 𝕗glue01 n j ∘' sucFin× ∘' sucFin×)
+--             (λ i → 𝕗glueBi< n (k , k<) i ∘'
+--                 𝕗suc (suc n) (𝕡loop (suc k , k<) i)
+--                 ∘' 𝕗suc n (𝕡loop (k , k<) i))
+--             (λ _ → sucFin× ∘' sucFin×) i j))
+
+--   acomp (w (suc (suc (suc n)))) (suc zero , tt) (zero , tt) i j f =
+--     let ((f0 , f1 , f2 , _) , fSSS) = 𝕗glue01comp< n i j
+--     in Σ-swap-012-≡-comp-ua-glue* {A = A} {A ×^ n} i j
+--           (f f0 , f f1 , f f2 , tab× n (f ∘' fSSS))
+  
+  
+--   ainvol (w (suc n)) (suc k , k<) i j f =
+--     f (𝕗0 n (𝕡invol (k , k<) i j))
+--     , ainvol (w n) (k , k<) i j
+--         (f ∘ 𝕗suc n (𝕡invol (k , k<) i j))
+--   ainvol (w (suc (suc n))) (zero , tt) i j f =    
+--    let ((f0 , f1) , fSS) = 𝕗glue01invol n i j
+--    in Σ-swap-01-≡-invol-ua-glue {A = A} {B = A ×^ n} i j
+--          (f f0 , f f1 , tab× n (f ∘' fSS))
+
+--   acomm (w (suc n)) (suc k , k<) (suc (suc (suc l)) , l<) x i j f =    
+--     f (𝕗0 n (𝕡comm (k , k<) (suc (suc l) , l<) x i j))
+--     , acomm (w n) (k , k<) (suc (suc l) , l<) x i j
+--        (f ∘ 𝕗suc n (𝕡comm (k , k<) (suc (suc l) , l<) x i j)) 
+--   acomm (w (suc (suc n))) (zero , k<) (suc (suc l) , l<) x i j f =
+--    let ((f0 , f1) , fSS) = 𝕗glue01commS n l l< i j
+--    in glue-biAdjT×^≡-comm {n = n} (l , l<)
+--       i j
+--       (f f0 , f f1 , ainvol (w n) (l , l<) j (~ i) (f ∘ fSS))
    
-  abraid (w (suc n)) (suc k) k< i j f =
-      f (𝕗0 n (𝕡braid k k< i j))
-    , abraid (w n) k k< i j (f ∘  𝕗suc n (𝕡braid k  k< i j))
-  abraid (w (suc (suc (suc n)))) zero tt i j f =
-   let ((f0 , f1 , f2) , fSSS) = 𝕗glueBraid n i j
-   in glue-adjT×^≡-braid {n = n} i j
-         (ua-gluePath (adjT×^≃ 0 ∙ₑ compEquiv (adjT×^≃ 1) (adjT×^≃ 0))
-           (λ j → f f2 , f f0 , f f1 , tab× n (f ∘' fSSS)) j)
+--   abraid (w (suc n)) (suc k) k< i j f =
+--       f (𝕗0 n (𝕡braid k k< i j))
+--     , abraid (w n) k k< i j (f ∘  𝕗suc n (𝕡braid k  k< i j))
+--   abraid (w (suc (suc (suc n)))) zero tt i j f =
+--    let ((f0 , f1 , f2) , fSSS) = 𝕗glueBraid n i j
+--    in glue-adjT×^≡-braid {n = n} i j
+--          (ua-gluePath (adjT×^≃ 0 ∙ₑ compEquiv (adjT×^≃ 1) (adjT×^≃ 0))
+--            (λ j → f f2 , f f0 , f f1 , tab× n (f ∘' fSSS)) j)
            
 
- isEquivTab𝕍 : ∀ n → ∀ 𝕡 → (isEquiv (tab𝕍 n 𝕡))
- isEquivTab𝕍 n = R𝕡elimProp.f w
-  where
-  w : R𝕡elimProp (isEquiv ∘ tab𝕍 n)
-  R𝕡elimProp.isPropA w _ = isPropIsEquiv _
-  R𝕡elimProp.abase w = snd (tab×≃ n)
+--  isEquivTab𝕍 : ∀ n → ∀ 𝕡 → (isEquiv (tab𝕍 n 𝕡))
+--  isEquivTab𝕍 n = R𝕡elimProp.f w
+--   where
+--   w : R𝕡elimProp (isEquiv ∘ tab𝕍 n)
+--   R𝕡elimProp.isPropA w _ = isPropIsEquiv _
+--   R𝕡elimProp.abase w = snd (tab×≃ n)
 
- s𝕍₃' : ∀ n → (𝕡 : ℙrm {false} n) →
-    Σ (Type ℓ) λ T → ((𝔽in n (toTruncℙ 𝕡) → A) ≃ T)
- s𝕍₃' n 𝕡 = _ , (_ , isEquivTab𝕍 n 𝕡)
-
-
- s𝕍₃ : ∀ n → (𝕡 : ℙrm {true} n) → Σ (Type ℓ) λ T → ((𝔽in n 𝕡 → A) ≃ T)
- s𝕍₃ =  truncℙ₂ _ (λ _ _ → isOfHLevelPlus 3 (isContrΣ≃ _) )  s𝕍₃'
+--  s𝕍₃' : ∀ n → (𝕡 : ℙrm {false} n) →
+--     Σ (Type ℓ) λ T → ((𝔽in n (toTruncℙ 𝕡) → A) ≃ T)
+--  s𝕍₃' n 𝕡 = _ , (_ , isEquivTab𝕍 n 𝕡)
 
 
- 𝕍₃ : ∀ n → ℙrm {true} n → Type ℓ
- 𝕍₃ n = fst ∘ s𝕍₃ n
-
- module _ (isGrpA : isGroupoid A) where
-
-  isGroupoid𝕍₃ : ∀ n → ∀ 𝕡 → isGroupoid (𝕍₃ n 𝕡)
-  isGroupoid𝕍₃ n = R𝕡elimProp.f w
-   where
-   w : R𝕡elimProp _
-   R𝕡elimProp.isPropA w _ = isPropIsOfHLevel 3
-   R𝕡elimProp.abase w = isOfHLevel×^ n 3 isGrpA 
+--  s𝕍₃ : ∀ n → (𝕡 : ℙrm {true} n) → Σ (Type ℓ) λ T → ((𝔽in n 𝕡 → A) ≃ T)
+--  s𝕍₃ =  truncℙ₂ _ (λ _ _ → isOfHLevelPlus 3 (isContrΣ≃ _) )  s𝕍₃'
 
 
-  cons𝕍₃ : ∀ n → ∀ 𝕡 → A → 𝕍₃ n 𝕡
-      → 𝕍₃ (suc n) (sucℙrm n 𝕡)
-  cons𝕍₃ n = R𝕡elim.f w
-   where
-   w : R𝕡elim (λ z → A → 𝕍₃ n z → 𝕍₃ (suc n) (sucℙrm n z))
-   R𝕡elim.isGroupoidA w _ 𝕡 =
-     isGroupoidΠ2 λ _ _ →  isGroupoid𝕍₃ (suc n) (sucℙrm n 𝕡)
-   R𝕡elim.abase w = _,_
-   R𝕡elim.aloop w _ _ = _,_
-   R𝕡elim.alooop w _ _ _ = _,_
-   R𝕡elim.acomp w _ _ _ _ = _,_
-   R𝕡elim.ainvol w _ _ _ = _,_
-   R𝕡elim.acomm w _ (suc l , l<) _ _ _ = _,_
-   R𝕡elim.abraid w _ _ _ _ = _,_
+--  𝕍₃ : ∀ n → ℙrm {true} n → Type ℓ
+--  𝕍₃ n = fst ∘ s𝕍₃ n
+
+--  module _ (isGrpA : isGroupoid A) where
+
+--   isGroupoid𝕍₃ : ∀ n → ∀ 𝕡 → isGroupoid (𝕍₃ n 𝕡)
+--   isGroupoid𝕍₃ n = R𝕡elimProp.f w
+--    where
+--    w : R𝕡elimProp _
+--    R𝕡elimProp.isPropA w _ = isPropIsOfHLevel 3
+--    R𝕡elimProp.abase w = isOfHLevel×^ n 3 isGrpA 
+
+
+--   cons𝕍₃ : ∀ n → ∀ 𝕡 → A → 𝕍₃ n 𝕡
+--       → 𝕍₃ (suc n) (sucℙrm n 𝕡)
+--   cons𝕍₃ n = R𝕡elim.f w
+--    where
+--    w : R𝕡elim (λ z → A → 𝕍₃ n z → 𝕍₃ (suc n) (sucℙrm n z))
+--    R𝕡elim.isGroupoidA w _ 𝕡 =
+--      isGroupoidΠ2 λ _ _ →  isGroupoid𝕍₃ (suc n) (sucℙrm n 𝕡)
+--    R𝕡elim.abase w = _,_
+--    R𝕡elim.aloop w _ _ = _,_
+--    R𝕡elim.alooop w _ _ _ = _,_
+--    R𝕡elim.acomp w _ _ _ _ = _,_
+--    R𝕡elim.ainvol w _ _ _ = _,_
+--    R𝕡elim.acomm w _ (suc l , l<) _ _ _ = _,_
+--    R𝕡elim.abraid w _ _ _ _ = _,_

@@ -1482,760 +1482,760 @@ Iso.leftInv plIso (x , (k , (p , q))) =
   Σ≡Prop (snd ∘ isFinGen≃') refl
 
 
--- -- [Fin→Fin]→[ℕ→ℕ] : ∀ n → ((Fin n) → ℕ)
--- --                         → ℕ → ℕ
--- -- [Fin→Fin]→[ℕ→ℕ] zero x x₁ = x₁
--- -- [Fin→Fin]→[ℕ→ℕ] (suc zero) x x₁ = x₁
--- -- [Fin→Fin]→[ℕ→ℕ] (suc (suc n)) f zero = (f (zero , tt))
--- -- [Fin→Fin]→[ℕ→ℕ] (suc (suc n)) f (suc x₁) =
--- --  suc ([Fin→Fin]→[ℕ→ℕ] (suc n) (f ∘ sucF) x₁)
-
-
--- [Fin→Fin]→[ℕ→ℕ]' : ∀ n → ((Fin n) → ℕ) → ∀ k → Dec (suc k ≤ n) → ℕ 
--- [Fin→Fin]→[ℕ→ℕ]' n f k (yes p) = f (k , p)
--- [Fin→Fin]→[ℕ→ℕ]' n f k (no ¬p) = k
-
--- [Fin→Fin]→[ℕ→ℕ] : ∀ n → ((Fin n) → ℕ) 
+-- [Fin→Fin]→[ℕ→ℕ] : ∀ n → ((Fin n) → ℕ)
 --                         → ℕ → ℕ
--- [Fin→Fin]→[ℕ→ℕ] n f k = [Fin→Fin]→[ℕ→ℕ]' n f k ((suc k) ≤? n)
-
--- -- -- [Fin→Fin]→[ℕ→ℕ]compute : ∀ n f → [Fin→Fin]→[ℕ→ℕ]
--- -- -- [Fin→Fin]→[ℕ→ℕ]compute = ?
-
--- CFIso→IsoFin : ∀ n → IsoCF n → Iso (Fin n) (Fin n) 
--- CFIso→IsoFin n (isom , p) = w
---   where
-
---    module u = Iso isom
-
---    w : Iso (Fin n) (Fin n)
---    Iso.fun w (k , k<) = u.fun k , IsoCFpres<n n (isom , p) _ k<
---    Iso.inv w (k , k<) = u.inv k ,
---      IsoCFpres<n n (invIso isom , constFromInvIso n isom p) _ k<
---    Iso.rightInv w (k , k<) = ≡Fin {n = n} (u.rightInv k)
---    Iso.leftInv w (k , k<) = ≡Fin {n = n} (u.leftInv k)
+-- [Fin→Fin]→[ℕ→ℕ] zero x x₁ = x₁
+-- [Fin→Fin]→[ℕ→ℕ] (suc zero) x x₁ = x₁
+-- [Fin→Fin]→[ℕ→ℕ] (suc (suc n)) f zero = (f (zero , tt))
+-- [Fin→Fin]→[ℕ→ℕ] (suc (suc n)) f (suc x₁) =
+--  suc ([Fin→Fin]→[ℕ→ℕ] (suc n) (f ∘ sucF) x₁)
 
 
+[Fin→Fin]→[ℕ→ℕ]' : ∀ n → ((Fin n) → ℕ) → ∀ k → Dec (suc k ≤ n) → ℕ 
+[Fin→Fin]→[ℕ→ℕ]' n f k (yes p) = f (k , p)
+[Fin→Fin]→[ℕ→ℕ]' n f k (no ¬p) = k
 
--- IsoFin→CFIso : ∀ n → Iso (Fin n) (Fin n) → IsoCF n
--- IsoFin→CFIso n isom = w
---   where
+[Fin→Fin]→[ℕ→ℕ] : ∀ n → ((Fin n) → ℕ) 
+                        → ℕ → ℕ
+[Fin→Fin]→[ℕ→ℕ] n f k = [Fin→Fin]→[ℕ→ℕ]' n f k ((suc k) ≤? n)
 
---    module u = Iso isom
+-- -- [Fin→Fin]→[ℕ→ℕ]compute : ∀ n f → [Fin→Fin]→[ℕ→ℕ]
+-- -- [Fin→Fin]→[ℕ→ℕ]compute = ?
+
+CFIso→IsoFin : ∀ n → IsoCF n → Iso (Fin n) (Fin n) 
+CFIso→IsoFin n (isom , p) = w
+  where
+
+   module u = Iso isom
+
+   w : Iso (Fin n) (Fin n)
+   Iso.fun w (k , k<) = u.fun k , IsoCFpres<n n (isom , p) _ k<
+   Iso.inv w (k , k<) = u.inv k ,
+     IsoCFpres<n n (invIso isom , constFromInvIso n isom p) _ k<
+   Iso.rightInv w (k , k<) = ≡Fin {n = n} (u.rightInv k)
+   Iso.leftInv w (k , k<) = ≡Fin {n = n} (u.leftInv k)
+
+
+
+IsoFin→CFIso : ∀ n → Iso (Fin n) (Fin n) → IsoCF n
+IsoFin→CFIso n isom = w
+  where
+
+   module u = Iso isom
 
    
---    ri' : (isom : Iso (Fin n) (Fin n)) → 
---         (b : ℕ) → ∀ p' p  →
---           [Fin→Fin]→[ℕ→ℕ]' n (λ x → fst (Iso.fun isom x))
---           ([Fin→Fin]→[ℕ→ℕ]' n (λ x → fst (Iso.inv isom x)) b p')
---           p
---           ≡ b
---    ri' isom b (yes p₁) (yes p) =
---      cong′ (fst ∘' Iso.fun isom) (≡Fin {n = n} refl)
---        ∙ cong fst (Iso.rightInv isom (b , p₁))
---    ri' isom b (yes p) (no ¬p) = ⊥.rec (¬p (snd (Iso.inv isom (b , p))))
---    ri' isom b (no ¬p) (yes p) = ⊥.rec (¬p p)
---    ri' isom b (no ¬p) (no ¬p₁) = refl
+   ri' : (isom : Iso (Fin n) (Fin n)) → 
+        (b : ℕ) → ∀ p' p  →
+          [Fin→Fin]→[ℕ→ℕ]' n (λ x → fst (Iso.fun isom x))
+          ([Fin→Fin]→[ℕ→ℕ]' n (λ x → fst (Iso.inv isom x)) b p')
+          p
+          ≡ b
+   ri' isom b (yes p₁) (yes p) =
+     cong′ (fst ∘' Iso.fun isom) (≡Fin {n = n} refl)
+       ∙ cong fst (Iso.rightInv isom (b , p₁))
+   ri' isom b (yes p) (no ¬p) = ⊥.rec (¬p (snd (Iso.inv isom (b , p))))
+   ri' isom b (no ¬p) (yes p) = ⊥.rec (¬p p)
+   ri' isom b (no ¬p) (no ¬p₁) = refl
 
---    ri : (isom : Iso (Fin n) (Fin n)) → 
---      section ([Fin→Fin]→[ℕ→ℕ] n (fst ∘ (Iso.fun isom)))
---              ([Fin→Fin]→[ℕ→ℕ] n (fst ∘ (Iso.inv isom)))
---    ri isom b = ri' isom b
---                 (suc b ≤? n)
---                 (suc ([Fin→Fin]→[ℕ→ℕ] n (fst ∘ (Iso.inv isom)) b)  ≤? n) 
+   ri : (isom : Iso (Fin n) (Fin n)) → 
+     section ([Fin→Fin]→[ℕ→ℕ] n (fst ∘ (Iso.fun isom)))
+             ([Fin→Fin]→[ℕ→ℕ] n (fst ∘ (Iso.inv isom)))
+   ri isom b = ri' isom b
+                (suc b ≤? n)
+                (suc ([Fin→Fin]→[ℕ→ℕ] n (fst ∘ (Iso.inv isom)) b)  ≤? n) 
    
---    w : IsoCF n
---    Iso.fun (fst w) = [Fin→Fin]→[ℕ→ℕ] n (fst ∘ u.fun)
---    Iso.inv (fst w) = [Fin→Fin]→[ℕ→ℕ] n (fst ∘ u.inv)
---    Iso.rightInv (fst w) = ri isom
---    Iso.leftInv (fst w) = ri (invIso isom)
---    snd w m n≤m with (suc m ≤? n)
---    ... | yes p = ⊥.rec (<→≥→⊥ {n} {suc m} n≤m p)
---    ... | no ¬p = refl
+   w : IsoCF n
+   Iso.fun (fst w) = [Fin→Fin]→[ℕ→ℕ] n (fst ∘ u.fun)
+   Iso.inv (fst w) = [Fin→Fin]→[ℕ→ℕ] n (fst ∘ u.inv)
+   Iso.rightInv (fst w) = ri isom
+   Iso.leftInv (fst w) = ri (invIso isom)
+   snd w m n≤m with (suc m ≤? n)
+   ... | yes p = ⊥.rec (<→≥→⊥ {n} {suc m} n≤m p)
+   ... | no ¬p = refl
    
--- IsoIsoCFIsoFin : ∀ n → Iso (IsoCF n) (Iso (Fin n) (Fin n)) 
--- Iso.fun (IsoIsoCFIsoFin n) = CFIso→IsoFin n
--- Iso.inv (IsoIsoCFIsoFin n) = IsoFin→CFIso n
--- Iso.rightInv (IsoIsoCFIsoFin n) e =
---    Iso≡Set-fun (isSetFin {n}) (isSetFin {n}) _ _
---      (λ x → ≡Fin {n} (w x (suc (fst x) ≤? n)))
---  where
---    module u = Iso e
+IsoIsoCFIsoFin : ∀ n → Iso (IsoCF n) (Iso (Fin n) (Fin n)) 
+Iso.fun (IsoIsoCFIsoFin n) = CFIso→IsoFin n
+Iso.inv (IsoIsoCFIsoFin n) = IsoFin→CFIso n
+Iso.rightInv (IsoIsoCFIsoFin n) e =
+   Iso≡Set-fun (isSetFin {n}) (isSetFin {n}) _ _
+     (λ x → ≡Fin {n} (w x (suc (fst x) ≤? n)))
+ where
+   module u = Iso e
    
---    w : (x : Fin n) → ∀ q →
---           ([Fin→Fin]→[ℕ→ℕ]' n (fst ∘ u.fun) (fst x) q) ≡ fst (u.fun x) 
---    w x (yes p) = cong (fst ∘ u.fun) (≡Fin {n = n} refl)
---    w x (no ¬p) = ⊥.rec (¬p (snd x))
+   w : (x : Fin n) → ∀ q →
+          ([Fin→Fin]→[ℕ→ℕ]' n (fst ∘ u.fun) (fst x) q) ≡ fst (u.fun x) 
+   w x (yes p) = cong (fst ∘ u.fun) (≡Fin {n = n} refl)
+   w x (no ¬p) = ⊥.rec (¬p (snd x))
    
--- Iso.leftInv (IsoIsoCFIsoFin n) (e , p) =
---   Σ≡Prop (λ e → snd (constFromIsoH e n))
---     (Iso≡Set-fun isSetℕ isSetℕ _ _
---       λ x → w x (suc x ≤? n))
---   where
---    w : (x : ℕ) → ∀ p → 
---       [Fin→Fin]→[ℕ→ℕ]' n (Iso.fun e ∘ fst) x p ≡
---       e .Iso.fun x
---    w x (yes p) = refl
---    w x (no ¬p) = sym (p x (¬<-≥ x n ¬p))
+Iso.leftInv (IsoIsoCFIsoFin n) (e , p) =
+  Σ≡Prop (λ e → snd (constFromIsoH e n))
+    (Iso≡Set-fun isSetℕ isSetℕ _ _
+      λ x → w x (suc x ≤? n))
+  where
+   w : (x : ℕ) → ∀ p → 
+      [Fin→Fin]→[ℕ→ℕ]' n (Iso.fun e ∘ fst) x p ≡
+      e .Iso.fun x
+   w x (yes p) = refl
+   w x (no ¬p) = sym (p x (¬<-≥ x n ¬p))
 
 
 
--- -- to≃η : ∀ k → fst (to≃ (η k)) ≡ adjTransposition k
--- -- to≃η k = refl
+-- to≃η : ∀ k → fst (to≃ (η k)) ≡ adjTransposition k
+-- to≃η k = refl
 
--- -- to≃rotFG : ∀ k → fst (to≃ (rotFG k)) ≡ rot' k
--- -- to≃rotFG zero = refl
--- -- to≃rotFG (suc zero) = refl
--- -- to≃rotFG (suc (suc k)) =
+-- to≃rotFG : ∀ k → fst (to≃ (rotFG k)) ≡ rot' k
+-- to≃rotFG zero = refl
+-- to≃rotFG (suc zero) = refl
+-- to≃rotFG (suc (suc k)) =
 
--- -- let z = sucFunResp∘ (fst (to≃ (sucFGℕ≃ℕ (rotFG k)))) swap0and1
--- --          ∙ cong ( sucFun ) (to≃rotFG (suc k))
--- -- in cong (_∘' sucFun swap0and1 ∘ swap0and1)
--- --      (sym (to≃suc (sucFGℕ≃ℕ (rotFG k)))) ∙ cong (_∘' swap0and1) z
+-- let z = sucFunResp∘ (fst (to≃ (sucFGℕ≃ℕ (rotFG k)))) swap0and1
+--          ∙ cong ( sucFun ) (to≃rotFG (suc k))
+-- in cong (_∘' sucFun swap0and1 ∘ swap0and1)
+--      (sym (to≃suc (sucFGℕ≃ℕ (rotFG k)))) ∙ cong (_∘' swap0and1) z
 
--- -- CFisoElim' : ∀ {ℓ} (A : Iso ℕ ℕ  → Type ℓ)
--- --           → A idIso          
--- --           → (∀ n → (∀ e → isLB e n →  A e)
--- --                → ∀ e k → k ≤ n
--- --                → isLB (compIso  (sucIso e) (rotIso' k))
--- --                     (suc n) → A (compIso  (sucIso e) (rotIso' k)))
--- --           → ∀ e n → isLB e n → A e
--- --           --    → ∀ e k p → A (suc n)
--- --           --         (compIso  (sucIso e) (adjTransposition≃ k))
--- --           --         {!isConstFrom∘ ? ? ? ? ? ?!})
--- --           -- → ∀ n e p → A n e p
--- -- CFisoElim' A A₀ _ e zero p = {!!}
--- -- CFisoElim' A A₀ As e (suc n) p =
--- --   let ((k , k<) , (e' , p')) = Iso.fun (unwindIsoIsoCF n) (e , fst p)
--- --       z = CFisoElim' A A₀ As e' n (p' , {!!})
--- --   in {!!}  
-
-
--- -- CFisoElim : ∀ {ℓ} (A : ∀ n → (e : Iso ℕ ℕ)
--- --     → (Least (fst ∘  (isConstFrom (Iso.fun e)))) n → Type ℓ)
--- --           → A 0 idIso ((λ _ _ → refl) , λ _ x _ → x)          
--- --           → (∀ n → (∀ e p → A n e p)
--- --              → ∀ e k p → A (suc n)
--- --                   (compIso  (sucIso e) (adjTransposition≃ k))
--- --                   {!isConstFrom∘ ? ? ? ? ? ?!})
--- --           → ∀ n e p → A n e p
--- -- CFisoElim A a0 aS = {!!}
-
--- -- isFGLi'lem : ∀ 𝑘 e m m'
--- --                (p
--- --                 : ⟨
--- --                   isConstFrom (Iso.fun (compIso (adjTransposition≃ (suc 𝑘)) e))
--- --                   (suc m)
--- --                   ⟩)
--- --                (p' : ⟨ isConstFrom (Iso.fun e) (suc m') ⟩)  →
--- --              fst
--- --              (snd
--- --               (Iso.fun (unwindIsoIsoCF m)
--- --                (compIso (adjTransposition≃ (suc 𝑘)) e , p)))
--- --              ≡
--- --              compIso (adjTransposition≃ 𝑘)
--- --              (fst (snd (Iso.fun (unwindIsoIsoCF m') (e , p'))))
--- -- isFGLi'lem 𝑘 e m m' p p' = {!!}
---    -- Iso≡Set isSetℕ isSetℕ _ _
---    --    (λ _ → refl)
---    --    λ _ → {!!}
+-- CFisoElim' : ∀ {ℓ} (A : Iso ℕ ℕ  → Type ℓ)
+--           → A idIso          
+--           → (∀ n → (∀ e → isLB e n →  A e)
+--                → ∀ e k → k ≤ n
+--                → isLB (compIso  (sucIso e) (rotIso' k))
+--                     (suc n) → A (compIso  (sucIso e) (rotIso' k)))
+--           → ∀ e n → isLB e n → A e
+--           --    → ∀ e k p → A (suc n)
+--           --         (compIso  (sucIso e) (adjTransposition≃ k))
+--           --         {!isConstFrom∘ ? ? ? ? ? ?!})
+--           -- → ∀ n e p → A n e p
+-- CFisoElim' A A₀ _ e zero p = {!!}
+-- CFisoElim' A A₀ As e (suc n) p =
+--   let ((k , k<) , (e' , p')) = Iso.fun (unwindIsoIsoCF n) (e , fst p)
+--       z = CFisoElim' A A₀ As e' n (p' , {!!})
+--   in {!!}  
 
 
+-- CFisoElim : ∀ {ℓ} (A : ∀ n → (e : Iso ℕ ℕ)
+--     → (Least (fst ∘  (isConstFrom (Iso.fun e)))) n → Type ℓ)
+--           → A 0 idIso ((λ _ _ → refl) , λ _ x _ → x)          
+--           → (∀ n → (∀ e p → A n e p)
+--              → ∀ e k p → A (suc n)
+--                   (compIso  (sucIso e) (adjTransposition≃ k))
+--                   {!isConstFrom∘ ? ? ? ? ? ?!})
+--           → ∀ n e p → A n e p
+-- CFisoElim A a0 aS = {!!}
 
-
--- rotRotCase : (e0 e1 : ℕ) → Type
--- rotRotCase e0 e1 =
---   (Σ ((Σ _ λ e0' → suc e0' ≡ e0))
---        λ ((e0' , _)) →
---           (e1 < (suc e0'))
---            × ((predℕ (Iso.inv (compIso swap0and1≃ (sucIso (rotIso' e0')))
---              (e1))) ≡ e1) × 
---                (Iso.inv (rotIso' e1) (suc e0') ≡ suc e0'))
+-- isFGLi'lem : ∀ 𝑘 e m m'
+--                (p
+--                 : ⟨
+--                   isConstFrom (Iso.fun (compIso (adjTransposition≃ (suc 𝑘)) e))
+--                   (suc m)
+--                   ⟩)
+--                (p' : ⟨ isConstFrom (Iso.fun e) (suc m') ⟩)  →
+--              fst
+--              (snd
+--               (Iso.fun (unwindIsoIsoCF m)
+--                (compIso (adjTransposition≃ (suc 𝑘)) e , p)))
+--              ≡
+--              compIso (adjTransposition≃ 𝑘)
+--              (fst (snd (Iso.fun (unwindIsoIsoCF m') (e , p'))))
+-- isFGLi'lem 𝑘 e m m' p p' = {!!}
+   -- Iso≡Set isSetℕ isSetℕ _ _
+   --    (λ _ → refl)
+   --    λ _ → {!!}
 
 
 
 
-
--- <→rotRotCase : (e0 e1 : ℕ) → e1 < e0 → rotRotCase e0 e1
--- <→rotRotCase (suc e0) e1 x =
---   (e0 , refl) , x , rot'< e1 e0 x , rotIsoConstInv e1 (suc e0) x
-
-
--- rotRotCases : (e0 e1 : ℕ) → ¬ e0 ≡ e1 →
---                rotRotCase e1 e0 ⊎ rotRotCase e0 e1
--- rotRotCases e0 e1 = 
---       map-⊎ (<→rotRotCase _ _) (<→rotRotCase _ _)
---    ∘ ¬≡ℕ-cases e0 e1
-
--- lll : ∀ e0 e1 → e0 < suc e1 → predℕ
---       (swap0and1
---        (sucFun (Iso.inv (cases idIso rotIso e1))
---         e0))
---       ≡ predℕ (Iso.inv (rotIso e1) e0)
--- lll zero zero x = refl
--- lll e0 (suc e1) x = refl
-
--- rotRotElim : (A :  (e0 e1 : ℕ) (e0' e1' : ℕ) → Type ℓ)
---           → (∀ e0 e1 → e1 < (suc e0) → A (suc e0) (e1) e0 e1)
---           → (∀ e0 e1 → e0 < (suc e1) → A (e0) (suc e1)  e0 e1)
---           → (e0 e1 : ℕ) → ¬ e0 ≡ e1
---           → A e0 e1 (predℕ (Iso.inv (rotIso' e1) e0)) (predℕ (Iso.inv (rotIso' e0) e1))
--- rotRotElim A c< c> e0 e1 =
+rotRotCase : (e0 e1 : ℕ) → Type
+rotRotCase e0 e1 =
+  (Σ ((Σ _ λ e0' → suc e0' ≡ e0))
+       λ ((e0' , _)) →
+          (e1 < (suc e0'))
+           × ((predℕ (Iso.inv (compIso swap0and1≃ (sucIso (rotIso' e0')))
+             (e1))) ≡ e1) × 
+               (Iso.inv (rotIso' e1) (suc e0') ≡ suc e0'))
 
 
---   ⊎.elim (λ ((e0' , p0) , p , q , r) →
---           let pe0 : e0' ≡ (predℕ (Iso.inv (rotIso' e0) e1))
---               pe0 = cong predℕ (sym r) ∙ cong (predℕ ∘ (Iso.inv (rotIso' e0))) p0
---               pe1 : e0 ≡ (predℕ (Iso.inv (rotIso' e1) e0))
---               pe1 = sym q ∙ lll e0 e0' p ∙
---                  cong₂ (λ e0 → predℕ ∘ (Iso.inv (rotIso' e0))) p0 (λ _ → e0)
---           in transport (λ i → A e0 (p0 i) (pe1 i) (pe0 i)) (c> e0 e0' p))
---          (λ ((e0' , p0) , p , q , r) → 
---            let pe0 : e0' ≡ (predℕ (Iso.inv (rotIso' e1) e0))
---                pe0 = cong predℕ (sym r) ∙ cong (predℕ ∘ (Iso.inv (rotIso' e1))) p0
---                pe1 : e1 ≡ (predℕ (Iso.inv (rotIso' e0) e1))
---                pe1 = sym q ∙∙ lll e1 e0' p ∙∙ 
---                     cong (λ e0 → predℕ (Iso.inv (rotIso' e0) e1)) p0 
---            in transport (λ i → A (p0 i) e1 (pe0 i) (pe1 i)) (c< e0' e1 p)) 
+
+
+
+<→rotRotCase : (e0 e1 : ℕ) → e1 < e0 → rotRotCase e0 e1
+<→rotRotCase (suc e0) e1 x =
+  (e0 , refl) , x , rot'< e1 e0 x , rotIsoConstInv e1 (suc e0) x
+
+
+rotRotCases : (e0 e1 : ℕ) → ¬ e0 ≡ e1 →
+               rotRotCase e1 e0 ⊎ rotRotCase e0 e1
+rotRotCases e0 e1 = 
+      map-⊎ (<→rotRotCase _ _) (<→rotRotCase _ _)
+   ∘ ¬≡ℕ-cases e0 e1
+
+lll : ∀ e0 e1 → e0 < suc e1 → predℕ
+      (swap0and1
+       (sucFun (Iso.inv (cases idIso rotIso e1))
+        e0))
+      ≡ predℕ (Iso.inv (rotIso e1) e0)
+lll zero zero x = refl
+lll e0 (suc e1) x = refl
+
+rotRotElim : (A :  (e0 e1 : ℕ) (e0' e1' : ℕ) → Type ℓ)
+          → (∀ e0 e1 → e1 < (suc e0) → A (suc e0) (e1) e0 e1)
+          → (∀ e0 e1 → e0 < (suc e1) → A (e0) (suc e1)  e0 e1)
+          → (e0 e1 : ℕ) → ¬ e0 ≡ e1
+          → A e0 e1 (predℕ (Iso.inv (rotIso' e1) e0)) (predℕ (Iso.inv (rotIso' e0) e1))
+rotRotElim A c< c> e0 e1 =
+
+
+  ⊎.elim (λ ((e0' , p0) , p , q , r) →
+          let pe0 : e0' ≡ (predℕ (Iso.inv (rotIso' e0) e1))
+              pe0 = cong predℕ (sym r) ∙ cong (predℕ ∘ (Iso.inv (rotIso' e0))) p0
+              pe1 : e0 ≡ (predℕ (Iso.inv (rotIso' e1) e0))
+              pe1 = sym q ∙ lll e0 e0' p ∙
+                 cong₂ (λ e0 → predℕ ∘ (Iso.inv (rotIso' e0))) p0 (λ _ → e0)
+          in transport (λ i → A e0 (p0 i) (pe1 i) (pe0 i)) (c> e0 e0' p))
+         (λ ((e0' , p0) , p , q , r) → 
+           let pe0 : e0' ≡ (predℕ (Iso.inv (rotIso' e1) e0))
+               pe0 = cong predℕ (sym r) ∙ cong (predℕ ∘ (Iso.inv (rotIso' e1))) p0
+               pe1 : e1 ≡ (predℕ (Iso.inv (rotIso' e0) e1))
+               pe1 = sym q ∙∙ lll e1 e0' p ∙∙ 
+                    cong (λ e0 → predℕ (Iso.inv (rotIso' e0) e1)) p0 
+           in transport (λ i → A (p0 i) e1 (pe0 i) (pe1 i)) (c< e0' e1 p)) 
           
---    ∘ rotRotCases _ _
+   ∘ rotRotCases _ _
 
 
 
--- isFGliK0 : ∀ n m → ¬ n ≡ m →
---               (sucFGℕ≃ℕ (rotFG (predℕ ((Iso.inv (rotIso' n) m))))) · rotFG n
---               ≡ zero ∷ ((sucFGℕ≃ℕ (rotFG (predℕ
---                 (Iso.inv (rotIso' m) n))) · rotFG m))
--- isFGliK0 = rotRotElim
---   (λ n m n' m' →
---      (sucFGℕ≃ℕ (rotFG (m'))) · rotFG n
---               ≡ zero ∷ ((sucFGℕ≃ℕ (rotFG (n')) · rotFG m)))
---   caseA caseB
---  where
---   caseA : (e0 e1 : ℕ) →
---             e1 < suc e0 →
---             (sucFGℕ≃ℕ (rotFG e1) · rotFG (suc e0)) ≡
---             zero ∷ (sucFGℕ≃ℕ (rotFG e0) · rotFG e1)
---   caseA e0 zero x = cong′ (0 ∷_) (sym (idr _)) 
---   caseA (suc e0) (suc e1) x =
---     let z = caseA e0 e1 x
---     in  cong′ (1 ∷_) (
---         ((assoc· ((sucFGℕ≃ℕ (sucFGℕ≃ℕ (rotFG e1)))) (η 0) _ ∙
---            cong′ (_· (sucFGℕ≃ℕ (zero ∷ sucFGℕ≃ℕ (rotFG e0))))
---              (sucSucComm (rotFG e1))
---          ∙ (sym (assoc· (η 0) (sucFGℕ≃ℕ (sucFGℕ≃ℕ (rotFG e1))) _)))
---           ∙ cong′ (0 ∷_)
---            (sym (sucFGℕ≃ℕresp· (sucFGℕ≃ℕ (rotFG e1)) (zero ∷ sucFGℕ≃ℕ (rotFG e0)))
---             ∙ cong sucFGℕ≃ℕ z))
---           ∙ cong′ (λ x → 0 ∷ 1 ∷ x)
---            (sucFGℕ≃ℕresp· (sucFGℕ≃ℕ (rotFG e0)) (rotFG e1)))
---        ∙ sym (braid _ _)
---       ∙ cong′ (λ x → 0 ∷ 1 ∷ x)
---        ((cong′ (_· (sucFGℕ≃ℕ (rotFG e1)))
---          (sym (sucSucComm (rotFG e0))))
---          ∙ (sym (assoc· (sucFGℕ≃ℕ (sucFGℕ≃ℕ (rotFG e0))) (η zero) (sucFGℕ≃ℕ (rotFG e1))))) 
+isFGliK0 : ∀ n m → ¬ n ≡ m →
+              (sucFGℕ≃ℕ (rotFG (predℕ ((Iso.inv (rotIso' n) m))))) · rotFG n
+              ≡ zero ∷ ((sucFGℕ≃ℕ (rotFG (predℕ
+                (Iso.inv (rotIso' m) n))) · rotFG m))
+isFGliK0 = rotRotElim
+  (λ n m n' m' →
+     (sucFGℕ≃ℕ (rotFG (m'))) · rotFG n
+              ≡ zero ∷ ((sucFGℕ≃ℕ (rotFG (n')) · rotFG m)))
+  caseA caseB
+ where
+  caseA : (e0 e1 : ℕ) →
+            e1 < suc e0 →
+            (sucFGℕ≃ℕ (rotFG e1) · rotFG (suc e0)) ≡
+            zero ∷ (sucFGℕ≃ℕ (rotFG e0) · rotFG e1)
+  caseA e0 zero x = cong′ (0 ∷_) (sym (idr _)) 
+  caseA (suc e0) (suc e1) x =
+    let z = caseA e0 e1 x
+    in  cong′ (1 ∷_) (
+        ((assoc· ((sucFGℕ≃ℕ (sucFGℕ≃ℕ (rotFG e1)))) (η 0) _ ∙
+           cong′ (_· (sucFGℕ≃ℕ (zero ∷ sucFGℕ≃ℕ (rotFG e0))))
+             (sucSucComm (rotFG e1))
+         ∙ (sym (assoc· (η 0) (sucFGℕ≃ℕ (sucFGℕ≃ℕ (rotFG e1))) _)))
+          ∙ cong′ (0 ∷_)
+           (sym (sucFGℕ≃ℕresp· (sucFGℕ≃ℕ (rotFG e1)) (zero ∷ sucFGℕ≃ℕ (rotFG e0)))
+            ∙ cong sucFGℕ≃ℕ z))
+          ∙ cong′ (λ x → 0 ∷ 1 ∷ x)
+           (sucFGℕ≃ℕresp· (sucFGℕ≃ℕ (rotFG e0)) (rotFG e1)))
+       ∙ sym (braid _ _)
+      ∙ cong′ (λ x → 0 ∷ 1 ∷ x)
+       ((cong′ (_· (sucFGℕ≃ℕ (rotFG e1)))
+         (sym (sucSucComm (rotFG e0))))
+         ∙ (sym (assoc· (sucFGℕ≃ℕ (sucFGℕ≃ℕ (rotFG e0))) (η zero) (sucFGℕ≃ℕ (rotFG e1))))) 
          
---   caseB : (e0 e1 : ℕ) →
---             e0 < suc e1 →
---             (sucFGℕ≃ℕ (rotFG e1) · rotFG e0) ≡
---             zero ∷ (sucFGℕ≃ℕ (rotFG e0) · rotFG (suc e1))
---   caseB e1 e0 x =
---     let z = caseA e0 e1 x
---     in sym (invo _ _) ∙ sym (cong (zero ∷_) z)
+  caseB : (e0 e1 : ℕ) →
+            e0 < suc e1 →
+            (sucFGℕ≃ℕ (rotFG e1) · rotFG e0) ≡
+            zero ∷ (sucFGℕ≃ℕ (rotFG e0) · rotFG (suc e1))
+  caseB e1 e0 x =
+    let z = caseA e0 e1 x
+    in sym (invo _ _) ∙ sym (cong (zero ∷_) z)
 
 
--- -- blockGLI : (n m : ℕ) → Type
--- -- blockGLI n m =  < max n m 
+-- blockGLI : (n m : ℕ) → Type
+-- blockGLI n m =  < max n m 
 
--- FinGen≃'ConstCases : ℕ → Iso ℕ ℕ → Type₀   
--- FinGen≃'ConstCases x e =
---    𝟚.if (𝟚.Dec→Bool (x ≤? 1))
---     then e ≡ idIso
---     else Unit
+FinGen≃'ConstCases : ℕ → Iso ℕ ℕ → Type₀   
+FinGen≃'ConstCases x e =
+   𝟚.if (𝟚.Dec→Bool (x ≤? 1))
+    then e ≡ idIso
+    else Unit
 
--- FinGen≃'cc : ∀ k e → ⟨ isConstFrom (Iso.fun e) k ⟩
---               → FinGen≃'ConstCases k e
--- FinGen≃'cc zero e x = Iso≡Set-fun isSetℕ isSetℕ _ _ (λ k → x k _)
--- FinGen≃'cc (suc zero) e x = Iso≡Set-fun isSetℕ isSetℕ _ _  w
---   where
+FinGen≃'cc : ∀ k e → ⟨ isConstFrom (Iso.fun e) k ⟩
+              → FinGen≃'ConstCases k e
+FinGen≃'cc zero e x = Iso≡Set-fun isSetℕ isSetℕ _ _ (λ k → x k _)
+FinGen≃'cc (suc zero) e x = Iso≡Set-fun isSetℕ isSetℕ _ _  w
+  where
 
---     ww : ∀ k → e .Iso.fun 0 ≡ suc k → ⊥
---     ww k p = 
---       znots (sym (Iso.leftInv e 0) ∙ (cong (Iso.inv e) p)
---         ∙ constFromInvIso 1 e x (suc k) _)
+    ww : ∀ k → e .Iso.fun 0 ≡ suc k → ⊥
+    ww k p = 
+      znots (sym (Iso.leftInv e 0) ∙ (cong (Iso.inv e) p)
+        ∙ constFromInvIso 1 e x (suc k) _)
 
---     w : (x₁ : ℕ) → e .Iso.fun x₁ ≡ idIso .Iso.fun x₁
---     w zero = ≢suc→≡zero ww
---     w (suc x₁) = x (suc x₁) _
+    w : (x₁ : ℕ) → e .Iso.fun x₁ ≡ idIso .Iso.fun x₁
+    w zero = ≢suc→≡zero ww
+    w (suc x₁) = x (suc x₁) _
   
 
--- FinGen≃'cc (suc (suc _)) _ _ = _
+FinGen≃'cc (suc (suc _)) _ _ = _
 
--- retract-to≃'-from≃' : section to≃' from≃'
--- retract-to≃'-from≃' (f , n , (X , LX)) =
---   Σ≡Prop (snd ∘ isFinGen≃')
---     (isoFGriLem f n X)
+retract-to≃'-from≃' : section to≃' from≃'
+retract-to≃'-from≃' (f , n , (X , LX)) =
+  Σ≡Prop (snd ∘ isFinGen≃')
+    (isoFGriLem f n X)
 
 
--- isFGli'IdId : ∀ k e
---      → (compIso (adjTransposition≃ k) e) ≡ idIso
---      → e ≡ idIso → ⊥
--- isFGli'IdId k e P P' =
---   kAdjTlem k (funExt⁻
---     (cong′ Iso.fun
---       (sym P ∙
---         cong′ (compIso (adjTransposition≃ k)) P')) k)
+isFGli'IdId : ∀ k e
+     → (compIso (adjTransposition≃ k) e) ≡ idIso
+     → e ≡ idIso → ⊥
+isFGli'IdId k e P P' =
+  kAdjTlem k (funExt⁻
+    (cong′ Iso.fun
+      (sym P ∙
+        cong′ (compIso (adjTransposition≃ k)) P')) k)
 
--- from≃IdIso : ∀ m' p' → from≃ idIso m' p' ≡ ε
--- from≃IdIso zero p' = refl
--- from≃IdIso (suc m') p' =
---   idr (sucFGℕ≃ℕ
---        (from≃ (fst (snd (Iso.fun (unwindIsoIsoCF m') (idIso , p')))) m'
---         (snd (snd (Iso.fun (unwindIsoIsoCF m') (idIso , p'))))))
---      ∙ 
---      cong′ sucFGℕ≃ℕ ( cong₂ (λ e p → from≃ e m' p)
---        unwindIsoIdIso
---          (isProp→PathP (λ i →
---             snd (isConstFrom (Iso.fun (unwindIsoIdIso i)) m')) _ _)
---        ∙ from≃IdIso m' λ _ _ → refl)
+from≃IdIso : ∀ m' p' → from≃ idIso m' p' ≡ ε
+from≃IdIso zero p' = refl
+from≃IdIso (suc m') p' =
+  idr (sucFGℕ≃ℕ
+       (from≃ (fst (snd (Iso.fun (unwindIsoIsoCF m') (idIso , p')))) m'
+        (snd (snd (Iso.fun (unwindIsoIsoCF m') (idIso , p'))))))
+     ∙ 
+     cong′ sucFGℕ≃ℕ ( cong₂ (λ e p → from≃ e m' p)
+       unwindIsoIdIso
+         (isProp→PathP (λ i →
+            snd (isConstFrom (Iso.fun (unwindIsoIdIso i)) m')) _ _)
+       ∙ from≃IdIso m' λ _ _ → refl)
        
---   -- idr (sucFGℕ≃ℕ {!sucFGℕ≃ℕ (from≃ ? m' ?)!})
---   --   ∙ {!!} ∙ (cong sucFGℕ≃ℕ (from≃IdIso m' {!!})) ∙ {!!}
+  -- idr (sucFGℕ≃ℕ {!sucFGℕ≃ℕ (from≃ ? m' ?)!})
+  --   ∙ {!!} ∙ (cong sucFGℕ≃ℕ (from≃IdIso m' {!!})) ∙ {!!}
 
--- from≃adjT : ∀ k m p →
---    from≃ (adjTransposition≃ k) m  p ≡ k ∷ ε
--- from≃adjT k zero p = ⊥.rec (kAdjTlem k (sym (p k _)))
--- from≃adjT k (suc zero) p =
---    ⊥.rec (kAdjTlem k
---     (sym (funExt⁻ (cong Iso.fun (FinGen≃'cc 1 (adjTransposition≃ k) p)) k)))
--- from≃adjT zero (suc (suc zero)) p = refl
--- from≃adjT zero (suc (suc (suc m))) p =
---  let z = (cases ⊥.rec (cases ⊥.rec λ _ _ → refl))
---  in from≃lem (adjTransposition≃ zero) (adjTransposition≃ zero)
---      (suc (suc (suc m))) (suc (suc m)) p z refl
---        ∙ from≃adjT zero (suc (suc m))
---       z
+from≃adjT : ∀ k m p →
+   from≃ (adjTransposition≃ k) m  p ≡ k ∷ ε
+from≃adjT k zero p = ⊥.rec (kAdjTlem k (sym (p k _)))
+from≃adjT k (suc zero) p =
+   ⊥.rec (kAdjTlem k
+    (sym (funExt⁻ (cong Iso.fun (FinGen≃'cc 1 (adjTransposition≃ k) p)) k)))
+from≃adjT zero (suc (suc zero)) p = refl
+from≃adjT zero (suc (suc (suc m))) p =
+ let z = (cases ⊥.rec (cases ⊥.rec λ _ _ → refl))
+ in from≃lem (adjTransposition≃ zero) (adjTransposition≃ zero)
+     (suc (suc (suc m))) (suc (suc m)) p z refl
+       ∙ from≃adjT zero (suc (suc m))
+      z
 
--- from≃adjT (suc k) (suc (suc m)) p =
---   (idr (sucFGℕ≃ℕ (from≃HLP (adjTransposition≃ (suc k)) (suc m) p))
---      ∙ cong sucFGℕ≃ℕ
---        (from≃lem
---          (unwindIso (adjTransposition≃ (suc k))) (adjTransposition≃ k)
---          (suc m) (suc (suc k))
---            (unwindConstFromIso (suc m) (adjTransposition≃ (suc k)) p)
---            ((isConstFrom-adjTransposition k))
---            (unwindIsoAdjT k)))
---     ∙ cong sucFGℕ≃ℕ (from≃adjT k (suc (suc k))
---            (isConstFrom-adjTransposition k))
+from≃adjT (suc k) (suc (suc m)) p =
+  (idr (sucFGℕ≃ℕ (from≃HLP (adjTransposition≃ (suc k)) (suc m) p))
+     ∙ cong sucFGℕ≃ℕ
+       (from≃lem
+         (unwindIso (adjTransposition≃ (suc k))) (adjTransposition≃ k)
+         (suc m) (suc (suc k))
+           (unwindConstFromIso (suc m) (adjTransposition≃ (suc k)) p)
+           ((isConstFrom-adjTransposition k))
+           (unwindIsoAdjT k)))
+    ∙ cong sucFGℕ≃ℕ (from≃adjT k (suc (suc k))
+           (isConstFrom-adjTransposition k))
 
--- isFGli'Id : ∀ k e m p
---      → (p : ⟨ isConstFrom (Iso.fun (compIso (adjTransposition≃ k) e)) m ⟩)
---      → e ≡ idIso
---      →  from≃ (compIso (adjTransposition≃ k) e) m  p ≡
---          k ∷ ε
--- isFGli'Id k e m p p₁ x =
---    cong₂ (λ e p → from≃ e m p)
---      (cong (compIso _) x ∙ compIsoIdR _)
---        (isProp→PathP (λ i →
---             snd (isConstFrom
---       (Iso.fun
---        (((λ i₁ → compIso (adjTransposition≃ k) (x i₁)) ∙
---          compIsoIdR (adjTransposition≃ k))
---         i))
---       m)) p₁ p)
---      ∙ from≃adjT k m p
+isFGli'Id : ∀ k e m p
+     → (p : ⟨ isConstFrom (Iso.fun (compIso (adjTransposition≃ k) e)) m ⟩)
+     → e ≡ idIso
+     →  from≃ (compIso (adjTransposition≃ k) e) m  p ≡
+         k ∷ ε
+isFGli'Id k e m p p₁ x =
+   cong₂ (λ e p → from≃ e m p)
+     (cong (compIso _) x ∙ compIsoIdR _)
+       (isProp→PathP (λ i →
+            snd (isConstFrom
+      (Iso.fun
+       (((λ i₁ → compIso (adjTransposition≃ k) (x i₁)) ∙
+         compIsoIdR (adjTransposition≃ k))
+        i))
+      m)) p₁ p)
+     ∙ from≃adjT k m p
 
 
--- isFGli''-Hlp : ℕ → ℕ → Type 
--- isFGli''-Hlp m m' = 
---   𝟚.True ( 2 ≤? max m m')
+isFGli''-Hlp : ℕ → ℕ → Type 
+isFGli''-Hlp m m' = 
+  𝟚.True ( 2 ≤? max m m')
 
--- isFGli'-hlp : ∀ k e m m' →
---        (⟨ isConstFrom (Iso.fun (compIso (adjTransposition≃ k) e)) m ⟩) → 
---        (⟨ isConstFrom (Iso.fun e) m' ⟩) →
---        isFGli''-Hlp m m'
+isFGli'-hlp : ∀ k e m m' →
+       (⟨ isConstFrom (Iso.fun (compIso (adjTransposition≃ k) e)) m ⟩) → 
+       (⟨ isConstFrom (Iso.fun e) m' ⟩) →
+       isFGli''-Hlp m m'
  
--- isFGli'-hlp k e m m' p p' with FinGen≃'cc m' e p' | FinGen≃'cc m ((compIso (adjTransposition≃ k) e)) p
--- isFGli'-hlp k e zero zero p p' | w | ww = isFGli'IdId k e ww w 
--- isFGli'-hlp k e zero (suc zero) p p' | w | ww = isFGli'IdId k e ww w
--- isFGli'-hlp k e zero (suc (suc m')) p p' | w | ww = tt
--- isFGli'-hlp k e (suc zero) zero p p' | w | ww = isFGli'IdId k e ww w
--- isFGli'-hlp k e (suc (suc m)) zero p p' | w | ww = tt
--- isFGli'-hlp k e (suc zero) (suc zero) p p' | w | ww = isFGli'IdId k e ww w
--- isFGli'-hlp k e (suc zero) (suc (suc m')) p p' | w | ww = tt
--- isFGli'-hlp k e (suc (suc m)) (suc zero) p p' | w | ww = tt
--- isFGli'-hlp k e (suc (suc m)) (suc (suc m')) p p' | w | ww = tt
+isFGli'-hlp k e m m' p p' with FinGen≃'cc m' e p' | FinGen≃'cc m ((compIso (adjTransposition≃ k) e)) p
+isFGli'-hlp k e zero zero p p' | w | ww = isFGli'IdId k e ww w 
+isFGli'-hlp k e zero (suc zero) p p' | w | ww = isFGli'IdId k e ww w
+isFGli'-hlp k e zero (suc (suc m')) p p' | w | ww = tt
+isFGli'-hlp k e (suc zero) zero p p' | w | ww = isFGli'IdId k e ww w
+isFGli'-hlp k e (suc (suc m)) zero p p' | w | ww = tt
+isFGli'-hlp k e (suc zero) (suc zero) p p' | w | ww = isFGli'IdId k e ww w
+isFGli'-hlp k e (suc zero) (suc (suc m')) p p' | w | ww = tt
+isFGli'-hlp k e (suc (suc m)) (suc zero) p p' | w | ww = tt
+isFGli'-hlp k e (suc (suc m)) (suc (suc m')) p p' | w | ww = tt
 
 
--- isFGli''M<2 : ∀ n k e m m' p p'
---               → e ≡ idIso → m' ≤ n → suc k < n →
+isFGli''M<2 : ∀ n k e m m' p p'
+              → e ≡ idIso → m' ≤ n → suc k < n →
             
---            from≃ (compIso (adjTransposition≃ k) e) (suc (suc m))  p ≡
---            k ∷ from≃ e m' p'
--- isFGli''M<2 n k e m m' p p' H x k< = 
---   let z : k ≤ m
---       z = isConstFrom-adjTransposition<m k (suc (suc m))
---         (subst (λ e → ⟨ isConstFrom e
---             (suc (suc m)) ⟩)
---           (cong (_∘ adjTransposition k)
---            (cong′ Iso.fun H)) p)
---   in isFGli'Id k e (suc (suc m))
---       (λ x₁ x₂ → isConstFrom-adjTransposition k x₁
---         (≤-trans {suc (suc k)} {suc (suc m)} {x₁} z x₂)) p H
---     ∙ cong′ (k ∷_) (sym (from≃IdIso zero λ _ _ → refl)
---      ∙ from≃lem idIso e zero m' (λ _ _ → refl) p'
---        (sym H))
+           from≃ (compIso (adjTransposition≃ k) e) (suc (suc m))  p ≡
+           k ∷ from≃ e m' p'
+isFGli''M<2 n k e m m' p p' H x k< = 
+  let z : k ≤ m
+      z = isConstFrom-adjTransposition<m k (suc (suc m))
+        (subst (λ e → ⟨ isConstFrom e
+            (suc (suc m)) ⟩)
+          (cong (_∘ adjTransposition k)
+           (cong′ Iso.fun H)) p)
+  in isFGli'Id k e (suc (suc m))
+      (λ x₁ x₂ → isConstFrom-adjTransposition k x₁
+        (≤-trans {suc (suc k)} {suc (suc m)} {x₁} z x₂)) p H
+    ∙ cong′ (k ∷_) (sym (from≃IdIso zero λ _ _ → refl)
+     ∙ from≃lem idIso e zero m' (λ _ _ → refl) p'
+       (sym H))
 
 
--- isFGli''M'<2 : ∀ n k e m m' p p'
---               → (compIso (adjTransposition≃ k) e) ≡ idIso
---                 → (suc (suc m')) ≤ n → suc k < n →
+isFGli''M'<2 : ∀ n k e m m' p p'
+              → (compIso (adjTransposition≃ k) e) ≡ idIso
+                → (suc (suc m')) ≤ n → suc k < n →
             
---            from≃ (compIso (adjTransposition≃ k) e) m  p ≡
---            k ∷ from≃ e (suc (suc m')) p'
--- isFGli''M'<2 n k e m m' p p' H x k< = 
---   let H' : adjTransposition≃ k ≡ e
---       H' =  Iso≡Set-fun isSetℕ isSetℕ _ _
---               (λ x → sym (funExt⁻ (cong′ Iso.fun H) (adjTransposition k x))
---                 ∙ cong (Iso.fun e) (isInvolutionAdjTransposition k x))
+           from≃ (compIso (adjTransposition≃ k) e) m  p ≡
+           k ∷ from≃ e (suc (suc m')) p'
+isFGli''M'<2 n k e m m' p p' H x k< = 
+  let H' : adjTransposition≃ k ≡ e
+      H' =  Iso≡Set-fun isSetℕ isSetℕ _ _
+              (λ x → sym (funExt⁻ (cong′ Iso.fun H) (adjTransposition k x))
+                ∙ cong (Iso.fun e) (isInvolutionAdjTransposition k x))
          
---   in from≃lem _ _ m m p (λ _ _ → refl) H ∙ from≃IdIso m (λ _ _ → refl) ∙ sym (invo _ _)
---       ∙ cong′ (k ∷_) (sym (from≃adjT k (suc (suc k))
---         (isConstFrom-adjTransposition k))
---          ∙ from≃lem _ _ (suc (suc k)) (suc (suc m'))
---              (isConstFrom-adjTransposition k) p' H' )
+  in from≃lem _ _ m m p (λ _ _ → refl) H ∙ from≃IdIso m (λ _ _ → refl) ∙ sym (invo _ _)
+      ∙ cong′ (k ∷_) (sym (from≃adjT k (suc (suc k))
+        (isConstFrom-adjTransposition k))
+         ∙ from≃lem _ _ (suc (suc k)) (suc (suc m'))
+             (isConstFrom-adjTransposition k) p' H' )
 
 
--- unwindPermHeadCompSwap0and1FST : (e : Iso ℕ ℕ)
---        → unwindIso (unwindIso e) ≡
---          unwindIso (unwindIso (compIso swap0and1≃ e))
--- unwindPermHeadCompSwap0and1FST e = 
---   Iso≡Set-fun isSetℕ isSetℕ _ _
---     (λ x → cong′ predℕ ((rotRotElim
---       (λ e0 e1 e0' e1' →
---           ∀ eX (eX≢e0 : ¬ eX ≡ e0) (eX≢e1 : ¬ eX ≡ e1) →
---               (Iso.inv (rotIso' e1') (predℕ (Iso.inv (rotIso' e0) eX)))
---                 ≡
---               (Iso.inv (rotIso' e0') (predℕ (Iso.inv (rotIso' e1) eX))))
---           w1
---           (λ e0 e1 x₁ eX eX≢e0 eX≢e1 →
---              sym (w1 e1 e0 x₁ eX eX≢e1 eX≢e0))
---           (Iso.fun e 0) (Iso.fun e 1) (znots ∘ isoFunInjective e _ _))
---             (Iso.fun e (suc (suc x)))
---               ((snotz ∘ isoFunInjective e _ _))
---               ((snotz ∘ injSuc ∘ isoFunInjective e _ _)))) 
---   where
---     w1 : (e0 e1 : ℕ) → e1 < suc e0 → (eX : ℕ) → ¬ eX ≡ suc e0 → ¬ eX ≡ e1 →           
---            (Iso.inv (rotIso' e1) (predℕ (Iso.inv (rotIso' (suc e0)) eX)))
---          ≡ (Iso.inv (rotIso' e0) (predℕ (Iso.inv (rotIso' e1) eX)))
---     w1 e0 e1 x eX x₁ x₂ with ¬≡ℕ-cases _ _ x₁
---     ... | inl eX≤e0  =
---        let z = suc-predℕ _ (rot'-≢k→≢0 e1 eX (x₂ ∘ sym) ∘ sym)
---        in cong′ (Iso.inv (rotIso' e1) ∘ predℕ)
---                (sym (rot'-<k (suc e0) eX eX≤e0)) ∙
---                 (z ∙ rot'-<k e0 (predℕ (Iso.inv (rotIso' e1) eX))
---                 (⊎.rec (λ eX<e1 → subst (_< e0)
---                              (cong predℕ (rot'-<k e1 eX eX<e1))
---                                 (≤-trans {suc eX} {e1} {e0} eX<e1 x))
---                        (λ e1<eX → subst {x = eX}
---                              {y = suc (predℕ (Iso.inv (cases idIso rotIso e1) eX))}
---                                (_≤ e0)
---                           (sym (rot'-k< e1 eX e1<eX) ∙ z) eX≤e0)
---                            (¬≡ℕ-cases _ _ x₂)))
---     ... | inr x₃ = 
---        cong′ (Iso.inv (rotIso' e1) ∘ predℕ)
---          (rot'-k< (suc e0) eX x₃)
---         ∙∙ rot'-k< e1 (predℕ eX) (≤predℕ (suc e1) eX
---           (≤-trans {suc (suc e1)} {suc (suc e0)} {eX} x x₃ ))
---         ∙∙ (sym (rot'-k< e0 (predℕ eX) (≤predℕ (suc e0) eX x₃))
---           ∙ cong′ (Iso.inv (rotIso' e0) ∘ predℕ)
---              (sym (rot'-k< e1 eX (≤-trans {suc e1} {suc e0} {eX}
---                 x (<-weaken {suc e0} {eX} x₃)))))
+unwindPermHeadCompSwap0and1FST : (e : Iso ℕ ℕ)
+       → unwindIso (unwindIso e) ≡
+         unwindIso (unwindIso (compIso swap0and1≃ e))
+unwindPermHeadCompSwap0and1FST e = 
+  Iso≡Set-fun isSetℕ isSetℕ _ _
+    (λ x → cong′ predℕ ((rotRotElim
+      (λ e0 e1 e0' e1' →
+          ∀ eX (eX≢e0 : ¬ eX ≡ e0) (eX≢e1 : ¬ eX ≡ e1) →
+              (Iso.inv (rotIso' e1') (predℕ (Iso.inv (rotIso' e0) eX)))
+                ≡
+              (Iso.inv (rotIso' e0') (predℕ (Iso.inv (rotIso' e1) eX))))
+          w1
+          (λ e0 e1 x₁ eX eX≢e0 eX≢e1 →
+             sym (w1 e1 e0 x₁ eX eX≢e1 eX≢e0))
+          (Iso.fun e 0) (Iso.fun e 1) (znots ∘ isoFunInjective e _ _))
+            (Iso.fun e (suc (suc x)))
+              ((snotz ∘ isoFunInjective e _ _))
+              ((snotz ∘ injSuc ∘ isoFunInjective e _ _)))) 
+  where
+    w1 : (e0 e1 : ℕ) → e1 < suc e0 → (eX : ℕ) → ¬ eX ≡ suc e0 → ¬ eX ≡ e1 →           
+           (Iso.inv (rotIso' e1) (predℕ (Iso.inv (rotIso' (suc e0)) eX)))
+         ≡ (Iso.inv (rotIso' e0) (predℕ (Iso.inv (rotIso' e1) eX)))
+    w1 e0 e1 x eX x₁ x₂ with ¬≡ℕ-cases _ _ x₁
+    ... | inl eX≤e0  =
+       let z = suc-predℕ _ (rot'-≢k→≢0 e1 eX (x₂ ∘ sym) ∘ sym)
+       in cong′ (Iso.inv (rotIso' e1) ∘ predℕ)
+               (sym (rot'-<k (suc e0) eX eX≤e0)) ∙
+                (z ∙ rot'-<k e0 (predℕ (Iso.inv (rotIso' e1) eX))
+                (⊎.rec (λ eX<e1 → subst (_< e0)
+                             (cong predℕ (rot'-<k e1 eX eX<e1))
+                                (≤-trans {suc eX} {e1} {e0} eX<e1 x))
+                       (λ e1<eX → subst {x = eX}
+                             {y = suc (predℕ (Iso.inv (cases idIso rotIso e1) eX))}
+                               (_≤ e0)
+                          (sym (rot'-k< e1 eX e1<eX) ∙ z) eX≤e0)
+                           (¬≡ℕ-cases _ _ x₂)))
+    ... | inr x₃ = 
+       cong′ (Iso.inv (rotIso' e1) ∘ predℕ)
+         (rot'-k< (suc e0) eX x₃)
+        ∙∙ rot'-k< e1 (predℕ eX) (≤predℕ (suc e1) eX
+          (≤-trans {suc (suc e1)} {suc (suc e0)} {eX} x x₃ ))
+        ∙∙ (sym (rot'-k< e0 (predℕ eX) (≤predℕ (suc e0) eX x₃))
+          ∙ cong′ (Iso.inv (rotIso' e0) ∘ predℕ)
+             (sym (rot'-k< e1 eX (≤-trans {suc e1} {suc e0} {eX}
+                x (<-weaken {suc e0} {eX} x₃)))))
 
--- isFGli'' : ∀ n k e m m' p p'
---               → isFGli''-Hlp m m' → m' ≤ n → suc k < n →
+isFGli'' : ∀ n k e m m' p p'
+              → isFGli''-Hlp m m' → m' ≤ n → suc k < n →
           
---            from≃ (compIso (adjTransposition≃ k) e) m  p ≡
---            k ∷ from≃ e m' p'
--- isFGli'' n k e zero (suc (suc m')) p p' H x k< =
---    isFGli''M'<2 n k e zero m' p p' (FinGen≃'cc zero _ p) x k<
--- isFGli'' n k e (suc (suc m)) zero p p' H x k< =
---    isFGli''M<2 n k e m zero p p' (FinGen≃'cc zero e p') x k<
--- isFGli'' n k e (suc zero) (suc (suc m')) p p' H x k< =
---    isFGli''M'<2 n k e 1 m' p p' (FinGen≃'cc 1 _ p) x k<
--- isFGli'' n k e (suc (suc m)) (suc zero) p p' H x k< =
---    isFGli''M<2 n k e m 1 p p' (FinGen≃'cc 1 e p') x k<
+           from≃ (compIso (adjTransposition≃ k) e) m  p ≡
+           k ∷ from≃ e m' p'
+isFGli'' n k e zero (suc (suc m')) p p' H x k< =
+   isFGli''M'<2 n k e zero m' p p' (FinGen≃'cc zero _ p) x k<
+isFGli'' n k e (suc (suc m)) zero p p' H x k< =
+   isFGli''M<2 n k e m zero p p' (FinGen≃'cc zero e p') x k<
+isFGli'' n k e (suc zero) (suc (suc m')) p p' H x k< =
+   isFGli''M'<2 n k e 1 m' p p' (FinGen≃'cc 1 _ p) x k<
+isFGli'' n k e (suc (suc m)) (suc zero) p p' H x k< =
+   isFGli''M<2 n k e m 1 p p' (FinGen≃'cc 1 e p') x k<
 
--- isFGli'' (suc (suc n)) zero e (suc (suc m)) (suc (suc m')) p p' H x k< = 
---  let ee1 = _ --Iso.fun e 1
---      ee0 = _ --Iso.fun e 0
+isFGli'' (suc (suc n)) zero e (suc (suc m)) (suc (suc m')) p p' H x k< = 
+ let ee1 = _ --Iso.fun e 1
+     ee0 = _ --Iso.fun e 0
 
---      e0 = (Iso.inv (rotIso' ee1) ee0) --Iso.fun e zero
---      e1 = _
+     e0 = (Iso.inv (rotIso' ee1) ee0) --Iso.fun e zero
+     e1 = _
 
---      e0' = _
---      e1' = Iso.inv (rotIso' ee0) ee1
+     e0' = _
+     e1' = Iso.inv (rotIso' ee0) ee1
      
---      eL = (from≃ _ m _)
---      eR = (from≃ _ m' _)
---  in cong′ (_· rotFG e1) (sucFGℕ≃ℕresp· (sucFGℕ≃ℕ eL) (rotFG (predℕ e0)))
---        ∙ sym (assoc· (sucFGℕ≃ℕ (sucFGℕ≃ℕ eL))
---             (sucFGℕ≃ℕ (rotFG (predℕ e0))) (rotFG e1))
---        ∙ cong₂' _·_ (cong′ (sucFGℕ≃ℕ ∘' sucFGℕ≃ℕ)
---             (from≃lem _ _ m m' _ _ (sym (unwindPermHeadCompSwap0and1FST e))))
---             (isFGliK0 ee1 ee0 (snotz ∘ isoFunInjective e _ _))            
---        ∙ assoc· (sucFGℕ≃ℕ (sucFGℕ≃ℕ eR))
---           (η zero) ((sucFGℕ≃ℕ (rotFG (predℕ e1')) · rotFG e0' ))
---        ∙ cong′ (_· ((sucFGℕ≃ℕ (rotFG (predℕ e1')) · rotFG e0' ))) (sucSucComm eR)
---        ∙ sym (assoc· (η zero) (sucFGℕ≃ℕ (sucFGℕ≃ℕ eR))
---              (sucFGℕ≃ℕ (rotFG (predℕ e1')) · rotFG e0' )) ∙ cong′ (zero ∷_)
---           (assoc· (sucFGℕ≃ℕ (sucFGℕ≃ℕ eR))
---             (sucFGℕ≃ℕ (rotFG (predℕ e1'))) (rotFG e0') ∙ cong′ (_· rotFG e0')
---             (sym (sucFGℕ≃ℕresp· (sucFGℕ≃ℕ eR) (rotFG (predℕ e1')))))
+     eL = (from≃ _ m _)
+     eR = (from≃ _ m' _)
+ in cong′ (_· rotFG e1) (sucFGℕ≃ℕresp· (sucFGℕ≃ℕ eL) (rotFG (predℕ e0)))
+       ∙ sym (assoc· (sucFGℕ≃ℕ (sucFGℕ≃ℕ eL))
+            (sucFGℕ≃ℕ (rotFG (predℕ e0))) (rotFG e1))
+       ∙ cong₂' _·_ (cong′ (sucFGℕ≃ℕ ∘' sucFGℕ≃ℕ)
+            (from≃lem _ _ m m' _ _ (sym (unwindPermHeadCompSwap0and1FST e))))
+            (isFGliK0 ee1 ee0 (snotz ∘ isoFunInjective e _ _))            
+       ∙ assoc· (sucFGℕ≃ℕ (sucFGℕ≃ℕ eR))
+          (η zero) ((sucFGℕ≃ℕ (rotFG (predℕ e1')) · rotFG e0' ))
+       ∙ cong′ (_· ((sucFGℕ≃ℕ (rotFG (predℕ e1')) · rotFG e0' ))) (sucSucComm eR)
+       ∙ sym (assoc· (η zero) (sucFGℕ≃ℕ (sucFGℕ≃ℕ eR))
+             (sucFGℕ≃ℕ (rotFG (predℕ e1')) · rotFG e0' )) ∙ cong′ (zero ∷_)
+          (assoc· (sucFGℕ≃ℕ (sucFGℕ≃ℕ eR))
+            (sucFGℕ≃ℕ (rotFG (predℕ e1'))) (rotFG e0') ∙ cong′ (_· rotFG e0')
+            (sym (sucFGℕ≃ℕresp· (sucFGℕ≃ℕ eR) (rotFG (predℕ e1')))))
 
 
--- isFGli'' (suc n) (suc 𝑘) e (suc m) (suc m') p p' H m'< 𝑘< =
---   let ((k , k<) , (x' , X')) = Iso.fun (unwindIsoIsoCF m') ( e , p')
---       ((k* , k<*) , (x'* , X'*)) = Iso.fun (unwindIsoIsoCF m)
---             ((compIso (adjTransposition≃ (suc 𝑘)) e) , p)
---       X* = (isConstFrom∘ (Iso.fun x') m' _ (suc (suc 𝑘))
---             X' ((isConstFrom-adjTransposition 𝑘)))     
---   in cong′ (_· (rotFG (Iso.fun e zero)))      
---       (cong′ sucFGℕ≃ℕ {x = (from≃ x'* m X'*)}
---         (from≃lem x'* ((compIso (adjTransposition≃ 𝑘) x'))
---            m ((max ((suc (suc 𝑘))) m'))
---            X'* _ (Iso≡Set-fun isSetℕ isSetℕ _ _ (λ _ → refl))
---           ∙ isFGli'' n 𝑘 x' ((max ((suc (suc 𝑘))) m')) m'
---           X* X' (isFGli'-hlp 𝑘 x' (max (suc (suc 𝑘)) m') m' X* X')  m'< 𝑘<))
---     ∙ sym (assoc· (η (suc 𝑘))
---       (sucFGℕ≃ℕ (from≃ x' m' X')) (rotFG (Iso.fun e zero)))
+isFGli'' (suc n) (suc 𝑘) e (suc m) (suc m') p p' H m'< 𝑘< =
+  let ((k , k<) , (x' , X')) = Iso.fun (unwindIsoIsoCF m') ( e , p')
+      ((k* , k<*) , (x'* , X'*)) = Iso.fun (unwindIsoIsoCF m)
+            ((compIso (adjTransposition≃ (suc 𝑘)) e) , p)
+      X* = (isConstFrom∘ (Iso.fun x') m' _ (suc (suc 𝑘))
+            X' ((isConstFrom-adjTransposition 𝑘)))     
+  in cong′ (_· (rotFG (Iso.fun e zero)))      
+      (cong′ sucFGℕ≃ℕ {x = (from≃ x'* m X'*)}
+        (from≃lem x'* ((compIso (adjTransposition≃ 𝑘) x'))
+           m ((max ((suc (suc 𝑘))) m'))
+           X'* _ (Iso≡Set-fun isSetℕ isSetℕ _ _ (λ _ → refl))
+          ∙ isFGli'' n 𝑘 x' ((max ((suc (suc 𝑘))) m')) m'
+          X* X' (isFGli'-hlp 𝑘 x' (max (suc (suc 𝑘)) m') m' X* X')  m'< 𝑘<))
+    ∙ sym (assoc· (η (suc 𝑘))
+      (sucFGℕ≃ℕ (from≃ x' m' X')) (rotFG (Iso.fun e zero)))
 
--- isFGli : ∀ k e p → 
---            from≃' (isFinGen≃∘ (adjTransposition≃ k
---              , isFinGen'AdjTransposition≃ k) (e , p)) ≡
---            k ∷ from≃' (e , p)
--- isFGli k e (n , X) =
---   let (_ , (n' , X')) = (isFinGen≃∘ (adjTransposition≃ k
---                    , isFinGen'AdjTransposition≃ k) (e , (n , X)))
---   in isFGli'' (max (suc (suc k)) n) k e n' n (fst X') (fst X)
---          (isFGli'-hlp k e n' n (fst X') (fst X))
---          (right-≤-max (suc (suc k)) n)
---          ((left-≤-max (suc (suc k)) n)) 
+isFGli : ∀ k e p → 
+           from≃' (isFinGen≃∘ (adjTransposition≃ k
+             , isFinGen'AdjTransposition≃ k) (e , p)) ≡
+           k ∷ from≃' (e , p)
+isFGli k e (n , X) =
+  let (_ , (n' , X')) = (isFinGen≃∘ (adjTransposition≃ k
+                   , isFinGen'AdjTransposition≃ k) (e , (n , X)))
+  in isFGli'' (max (suc (suc k)) n) k e n' n (fst X') (fst X)
+         (isFGli'-hlp k e n' n (fst X') (fst X))
+         (right-≤-max (suc (suc k)) n)
+         ((left-≤-max (suc (suc k)) n)) 
 
--- isoFG : Iso FGℕ≃ℕ FinGen≃'
--- Iso.fun isoFG = to≃'
--- Iso.inv isoFG = from≃' 
--- Iso.rightInv isoFG = retract-to≃'-from≃'
--- Iso.leftInv isoFG = RelimProp.f w
---  where   
---   w : RelimProp _
---   RelimProp.isPropA w _ = trunc _ _
---   RelimProp.εA w = refl
---   RelimProp.∷A w k {xs} X = isFGli k (fst (to≃' xs)) (snd (to≃' xs)) 
---       ∙ cong (k ∷_) X
+isoFG : Iso FGℕ≃ℕ FinGen≃'
+Iso.fun isoFG = to≃'
+Iso.inv isoFG = from≃' 
+Iso.rightInv isoFG = retract-to≃'-from≃'
+Iso.leftInv isoFG = RelimProp.f w
+ where   
+  w : RelimProp _
+  RelimProp.isPropA w _ = trunc _ _
+  RelimProp.εA w = refl
+  RelimProp.∷A w k {xs} X = isFGli k (fst (to≃' xs)) (snd (to≃' xs)) 
+      ∙ cong (k ∷_) X
+
+-- module List-perm {A : Type ℓ} where
+
+ -- lookA⊎ℕ : List A → ℕ → A ⊎ ℕ 
+ -- lookA⊎ℕ [] n = inr n
+ -- lookA⊎ℕ (a ∷ _) zero = inl a
+ -- lookA⊎ℕ (_ ∷ l) (suc n) = lookA⊎ℕ l n
+
+ -- lookA⊎ℕ>length : ∀ l k → length l ≤ k → lookA⊎ℕ l k ≡ inr (k ∸ length l)
+ -- lookA⊎ℕ>length [] k x = refl
+ -- lookA⊎ℕ>length (x₁ ∷ l) (suc k) x = lookA⊎ℕ>length l k x
+
+
+ -- ipb' : List A → List A → (Iso ℕ ℕ) → Type ℓ
+ -- ipb' l l' x = lookA⊎ℕ l ∘' Iso.fun x ≡ lookA⊎ℕ l'
+
+ -- ipbR : List A → List A → Type ℓ
+ -- ipbR l l' = Σ _ (ipb' l l')
+
+ -- ipbR-sym : (l l' : List A) → ipbR l l' → ipbR l' l
+ -- ipbR-sym l l' (e , p) = invIso e ,
+ --   cong′ (_∘' (Iso.inv e)) (sym p) ∙
+ --     cong′ (lookA⊎ℕ l ∘'_) (funExt (Iso.rightInv e))
+
+ -- ¬ipbR[]∷ : ∀ x xs → ¬ ipbR [] (x ∷ xs)
+ -- ¬ipbR[]∷ _ _ (_ , x) =
+ --   ⊥.rec (𝟚.false≢true
+ --     (cong (⊎.rec (λ _ → 𝟚.true) (λ _ → 𝟚.false))
+ --       (funExt⁻ x zero)))
+
+ -- ¬ipbR∷[] : ∀ x xs → ¬ ipbR (x ∷ xs) []
+ -- ¬ipbR∷[] x xs = ¬ipbR[]∷ x xs ∘ ipbR-sym (x ∷ xs) []  
+ 
+ -- ipbR→length≡ : (l l' : List A) → ipbR l l' → length l ≡ length l'
+ -- ipbR→length≡ [] [] x = refl
+ -- ipbR→length≡ [] (x ∷ xs) = ⊥.rec ∘ ¬ipbR[]∷ x xs
+ -- ipbR→length≡ (x ∷ xs) [] = ⊥.rec ∘ ¬ipbR∷[] x xs
+ -- ipbR→length≡ (x₁ ∷ l) (x₂ ∷ l') x = {!!}
+
+ -- ipb' : List A → List A → FGℕ≃ℕ → Type ℓ
+ -- ipb' l l' = {!!}
+ -- ipb' l l' ∘' fst ∘' to≃'
+
+ -- isConstFromLength : ∀ l l' e → ipb' l l' e
+ --             → ⟨ isConstFrom (Iso.fun e) (length l') ⟩ 
+ -- isConstFromLength l l' e x k l<k =
+ --   let z = lookA⊎ℕ>length l' k l<k
+ --       z' = lookA⊎ℕ>length l (Iso.fun e k) {!!}
+ --   in {!!}
+ -- [] [] e x x₁ x₂ =
+ --   invEq (_ , (isEmbedding-inr _ _)) (funExt⁻ x x₁)  
+ -- isConstFromLength (x₃ ∷ l) [] e x _ _ = ⊥.rec (¬ipbR∷[] x₃ l (e , x))
+ -- isConstFromLength [] (x₃ ∷ l') e x x₁ x₂ = ⊥.rec (¬ipbR[]∷ x₃ l' (e , x))
+ -- isConstFromLength (x₄ ∷ l) (x₃ ∷ l') e x (suc x₁) x₂ =
+ --    {!(funExt⁻ x (suc x₁))  !}
+
+
+
+-- FinGen≃'
+
+ -- ↔at : (l l' : List A) → ℕ → Type ℓ
+ -- ↔at = {!!}
+
+--  ipb : (l l' : List A) → (e : FGℕ≃ℕ) →
+--           Σ (Type ℓ) λ T → T ≃ ipb' l l' e  
+--  ipb l l' = Relim.f (w l l')
+--   where
+--   open Relim
+
+--   -- wId : ∀ l l' → ListPath.Cover l l' ≃ (lookA⊎ℕ l ≡ lookA⊎ℕ l')
+--   -- wId = {!!}
+  
+--   w : ∀ l l' → Relim (λ z → Σ (Type ℓ) (λ T → T ≃ ipb' l l' z))
+--   isSetA (w l l') = {!!}
+--   εA (w l l') = ListPath.Cover l l' , {!!}
+--   ∷A (w (x ∷ xs) (y ∷ ys) ) (suc k) = {!l l' k!}
+--   ∷A (w (x ∷ x' ∷ xs) (y ∷ y' ∷ ys)) zero (X , E) =
+--      ({!!} × X) , {!!}
+  
+--   ∷A (w [] []) k _ = ⊥.⊥* , {!!}
+--   ∷A (w [] (x ∷ ys)) k _ = {!!}
+--   ∷A (w (x ∷ xs) []) k _ = {!!}
+--   ∷A (w (x ∷ xs) (y ∷ ys)) k = {!!}
+  
+--   invoA (w l l') = {!!}
+--   braidA (w l l') = {!!}
+--   commA (w l l') = {!!}
+
+--  -- ipb : FGℕ≃ℕ → List A → List A → Type ℓ 
+--  -- ipb = Rrec.f w
+--   -- where
+--   -- w : Rrec (List A → List A → Type ℓ)
+--   -- Rrec.isSetA w = {!!}
+--   -- Rrec.εA w = _≡_
+--   -- Rrec.∷A w (suc k) _ [] [] = ⊥*
+--   -- Rrec.∷A w (suc k) _ [] (x ∷ x₃) = ⊥*
+--   -- Rrec.∷A w (suc k) _ (x ∷ x₂) [] = ⊥*
+--   -- Rrec.∷A w (suc k) X (x ∷ x₂) (x₃ ∷ x₄) =
+--   --   (x ≡ x₃) × Rrec.∷A w (k) X x₂ x₄
+--   -- Rrec.∷A w zero x₁ x₂ x₃ = {!!}
+--   -- Rrec.invoA w = {!!}
+--   -- Rrec.braidA w = {!!}
+--   -- Rrec.commA w = {!!}
+
+
 
 -- -- module List-perm {A : Type ℓ} where
 
---  -- lookA⊎ℕ : List A → ℕ → A ⊎ ℕ 
---  -- lookA⊎ℕ [] n = inr n
---  -- lookA⊎ℕ (a ∷ _) zero = inl a
---  -- lookA⊎ℕ (_ ∷ l) (suc n) = lookA⊎ℕ l n
-
---  -- lookA⊎ℕ>length : ∀ l k → length l ≤ k → lookA⊎ℕ l k ≡ inr (k ∸ length l)
---  -- lookA⊎ℕ>length [] k x = refl
---  -- lookA⊎ℕ>length (x₁ ∷ l) (suc k) x = lookA⊎ℕ>length l k x
 
 
---  -- ipb' : List A → List A → (Iso ℕ ℕ) → Type ℓ
---  -- ipb' l l' x = lookA⊎ℕ l ∘' Iso.fun x ≡ lookA⊎ℕ l'
+-- --  lookA⊎ℕ : List A → ℕ → A ⊎ ℕ 
+-- --  lookA⊎ℕ [] n = inr n
+-- --  lookA⊎ℕ (a ∷ _) zero = inl a
+-- --  lookA⊎ℕ (_ ∷ l) (suc n) = lookA⊎ℕ l n
 
---  -- ipbR : List A → List A → Type ℓ
---  -- ipbR l l' = Σ _ (ipb' l l')
+-- --  lookA⊎ℕ>length : ∀ l k → length l ≤ k → lookA⊎ℕ l k ≡ inr (k ∸ length l)
+-- --  lookA⊎ℕ>length [] k x = refl
+-- --  lookA⊎ℕ>length (x₁ ∷ l) (suc k) x = lookA⊎ℕ>length l k x
 
---  -- ipbR-sym : (l l' : List A) → ipbR l l' → ipbR l' l
---  -- ipbR-sym l l' (e , p) = invIso e ,
---  --   cong′ (_∘' (Iso.inv e)) (sym p) ∙
---  --     cong′ (lookA⊎ℕ l ∘'_) (funExt (Iso.rightInv e))
 
---  -- ¬ipbR[]∷ : ∀ x xs → ¬ ipbR [] (x ∷ xs)
---  -- ¬ipbR[]∷ _ _ (_ , x) =
---  --   ⊥.rec (𝟚.false≢true
---  --     (cong (⊎.rec (λ _ → 𝟚.true) (λ _ → 𝟚.false))
---  --       (funExt⁻ x zero)))
+-- --  ipb' : List A → List A → (Iso ℕ ℕ) → Type ℓ
+-- --  ipb' l l' x = lookA⊎ℕ l ∘' Iso.fun x ≡ lookA⊎ℕ l'
 
---  -- ¬ipbR∷[] : ∀ x xs → ¬ ipbR (x ∷ xs) []
---  -- ¬ipbR∷[] x xs = ¬ipbR[]∷ x xs ∘ ipbR-sym (x ∷ xs) []  
+-- --  ipbR : List A → List A → Type ℓ
+-- --  ipbR l l' = Σ _ (ipb' l l')
+
+-- --  ipbR-sym : (l l' : List A) → ipbR l l' → ipbR l' l
+-- --  ipbR-sym l l' (e , p) = invIso e ,
+-- --    cong′ (_∘' (Iso.inv e)) (sym p) ∙
+-- --      cong′ (lookA⊎ℕ l ∘'_) (funExt (Iso.rightInv e))
+
+-- --  ¬ipbR[]∷ : ∀ x xs → ¬ ipbR [] (x ∷ xs)
+-- --  ¬ipbR[]∷ _ _ (_ , x) =
+-- --    ⊥.rec (𝟚.false≢true
+-- --      (cong (⊎.rec (λ _ → 𝟚.true) (λ _ → 𝟚.false))
+-- --        (funExt⁻ x zero)))
+
+-- --  ¬ipbR∷[] : ∀ x xs → ¬ ipbR (x ∷ xs) []
+-- --  ¬ipbR∷[] x xs = ¬ipbR[]∷ x xs ∘ ipbR-sym (x ∷ xs) []  
  
---  -- ipbR→length≡ : (l l' : List A) → ipbR l l' → length l ≡ length l'
---  -- ipbR→length≡ [] [] x = refl
---  -- ipbR→length≡ [] (x ∷ xs) = ⊥.rec ∘ ¬ipbR[]∷ x xs
---  -- ipbR→length≡ (x ∷ xs) [] = ⊥.rec ∘ ¬ipbR∷[] x xs
---  -- ipbR→length≡ (x₁ ∷ l) (x₂ ∷ l') x = {!!}
+-- --  ipbR→length≡ : (l l' : List A) → ipbR l l' → length l ≡ length l'
+-- --  ipbR→length≡ [] [] x = refl
+-- --  ipbR→length≡ [] (x ∷ xs) = ⊥.rec ∘ ¬ipbR[]∷ x xs
+-- --  ipbR→length≡ (x ∷ xs) [] = ⊥.rec ∘ ¬ipbR∷[] x xs
+-- --  ipbR→length≡ (x₁ ∷ l) (x₂ ∷ l') x = {!!}
 
---  -- ipb' : List A → List A → FGℕ≃ℕ → Type ℓ
---  -- ipb' l l' = {!!}
---  -- ipb' l l' ∘' fst ∘' to≃'
+-- --  -- ipb : List A → List A → FGℕ≃ℕ → Type ℓ
+-- --  -- ipb l l' = ipb' l l' ∘' fst ∘' to≃'
 
---  -- isConstFromLength : ∀ l l' e → ipb' l l' e
---  --             → ⟨ isConstFrom (Iso.fun e) (length l') ⟩ 
---  -- isConstFromLength l l' e x k l<k =
---  --   let z = lookA⊎ℕ>length l' k l<k
---  --       z' = lookA⊎ℕ>length l (Iso.fun e k) {!!}
---  --   in {!!}
---  -- [] [] e x x₁ x₂ =
---  --   invEq (_ , (isEmbedding-inr _ _)) (funExt⁻ x x₁)  
---  -- isConstFromLength (x₃ ∷ l) [] e x _ _ = ⊥.rec (¬ipbR∷[] x₃ l (e , x))
---  -- isConstFromLength [] (x₃ ∷ l') e x x₁ x₂ = ⊥.rec (¬ipbR[]∷ x₃ l' (e , x))
---  -- isConstFromLength (x₄ ∷ l) (x₃ ∷ l') e x (suc x₁) x₂ =
---  --    {!(funExt⁻ x (suc x₁))  !}
-
+-- --  isConstFromLength : ∀ l l' e → ipb' l l' e
+-- --              → ⟨ isConstFrom (Iso.fun e) (length l') ⟩ 
+-- --  isConstFromLength l l' e x k l<k =
+-- --    let z = lookA⊎ℕ>length l' k l<k
+-- --        z' = lookA⊎ℕ>length l (Iso.fun e k) {!!}
+-- --    in {!!}
+-- --  -- [] [] e x x₁ x₂ =
+-- --  --   invEq (_ , (isEmbedding-inr _ _)) (funExt⁻ x x₁)  
+-- --  -- isConstFromLength (x₃ ∷ l) [] e x _ _ = ⊥.rec (¬ipbR∷[] x₃ l (e , x))
+-- --  -- isConstFromLength [] (x₃ ∷ l') e x x₁ x₂ = ⊥.rec (¬ipbR[]∷ x₃ l' (e , x))
+-- --  -- isConstFromLength (x₄ ∷ l) (x₃ ∷ l') e x (suc x₁) x₂ =
+-- --  --    {!(funExt⁻ x (suc x₁))  !}
 
 
--- -- FinGen≃'
 
---  -- ↔at : (l l' : List A) → ℕ → Type ℓ
---  -- ↔at = {!!}
+-- -- -- FinGen≃'
 
--- --  ipb : (l l' : List A) → (e : FGℕ≃ℕ) →
--- --           Σ (Type ℓ) λ T → T ≃ ipb' l l' e  
--- --  ipb l l' = Relim.f (w l l')
--- --   where
--- --   open Relim
+-- --  -- ipb : (l l' : List A) → (e : FGℕ≃ℕ) →
+-- --  --          Σ (Type ℓ) λ T → T ≃ ipb' (fst (to≃' e)) l l'  
+-- --  -- ipb l l' = Relim.f (w l l')
+-- --  --  where
+-- --  --  open Relim
 
--- --   -- wId : ∀ l l' → ListPath.Cover l l' ≃ (lookA⊎ℕ l ≡ lookA⊎ℕ l')
--- --   -- wId = {!!}
+-- --  --  wId : ∀ l l' → ListPath.Cover l l' ≃ (lookA⊎ℕ l ≡ lookA⊎ℕ l')
+-- --  --  wId = {!!}
   
--- --   w : ∀ l l' → Relim (λ z → Σ (Type ℓ) (λ T → T ≃ ipb' l l' z))
--- --   isSetA (w l l') = {!!}
--- --   εA (w l l') = ListPath.Cover l l' , {!!}
--- --   ∷A (w (x ∷ xs) (y ∷ ys) ) (suc k) = {!l l' k!}
--- --   ∷A (w (x ∷ x' ∷ xs) (y ∷ y' ∷ ys)) zero (X , E) =
--- --      ({!!} × X) , {!!}
+-- --  --  w : ∀ l l' → Relim (λ z → Σ (Type ℓ) (λ T → T ≃ ipb' (fst (to≃' z)) l l'))
+-- --  --  isSetA (w l l') = {!!}
+-- --  --  εA (w l l') = ListPath.Cover l l' , wId l l'
+-- --  --  ∷A (w (x ∷ xs) (y ∷ ys) ) (suc k) = {!l l' k!}
+-- --  --  ∷A (w (x ∷ x' ∷ xs) (y ∷ y' ∷ ys)) zero (X , E) =
+-- --  --     ({!!} × X) , {!!}
   
--- --   ∷A (w [] []) k _ = ⊥.⊥* , {!!}
--- --   ∷A (w [] (x ∷ ys)) k _ = {!!}
--- --   ∷A (w (x ∷ xs) []) k _ = {!!}
--- --   ∷A (w (x ∷ xs) (y ∷ ys)) k = {!!}
+-- --  --  ∷A (w [] []) k _ = ⊥.⊥* , {!!}
+-- --  --  ∷A (w [] (x ∷ ys)) k _ = {!!}
+-- --  --  ∷A (w (x ∷ xs) []) k _ = {!!}
+-- --  --  ∷A (w (x ∷ xs) (y ∷ ys)) k = {!!}
   
--- --   invoA (w l l') = {!!}
--- --   braidA (w l l') = {!!}
--- --   commA (w l l') = {!!}
+-- --  --  invoA (w l l') = {!!}
+-- --  --  braidA (w l l') = {!!}
+-- --  --  commA (w l l') = {!!}
 
 -- --  -- ipb : FGℕ≃ℕ → List A → List A → Type ℓ 
 -- --  -- ipb = Rrec.f w
--- --   -- where
--- --   -- w : Rrec (List A → List A → Type ℓ)
--- --   -- Rrec.isSetA w = {!!}
--- --   -- Rrec.εA w = _≡_
--- --   -- Rrec.∷A w (suc k) _ [] [] = ⊥*
--- --   -- Rrec.∷A w (suc k) _ [] (x ∷ x₃) = ⊥*
--- --   -- Rrec.∷A w (suc k) _ (x ∷ x₂) [] = ⊥*
--- --   -- Rrec.∷A w (suc k) X (x ∷ x₂) (x₃ ∷ x₄) =
--- --   --   (x ≡ x₃) × Rrec.∷A w (k) X x₂ x₄
--- --   -- Rrec.∷A w zero x₁ x₂ x₃ = {!!}
--- --   -- Rrec.invoA w = {!!}
--- --   -- Rrec.braidA w = {!!}
--- --   -- Rrec.commA w = {!!}
-
-
-
--- -- -- module List-perm {A : Type ℓ} where
-
-
-
--- -- --  lookA⊎ℕ : List A → ℕ → A ⊎ ℕ 
--- -- --  lookA⊎ℕ [] n = inr n
--- -- --  lookA⊎ℕ (a ∷ _) zero = inl a
--- -- --  lookA⊎ℕ (_ ∷ l) (suc n) = lookA⊎ℕ l n
-
--- -- --  lookA⊎ℕ>length : ∀ l k → length l ≤ k → lookA⊎ℕ l k ≡ inr (k ∸ length l)
--- -- --  lookA⊎ℕ>length [] k x = refl
--- -- --  lookA⊎ℕ>length (x₁ ∷ l) (suc k) x = lookA⊎ℕ>length l k x
-
-
--- -- --  ipb' : List A → List A → (Iso ℕ ℕ) → Type ℓ
--- -- --  ipb' l l' x = lookA⊎ℕ l ∘' Iso.fun x ≡ lookA⊎ℕ l'
-
--- -- --  ipbR : List A → List A → Type ℓ
--- -- --  ipbR l l' = Σ _ (ipb' l l')
-
--- -- --  ipbR-sym : (l l' : List A) → ipbR l l' → ipbR l' l
--- -- --  ipbR-sym l l' (e , p) = invIso e ,
--- -- --    cong′ (_∘' (Iso.inv e)) (sym p) ∙
--- -- --      cong′ (lookA⊎ℕ l ∘'_) (funExt (Iso.rightInv e))
-
--- -- --  ¬ipbR[]∷ : ∀ x xs → ¬ ipbR [] (x ∷ xs)
--- -- --  ¬ipbR[]∷ _ _ (_ , x) =
--- -- --    ⊥.rec (𝟚.false≢true
--- -- --      (cong (⊎.rec (λ _ → 𝟚.true) (λ _ → 𝟚.false))
--- -- --        (funExt⁻ x zero)))
-
--- -- --  ¬ipbR∷[] : ∀ x xs → ¬ ipbR (x ∷ xs) []
--- -- --  ¬ipbR∷[] x xs = ¬ipbR[]∷ x xs ∘ ipbR-sym (x ∷ xs) []  
- 
--- -- --  ipbR→length≡ : (l l' : List A) → ipbR l l' → length l ≡ length l'
--- -- --  ipbR→length≡ [] [] x = refl
--- -- --  ipbR→length≡ [] (x ∷ xs) = ⊥.rec ∘ ¬ipbR[]∷ x xs
--- -- --  ipbR→length≡ (x ∷ xs) [] = ⊥.rec ∘ ¬ipbR∷[] x xs
--- -- --  ipbR→length≡ (x₁ ∷ l) (x₂ ∷ l') x = {!!}
-
--- -- --  -- ipb : List A → List A → FGℕ≃ℕ → Type ℓ
--- -- --  -- ipb l l' = ipb' l l' ∘' fst ∘' to≃'
-
--- -- --  isConstFromLength : ∀ l l' e → ipb' l l' e
--- -- --              → ⟨ isConstFrom (Iso.fun e) (length l') ⟩ 
--- -- --  isConstFromLength l l' e x k l<k =
--- -- --    let z = lookA⊎ℕ>length l' k l<k
--- -- --        z' = lookA⊎ℕ>length l (Iso.fun e k) {!!}
--- -- --    in {!!}
--- -- --  -- [] [] e x x₁ x₂ =
--- -- --  --   invEq (_ , (isEmbedding-inr _ _)) (funExt⁻ x x₁)  
--- -- --  -- isConstFromLength (x₃ ∷ l) [] e x _ _ = ⊥.rec (¬ipbR∷[] x₃ l (e , x))
--- -- --  -- isConstFromLength [] (x₃ ∷ l') e x x₁ x₂ = ⊥.rec (¬ipbR[]∷ x₃ l' (e , x))
--- -- --  -- isConstFromLength (x₄ ∷ l) (x₃ ∷ l') e x (suc x₁) x₂ =
--- -- --  --    {!(funExt⁻ x (suc x₁))  !}
-
-
-
--- -- -- -- FinGen≃'
-
--- -- --  -- ipb : (l l' : List A) → (e : FGℕ≃ℕ) →
--- -- --  --          Σ (Type ℓ) λ T → T ≃ ipb' (fst (to≃' e)) l l'  
--- -- --  -- ipb l l' = Relim.f (w l l')
--- -- --  --  where
--- -- --  --  open Relim
-
--- -- --  --  wId : ∀ l l' → ListPath.Cover l l' ≃ (lookA⊎ℕ l ≡ lookA⊎ℕ l')
--- -- --  --  wId = {!!}
-  
--- -- --  --  w : ∀ l l' → Relim (λ z → Σ (Type ℓ) (λ T → T ≃ ipb' (fst (to≃' z)) l l'))
--- -- --  --  isSetA (w l l') = {!!}
--- -- --  --  εA (w l l') = ListPath.Cover l l' , wId l l'
--- -- --  --  ∷A (w (x ∷ xs) (y ∷ ys) ) (suc k) = {!l l' k!}
--- -- --  --  ∷A (w (x ∷ x' ∷ xs) (y ∷ y' ∷ ys)) zero (X , E) =
--- -- --  --     ({!!} × X) , {!!}
-  
--- -- --  --  ∷A (w [] []) k _ = ⊥.⊥* , {!!}
--- -- --  --  ∷A (w [] (x ∷ ys)) k _ = {!!}
--- -- --  --  ∷A (w (x ∷ xs) []) k _ = {!!}
--- -- --  --  ∷A (w (x ∷ xs) (y ∷ ys)) k = {!!}
-  
--- -- --  --  invoA (w l l') = {!!}
--- -- --  --  braidA (w l l') = {!!}
--- -- --  --  commA (w l l') = {!!}
-
--- -- --  -- ipb : FGℕ≃ℕ → List A → List A → Type ℓ 
--- -- --  -- ipb = Rrec.f w
--- -- --  --  where
--- -- --  --  w : Rrec (List A → List A → Type ℓ)
--- -- --  --  Rrec.isSetA w = {!!}
--- -- --  --  Rrec.εA w = _≡_
--- -- --  --  Rrec.∷A w (suc k) _ [] [] = ⊥*
--- -- --  --  Rrec.∷A w (suc k) _ [] (x ∷ x₃) = ⊥*
--- -- --  --  Rrec.∷A w (suc k) _ (x ∷ x₂) [] = ⊥*
--- -- --  --  Rrec.∷A w (suc k) X (x ∷ x₂) (x₃ ∷ x₄) =
--- -- --  --    (x ≡ x₃) × Rrec.∷A w (k) X x₂ x₄
--- -- --  --  Rrec.∷A w zero x₁ x₂ x₃ = {!!}
--- -- --  --  Rrec.invoA w = {!!}
--- -- --  --  Rrec.braidA w = {!!}
--- -- --  --  Rrec.commA w = {!!}
+-- --  --  where
+-- --  --  w : Rrec (List A → List A → Type ℓ)
+-- --  --  Rrec.isSetA w = {!!}
+-- --  --  Rrec.εA w = _≡_
+-- --  --  Rrec.∷A w (suc k) _ [] [] = ⊥*
+-- --  --  Rrec.∷A w (suc k) _ [] (x ∷ x₃) = ⊥*
+-- --  --  Rrec.∷A w (suc k) _ (x ∷ x₂) [] = ⊥*
+-- --  --  Rrec.∷A w (suc k) X (x ∷ x₂) (x₃ ∷ x₄) =
+-- --  --    (x ≡ x₃) × Rrec.∷A w (k) X x₂ x₄
+-- --  --  Rrec.∷A w zero x₁ x₂ x₃ = {!!}
+-- --  --  Rrec.invoA w = {!!}
+-- --  --  Rrec.braidA w = {!!}
+-- --  --  Rrec.commA w = {!!}

@@ -38,7 +38,7 @@ open Iso
 
 private
   variable
-    ℓ ℓ' ℓ'' : Level
+    ℓ ℓ' ℓ'' ℓ''' : Level
     A A' : Type ℓ
     B B' : (a : A) → Type ℓ
     C : (a : A) (b : B a) → Type ℓ
@@ -242,6 +242,35 @@ module _ {A : Type ℓ} {B : A → Type ℓ'} {C : ∀ a → B a → Type ℓ''}
   leftInv Σ-Π-Iso _     = refl
 
   unquoteDecl Σ-Π-≃ = declStrictIsoToEquiv Σ-Π-≃ Σ-Π-Iso
+
+
+module _ {A : Type ℓ} {B : A → Type ℓ'}
+         {A' : Type ℓ''} {B' : A' → Type ℓ'''}  where
+
+ _×→_ : (∀ a → B a) → (∀ a' → B' a') → ((a , a') : (A × A')) → (B a × B' a') 
+ (f ×→ f') (a , a') = f a , f' a'
+
+
+module _ {A : Type ℓ} {B : A → Type ℓ'} {B' : A → Type ℓ''}
+         {C : ∀ a → B a → B' a → Type ℓ'''} where
+
+
+ Σ-transpose : Σ (Σ A B) (λ (a , b) → Σ (B' a) (C a b))
+               → Σ (Σ A B') (λ (a , b') → Σ (B a) (flip (C a) b'))
+ Σ-transpose ((a , b) , (b' , c)) = ((a , b') , (b , c))
+
+module _ {A : Type ℓ} {B : A → Type ℓ'} {B' : A → Type ℓ''}
+         {C : ∀ a → B a → B' a → Type ℓ'''} where
+
+ Σ-transpose-Iso : Iso (Σ (Σ A B) (λ (a , b) → Σ (B' a) (C a b)))
+                       (Σ (Σ A B') (λ (a , b') → Σ (B a) (flip (C a) b')))
+ fun Σ-transpose-Iso = Σ-transpose
+ inv Σ-transpose-Iso = Σ-transpose
+ rightInv Σ-transpose-Iso _ = refl
+ leftInv Σ-transpose-Iso _ = refl
+  
+ unquoteDecl Σ-transpose-≃ = declStrictIsoToEquiv Σ-transpose-≃ Σ-transpose-Iso
+
 
 Σ-cong-iso-fst : (isom : Iso A A') → Iso (Σ A (B ∘ fun isom)) (Σ A' B)
 fun (Σ-cong-iso-fst isom) x = fun isom (x .fst) , x .snd

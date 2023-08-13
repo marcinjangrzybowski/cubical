@@ -347,6 +347,7 @@ predFin {n} (k , k<) = (predℕ k , predℕ< k n k<)
 fzero' : ∀ {n} → Fin n → Fin n
 fzero' {suc n} _ = zero , _
 
+
 isSetFin : ∀ {n} → isSet (Fin n)
 isSetFin {n} = isSetΣ isSetℕ λ k → isProp→isSet (isProp≤ {suc k} {n})
 
@@ -890,6 +891,19 @@ glue'-Σ-swap-01 P i x =
 module _ {ℓ} {A : Type ℓ} where  
 
 
+ sucIso×^ : ∀ n → Iso (A ×^ n) (A ×^ n) → Iso (A ×^ (suc n)) (A ×^ (suc n))
+ sucIso×^ n e = w
+
+  where
+
+  open Iso e
+
+  w : Iso _ _
+  Iso.fun w = map-snd fun
+  Iso.inv w = map-snd inv
+  Iso.rightInv w (x , b) = cong (x ,_) (rightInv b)
+  Iso.leftInv w (x , a) = cong (x ,_) (leftInv a)
+
  adjT×^ : ∀ {n} → ℕ →
               (A ×^ n) → (A ×^ n)
  adjT×^ {zero} x x₁ = x₁
@@ -903,6 +917,10 @@ module _ {ℓ} {A : Type ℓ} where
     cong (x ,_) (invol-adjT×^ n k xs)
  invol-adjT×^ (suc zero) zero x = refl
  invol-adjT×^ (suc (suc n)) zero x = refl
+
+ adjT×^Iso : ∀ {n} → ℕ →
+              Iso (A ×^ n) (A ×^ n)
+ adjT×^Iso {n} k = involIso {f = adjT×^ {n} k} (invol-adjT×^ n k)
 
  cong-Σ-swap-01 : ∀ {ℓ'} {B₀ B₁ : Type ℓ'} → B₀ ≡ B₁
                     
@@ -967,6 +985,12 @@ module _ {ℓ} {A : Type ℓ} where
     ΣPathP (refl , funExt⁻ (cong transport (adjT×^≡-≡-ua n k)) _))
  adjT×^≡-≡-ua (suc zero) zero = sym (uaIdEquiv)
  adjT×^≡-≡-ua (suc (suc n)) zero = refl
+
+ transport-adjT×^≡ : ∀ n k →
+   transport (adjT×^≡ {n} k) ≡ adjT×^ {n} k
+ transport-adjT×^≡ n k =
+     cong transport (adjT×^≡-≡-ua n k)
+          ∙ cong (_∘ (adjT×^ k)) (transport-fillerExt⁻ refl)
 
  glueAdjT× : ∀ n k → PathP (λ i → A ×^ n → adjT×^≡ {n = n} k i)
                          (idfun (A ×^ n))
@@ -1452,6 +1476,18 @@ module _ {ℓ} {A : Type ℓ} where
 --   --  (snd e) (idIsEquiv _) i
 
 
+module _ {A : Type ℓ} {B : Type ℓ} where
+ map×^ : (A → B) → ∀ n → A ×^ n → B ×^ n 
+ map×^ f zero v = v
+ map×^ f (suc n) (a , v) = f a , map×^ f n v
+
+-- module _ {A : Type ℓ} {B : Type ℓ} where
+--  Iso×^ : (Iso A B) → ∀ n → Iso (A ×^ n) (B ×^ n) 
+--  Iso×^ x zero = idIso
+--  Iso×^ x (suc n) = {!iso×!}
+
+
+
 module hex (A : Type ℓ) (B : Type ℓ) where
 
  hlpIso : Iso (A × A × A × B) (A × A × A × B)
@@ -1875,8 +1911,85 @@ Fin×PathP' n P =
 sucFin× : Fin× n → Fin× (suc n)
 sucFin× (xs , ys) = (false , xs) , ys
 
+
 Fin×0 : Fin× (suc n)
 Fin×0 {n} = (true , repeat _ false) , allFalse-repeat-false n
+
+
+predFin× : {a : Fin× n} → Fin× (suc n) → Fin× n 
+predFin× ((false , bs) , ys) = bs , ys
+predFin× {suc n} {a = fst₁ , snd₁} ((true , bs) , ys) = Fin×0
+
+
+
+isFin×Fun : ∀ n →  ((Bool ×^ n) → (Bool ×^ n)) →
+                hProp ℓ-zero
+isFin×Fun n f =
+  L.∀[ v ]
+    (Fin×Snd n v L.⇒ Fin×Snd n (f v))
+
+from𝟚×Fun : ∀ n f → ⟨ isFin×Fun n f ⟩  → (Fin× n) → (Fin× n)
+from𝟚×Fun n f y (v , p) = f v , y v p 
+
+
+-- isPermutation : ∀ n →  (Iso (Bool ×^ n) (Bool ×^ n)) →
+--                 hProp ℓ-zero
+-- isPermutation n x =
+--   L.∀[ v ]
+--     (((Fin×Snd n v L.⇒ Fin×Snd n (fun v))
+--      L.⊓
+--     (Fin×Snd n (fun v) L.⇒ Fin×Snd n v))
+--     L.⊓
+--     ((allFalse n v L.⇒ allFalse n (fun v))
+--      L.⊓
+--     (allFalse n (fun v) L.⇒ allFalse n v)))
+--  where
+--  open Iso x
+
+Perm× : ∀ n → Type
+Perm× n = Iso (Fin× n) (Fin× n)
+
+-- from𝟚×^Iso : ∀ n x → ⟨ isPermutation n x ⟩  → Perm× n 
+-- from𝟚×^Iso n x y' = w
+--  where
+--  open Iso
+--  y = fst ∘ y'
+--  w : Iso _ _
+--  fun w (v , p) = fun x v , fst (y v) p 
+--  inv w (v , p) = inv x v ,
+--    snd (y (inv x v)) (subst (fst ∘ Fin×Snd n)
+--              (sym (rightInv x v)) p) 
+   
+--  rightInv w (v , p) = Σ≡Prop (snd ∘ Fin×Snd n) (rightInv x v)
+--  leftInv w (v , p) = Σ≡Prop (snd ∘ Fin×Snd n) (leftInv x v)
+
+module _ {ℓ ℓ' ℓ''} {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''}
+   (e : Iso A B) (f : A → C) (g : B → C) where
+
+ open Iso e
+
+ presF : (∀ a → g (fun a) ≡ f a) → (∀ b → f (inv b) ≡ g b)
+ presF x b = sym (x (inv b)) ∙ cong g (rightInv b)
+
+module _ {ℓ} {A : Type ℓ} where
+ rot×^Iso : ∀ n → ℕ → Iso (A ×^ n) (A ×^ n)
+ rot×^Iso (suc (suc n)) (suc k) =
+   compIso (Σ-cong-iso-snd λ _ → rot×^Iso (suc n) k) Σ-swap-01-Iso 
+ rot×^Iso (suc (suc n)) zero = Σ-swap-01-Iso
+ rot×^Iso zero k = idIso
+ rot×^Iso (suc zero) k = idIso
+
+predFun𝟚^ : ∀ n → (Bool ×^ (suc n) → Bool ×^ (suc n))
+                → (Bool ×^ n → Bool ×^ n) 
+predFun𝟚^ n f = snd ∘ f ∘ (false ,_)
+
+predFunFin× : ∀ n f → ⟨ isFin×Fun (suc n) f ⟩
+                  → ((∀ v → fst (f (false , v)) ≡ false)  )
+                  → ⟨ isFin×Fun n (predFun𝟚^ n f) ⟩ 
+predFunFin× n f x p v q =
+  subst (fst ∘ Fin×Snd (suc n))
+    (cong (_, snd (f (false , v)))(p v))
+    ((x (false , v) q))
 
 
 -- subst-Fin× : {!n ≡ m → Fin× n → Fin× m!}
@@ -1954,6 +2067,13 @@ F×adjT≃ {n} k =
      λ a → subst (fst ∘ Fin×Snd n) (invol-adjT×^ n k a)
        ∘ (Fin×Snd∘adjT× n k ∘ adjT×^ k) a
 
+F×adjTIso : ∀ {n} → ℕ → Iso (Fin× n) (Fin× n)
+Iso.fun (F×adjTIso k) = F×adjT k
+Iso.inv (F×adjTIso k) = F×adjT k
+Iso.rightInv (F×adjTIso k) (v , _) =
+    Σ≡Prop (snd ∘ (Fin×Snd _)) (invol-adjT×^ _ k v)
+Iso.leftInv (F×adjTIso k) (v , _) =
+    Σ≡Prop (snd ∘ (Fin×Snd _)) (invol-adjT×^ _ k v)
 
 sucFin-F×adjT : ∀ n k →
      sucFin× ∘' F×adjT {n = n} k

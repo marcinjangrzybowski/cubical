@@ -814,6 +814,7 @@ module _ (isSet-A : isSet A) (isSet-A' : isSet A') where
   SetsIso≡ p q =
     SetsIso≡-ext (funExt⁻ p) (funExt⁻ q)
 
+
   isSet→Iso-Iso-≃ : Iso (Iso A A') (A ≃ A')
   isSet→Iso-Iso-≃ = ww
     where
@@ -824,6 +825,7 @@ module _ (isSet-A : isSet A) (isSet-A' : isSet A') where
       inv ww = equivToIso
       rightInv ww b = equivEq refl
       leftInv ww a = SetsIso≡ refl refl
+
 
 
   isSet→isEquiv-isoToPath : isEquiv isoToEquiv

@@ -96,6 +96,15 @@ Iso.inv (pathToIso x) = transport⁻ x
 Iso.rightInv (pathToIso x) = transportTransport⁻ x
 Iso.leftInv (pathToIso x) = transport⁻Transport x
 
+pathToIso-refl : ∀ {ℓ} {A : Type ℓ} →
+  pathToIso {A = A} refl ≡ idIso
+Iso.fun (pathToIso-refl i) = transport-fillerExt⁻ refl i
+Iso.inv (pathToIso-refl i) = transport-fillerExt⁻ refl i
+Iso.rightInv (pathToIso-refl {A = A} i) b j =
+  transp (λ _ → A) (j ∨ i) (transp (λ _ → A) (j ∨ i) b)
+Iso.leftInv (pathToIso-refl {A = A} i) a j =
+  transp (λ _ → A) (j ∨ i) (transp (λ _ → A) (j ∨ i) a)
+
 isInjectiveTransport : ∀ {ℓ : Level} {A B : Type ℓ} {p q : A ≡ B}
   → transport p ≡ transport q → p ≡ q
 isInjectiveTransport {p = p} {q} α i =
