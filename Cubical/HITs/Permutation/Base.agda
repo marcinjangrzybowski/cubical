@@ -107,7 +107,20 @@ data ℙrm {trunc : Bool} (n : ℕ) : Type₀ where
   𝕡squash : Bool→Type trunc → isGroupoid (ℙrm n)
 
 
-
+𝕡loopComm : ∀ {b n} → (k l : Σ ℕ  λ k → (suc k < n)) →
+     commT (fst k) (fst l) →
+      𝕡loop {b} {n = n} k ∙ 𝕡loop l ≡ 𝕡loop l ∙ 𝕡loop k
+𝕡loopComm k l x i j =
+     hcomp (λ i' → λ {
+            (j = i0) → 𝕡base
+           ;(j = i1) → 𝕡comp l k i i'
+             })
+      (hcomp (λ i' → λ {
+            (j = i0) → 𝕡base
+           ;(j = i1) → 𝕡comm k l x i i'
+           ;(i = i0) → 𝕡invol k i' (~ j)
+           ;(i = i1) → 𝕡invol l i' (~ j)
+             }) (𝕡comp k l i (~ j)))
 
 toTruncℙ : ∀ {n b} → ℙrm {b} n → ℙrm {true} n
 toTruncℙ 𝕡base = 𝕡base
@@ -328,6 +341,9 @@ record R𝕡elimSet' {n} {trunc} (A : ℙrm {trunc} n → Type ℓ) : Type ℓ w
 
  f : ∀ x → A x
  f = R𝕡elimSet.f fR
+
+
+
 
 
 

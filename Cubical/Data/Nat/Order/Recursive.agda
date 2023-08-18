@@ -2037,6 +2037,20 @@ Fin×0= n {x} {x'} {y} {y'} =
   cong′ (λ (x , y) → (true , x) , y)
     (allFalse-PathP n _ refl (x , y) (x' , y')) 
 
+Fin×0=' : ∀ n → ∀ {t} → true ≡ t →  ∀ {x x' y y'}
+            → Path (Fin× (suc n))
+           ((t , x) , y)
+           ((true , x') , y')
+Fin×0=' n =
+  J (λ t _ →  ∀ {x x' y y'}
+            → Path (Fin× (suc n))
+           ((t , x) , y)
+           ((true , x') , y')) (Fin×0= n)
+           
+   -- ((p i) , (fst (allFalse-PathP n _ {!p!} (x , y) (x' , y') i))) , {!!}
+  -- cong₂ (λ (x , y) → (true , x) , y)
+  --   (allFalse-PathP n _ refl (x , y) (x' , y')) 
+
 
 -- Fin×cases f0 (Fin×cases f1 f)
 
