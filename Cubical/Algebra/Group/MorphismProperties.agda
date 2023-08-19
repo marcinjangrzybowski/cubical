@@ -68,6 +68,10 @@ module _ {A : Type ℓ} {B : Type ℓ'} (G : GroupStr A) (f : A → B) (H : Grou
     H.1g H.· H.inv (f g)                   ≡⟨ H.·IdL _ ⟩
     H.inv (f g) ∎
 
+
+  invHomInv : ∀ g → H.inv (f (G.inv g)) ≡ (f g)
+  invHomInv g = cong H.inv (homInv g) ∙ GroupTheory.invInv (_ , H) _
+ 
 module _ {A : Type ℓ} {B : Type ℓ'} {G : GroupStr A} {f : A → B} {H : GroupStr B}
   (pres : (x y : A) → f (G ._·_ x y) ≡ H ._·_ (f x) (f y))
   where

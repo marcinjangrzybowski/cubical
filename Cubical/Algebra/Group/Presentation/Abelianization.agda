@@ -4,9 +4,6 @@ module Cubical.Algebra.Group.Presentation.Abelianization where
 open import Cubical.Data.Sigma
 
 open import Cubical.Foundations.Everything
--- open import Cubical.Foundations.Function
--- open import Cubical.Foundations.HLevels
--- open import Cubical.Foundations.Isomorphism
 open import Cubical.Functions.FunExtEquiv
 
 import Cubical.Data.Bool as 𝟚
@@ -304,6 +301,6 @@ module _ {IxG : Type ℓ} {IxR : Type ℓ'} where
   IsGroupHom.presinv Ab'→Ab-hom = 
     elimPropAb _ (λ _ → trunc _ _) (IsGroupHom.presinv T→AbT-Mor)
 
-  -- AbGroupIsoAb'Ab : AbGroupIso asAbelianGroup AbGroupT
-  -- fst AbGroupIsoAb'Ab = IsoAbAb'
-  -- snd AbGroupIsoAb'Ab = Ab'→Ab-hom
+  AbGroupIsoAb'Ab : AbGroupIso asAbelianGroup AbGroupT
+  fst AbGroupIsoAb'Ab = IsoAbAb'
+  snd AbGroupIsoAb'Ab = Ab'→Ab-hom

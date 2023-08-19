@@ -200,8 +200,6 @@ module _ (IxG : Type ℓ) where
                ≡ ∷fc≃ (fc₋₀ (rels ixR)) ∙ₑ ∷fc≃ (fc₁₋ (rels ixR))
   rel≃ ixR  = equivEq (funExt (rel ixR))
 
-  
-
   module _ (f : Sq) where
    module F≃ = Faces f (ua ∘ ∷fc≃)
 
@@ -372,7 +370,7 @@ module _ (IxG : Type ℓ) where
 
   _·_ : T → T → T
   x · y = RecT.f (·R y) x
-
+  
 
   ·IdR : ∀ x → x · ε ≡ x
   ·IdR = ElimPropT.f w
@@ -478,6 +476,13 @@ module _ (IxG : Type ℓ) where
        cong ((inv xs) ·_) (inv∷ b x _) ∙∙ p 
 
 
+
+
+  _·∷_ : (𝟚 × T) → T → T 
+  (false , x) ·∷ y = inv x · y
+  (true , x) ·∷ y = x · y
+
+
   GroupT : Group (ℓ-max ℓ ℓ')
   GroupT = makeGroup
     ε
@@ -485,7 +490,19 @@ module _ (IxG : Type ℓ) where
     inv trunc
      ·assoc ·IdR ·IdL ·InvR ·InvL
 
+  open GroupTheory GroupT
 
+  sq→T : Sq → T
+  sq→T s = (inv (fc₁₋ s fc∷ fc₋₀ s fc∷ ε))
+            · (fc₋₁ s fc∷ fc₀₋ s fc∷ ε)
+  
+
+  ixG→T≡ε : ∀ ixR → sq→T (rels ixR) ≡ ε
+  ixG→T≡ε ixR = cong (inv (rel ixR ε i1) ·_) (rel ixR ε) ∙
+        ·InvL _
+    where
+      module s = Sq (rels ixR)
+   
 
   data 𝔹T : Type (ℓ-max ℓ ℓ')
 
@@ -1022,3 +1039,5 @@ module _ (IxG : Type ℓ) where
   Iso.inv encodeDecodeIso = encode base
   Iso.rightInv encodeDecodeIso = encodeDecode {base}
   Iso.leftInv encodeDecodeIso = decodeEncode
+
+  
