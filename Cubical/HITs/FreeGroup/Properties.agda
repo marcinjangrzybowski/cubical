@@ -21,6 +21,7 @@ open import Cubical.Foundations.Path
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Equiv.BiInvertible
+open import Cubical.Foundations.HLevels
 
 open import Cubical.Algebra.Group
 open import Cubical.Algebra.Group.Morphisms
@@ -198,3 +199,102 @@ A→Group≃GroupHom {Group = Group} = biInvEquiv→Equiv-right biInv where
   BiInvEquiv.invr-rightInv biInv hom = freeGroupHom≡ (λ a → refl)
   BiInvEquiv.invl biInv (hom ,  _) a = hom (η a)
   BiInvEquiv.invl-leftInv biInv f    = funExt (λ a → refl)
+
+
+record ElimProp {A : Type ℓ} (B : FreeGroup A → Type ℓ') : Type (ℓ-max ℓ ℓ') where 
+ field
+  isPropB : ∀ a → isProp (B a)
+  εB : B ε
+  ηB : ∀ a → B (η a)
+  invB : ∀ a → B a → B (inv a)
+  ·B : ∀ a b → B a → B b → B (a · b)
+
+ f : ∀ a → B a
+ f (a · a₁) = ·B _ _ (f a) (f a₁)
+ f ε = εB
+ f (η x) = ηB x
+ f (inv a) = invB _ (f a)
+ f (assoc a a₁ a₂ i) =
+   isProp→PathP (λ i → isPropB (assoc a a₁ a₂ i))
+     ((·B a (a₁ · a₂) (f a) (·B a₁ a₂ (f a₁) (f a₂))))
+     ((·B (a · a₁) a₂ (·B a a₁ (f a) (f a₁)) (f a₂))) i
+ f (idr a i) =
+      isProp→PathP (λ i → isPropB (idr a i))
+       (f a)
+       (·B a ε (f a) εB)
+       i
+ f (idl a i) =
+   isProp→PathP (λ i → isPropB (idl a i))
+       (f a)
+       (·B ε a εB (f a))
+       i
+ f (invr a i) =
+   isProp→PathP (λ i → isPropB (invr a i))
+       (·B a (inv a) (f a) (invB a (f a)))
+       εB
+       i
+ f (invl a i) =
+    isProp→PathP (λ i → isPropB (invl a i))
+       (·B (inv a) a (invB a (f a)) (f a))
+       εB
+       i
+ f (trunc a a₁ x y i i₁) =
+   isOfHLevel→isOfHLevelDep 2 (isProp→isSet ∘ isPropB)
+    _ _ (cong f x) (cong f y) (trunc a a₁ x y) i i₁
+
+
+-- record ElimProp {A : Type ℓ} (B : FreeGroup A → Type ℓ') : Type (ℓ-max ℓ ℓ') where 
+--  field
+--   isPropB : ∀ a → isProp (B a)
+--   εB : B ε
+--   ηB : ∀ a → B (η a)
+--   η⁻B : ∀ a → B (inv (η a))
+--   ·B : ∀ a b → B a → B b → B (a · b)
+  
+
+--  open GroupTheory (freeGroupGroup A)
+
+--  f : ∀ a → B a
+
+--  fHlp : ∀ {a₀ a₁ : FreeGroup A} → (p : a₀ ≡ a₁) (fa₀ : B a₀) (fa₁ : B a₁)  → PathP (λ z → B (p z))
+--                fa₀ fa₁
+--  fHlp {a₀} {a₁} p = isProp→PathP (λ i → isPropB (p i)) 
+
+
+--  f (η x) = ηB x
+--  f (a · a₁) = ·B _ _ (f a) (f a₁)
+--  f ε = εB
+--  f (inv (η x)) = η⁻B x
+--  f (inv (a · a₁)) = subst B (sym (invDistr _ _)) (·B (inv a₁) (inv a) (f _) (f _)) 
+--  f (inv ε) = subst B (sym (inv1g)) εB
+--  f (inv (inv a)) = subst B (sym (invInv a)) (f a)
+--  f (inv (assoc a a₁ a₂ i)) = 
+--    fHlp (λ i → inv (assoc a a₁ a₂ i))
+--     (subst B (λ i₁ → invDistr a (a₁ · a₂) (~ i₁))
+--          (·B (inv (a₁ · a₂)) (inv a)
+--           (subst B (λ i₁ → invDistr a₁ a₂ (~ i₁))
+--            (·B (inv a₂) (inv a₁) (f (inv a₂)) (f (inv a₁))))
+--           (f (inv a))))
+--     (subst B (λ i₁ → invDistr (a · a₁) a₂ (~ i₁))
+--          (·B (inv a₂) (inv (a · a₁)) (f (inv a₂))
+--           (subst B (λ i₁ → invDistr a a₁ (~ i₁))
+--            (·B (inv a₁) (inv a) (f (inv a₁)) (f (inv a)))))) i
+
+--  f (inv (idr a i)) =
+--    fHlp (λ i → inv (idr a i))
+--     (f (inv a))
+--     (subst B (sym (invDistr _ _)) 
+--          (·B (inv ε) (inv a)
+--           (subst B (sym inv1g) εB)
+--           (f (inv a)))) i
+--  f (inv (idl a i)) = {!!}
+--  f (inv (invr a i)) = {!!}
+--  f (inv (invl a i)) = {!!}
+--  f (inv (trunc a a₁ x y i i₁)) = {!!}
+--  f (assoc a a₁ a₂ i) = {!!}
+--  f (idr a i) = {!!}
+--  f (idl a i) = {!!}
+--  f (invr a i) = {!!}
+--  f (invl a i) = {!!}
+--  f (trunc a a₁ x y i i₁) = {!!}
+  
