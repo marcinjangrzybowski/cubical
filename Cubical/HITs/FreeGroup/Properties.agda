@@ -200,6 +200,47 @@ A→Group≃GroupHom {Group = Group} = biInvEquiv→Equiv-right biInv where
   BiInvEquiv.invl biInv (hom ,  _) a = hom (η a)
   BiInvEquiv.invl-leftInv biInv f    = funExt (λ a → refl)
 
+record Elim {A : Type ℓ} (B : FreeGroup A → Type ℓ') : Type (ℓ-max ℓ ℓ') where 
+ field
+  isSetB : ∀ a → isSet (B a)
+  εB : B ε
+  ηB : ∀ a → B (η a)
+  invB : ∀ a → B a → B (inv a)
+  ·B : ∀ a b → B a → B b → B (a · b)
+  assocB : ∀ {a b c} a' b' c' →
+      PathP (λ i → B (assoc a b c i))
+        (·B _ _ a' (·B _ _ b' c'))
+        (·B _ _ (·B _ _ a' b') c')
+  idrB : ∀ {a} a' →
+      PathP (λ i → B (idr a i))
+        a'
+        (·B _ _ a' εB)
+  idlB : ∀ {a} a' →
+      PathP (λ i → B (idl a i))
+        a'
+        (·B _ _ εB a')
+  invrB : ∀ {a} a' →
+      PathP (λ i → B (invr a i))        
+        (·B _ _ a' (invB _ a'))
+        εB
+  invlB : ∀ {a} a' →
+      PathP (λ i → B (invl a i))        
+        (·B _ _ (invB _ a') a')
+        εB
+
+ f : ∀ a → B a
+ f (a · a₁) = ·B _ _ (f a) (f a₁)
+ f ε = εB
+ f (η x) = ηB x
+ f (inv a) = invB _ (f a)
+ f (assoc a b c i) = assocB (f a) (f b) (f c) i
+ f (idr a i) = idrB (f a) i
+ f (idl a i) = idlB (f a) i
+ f (invr a i) = invrB (f a) i
+ f (invl a i) = invlB (f a) i
+ f (trunc a a₁ x y i i₁) =
+   isOfHLevel→isOfHLevelDep 2 (isSetB)
+    _ _ (cong f x) (cong f y) (trunc a a₁ x y) i i₁
 
 record ElimProp {A : Type ℓ} (B : FreeGroup A → Type ℓ') : Type (ℓ-max ℓ ℓ') where 
  field

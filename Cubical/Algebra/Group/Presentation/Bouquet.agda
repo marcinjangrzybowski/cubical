@@ -64,6 +64,7 @@ Normalised [] = L.⊤
 Normalised ((b , x) ∷ xs) = L.¬ WillReduce b x xs  L.⊓ Normalised xs
 
 module _ (_≟_ : Discrete A) where
+ isSetA = Discrete→isSet _≟_
 
  Normalised∷ : 𝟚 → A → (xs : List (𝟚 × A)) →  ⟨ Normalised xs ⟩
                 → Σ _ (fst ∘ Normalised {A = A}) 
@@ -82,8 +83,67 @@ module _ (_≟_ : Discrete A) where
   let (xs , x') =  Normalised++ xs ys (snd x) x₁ 
   in Normalised∷ b a xs x'
 
+ willReduceRev : ∀ (x : 𝟚 × A) xs → ⟨ L.¬ WillReduce (fst x) (snd x) (rev xs) ⟩
+                                    → ⟨ Normalised xs ⟩ → ⟨ Normalised (xs ++ [ x ]) ⟩
+ willReduceRev x [] x₁ x₂ = (λ () ) , _
+ willReduceRev x (x₃ ∷ xs) x₁ x₂ =
+  let z = {!willReduceRev x₃ xs ?!}
+  in {!!} , {!!}
+
+ revNormalised : ∀ (xs : List (𝟚 × A))
+      →  ⟨ Normalised xs ⟩ → ⟨ Normalised (rev xs) ⟩
+ revNormalised [] _ = _
+ revNormalised (x ∷ xs) p =
+  let r = revNormalised xs (snd p)
+  in {!willReduceRev x xs (fst p)!}
+ -- revNormalised (x₁ ∷ xs@(x₂ ∷ xs')) x =
+ --  let r = revNormalised xs'
+ --  in {!!}
  
  
+ 
+ ∃Normalised : ∀ g → Σ (List (𝟚 × A)) λ l → ⟨ Normalised l ⟩ × (g ≡ fromList l) 
+ ∃Normalised = Elim.f w
+  where
+  open GroupTheory (freeGroupGroup A)
+  open Elim
+  w : Elim _       
+  isSetB w _ = isSetΣ (isOfHLevelList 0 (isSet× 𝟚.isSetBool isSetA)) {!!}
+  εB w = [] , _ , refl
+  ηB w a = [ true , a ] , ((λ ()) , _) , idr _
+  fst (invB w a (l , p)) = rev (List.map (map-fst 𝟚.not) l) 
+  snd (invB w a (l , p)) = {!!} , ww l a (snd p)
+   where
+   ww : ∀ l → ∀ a → (a ≡ fromList l) 
+           → (inv a ≡ fromList (rev (List.map (map-fst 𝟚.not) l)))
+   ww [] a p = cong inv p ∙ inv1g 
+   ww (x ∷ l) a p = 
+    let --p' = cong inv p ∙ {!!}
+        p' = cong ((_· (𝟚.if fst x then (λ x₁ → x₁) else inv) (η (snd x))))
+                (cong inv p ∙ invDistr _ _)
+               ∙∙ sym (FG.assoc (inv (fromList (l))) _ _) ∙∙ 
+                (cong (inv (fromList (l)) ·_) (invl _) ∙
+                 sym (idr _))
+    -- (𝟚.if fst x then (λ x₁ → x₁) else inv) (η (snd x)))
+          --(cong ((_· ?) ∘ inv) p) ∙∙ ∙ invDistr _ _  ∙∙ {!!}
+        p'' = sym (invDistr _ _) ∙ ww l _ ((cong₂ _·_ refl (sym (invInv a)) ∙ sym (invDistr _ _) ) ∙∙ cong inv p' ∙∙ invInv _)
+    in {!p''!}
+     -- cong inv p ∙∙ invDistr _ _ ∙∙ {!!}
+    -- ww ((true , y) ∷ l) a p = {!!}
+     
+    -- let p' = cong (inv (η y) ·_) q ∙∙ FG.assoc _ _ _ ∙∙ (cong (_· fromList l) (invl (η y)) ∙ sym (idl _))
+    --     (n , q) = ww l (inv (η y) · a) (snd p , p')
+    -- in ({!p!} , n) , {!q!}
+
+  -- snd (invB w a ([] , p)) = _ , cong inv (snd p) ∙ inv1g 
+  -- snd (invB w a (x ∷ l , p)) = {!!}
+
+  ·B w = {!!}
+  assocB w = {!!}
+  idrB w = {!!}
+  idlB w = {!!}
+  invrB w = {!!}
+  invlB w = {!!}
 
 -- -- ∃!Normalised : ∀ g → Σ (List (𝟚 × A)) λ l → ⟨ Normalised l ⟩ × (g ≡ fromList l) 
 -- -- ∃!Normalised (η x) = ([ (true , x) ] , _ , idr (η x))
@@ -98,7 +158,7 @@ module _ (_≟_ : Discrete A) where
 -- -- ∃!Normalised (invl g i) = {!!}
 -- -- ∃!Normalised (trunc g g₁ x y i i₁) = {!!}
 
--- -- normalize : (x : FreeGroup A) → singl x 
+-- -- normalize : (x : FreeGroup A) → singl x  
 -- -- normalize = ElimProp.f w
 -- --  where
 -- --  open ElimProp
