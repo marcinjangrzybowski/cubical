@@ -47,6 +47,9 @@ module GroupTheory (G : Group ℓ) where
     invInv : (a : ⟨ G ⟩) → inv (inv a) ≡ a
     invInv a = ·CancelL (inv a) (·InvR (inv a) ∙ sym (·InvL a))
 
+    injInv : {a b : ⟨ G ⟩} → inv a ≡ inv b → a ≡ b
+    injInv p = sym (invInv _) ∙∙ cong inv p ∙∙ invInv _ 
+
     inv1g : inv 1g ≡ 1g
     inv1g = ·CancelL 1g (·InvR 1g ∙ sym (·IdL 1g))
 

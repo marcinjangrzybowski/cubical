@@ -237,6 +237,10 @@ univalencePath = ua (compEquiv univalence LiftEquiv)
 uaβ : {A B : Type ℓ} (e : A ≃ B) (x : A) → transport (ua e) x ≡ equivFun e x
 uaβ e x = transportRefl (equivFun e x)
 
+~uaβ : {A B : Type ℓ} (e : A ≃ B) (x : B) → transport (sym (ua e)) x ≡ invEq e x
+~uaβ e x = cong (invEq e) (transportRefl x)
+
+
 uaη : ∀ {A B : Type ℓ} → (P : A ≡ B) → ua (pathToEquiv P) ≡ P
 uaη = J (λ _ q → ua (pathToEquiv q) ≡ q) (cong ua pathToEquivRefl ∙ uaIdEquiv)
 
