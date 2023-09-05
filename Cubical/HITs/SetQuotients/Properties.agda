@@ -22,6 +22,8 @@ open import Cubical.Foundations.Univalence
 open import Cubical.Functions.FunExtEquiv
 
 open import Cubical.Data.Sigma
+import Cubical.Data.Sum as ⊎
+import Cubical.Data.Empty as ⊥
 
 open import Cubical.Relation.Nullary
 open import Cubical.Relation.Binary.Base
@@ -335,3 +337,171 @@ descendMapPath f g isSetM path i x =
                         g x   ∎ })
     ([]surjective x)
     i
+
+module TC {A : Type ℓ}
+   (R : A → A → Type ℓ')
+
+   where
+
+ data tc (a a' : A) : Type (ℓ-max ℓ ℓ') where
+  here : R a a' → tc a a'
+  there : ∀ a'' → tc a a'' → tc a'' a' → tc a a'
+  tcsym : tc a' a → tc a a' 
+  tcrefl : a ≡ a' → tc a a'
+ 
+ tcrER : BinaryRelation.isEquivRel λ a b → tc a b
+ isEquivRel.reflexive tcrER _ = tcrefl refl
+ isEquivRel.symmetric tcrER _ _ = tcsym 
+ isEquivRel.transitive tcrER _ _ _ = there _
+
+
+ IsoTc/ : Iso (A / R) (A / tc) 
+ Iso.fun IsoTc/ =
+    rec squash/ [_] λ _ _ r → eq/ _ _ (here r)
+ Iso.inv IsoTc/ =
+    rec squash/ [_] w
+    where
+    w : (a b : A) → tc a b → [ a ] ≡ [ b ]
+    w a b (here x) = eq/ _ _ x
+    w a b (there a'' x x₁) =
+     w a a'' x ∙ w a'' b x₁
+    w a b (tcsym x) = sym (w b a x)
+    w a b (tcrefl x) = cong [_] x
+ Iso.rightInv IsoTc/ = elimProp (λ _ → squash/ _ _) λ _ → refl 
+ Iso.leftInv IsoTc/ = elimProp (λ _ → squash/ _ _) λ _ → refl
+
+
+ tc' : A → A → Type (ℓ-max ℓ ℓ')
+ tc' a a' = Path (A / R) [ a ] [ a' ]
+
+ TCisEquivRel→TruncIso : (a b : A) →
+    Iso (Path (A / tc) [ a ] [ b ]) ∥ tc a b ∥₁
+ TCisEquivRel→TruncIso = isEquivRel→TruncIso tcrER
+
+ IsoTcTc' : (a b : A) → Iso (tc' a b)  (∥ tc a b ∥₁)
+ IsoTcTc' a b = 
+   (compIso
+     (congIso IsoTc/)
+     (TCisEquivRel→TruncIso a b))
+
+ -- module _ (p : (a b : A) → a ≡ b → ¬ R a b)
+ --        (q : (a b : A) → R a b → ¬ a ≡ b) where
+
+ --  hh : ∀ a a' → ¬ R a a' → tc a a' → a ≡ a'
+ --  hh a a' x (here x₁) = ⊥.rec (x x₁)
+ --  hh a a' x (there a'' x₁ x₂) =
+ --     hh a a'' {!!} x₁ ∙
+ --      hh a'' a' {!!} x₂
+ --  hh a a' x (tcsym x₁) = sym (hh a' a {!!} {!!})
+ --  hh a a' x (tcrefl x₁) = x₁
+ 
+
+
+module TC' {A : Type ℓ}
+   (R : A → A → Type ℓ')
+   (isTransR : BinaryRelation.isTrans R)
+
+   where
+ 
+ data sc↑ (a a' : A) : Type (ℓ-max ℓ ℓ') 
+ data sc↓ (a a' : A) : Type (ℓ-max ℓ ℓ') 
+ 
+ data sc↑ a a' where
+  here↑ : R a a' → sc↑ a a'
+  there↑ : ∀ a'' → R a a'' → sc↓ a'' a' → sc↑ a a'
+
+ data sc↓ a a'   where
+  here↓ : R a' a → sc↓ a a'
+  there↓ : ∀ a'' → R a'' a → sc↑ a'' a' → sc↓ a a'
+
+
+ data sc (a a' : A) : Type (ℓ-max ℓ ℓ') where
+  here↓sc : sc↓ a a' → sc a a'
+  here↑sc : sc↑ a a' → sc a a'
+
+ sc↑∷ : ∀ {a a' a''} → R a a' → sc↑ a' a'' → sc↑ a a''
+ sc↑∷ x (here↑ x₁) = here↑ (isTransR _ _ _ x x₁)
+ sc↑∷ x (there↑ a'' x₁ x₂) = there↑ a'' (isTransR _ _ _ x x₁) x₂
+
+ sc↓∷ : ∀ {a a' a''} → R a' a → sc↓ a' a'' → sc↓ a a''
+ sc↓∷ x (here↓ x₁) = here↓ (isTransR _ _ _ x₁ x)
+ sc↓∷ x (there↓ a'' x₁ x₂) = there↓ a'' (isTransR _ _ _ x₁ x) x₂
+
+
+ sc∷↓ : ∀ {a a' a''} → R a a' → sc a' a'' → sc a a'' 
+ sc∷↓ x (here↓sc x₁) = here↑sc (there↑ _ x x₁)
+ sc∷↓ x (here↑sc x₁) = here↑sc (sc↑∷ x x₁)
+
+ sc∷↑ : ∀ {a a' a''} → R a' a → sc a' a'' → sc a a'' 
+ sc∷↑ x (here↓sc x₁) = here↓sc (sc↓∷ x x₁)
+ sc∷↑ x (here↑sc x₁) = here↓sc (there↓ _ x x₁)
+
+
+ isTransSc : BinaryRelation.isTrans sc
+ isTransSc a b c (here↓sc (here↓ x)) x₁ = sc∷↑ x x₁
+ isTransSc a b c (here↓sc (there↓ a'' x x₂)) x₁ =
+   sc∷↑ x (isTransSc _ _ _ (here↑sc x₂) x₁)
+ isTransSc a b c (here↑sc (here↑ x)) x₁ = sc∷↓ x x₁
+ isTransSc a b c (here↑sc (there↑ a'' x x₂)) x₁ =
+   sc∷↓ x (isTransSc _ _ _ (here↓sc x₂) x₁)
+
+ isSymSc : BinaryRelation.isSym sc
+ isSymSc a b (here↓sc (here↓ x)) = here↑sc (here↑ x)
+ isSymSc a b (here↓sc (there↓ a'' x x₁)) =
+    isTransSc _ _ _ (isSymSc _ _ (here↑sc x₁))
+       (here↑sc (here↑ x))
+ isSymSc a b (here↑sc (here↑ x)) = here↓sc (here↓ x)
+ isSymSc a b (here↑sc (there↑ a'' x x₁)) =
+     isTransSc _ _ _ (isSymSc _ _ (here↓sc x₁))
+       (here↓sc (here↓ x))
+
+
+ stc : A → A → Type (ℓ-max ℓ ℓ')
+ stc a a' = (a ≡ a') ⊎.⊎ sc a a'
+
+
+
+ stcEquivRel : BinaryRelation.isEquivRel stc
+ isEquivRel.reflexive stcEquivRel a = ⊎.inl refl
+ isEquivRel.symmetric stcEquivRel a b = ⊎.map sym (isSymSc _ _)
+ isEquivRel.transitive stcEquivRel a b c x (⊎.inl x₁) = subst (stc a) x₁ x
+ isEquivRel.transitive stcEquivRel a b c (⊎.inl x) (⊎.inr x₁) =
+   subst (flip stc c) (sym x) (⊎.inr x₁)
+ isEquivRel.transitive stcEquivRel a b c (⊎.inr x) (⊎.inr x₁) =
+  ⊎.inr (isTransSc _ _ _ x x₁)
+
+ IsoTc/ : Iso (A / R) (A / stc) 
+ Iso.fun IsoTc/ =
+    rec squash/ [_] λ _ _ r → eq/ _ _ (⊎.inr (here↑sc (here↑ r)))
+ Iso.inv IsoTc/ =
+    rec squash/ [_] w
+    where
+    w' : (a b : A) → sc a b → [ a ] ≡ [ b ]
+    w' a b (here↓sc (here↓ x)) = sym (eq/ _ _ x)
+    w' a b (here↓sc (there↓ a'' x x₁)) =
+       sym (eq/ _ _ x) ∙ w' _ _ (here↑sc x₁)
+    w' a b (here↑sc (here↑ x)) = eq/ _ _ x
+    w' a b (here↑sc (there↑ a'' x x₁)) =
+       (eq/ _ _ x) ∙ w' _ _ (here↓sc x₁)
+
+    w : (a b : A) → stc a b → [ a ] ≡ [ b ]
+    w a b (⊎.inl x) = cong [_] x
+    w a b (⊎.inr x) = w' a b x
+ Iso.rightInv IsoTc/ = elimProp (λ _ → squash/ _ _) λ _ → refl 
+ Iso.leftInv IsoTc/ = elimProp (λ _ → squash/ _ _) λ _ → refl
+
+
+ -- -- -- tc' : A → A → Type (ℓ-max ℓ ℓ')
+ -- -- -- tc' a a' = Path (A / R) [ a ] [ a' ]
+
+ -- -- -- TCisEquivRel→TruncIso : (a b : A) →
+ -- -- --    Iso (Path (A / tc) [ a ] [ b ]) ∥ tc a b ∥₁
+ -- -- -- TCisEquivRel→TruncIso = isEquivRel→TruncIso tcrER
+
+ -- -- -- IsoTcTc' : (a b : A) → Iso (tc' a b)  (∥ tc a b ∥₁)
+ -- -- -- IsoTcTc' a b = 
+ -- -- --   (compIso
+ -- -- --     (congIso IsoTc/)
+ -- -- --     (TCisEquivRel→TruncIso a b))
+
+

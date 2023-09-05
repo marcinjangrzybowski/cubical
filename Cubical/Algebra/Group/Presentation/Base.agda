@@ -11,16 +11,19 @@ open import Cubical.Foundations.Powerset
 open import Cubical.Functions.FunExtEquiv
 
 import Cubical.Data.Bool as 𝟚
+import Cubical.Data.Bool as 𝟚
 open import Cubical.Data.Bool using (false ; true) renaming (Bool to 𝟚) 
 
 
-
+open import Cubical.Functions.Logic as L
 open import Cubical.Algebra.Group.Base
 open import Cubical.Algebra.Group.Properties
 
 open import Cubical.HITs.EilenbergMacLane1
 
 open import Cubical.HITs.GroupoidTruncation as GT
+
+import Cubical.Data.Int as Int
 
 
 private
@@ -103,910 +106,961 @@ module _ (IxG : Type ℓ) where
 
 
    
- module Pres (rels : ℙ Sq) where
+ module Pres (rels : ℙ Sq) (isSetA : isSet IxG) where
 
   
 
   data T : Type ℓ 
 
-  infixr 5 _∷_ _fc∷_ 
+  infixr 5 _∷_ --_fc∷_ 
 
-  _fc∷_ : Fc → T → T
+  -- _fc∷_ : Fc → T → T
  
   data T where
    ε : T
    _∷_ : (𝟚 × IxG) → T → T
    inv∷ : ∀ b ixG xs → ((𝟚.not b) , ixG) ∷ (b , ixG) ∷ xs ≡ xs
-   rel : ∀ s → s ∈ rels → ∀ x →
-          fc₋₁ s fc∷ fc₀₋ s fc∷ x ≡
-          fc₁₋ s fc∷ fc₋₀ s fc∷ x
    trunc : isSet T   
 
-  _fc∷_ = FcCons.fcCons _∷_
-
-  IxR = Σ _ (_∈ rels)
-
-  ∷iso : IxG → Iso T T
-  Iso.fun (∷iso x) = (true , x) ∷_
-  Iso.inv (∷iso x) = (false , x) ∷_
-  Iso.rightInv (∷iso x) = inv∷ false x 
-  Iso.leftInv (∷iso x) = inv∷ true x
   
   η : IxG → T
   η = (_∷ ε) ∘ (true ,_)
 
-  η⁻ : IxG → T
-  η⁻ = (_∷ ε) ∘ (false ,_)
 
+  Red : (𝟚 × IxG) → (𝟚 × IxG) → hProp ℓ
+  Red (b , a) (b' , a') =
+    ((b ≡ 𝟚.not b') , 𝟚.isSetBool _ _) L.⊓ ((a ≡ a') , isSetA _ _)
 
-  ∷≃ : IxG → T ≃ T
-  ∷≃ = isoToEquiv ∘ ∷iso
+  -- Cover1 : ∀ x → singl {A = hProp ℓ} ((x ≡ ε) , trunc _ _)
+  -- Cover1 ε = ⊤ , ⇔toPath (λ _ → lift Int.tt) λ _ → refl
+  -- Cover1 (x ∷ ε) = {!!}
+  -- Cover1 (x ∷ y ∷ x₂) =
+  --    ( Red x y L.⊓ fst (Cover1 x₂))
+  --      L.⊔ {!!} , {!!}
+  -- Cover1 (x ∷ inv∷ b ixG x₁ i) = {!!}
+  -- Cover1 (x ∷ trunc x₁ x₂ x₃ y i i₁) = {!!}
+  -- Cover1 (inv∷ b ixG x i) = {!!}
+  -- Cover1 (trunc x x₁ x₂ y i i₁) = {!!}
 
-  ∷fcIso' : Fc → Iso T T
-  ∷fcIso' (fc x x₁) = 𝟚.if x then ∷iso x₁ else (invIso (∷iso x₁)) 
-  ∷fcIso' cns = idIso
-
-  notFC : Fc → Fc
-  notFC (fc x x₁) = fc (𝟚.not x) x₁
-  notFC cns = cns
-
-  invFC∷ : ∀ fc xs → (notFC fc fc∷ fc fc∷ xs) ≡ xs 
-  invFC∷ (fc x x₁) xs = inv∷ _ _ _
-  invFC∷ cns xs = refl
-
-  invFC∷' : ∀ fc xs → (fc fc∷ (notFC fc) fc∷ xs) ≡ xs 
-  invFC∷' (fc false x₁) xs = inv∷ _ _ _
-  invFC∷' (fc true x₁) xs = inv∷ _ _ _
-  invFC∷' cns xs = refl
+  Cover : (x x' : T) → singl {A = hProp ℓ} ((x ≡ x') , trunc _ _)
+  Cover ε ε =  ⊤ , ⇔toPath (λ _ → lift Int.tt) λ _ → refl
+  Cover ε (x ∷ ε) = {!!}
+  Cover ε (x ∷ y ∷ xs) =
+         ( Red x y L.⊓ fst (Cover ε xs))
+       L.⊔ {!!} , {!!}
+  Cover ε (x ∷ inv∷ b ixG x' i) = {!!}
+  Cover ε (x ∷ trunc x' x'' x₁ y i i₁) = {!!}
+  Cover ε (inv∷ b ixG x' i) = {!!}
+  Cover ε (trunc x' x'' x y i i₁) = {!!}
+  Cover (x ∷ x₁) ε = {!!}
+  Cover (x ∷ x₁) (x₂ ∷ x') =
+     {!!}
+  Cover (x ∷ x₁) (inv∷ b ixG x' i) = {!!}
+  Cover (x ∷ x₁) (trunc x' x'' x₂ y i i₁) = {!!}
+  Cover (inv∷ b ixG x i) x' = {!!}
+  Cover (trunc x x₁ x₂ y i i₁) x' = {!!}
   
-  relInv : (ixR : IxR) → 
-         notFC (fc₀₋ (fst ixR)) fc∷ notFC (fc₋₁ (fst ixR)) fc∷ ε ≡
-         notFC (fc₋₀ (fst ixR)) fc∷ notFC (fc₁₋ (fst ixR)) fc∷ ε
-  relInv ixR@(s , s∈) = 
-      sym (invFC∷ (fc₋₀ (fst ixR)) _) ∙∙
-       cong (notFC (fc₋₀ (fst ixR)) fc∷_)
-         (sym (invFC∷ (fc₁₋ (fst ixR)) _))
-       ∙∙ cong ((notFC (fc₋₀ (fst ixR)) fc∷_) ∘'
-          (notFC (fc₁₋ (fst ixR)) fc∷_)) (sym (rel s s∈
-            (notFC (fc₀₋ (fst ixR)) fc∷ (notFC (fc₋₁ (fst ixR)) fc∷ ε)))) ∙∙
-       cong ((notFC (fc₋₀ (fst ixR)) fc∷_)
-            ∘' ((notFC (fc₁₋ (fst ixR)) fc∷_)
-              ∘' ((fc₋₁ (fst ixR)) fc∷_)))
-              (invFC∷' (fc₀₋ (fst ixR)) _) ∙∙
-         cong ((notFC (fc₋₀ (fst ixR)) fc∷_)
-            ∘' ((notFC (fc₁₋ (fst ixR)) fc∷_)))
-             (invFC∷' (fc₋₁ (fst ixR)) _)
+  -- Cover ε ε = ⊤ , ⇔toPath (λ _ → lift Int.tt) λ _ → refl
+  -- Cover ε (x ∷ y) = 
+  -- Cover ε (inv∷ b ixG y i) = {!!}
+  -- Cover ε (trunc y y₁ x y₂ i i₁) = {!!}
+  -- Cover (x ∷ x₁) y = {!!}
+  -- Cover (inv∷ b ixG x i) y = {!!}
+  -- Cover (trunc x x₁ x₂ y₁ i i₁) y = {!!}
+
+ -- ε x₁ = ?g toℤ!}
+ --  pop ((false , snd₁) ∷ x₂) x₁ = {!!}
+ --  pop ((true , snd₁) ∷ x₂) x₁ = {!!}
+ --  pop (inv∷ b ixG x i) x₁ = {!!}
+ --  pop (trunc x x₂ x₃ y i i₁) x₁ = {!!}
+
+  -- ηInv : ∀ a a' → η a ≡ η a' → a ≡ a'
+  -- ηInv = {!!}
+  -- _fc∷_ = FcCons.fcCons _∷_
+
+  -- IxR = Σ _ (_∈ rels)
+
+  -- ∷iso : IxG → Iso T T
+  -- Iso.fun (∷iso x) = (true , x) ∷_
+  -- Iso.inv (∷iso x) = (false , x) ∷_
+  -- Iso.rightInv (∷iso x) = inv∷ false x 
+  -- Iso.leftInv (∷iso x) = inv∷ true x
   
-  ∷fcIso : Fc → Iso T T
-  Iso.fun (∷fcIso x) = x fc∷_
-  Iso.inv (∷fcIso x) = notFC x fc∷_
-  Iso.rightInv (∷fcIso (fc false x₁)) = inv∷ _ _
-  Iso.rightInv (∷fcIso (fc true x₁)) = inv∷ _ _
-  Iso.rightInv (∷fcIso cns) _ = refl
-  Iso.leftInv (∷fcIso (fc x x₁)) = inv∷ _ _
-  Iso.leftInv (∷fcIso cns) _ = refl
+  -- η : IxG → T
+  -- η = (_∷ ε) ∘ (true ,_)
+
+  -- η⁻ : IxG → T
+  -- η⁻ = (_∷ ε) ∘ (false ,_)
+
+
+  -- ∷≃ : IxG → T ≃ T
+  -- ∷≃ = isoToEquiv ∘ ∷iso
+
+  -- ∷fcIso' : Fc → Iso T T
+  -- ∷fcIso' (fc x x₁) = 𝟚.if x then ∷iso x₁ else (invIso (∷iso x₁)) 
+  -- ∷fcIso' cns = idIso
+
+  -- notFC : Fc → Fc
+  -- notFC (fc x x₁) = fc (𝟚.not x) x₁
+  -- notFC cns = cns
+
+  -- invFC∷ : ∀ fc xs → (notFC fc fc∷ fc fc∷ xs) ≡ xs 
+  -- invFC∷ (fc x x₁) xs = inv∷ _ _ _
+  -- invFC∷ cns xs = refl
+
+  -- invFC∷' : ∀ fc xs → (fc fc∷ (notFC fc) fc∷ xs) ≡ xs 
+  -- invFC∷' (fc false x₁) xs = inv∷ _ _ _
+  -- invFC∷' (fc true x₁) xs = inv∷ _ _ _
+  -- invFC∷' cns xs = refl
+  
+  -- relInv : (ixR : IxR) → 
+  --        notFC (fc₀₋ (fst ixR)) fc∷ notFC (fc₋₁ (fst ixR)) fc∷ ε ≡
+  --        notFC (fc₋₀ (fst ixR)) fc∷ notFC (fc₁₋ (fst ixR)) fc∷ ε
+  -- relInv ixR@(s , s∈) = 
+  --     sym (invFC∷ (fc₋₀ (fst ixR)) _) ∙∙
+  --      cong (notFC (fc₋₀ (fst ixR)) fc∷_)
+  --        (sym (invFC∷ (fc₁₋ (fst ixR)) _))
+  --      ∙∙ cong ((notFC (fc₋₀ (fst ixR)) fc∷_) ∘'
+  --         (notFC (fc₁₋ (fst ixR)) fc∷_)) (sym (rel s s∈
+  --           (notFC (fc₀₋ (fst ixR)) fc∷ (notFC (fc₋₁ (fst ixR)) fc∷ ε)))) ∙∙
+  --      cong ((notFC (fc₋₀ (fst ixR)) fc∷_)
+  --           ∘' ((notFC (fc₁₋ (fst ixR)) fc∷_)
+  --             ∘' ((fc₋₁ (fst ixR)) fc∷_)))
+  --             (invFC∷' (fc₀₋ (fst ixR)) _) ∙∙
+  --        cong ((notFC (fc₋₀ (fst ixR)) fc∷_)
+  --           ∘' ((notFC (fc₁₋ (fst ixR)) fc∷_)))
+  --            (invFC∷' (fc₋₁ (fst ixR)) _)
+  
+  -- ∷fcIso : Fc → Iso T T
+  -- Iso.fun (∷fcIso x) = x fc∷_
+  -- Iso.inv (∷fcIso x) = notFC x fc∷_
+  -- Iso.rightInv (∷fcIso (fc false x₁)) = inv∷ _ _
+  -- Iso.rightInv (∷fcIso (fc true x₁)) = inv∷ _ _
+  -- Iso.rightInv (∷fcIso cns) _ = refl
+  -- Iso.leftInv (∷fcIso (fc x x₁)) = inv∷ _ _
+  -- Iso.leftInv (∷fcIso cns) _ = refl
 
  
-  ∷fc≃ : Fc → T ≃ T
-  ∷fc≃ = isoToEquiv ∘ ∷fcIso
+  -- ∷fc≃ : Fc → T ≃ T
+  -- ∷fc≃ = isoToEquiv ∘ ∷fcIso
 
-  ∷inv≃P : ∀ b → (ixG : IxG) →
-            PathP (λ i → T → ua (∷fc≃ (fc (𝟚.not b) ixG)) i)
-               (λ x → (b , ixG) ∷ x)
-               (λ x → x) 
-  ∷inv≃P b ixG = funExt (ua-gluePath _ ∘ (inv∷ b ixG))
+  -- ∷inv≃P : ∀ b → (ixG : IxG) →
+  --           PathP (λ i → T → ua (∷fc≃ (fc (𝟚.not b) ixG)) i)
+  --              (λ x → (b , ixG) ∷ x)
+  --              (λ x → x) 
+  -- ∷inv≃P b ixG = funExt (ua-gluePath _ ∘ (inv∷ b ixG))
  
 
-  rel≃ : ∀ ixR → ∷fc≃ (fc₀₋ (fst ixR)) ∙ₑ ∷fc≃ (fc₋₁ (fst ixR))
-               ≡ ∷fc≃ (fc₋₀ (fst ixR)) ∙ₑ ∷fc≃ (fc₁₋ (fst ixR))
-  rel≃ (s , s∈)  = equivEq (funExt (rel s s∈))
+  -- rel≃ : ∀ ixR → ∷fc≃ (fc₀₋ (fst ixR)) ∙ₑ ∷fc≃ (fc₋₁ (fst ixR))
+  --              ≡ ∷fc≃ (fc₋₀ (fst ixR)) ∙ₑ ∷fc≃ (fc₁₋ (fst ixR))
+  -- rel≃ (s , s∈)  = equivEq (funExt (rel s s∈))
 
   
 
-  module _ (f : Sq) where
-   module F≃ = Faces f (ua ∘ ∷fc≃)
+  -- module _ (f : Sq) where
+  --  module F≃ = Faces f (ua ∘ ∷fc≃)
 
-  module _ (f : Sq) where
-   module F≡ = Faces f (mkFc≡ (ua ∘ ∷≃))
+  -- module _ (f : Sq) where
+  --  module F≡ = Faces f (mkFc≡ (ua ∘ ∷≃))
 
-  mkFc≡uaLem : ∀ fc →  mkFc≡ (ua ∘ ∷≃) fc ≡ ua (∷fc≃ fc) 
-  mkFc≡uaLem (fc false x₁) = sym (uaInvEquiv _) ∙ cong ua (equivEq refl)
-  mkFc≡uaLem (fc true x₁) = cong ua (equivEq refl)
-  mkFc≡uaLem cns =  sym uaIdEquiv ∙ cong ua (equivEq refl)
+  -- mkFc≡uaLem : ∀ fc →  mkFc≡ (ua ∘ ∷≃) fc ≡ ua (∷fc≃ fc) 
+  -- mkFc≡uaLem (fc false x₁) = sym (uaInvEquiv _) ∙ cong ua (equivEq refl)
+  -- mkFc≡uaLem (fc true x₁) = cong ua (equivEq refl)
+  -- mkFc≡uaLem cns =  sym uaIdEquiv ∙ cong ua (equivEq refl)
 
-  rel≡Sq : ∀ ixR → F≡.SqTy (fst ixR)
-  rel≡Sq ixR = flipSquare (compPath→Square
-    (
-       ((cong₂ _∙_
-         (mkFc≡uaLem (fc₀₋ (fst ixR)))
-         (mkFc≡uaLem (fc₋₁ (fst ixR)))
-         ∙ sym (uaCompEquiv _ _))
-        ◁ cong ua (  (rel≃ ixR)) ▷
-         (uaCompEquiv _ _ ∙
-           cong₂ _∙_
-            (sym (mkFc≡uaLem (fc₋₀ (fst ixR))))
-            (sym (mkFc≡uaLem (fc₁₋ (fst ixR))))
-                     ))))
+  -- rel≡Sq : ∀ ixR → F≡.SqTy (fst ixR)
+  -- rel≡Sq ixR = flipSquare (compPath→Square
+  --   (
+  --      ((cong₂ _∙_
+  --        (mkFc≡uaLem (fc₀₋ (fst ixR)))
+  --        (mkFc≡uaLem (fc₋₁ (fst ixR)))
+  --        ∙ sym (uaCompEquiv _ _))
+  --       ◁ cong ua (  (rel≃ ixR)) ▷
+  --        (uaCompEquiv _ _ ∙
+  --          cong₂ _∙_
+  --           (sym (mkFc≡uaLem (fc₋₀ (fst ixR))))
+  --           (sym (mkFc≡uaLem (fc₁₋ (fst ixR))))
+  --                    ))))
     
-    -- {!!} ◁  {!!} ▷ {!!} 
-    -- Glue (ua (rel≃ ixR i) j)
-    -- -- Glue T {i ∨ ~ i ∨ j ∨ ~ j}
-    --   λ { (i = i0) → pa₀₋ j , {!!}
-    --      ; (i = i1) → pa₁₋ j , {!!}
-    --      ; (j = i0) → pa₋₀ i , {!!}
-    --      ; (j = i1) → pa₋₁ i , {!!}
-    --      }
-    where
-    open F≡ (fst ixR)
+  --   -- {!!} ◁  {!!} ▷ {!!} 
+  --   -- Glue (ua (rel≃ ixR i) j)
+  --   -- -- Glue T {i ∨ ~ i ∨ j ∨ ~ j}
+  --   --   λ { (i = i0) → pa₀₋ j , {!!}
+  --   --      ; (i = i1) → pa₁₋ j , {!!}
+  --   --      ; (j = i0) → pa₋₀ i , {!!}
+  --   --      ; (j = i1) → pa₋₁ i , {!!}
+  --   --      }
+  --   where
+  --   open F≡ (fst ixR)
 
     
-  module FcConsDep {ℓ*} {XS : T → Type ℓ*}
-            (cons : ∀ {xs} → (x : (𝟚 × IxG)) → XS xs → XS (x ∷ xs)) where
-   fcConsDep : ∀ {xs} → (x : Fc) → XS xs → XS (x fc∷ xs)
-   fcConsDep (fc x x₂) x₁ = cons (x , x₂) x₁
-   fcConsDep cns x₁ = x₁
+  -- module FcConsDep {ℓ*} {XS : T → Type ℓ*}
+  --           (cons : ∀ {xs} → (x : (𝟚 × IxG)) → XS xs → XS (x ∷ xs)) where
+  --  fcConsDep : ∀ {xs} → (x : Fc) → XS xs → XS (x fc∷ xs)
+  --  fcConsDep (fc x x₂) x₁ = cons (x , x₂) x₁
+  --  fcConsDep cns x₁ = x₁
 
 
-  record RecT {ℓ*} (A : Type ℓ*) : Type (ℓ-max ℓ* ℓ) where
-   no-eta-equality
-   field
-    isSetA : isSet A
-    εA : A
-    ∷A : 𝟚 → IxG → A → A
-    inv∷A : ∀ b ixG a → ∷A (𝟚.not b) ixG (∷A b ixG a) ≡ a
+  -- record RecT {ℓ*} (A : Type ℓ*) : Type (ℓ-max ℓ* ℓ) where
+  --  no-eta-equality
+  --  field
+  --   isSetA : isSet A
+  --   εA : A
+  --   ∷A : 𝟚 → IxG → A → A
+  --   inv∷A : ∀ b ixG a → ∷A (𝟚.not b) ixG (∷A b ixG a) ≡ a
 
-   infixr 5 _fc∷A_ 
+  --  infixr 5 _fc∷A_ 
 
-   _fc∷A_ : Fc → A → A
-   _fc∷A_ = FcCons.fcCons (uncurry ∷A) 
-   field
-    relA : ∀ (ixR : IxR) a →
-          fc₋₁ (fst ixR) fc∷A fc₀₋ (fst ixR) fc∷A a ≡
-          fc₁₋ (fst ixR) fc∷A fc₋₀ (fst ixR) fc∷A a
-
-   
-
-   f : T → A
-   f ε = εA
-   f (x ∷ x₁) = ∷A (fst x) (snd x) (f x₁)
-   f (inv∷ b ixG x i) = inv∷A b ixG (f x) i
-   f (rel s s∈ x i) with fc₋₀ s | fc₋₁ s | fc₀₋ s | fc₁₋ s | relA (s , s∈) (f x)
-   ... | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | fc x₇ x₈ | q = q i
-   ... | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | cns | q = q i
-   ... | fc x₁ x₂ | fc x₃ x₄ | cns | fc x₅ x₆ | q = q i
-   ... | fc x₁ x₂ | fc x₃ x₄ | cns | cns | q = q i
-   ... | fc x₁ x₂ | cns | fc x₃ x₄ | fc x₅ x₆ | q = q i 
-   ... | fc x₁ x₂ | cns | fc x₃ x₄ | cns | q = q i
-   ... | fc x₁ x₂ | cns | cns | fc x₃ x₄ | q = q i
-   ... | fc x₁ x₂ | cns | cns | cns | q = q i
-   ... | cns | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | q = q i
-   ... | cns | fc x₁ x₂ | fc x₃ x₄ | cns | q = q i
-   ... | cns | fc x₁ x₂ | cns | fc x₃ x₄ | q = q i
-   ... | cns | fc x₁ x₂ | cns | cns | q = q i
-   ... | cns | cns | fc x₁ x₂ | fc x₃ x₄ | q = q i
-   ... | cns | cns | fc x₁ x₂ | cns | q = q i
-   ... | cns | cns | cns | fc x₁ x₂ | q = q i
-   ... | cns | cns | cns | cns | q = q i
-   f (trunc _ _ p q i i₁) =
-     isSetA _ _ (cong f p) (cong f q) i i₁
-
-
-  record ElimT {ℓ*} (A : T → Type ℓ*) : Type (ℓ-max ℓ* ℓ) where
-   no-eta-equality
-   field
-    isSetA : ∀ x → isSet (A x)
-    εA : A ε
-    ∷A : ∀ {xs} → ∀ b x → A xs → A ((b , x) ∷ xs)
-
-    inv∷A : ∀ b (ixG : IxG) → ∀ {xs} a →
-      PathP (λ i → A (inv∷ b ixG xs i))
-       (∷A (𝟚.not b) ixG (∷A b ixG a)) a
-
-   infixr 5 _fc∷A_ 
-
-   _fc∷A_ = FcConsDep.fcConsDep (λ {xs} → uncurry (∷A {xs}))
-   
-   field
-    relA : ∀ (ixR : IxR) {xs} (a : A xs) →
-          PathP (λ i → A (rel _ (snd ixR) xs i ))
-          (fc₋₁ (fst ixR) fc∷A fc₀₋ (fst ixR) fc∷A a)
-          (fc₁₋ (fst ixR) fc∷A fc₋₀ (fst ixR) fc∷A a)
+  --  _fc∷A_ : Fc → A → A
+  --  _fc∷A_ = FcCons.fcCons (uncurry ∷A) 
+  --  field
+  --   relA : ∀ (ixR : IxR) a →
+  --         fc₋₁ (fst ixR) fc∷A fc₀₋ (fst ixR) fc∷A a ≡
+  --         fc₁₋ (fst ixR) fc∷A fc₋₀ (fst ixR) fc∷A a
 
    
 
-   f : ∀ x → A x
-   f ε = εA
-   f (x ∷ x₁) = ∷A (fst x) (snd x) (f x₁)
-   f (inv∷ b ixG x i) = inv∷A b ixG (f x) i
-   f (rel s s∈ x i) with fc₋₀ s | fc₋₁ s | fc₀₋ s | fc₁₋ s | relA (s , s∈) (f x)
-   ... | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | fc x₇ x₈ | q = q i
-   ... | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | cns | q = q i
-   ... | fc x₁ x₂ | fc x₃ x₄ | cns | fc x₅ x₆ | q = q i
-   ... | fc x₁ x₂ | fc x₃ x₄ | cns | cns | q = q i
-   ... | fc x₁ x₂ | cns | fc x₃ x₄ | fc x₅ x₆ | q = q i 
-   ... | fc x₁ x₂ | cns | fc x₃ x₄ | cns | q = q i
-   ... | fc x₁ x₂ | cns | cns | fc x₃ x₄ | q = q i
-   ... | fc x₁ x₂ | cns | cns | cns | q = q i
-   ... | cns | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | q = q i
-   ... | cns | fc x₁ x₂ | fc x₃ x₄ | cns | q = q i
-   ... | cns | fc x₁ x₂ | cns | fc x₃ x₄ | q = q i
-   ... | cns | fc x₁ x₂ | cns | cns | q = q i
-   ... | cns | cns | fc x₁ x₂ | fc x₃ x₄ | q = q i
-   ... | cns | cns | fc x₁ x₂ | cns | q = q i
-   ... | cns | cns | cns | fc x₁ x₂ | q = q i
-   ... | cns | cns | cns | cns | q = q i
-   f (trunc _ _ p q i i₁) =
-     isSet→SquareP (λ i j → isSetA (trunc _ _ p q i j))
-       (cong f p) (cong f q) refl refl  i i₁ 
+  --  f : T → A
+  --  f ε = εA
+  --  f (x ∷ x₁) = ∷A (fst x) (snd x) (f x₁)
+  --  f (inv∷ b ixG x i) = inv∷A b ixG (f x) i
+  --  f (rel s s∈ x i) with fc₋₀ s | fc₋₁ s | fc₀₋ s | fc₁₋ s | relA (s , s∈) (f x)
+  --  ... | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | fc x₇ x₈ | q = q i
+  --  ... | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | cns | q = q i
+  --  ... | fc x₁ x₂ | fc x₃ x₄ | cns | fc x₅ x₆ | q = q i
+  --  ... | fc x₁ x₂ | fc x₃ x₄ | cns | cns | q = q i
+  --  ... | fc x₁ x₂ | cns | fc x₃ x₄ | fc x₅ x₆ | q = q i 
+  --  ... | fc x₁ x₂ | cns | fc x₃ x₄ | cns | q = q i
+  --  ... | fc x₁ x₂ | cns | cns | fc x₃ x₄ | q = q i
+  --  ... | fc x₁ x₂ | cns | cns | cns | q = q i
+  --  ... | cns | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | q = q i
+  --  ... | cns | fc x₁ x₂ | fc x₃ x₄ | cns | q = q i
+  --  ... | cns | fc x₁ x₂ | cns | fc x₃ x₄ | q = q i
+  --  ... | cns | fc x₁ x₂ | cns | cns | q = q i
+  --  ... | cns | cns | fc x₁ x₂ | fc x₃ x₄ | q = q i
+  --  ... | cns | cns | fc x₁ x₂ | cns | q = q i
+  --  ... | cns | cns | cns | fc x₁ x₂ | q = q i
+  --  ... | cns | cns | cns | cns | q = q i
+  --  f (trunc _ _ p q i i₁) =
+  --    isSetA _ _ (cong f p) (cong f q) i i₁
+
+
+  -- record ElimT {ℓ*} (A : T → Type ℓ*) : Type (ℓ-max ℓ* ℓ) where
+  --  no-eta-equality
+  --  field
+  --   isSetA : ∀ x → isSet (A x)
+  --   εA : A ε
+  --   ∷A : ∀ {xs} → ∀ b x → A xs → A ((b , x) ∷ xs)
+
+  --   inv∷A : ∀ b (ixG : IxG) → ∀ {xs} a →
+  --     PathP (λ i → A (inv∷ b ixG xs i))
+  --      (∷A (𝟚.not b) ixG (∷A b ixG a)) a
+
+  --  infixr 5 _fc∷A_ 
+
+  --  _fc∷A_ = FcConsDep.fcConsDep (λ {xs} → uncurry (∷A {xs}))
+   
+  --  field
+  --   relA : ∀ (ixR : IxR) {xs} (a : A xs) →
+  --         PathP (λ i → A (rel _ (snd ixR) xs i ))
+  --         (fc₋₁ (fst ixR) fc∷A fc₀₋ (fst ixR) fc∷A a)
+  --         (fc₁₋ (fst ixR) fc∷A fc₋₀ (fst ixR) fc∷A a)
+
+   
+
+  --  f : ∀ x → A x
+  --  f ε = εA
+  --  f (x ∷ x₁) = ∷A (fst x) (snd x) (f x₁)
+  --  f (inv∷ b ixG x i) = inv∷A b ixG (f x) i
+  --  f (rel s s∈ x i) with fc₋₀ s | fc₋₁ s | fc₀₋ s | fc₁₋ s | relA (s , s∈) (f x)
+  --  ... | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | fc x₇ x₈ | q = q i
+  --  ... | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | cns | q = q i
+  --  ... | fc x₁ x₂ | fc x₃ x₄ | cns | fc x₅ x₆ | q = q i
+  --  ... | fc x₁ x₂ | fc x₃ x₄ | cns | cns | q = q i
+  --  ... | fc x₁ x₂ | cns | fc x₃ x₄ | fc x₅ x₆ | q = q i 
+  --  ... | fc x₁ x₂ | cns | fc x₃ x₄ | cns | q = q i
+  --  ... | fc x₁ x₂ | cns | cns | fc x₃ x₄ | q = q i
+  --  ... | fc x₁ x₂ | cns | cns | cns | q = q i
+  --  ... | cns | fc x₁ x₂ | fc x₃ x₄ | fc x₅ x₆ | q = q i
+  --  ... | cns | fc x₁ x₂ | fc x₃ x₄ | cns | q = q i
+  --  ... | cns | fc x₁ x₂ | cns | fc x₃ x₄ | q = q i
+  --  ... | cns | fc x₁ x₂ | cns | cns | q = q i
+  --  ... | cns | cns | fc x₁ x₂ | fc x₃ x₄ | q = q i
+  --  ... | cns | cns | fc x₁ x₂ | cns | q = q i
+  --  ... | cns | cns | cns | fc x₁ x₂ | q = q i
+  --  ... | cns | cns | cns | cns | q = q i
+  --  f (trunc _ _ p q i i₁) =
+  --    isSet→SquareP (λ i j → isSetA (trunc _ _ p q i j))
+  --      (cong f p) (cong f q) refl refl  i i₁ 
      
 
 
-  record ElimPropT {ℓ*} (A : T → Type ℓ*) : Type (ℓ-max ℓ* ℓ) where
-   no-eta-equality
-   field
-    isPropA : ∀ x → isProp (A x)
-    εA : A ε
-    ∷A : ∀ {xs} → ∀ b x → A xs → A ((b , x) ∷ xs)
+  -- record ElimPropT {ℓ*} (A : T → Type ℓ*) : Type (ℓ-max ℓ* ℓ) where
+  --  no-eta-equality
+  --  field
+  --   isPropA : ∀ x → isProp (A x)
+  --   εA : A ε
+  --   ∷A : ∀ {xs} → ∀ b x → A xs → A ((b , x) ∷ xs)
 
-   r : ElimT A
-   ElimT.isSetA r = isProp→isSet ∘ isPropA
-   ElimT.εA r = εA
-   ElimT.∷A r = ∷A
-   ElimT.inv∷A r _ _ _ =
-    isProp→PathP (λ i → isPropA _)
-     _ _
-   ElimT.relA r _ _ =
-    isProp→PathP (λ i → isPropA _)
-     _ _
+  --  r : ElimT A
+  --  ElimT.isSetA r = isProp→isSet ∘ isPropA
+  --  ElimT.εA r = εA
+  --  ElimT.∷A r = ∷A
+  --  ElimT.inv∷A r _ _ _ =
+  --   isProp→PathP (λ i → isPropA _)
+  --    _ _
+  --  ElimT.relA r _ _ =
+  --   isProp→PathP (λ i → isPropA _)
+  --    _ _
 
-   f : ∀ x → A x
-   f = ElimT.f r
+  --  f : ∀ x → A x
+  --  f = ElimT.f r
    
-  ·R : T → RecT T
-  RecT.isSetA (·R y) = trunc
-  RecT.εA (·R y) = y
-  RecT.∷A (·R y) = curry _∷_
-  RecT.inv∷A (·R y) = inv∷
-  RecT.relA (·R y) = uncurry rel
+  -- ·R : T → RecT T
+  -- RecT.isSetA (·R y) = trunc
+  -- RecT.εA (·R y) = y
+  -- RecT.∷A (·R y) = curry _∷_
+  -- RecT.inv∷A (·R y) = inv∷
+  -- RecT.relA (·R y) = uncurry rel
   
-  _·_ : T → T → T
-  x · y = RecT.f (·R y) x
+  -- _·_ : T → T → T
+  -- x · y = RecT.f (·R y) x
 
 
-  ·IdR : ∀ x → x · ε ≡ x
-  ·IdR = ElimPropT.f w
-   where
-   w : ElimPropT (λ z → (z · ε) ≡ z)
-   ElimPropT.isPropA w _ = trunc _ _
-   ElimPropT.εA w = refl
-   ElimPropT.∷A w b x = cong ((b , x) ∷_)
+  -- ·IdR : ∀ x → x · ε ≡ x
+  -- ·IdR = ElimPropT.f w
+  --  where
+  --  w : ElimPropT (λ z → (z · ε) ≡ z)
+  --  ElimPropT.isPropA w _ = trunc _ _
+  --  ElimPropT.εA w = refl
+  --  ElimPropT.∷A w b x = cong ((b , x) ∷_)
    
-  ·IdL : ∀ x → ε · x ≡ x
-  ·IdL _ = refl
+  -- ·IdL : ∀ x → ε · x ≡ x
+  -- ·IdL _ = refl
 
-  ·assoc : (x y z : T) → (x · (y · z)) ≡ ((x · y) · z)
-  ·assoc = ElimPropT.f w
-   where
-   w : ElimPropT _
-   ElimPropT.isPropA w _ = isPropΠ2 λ _ _ → trunc _ _
-   ElimPropT.εA w _ _ = refl
-   ElimPropT.∷A w _ _ q = ElimPropT.f w'
-    where
-    w' : ElimPropT _
-    ElimPropT.isPropA w' _ = isPropΠ λ _ → trunc _ _
-    ElimPropT.εA w' _ = cong ((_ , _) ∷_) (q _ _)
-    ElimPropT.∷A w' b x x₁ x₂ =
-      cong ((_ , _) ∷_) (q _ _)
+  -- ·assoc : (x y z : T) → (x · (y · z)) ≡ ((x · y) · z)
+  -- ·assoc = ElimPropT.f w
+  --  where
+  --  w : ElimPropT _
+  --  ElimPropT.isPropA w _ = isPropΠ2 λ _ _ → trunc _ _
+  --  ElimPropT.εA w _ _ = refl
+  --  ElimPropT.∷A w _ _ q = ElimPropT.f w'
+  --   where
+  --   w' : ElimPropT _
+  --   ElimPropT.isPropA w' _ = isPropΠ λ _ → trunc _ _
+  --   ElimPropT.εA w' _ = cong ((_ , _) ∷_) (q _ _)
+  --   ElimPropT.∷A w' b x x₁ x₂ =
+  --     cong ((_ , _) ∷_) (q _ _)
 
-  fc→T : Fc → T
-  fc→T (fc x x₁) = (x , x₁) ∷ ε
-  fc→T cns = ε
+  -- fc→T : Fc → T
+  -- fc→T (fc x x₁) = (x , x₁) ∷ ε
+  -- fc→T cns = ε
   
-  _fc∷'_ : Fc → T → T
-  x fc∷' x₁ = fc→T x · x₁
+  -- _fc∷'_ : Fc → T → T
+  -- x fc∷' x₁ = fc→T x · x₁
 
-  fc∷≡fc∷' : ∀ fc → Path (T → T) (λ x → fc fc∷ x) (λ x → fc fc∷' x)  
-  fc∷≡fc∷' (fc x₁ x₂) i x = (x₁ , x₂) ∷ x
-  fc∷≡fc∷' cns i x = x
+  -- fc∷≡fc∷' : ∀ fc → Path (T → T) (λ x → fc fc∷ x) (λ x → fc fc∷' x)  
+  -- fc∷≡fc∷' (fc x₁ x₂) i x = (x₁ , x₂) ∷ x
+  -- fc∷≡fc∷' cns i x = x
 
-  invRLem : FcCons.fcCons (uncurry (λ b x xs → xs · ((𝟚.not b , x) ∷ ε)))
-             ≡ λ fc t → t · fc→T (notFC fc)
-  invRLem i (fc x x₂) x₁ = RecT.f (·R ((𝟚.not x , x₂) ∷ ε)) x₁
-  invRLem i cns x₁ = ·IdR x₁ (~ i)
+  -- invRLem : FcCons.fcCons (uncurry (λ b x xs → xs · ((𝟚.not b , x) ∷ ε)))
+  --            ≡ λ fc t → t · fc→T (notFC fc)
+  -- invRLem i (fc x x₂) x₁ = RecT.f (·R ((𝟚.not x , x₂) ∷ ε)) x₁
+  -- invRLem i cns x₁ = ·IdR x₁ (~ i)
 
-  invRLem' : ∀ x x' → (fc→T x · fc→T x')
-      ≡ x fc∷ x' fc∷ ε
-  invRLem' (fc x x₁) (fc x₂ x₃) = refl
-  invRLem' (fc x x₁) cns = refl
-  invRLem' cns (fc x x₁) = refl
-  invRLem' cns cns = refl
+  -- invRLem' : ∀ x x' → (fc→T x · fc→T x')
+  --     ≡ x fc∷ x' fc∷ ε
+  -- invRLem' (fc x x₁) (fc x₂ x₃) = refl
+  -- invRLem' (fc x x₁) cns = refl
+  -- invRLem' cns (fc x x₁) = refl
+  -- invRLem' cns cns = refl
 
 
   
 
-  rel' : ∀ ixR → (fc→T (notFC (fc₀₋ (fst ixR))) ·
-        fc→T (notFC (fc₋₁ (fst ixR))))
-       ≡ (fc→T (notFC (fc₋₀ (fst ixR))) · fc→T (notFC (fc₁₋ (fst ixR))))
-  rel' ixR =
-     invRLem' (notFC (fc₀₋ (fst ixR))) (notFC (fc₋₁ (fst ixR)))
-      ∙∙  (relInv ixR) ∙∙
-      sym (invRLem' ((notFC (fc₋₀ (fst ixR))))
-           ((notFC (fc₁₋ (fst ixR)))))
+  -- rel' : ∀ ixR → (fc→T (notFC (fc₀₋ (fst ixR))) ·
+  --       fc→T (notFC (fc₋₁ (fst ixR))))
+  --      ≡ (fc→T (notFC (fc₋₀ (fst ixR))) · fc→T (notFC (fc₁₋ (fst ixR))))
+  -- rel' ixR =
+  --    invRLem' (notFC (fc₀₋ (fst ixR))) (notFC (fc₋₁ (fst ixR)))
+  --     ∙∙  (relInv ixR) ∙∙
+  --     sym (invRLem' ((notFC (fc₋₀ (fst ixR))))
+  --          ((notFC (fc₁₋ (fst ixR)))))
 
 
-  invR : RecT T
-  RecT.isSetA invR = trunc
-  RecT.εA invR = ε
-  RecT.∷A invR b x xs = xs · ((𝟚.not b , x) ∷ ε)
-  RecT.inv∷A invR b ixG a  =
-     (λ i → (·assoc a ((𝟚.not b , ixG) ∷ ε)
-              ((𝟚.notnot b i , ixG) ∷ ε)) (~ i)) ∙∙
-      cong (a ·_)
-        (inv∷ b ixG ε)
-        ∙∙ ·IdR _
-  RecT.relA invR ixR a =
-    (λ i →
-      invRLem i (fc₋₁ (fst ixR)) (invRLem i (fc₀₋ (fst ixR)) a)) 
-     ∙∙ sym (·assoc a _ _) ∙∙
-       cong (a ·_) (rel' ixR)
-       ∙∙ (·assoc a _ _) ∙∙
-    (λ i →
-      invRLem (~ i) (fc₁₋ (fst ixR)) (invRLem (~ i) (fc₋₀ (fst ixR)) a))
+  -- invR : RecT T
+  -- RecT.isSetA invR = trunc
+  -- RecT.εA invR = ε
+  -- RecT.∷A invR b x xs = xs · ((𝟚.not b , x) ∷ ε)
+  -- RecT.inv∷A invR b ixG a  =
+  --    (λ i → (·assoc a ((𝟚.not b , ixG) ∷ ε)
+  --             ((𝟚.notnot b i , ixG) ∷ ε)) (~ i)) ∙∙
+  --     cong (a ·_)
+  --       (inv∷ b ixG ε)
+  --       ∙∙ ·IdR _
+  -- RecT.relA invR ixR a =
+  --   (λ i →
+  --     invRLem i (fc₋₁ (fst ixR)) (invRLem i (fc₀₋ (fst ixR)) a)) 
+  --    ∙∙ sym (·assoc a _ _) ∙∙
+  --      cong (a ·_) (rel' ixR)
+  --      ∙∙ (·assoc a _ _) ∙∙
+  --   (λ i →
+  --     invRLem (~ i) (fc₁₋ (fst ixR)) (invRLem (~ i) (fc₋₀ (fst ixR)) a))
 
-  inv : T → T
-  inv = RecT.f invR
+  -- inv : T → T
+  -- inv = RecT.f invR
 
-  ·InvR : ∀ x → x · inv x ≡ ε
-  ·InvR = ElimPropT.f w
-   where
-   w : ElimPropT _
-   ElimPropT.isPropA w _ = trunc _ _
-   ElimPropT.εA w = refl
-   ElimPropT.∷A w {xs} b x  p = ·assoc ((b , x) ∷ xs ) (inv xs) _ ∙∙
-    (λ i → ((𝟚.notnot b (~ i) , x) ∷ p i) · ((𝟚.not b , x) ∷ ε)) ∙∙
-     (inv∷ (𝟚.not b) x ε) 
+  -- ·InvR : ∀ x → x · inv x ≡ ε
+  -- ·InvR = ElimPropT.f w
+  --  where
+  --  w : ElimPropT _
+  --  ElimPropT.isPropA w _ = trunc _ _
+  --  ElimPropT.εA w = refl
+  --  ElimPropT.∷A w {xs} b x  p = ·assoc ((b , x) ∷ xs ) (inv xs) _ ∙∙
+  --   (λ i → ((𝟚.notnot b (~ i) , x) ∷ p i) · ((𝟚.not b , x) ∷ ε)) ∙∙
+  --    (inv∷ (𝟚.not b) x ε) 
 
-  ·InvL : ∀ x → inv x · x ≡ ε
-  ·InvL = ElimPropT.f w
-   where
-   w : ElimPropT _
-   ElimPropT.isPropA w _ = trunc _ _
-   ElimPropT.εA w = refl
-   ElimPropT.∷A w {xs} b x p =
-      sym (·assoc (inv xs) _ _) ∙∙
-       cong ((inv xs) ·_) (inv∷ b x _) ∙∙ p 
-
-
-  GroupT : Group ℓ
-  GroupT = makeGroup
-    ε
-    _·_
-    inv trunc
-     ·assoc ·IdR ·IdL ·InvR ·InvL
+  -- ·InvL : ∀ x → inv x · x ≡ ε
+  -- ·InvL = ElimPropT.f w
+  --  where
+  --  w : ElimPropT _
+  --  ElimPropT.isPropA w _ = trunc _ _
+  --  ElimPropT.εA w = refl
+  --  ElimPropT.∷A w {xs} b x p =
+  --     sym (·assoc (inv xs) _ _) ∙∙
+  --      cong ((inv xs) ·_) (inv∷ b x _) ∙∙ p 
 
 
+  -- GroupT : Group ℓ
+  -- GroupT = makeGroup
+  --   ε
+  --   _·_
+  --   inv trunc
+  --    ·assoc ·IdR ·IdL ·InvR ·InvL
 
-  data 𝔹T : Type ℓ
-
-  base' : 𝔹T
-  loop' : IxG → base' ≡ base'
 
 
-  module _ (f : Sq) where
-   open Faces f (mkFc≡ loop') public
+  -- data 𝔹T : Type ℓ
+
+  -- base' : 𝔹T
+  -- loop' : IxG → base' ≡ base'
+
+
+  -- module _ (f : Sq) where
+  --  open Faces f (mkFc≡ loop') public
    
-  data 𝔹T where
-   base : 𝔹T
-   loop : IxG → base ≡ base
-   relSq : (r : IxR) →
-     Square {A = 𝔹T}
-       (pa₀₋ (fst r))
-       (pa₁₋ (fst r))
-       (pa₋₀ (fst r))
-       (pa₋₁ (fst r))
-   trunc : isGroupoid 𝔹T
+  -- data 𝔹T where
+  --  base : 𝔹T
+  --  loop : IxG → base ≡ base
+  --  relSq : (r : IxR) →
+  --    Square {A = 𝔹T}
+  --      (pa₀₋ (fst r))
+  --      (pa₁₋ (fst r))
+  --      (pa₋₀ (fst r))
+  --      (pa₋₁ (fst r))
+  --  trunc : isGroupoid 𝔹T
 
-  base' = base
-  loop' = loop
-
-
-  record Rec𝔹T' {ℓa} (A : Type ℓa) : Type (ℓ-max ℓa ℓ) where
-   no-eta-equality
-   field
-    baseA : A
-    loopA : IxG → baseA ≡ baseA
-
-   fcA : Fc → baseA ≡ baseA
-   fcA = mkFc≡ {A = A} {base = baseA} loopA 
-   field
-    relSqA : (r : IxR) →
-      Square {A = A}
-        (Faces.pa₀₋ (fst r) {base = baseA} fcA)
-        (Faces.pa₁₋ (fst r) {base = baseA} fcA)
-        (Faces.pa₋₀ (fst r) {base = baseA} fcA)
-        (Faces.pa₋₁ (fst r) {base = baseA} fcA)
+  -- base' = base
+  -- loop' = loop
 
 
-  record Rec𝔹T {ℓa} (A : Type ℓa) : Type (ℓ-max ℓa ℓ) where
-   no-eta-equality
-   field
-    isGroupoidA : isGroupoid A 
-    baseA : A
-    loopA : IxG → baseA ≡ baseA
+  -- record Rec𝔹T' {ℓa} (A : Type ℓa) : Type (ℓ-max ℓa ℓ) where
+  --  no-eta-equality
+  --  field
+  --   baseA : A
+  --   loopA : IxG → baseA ≡ baseA
 
-   fcA : Fc → baseA ≡ baseA
-   fcA = mkFc≡ {A = A} {base = baseA} loopA 
-   field
-    relSqA : (r : IxR) →
-      Square {A = A}
-        (Faces.pa₀₋ (fst r) {base = baseA} fcA)
-        (Faces.pa₁₋ (fst r) {base = baseA} fcA)
-        (Faces.pa₋₀ (fst r) {base = baseA} fcA)
-        (Faces.pa₋₁ (fst r) {base = baseA} fcA)
+  --  fcA : Fc → baseA ≡ baseA
+  --  fcA = mkFc≡ {A = A} {base = baseA} loopA 
+  --  field
+  --   relSqA : (r : IxR) →
+  --     Square {A = A}
+  --       (Faces.pa₀₋ (fst r) {base = baseA} fcA)
+  --       (Faces.pa₁₋ (fst r) {base = baseA} fcA)
+  --       (Faces.pa₋₀ (fst r) {base = baseA} fcA)
+  --       (Faces.pa₋₁ (fst r) {base = baseA} fcA)
+
+
+  -- record Rec𝔹T {ℓa} (A : Type ℓa) : Type (ℓ-max ℓa ℓ) where
+  --  no-eta-equality
+  --  field
+  --   isGroupoidA : isGroupoid A 
+  --   baseA : A
+  --   loopA : IxG → baseA ≡ baseA
+
+  --  fcA : Fc → baseA ≡ baseA
+  --  fcA = mkFc≡ {A = A} {base = baseA} loopA 
+  --  field
+  --   relSqA : (r : IxR) →
+  --     Square {A = A}
+  --       (Faces.pa₀₋ (fst r) {base = baseA} fcA)
+  --       (Faces.pa₁₋ (fst r) {base = baseA} fcA)
+  --       (Faces.pa₋₀ (fst r) {base = baseA} fcA)
+  --       (Faces.pa₋₁ (fst r) {base = baseA} fcA)
                 
-   f : 𝔹T → A
-   f base = baseA
-   f (loop x i) = loopA x i
-   -- f (loopSym b ixG i i₁) = loopSymA b ixG i i₁
-   f (relSq ixR i j) with fc₋₀ (fst ixR) | fc₋₁ (fst ixR) | fc₀₋ (fst ixR) | fc₁₋ (fst ixR) | relSqA ixR
-   ... | fc false x₁ | fc false x₃ | fc false x₅ | fc false x₇ | q = q i j
-   ... | fc false x₁ | fc false x₃ | fc false x₅ | fc true x₇ | q = q i j
-   ... | fc false x₁ | fc false x₃ | fc true x₅ | fc false x₇ | q = q i j
-   ... | fc false x₁ | fc false x₃ | fc true x₅ | fc true x₇ | q = q i j
-   ... | fc false x₁ | fc true x₃ | fc false x₅ | fc false x₇ | q = q i j
-   ... | fc false x₁ | fc true x₃ | fc false x₅ | fc true x₇ | q = q i j
-   ... | fc false x₁ | fc true x₃ | fc true x₅ | fc false x₇ | q = q i j
-   ... | fc false x₁ | fc true x₃ | fc true x₅ | fc true x₇ | q = q i j
-   ... | fc true x₁ | fc false x₃ | fc false x₅ | fc false x₇ | q = q i j
-   ... | fc true x₁ | fc false x₃ | fc false x₅ | fc true x₇ | q = q i j
-   ... | fc true x₁ | fc false x₃ | fc true x₅ | fc false x₇ | q = q i j
-   ... | fc true x₁ | fc false x₃ | fc true x₅ | fc true x₇ | q = q i j
-   ... | fc true x₁ | fc true x₃ | fc false x₅ | fc false x₇ | q = q i j
-   ... | fc true x₁ | fc true x₃ | fc false x₅ | fc true x₇ | q = q i j
-   ... | fc true x₁ | fc true x₃ | fc true x₅ | fc false x₇ | q = q i j
-   ... | fc true x₁ | fc true x₃ | fc true x₅ | fc true x₇ | q = q i j
-   ... | fc false x₁ | fc false x₃ | fc false x₅ | cns | q = q i j
-   ... | fc false x₁ | fc false x₃ | fc true x₅ | cns | q = q i j
-   ... | fc false x₁ | fc true x₃ | fc false x₅ | cns | q = q i j
-   ... | fc false x₁ | fc true x₃ | fc true x₅ | cns | q = q i j
-   ... | fc true x₁ | fc false x₃ | fc false x₅ | cns | q = q i j
-   ... | fc true x₁ | fc false x₃ | fc true x₅ | cns | q = q i j
-   ... | fc true x₁ | fc true x₃ | fc false x₅ | cns | q = q i j
-   ... | fc true x₁ | fc true x₃ | fc true x₅ | cns | q = q i j
-   ... | fc false x₁ | fc false x₃ | cns | fc false x₅ | q = q i j
-   ... | fc false x₁ | fc false x₃ | cns | fc true x₅ | q = q i j
-   ... | fc false x₁ | fc true x₃ | cns | fc false x₅ | q = q i j
-   ... | fc false x₁ | fc true x₃ | cns | fc true x₅ | q = q i j
-   ... | fc true x₁ | fc false x₃ | cns | fc false x₅ | q = q i j
-   ... | fc true x₁ | fc false x₃ | cns | fc true x₅ | q = q i j
-   ... | fc true x₁ | fc true x₃ | cns | fc false x₅ | q = q i j
-   ... | fc true x₁ | fc true x₃ | cns | fc true x₅ | q = q i j
-   ... | fc false x₁ | fc false x₃ | cns | cns | q = q i j
-   ... | fc false x₁ | fc true x₃ | cns | cns | q = q i j
-   ... | fc true x₁ | fc false x₃ | cns | cns | q = q i j
-   ... | fc true x₁ | fc true x₃ | cns | cns | q = q i j
-   ... | fc false x₁ | cns | fc false x₃ | fc false x₅ | q = q i j
-   ... | fc false x₁ | cns | fc false x₃ | fc true x₅ | q = q i j
-   ... | fc false x₁ | cns | fc true x₃ | fc false x₅ | q = q i j
-   ... | fc false x₁ | cns | fc true x₃ | fc true x₅ | q = q i j
-   ... | fc true x₁ | cns | fc false x₃ | fc false x₅ | q = q i j
-   ... | fc true x₁ | cns | fc false x₃ | fc true x₅ | q = q i j
-   ... | fc true x₁ | cns | fc true x₃ | fc false x₅ | q = q i j
-   ... | fc true x₁ | cns | fc true x₃ | fc true x₅ | q = q i j
-   ... | fc false x₁ | cns | fc false x₃ | cns | q = q i j
-   ... | fc false x₁ | cns | fc true x₃ | cns | q = q i j
-   ... | fc true x₁ | cns | fc false x₃ | cns | q = q i j
-   ... | fc true x₁ | cns | fc true x₃ | cns | q = q i j
-   ... | fc false x₁ | cns | cns | fc false x₃ | q = q i j
-   ... | fc false x₁ | cns | cns | fc true x₃ | q = q i j
-   ... | fc true x₁ | cns | cns | fc false x₃ | q = q i j
-   ... | fc true x₁ | cns | cns | fc true x₃ | q = q i j
-   ... | fc false x₁ | cns | cns | cns | q = q i j
-   ... | fc true x₁ | cns | cns | cns | q = q i j
-   ... | cns | fc false x₁ | fc false x₃ | fc false x₅ | q = q i j
-   ... | cns | fc false x₁ | fc false x₃ | fc true x₅ | q = q i j
-   ... | cns | fc false x₁ | fc true x₃ | fc false x₅ | q = q i j
-   ... | cns | fc false x₁ | fc true x₃ | fc true x₅ | q = q i j
-   ... | cns | fc true x₁ | fc false x₃ | fc false x₅ | q = q i j
-   ... | cns | fc true x₁ | fc false x₃ | fc true x₅ | q = q i j
-   ... | cns | fc true x₁ | fc true x₃ | fc false x₅ | q = q i j
-   ... | cns | fc true x₁ | fc true x₃ | fc true x₅ | q = q i j
-   ... | cns | fc false x₁ | fc false x₃ | cns | q = q i j
-   ... | cns | fc false x₁ | fc true x₃ | cns | q = q i j
-   ... | cns | fc true x₁ | fc false x₃ | cns | q = q i j
-   ... | cns | fc true x₁ | fc true x₃ | cns | q = q i j
-   ... | cns | fc false x₁ | cns | fc false x₃ | q = q i j
-   ... | cns | fc false x₁ | cns | fc true x₃ | q = q i j
-   ... | cns | fc true x₁ | cns | fc false x₃ | q = q i j
-   ... | cns | fc true x₁ | cns | fc true x₃ | q = q i j
-   ... | cns | fc false x₁ | cns | cns | q = q i j
-   ... | cns | fc true x₁ | cns | cns | q = q i j
-   ... | cns | cns | fc false x₁ | fc false x₃ | q = q i j
-   ... | cns | cns | fc false x₁ | fc true x₃ | q = q i j
-   ... | cns | cns | fc true x₁ | fc false x₃ | q = q i j
-   ... | cns | cns | fc true x₁ | fc true x₃ | q = q i j
-   ... | cns | cns | fc false x₁ | cns | q = q i j
-   ... | cns | cns | fc true x₁ | cns | q = q i j
-   ... | cns | cns | cns | fc false x₁ | q = q i j
-   ... | cns | cns | cns | fc true x₁ | q = q i j
-   ... | cns | cns | cns | cns | q = q i j
+  --  f : 𝔹T → A
+  --  f base = baseA
+  --  f (loop x i) = loopA x i
+  --  -- f (loopSym b ixG i i₁) = loopSymA b ixG i i₁
+  --  f (relSq ixR i j) with fc₋₀ (fst ixR) | fc₋₁ (fst ixR) | fc₀₋ (fst ixR) | fc₁₋ (fst ixR) | relSqA ixR
+  --  ... | fc false x₁ | fc false x₃ | fc false x₅ | fc false x₇ | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | fc false x₅ | fc true x₇ | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | fc true x₅ | fc false x₇ | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | fc true x₅ | fc true x₇ | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | fc false x₅ | fc false x₇ | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | fc false x₅ | fc true x₇ | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | fc true x₅ | fc false x₇ | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | fc true x₅ | fc true x₇ | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | fc false x₅ | fc false x₇ | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | fc false x₅ | fc true x₇ | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | fc true x₅ | fc false x₇ | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | fc true x₅ | fc true x₇ | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | fc false x₅ | fc false x₇ | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | fc false x₅ | fc true x₇ | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | fc true x₅ | fc false x₇ | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | fc true x₅ | fc true x₇ | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | fc false x₅ | cns | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | fc true x₅ | cns | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | fc false x₅ | cns | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | fc true x₅ | cns | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | fc false x₅ | cns | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | fc true x₅ | cns | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | fc false x₅ | cns | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | fc true x₅ | cns | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | cns | fc false x₅ | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | cns | fc true x₅ | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | cns | fc false x₅ | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | cns | fc true x₅ | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | cns | fc false x₅ | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | cns | fc true x₅ | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | cns | fc false x₅ | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | cns | fc true x₅ | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | cns | cns | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | cns | cns | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | cns | cns | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | cns | cns | q = q i j
+  --  ... | fc false x₁ | cns | fc false x₃ | fc false x₅ | q = q i j
+  --  ... | fc false x₁ | cns | fc false x₃ | fc true x₅ | q = q i j
+  --  ... | fc false x₁ | cns | fc true x₃ | fc false x₅ | q = q i j
+  --  ... | fc false x₁ | cns | fc true x₃ | fc true x₅ | q = q i j
+  --  ... | fc true x₁ | cns | fc false x₃ | fc false x₅ | q = q i j
+  --  ... | fc true x₁ | cns | fc false x₃ | fc true x₅ | q = q i j
+  --  ... | fc true x₁ | cns | fc true x₃ | fc false x₅ | q = q i j
+  --  ... | fc true x₁ | cns | fc true x₃ | fc true x₅ | q = q i j
+  --  ... | fc false x₁ | cns | fc false x₃ | cns | q = q i j
+  --  ... | fc false x₁ | cns | fc true x₃ | cns | q = q i j
+  --  ... | fc true x₁ | cns | fc false x₃ | cns | q = q i j
+  --  ... | fc true x₁ | cns | fc true x₃ | cns | q = q i j
+  --  ... | fc false x₁ | cns | cns | fc false x₃ | q = q i j
+  --  ... | fc false x₁ | cns | cns | fc true x₃ | q = q i j
+  --  ... | fc true x₁ | cns | cns | fc false x₃ | q = q i j
+  --  ... | fc true x₁ | cns | cns | fc true x₃ | q = q i j
+  --  ... | fc false x₁ | cns | cns | cns | q = q i j
+  --  ... | fc true x₁ | cns | cns | cns | q = q i j
+  --  ... | cns | fc false x₁ | fc false x₃ | fc false x₅ | q = q i j
+  --  ... | cns | fc false x₁ | fc false x₃ | fc true x₅ | q = q i j
+  --  ... | cns | fc false x₁ | fc true x₃ | fc false x₅ | q = q i j
+  --  ... | cns | fc false x₁ | fc true x₃ | fc true x₅ | q = q i j
+  --  ... | cns | fc true x₁ | fc false x₃ | fc false x₅ | q = q i j
+  --  ... | cns | fc true x₁ | fc false x₃ | fc true x₅ | q = q i j
+  --  ... | cns | fc true x₁ | fc true x₃ | fc false x₅ | q = q i j
+  --  ... | cns | fc true x₁ | fc true x₃ | fc true x₅ | q = q i j
+  --  ... | cns | fc false x₁ | fc false x₃ | cns | q = q i j
+  --  ... | cns | fc false x₁ | fc true x₃ | cns | q = q i j
+  --  ... | cns | fc true x₁ | fc false x₃ | cns | q = q i j
+  --  ... | cns | fc true x₁ | fc true x₃ | cns | q = q i j
+  --  ... | cns | fc false x₁ | cns | fc false x₃ | q = q i j
+  --  ... | cns | fc false x₁ | cns | fc true x₃ | q = q i j
+  --  ... | cns | fc true x₁ | cns | fc false x₃ | q = q i j
+  --  ... | cns | fc true x₁ | cns | fc true x₃ | q = q i j
+  --  ... | cns | fc false x₁ | cns | cns | q = q i j
+  --  ... | cns | fc true x₁ | cns | cns | q = q i j
+  --  ... | cns | cns | fc false x₁ | fc false x₃ | q = q i j
+  --  ... | cns | cns | fc false x₁ | fc true x₃ | q = q i j
+  --  ... | cns | cns | fc true x₁ | fc false x₃ | q = q i j
+  --  ... | cns | cns | fc true x₁ | fc true x₃ | q = q i j
+  --  ... | cns | cns | fc false x₁ | cns | q = q i j
+  --  ... | cns | cns | fc true x₁ | cns | q = q i j
+  --  ... | cns | cns | cns | fc false x₁ | q = q i j
+  --  ... | cns | cns | cns | fc true x₁ | q = q i j
+  --  ... | cns | cns | cns | cns | q = q i j
 
-   f (trunc x y p q r s i i₁ i₂) =
-     isGroupoidA _ _ _ _
-       (λ i j → f (r i j)) (λ i j → f (s i j))
-       i i₁ i₂ 
+  --  f (trunc x y p q r s i i₁ i₂) =
+  --    isGroupoidA _ _ _ _
+  --      (λ i j → f (r i j)) (λ i j → f (s i j))
+  --      i i₁ i₂ 
 
-  record Elim𝔹T {ℓa} (A : 𝔹T → Type ℓa) : Type (ℓ-max ℓa ℓ) where
-   no-eta-equality
-   field
-    isGroupoidA : ∀ x → isGroupoid (A x) 
-    baseA : A base
-    loopA : ∀ ixG → PathP (λ i → A (loop ixG i) ) baseA baseA
+  -- record Elim𝔹T {ℓa} (A : 𝔹T → Type ℓa) : Type (ℓ-max ℓa ℓ) where
+  --  no-eta-equality
+  --  field
+  --   isGroupoidA : ∀ x → isGroupoid (A x) 
+  --   baseA : A base
+  --   loopA : ∀ ixG → PathP (λ i → A (loop ixG i) ) baseA baseA
 
-   fcA : ∀ fc → PathP (λ i → A (mkFc≡ loop fc i))
-               baseA baseA
-   fcA = λ { (fc false x₁) →  symP (loopA x₁)
-            ; (fc true x₁) → (loopA x₁)
-            ; cns → refl }
+  --  fcA : ∀ fc → PathP (λ i → A (mkFc≡ loop fc i))
+  --              baseA baseA
+  --  fcA = λ { (fc false x₁) →  symP (loopA x₁)
+  --           ; (fc true x₁) → (loopA x₁)
+  --           ; cns → refl }
    
-   field
-    relSqA : (r : IxR) →
-      SquareP (λ i j → A (relSq r i j))
-        (fcA (fc₀₋ (fst r)))
-        (fcA (fc₁₋ (fst r)))
-        (fcA (fc₋₀ (fst r)))
-        (fcA (fc₋₁ (fst r)))
+  --  field
+  --   relSqA : (r : IxR) →
+  --     SquareP (λ i j → A (relSq r i j))
+  --       (fcA (fc₀₋ (fst r)))
+  --       (fcA (fc₁₋ (fst r)))
+  --       (fcA (fc₋₀ (fst r)))
+  --       (fcA (fc₋₁ (fst r)))
         
-   f : ∀ x → A x
-   f base = baseA
-   f (loop x i) = loopA x i
-   -- f (loopSym b ixG i i₁) = loopSymA b ixG i i₁
-   f (relSq ixR i j) with fc₋₀ (fst ixR) | fc₋₁ (fst ixR) | fc₀₋ (fst ixR) | fc₁₋ (fst ixR) |  relSqA ixR
-   ... | fc false x₁ | fc false x₃ | fc false x₅ | fc false x₇ | q = q i j
-   ... | fc false x₁ | fc false x₃ | fc false x₅ | fc true x₇ | q = q i j
-   ... | fc false x₁ | fc false x₃ | fc true x₅ | fc false x₇ | q = q i j
-   ... | fc false x₁ | fc false x₃ | fc true x₅ | fc true x₇ | q = q i j
-   ... | fc false x₁ | fc true x₃ | fc false x₅ | fc false x₇ | q = q i j
-   ... | fc false x₁ | fc true x₃ | fc false x₅ | fc true x₇ | q = q i j
-   ... | fc false x₁ | fc true x₃ | fc true x₅ | fc false x₇ | q = q i j
-   ... | fc false x₁ | fc true x₃ | fc true x₅ | fc true x₇ | q = q i j
-   ... | fc true x₁ | fc false x₃ | fc false x₅ | fc false x₇ | q = q i j
-   ... | fc true x₁ | fc false x₃ | fc false x₅ | fc true x₇ | q = q i j
-   ... | fc true x₁ | fc false x₃ | fc true x₅ | fc false x₇ | q = q i j
-   ... | fc true x₁ | fc false x₃ | fc true x₅ | fc true x₇ | q = q i j
-   ... | fc true x₁ | fc true x₃ | fc false x₅ | fc false x₇ | q = q i j
-   ... | fc true x₁ | fc true x₃ | fc false x₅ | fc true x₇ | q = q i j
-   ... | fc true x₁ | fc true x₃ | fc true x₅ | fc false x₇ | q = q i j
-   ... | fc true x₁ | fc true x₃ | fc true x₅ | fc true x₇ | q = q i j
-   ... | fc false x₁ | fc false x₃ | fc false x₅ | cns | q = q i j
-   ... | fc false x₁ | fc false x₃ | fc true x₅ | cns | q = q i j
-   ... | fc false x₁ | fc true x₃ | fc false x₅ | cns | q = q i j
-   ... | fc false x₁ | fc true x₃ | fc true x₅ | cns | q = q i j
-   ... | fc true x₁ | fc false x₃ | fc false x₅ | cns | q = q i j
-   ... | fc true x₁ | fc false x₃ | fc true x₅ | cns | q = q i j
-   ... | fc true x₁ | fc true x₃ | fc false x₅ | cns | q = q i j
-   ... | fc true x₁ | fc true x₃ | fc true x₅ | cns | q = q i j
-   ... | fc false x₁ | fc false x₃ | cns | fc false x₅ | q = q i j
-   ... | fc false x₁ | fc false x₃ | cns | fc true x₅ | q = q i j
-   ... | fc false x₁ | fc true x₃ | cns | fc false x₅ | q = q i j
-   ... | fc false x₁ | fc true x₃ | cns | fc true x₅ | q = q i j
-   ... | fc true x₁ | fc false x₃ | cns | fc false x₅ | q = q i j
-   ... | fc true x₁ | fc false x₃ | cns | fc true x₅ | q = q i j
-   ... | fc true x₁ | fc true x₃ | cns | fc false x₅ | q = q i j
-   ... | fc true x₁ | fc true x₃ | cns | fc true x₅ | q = q i j
-   ... | fc false x₁ | fc false x₃ | cns | cns | q = q i j
-   ... | fc false x₁ | fc true x₃ | cns | cns | q = q i j
-   ... | fc true x₁ | fc false x₃ | cns | cns | q = q i j
-   ... | fc true x₁ | fc true x₃ | cns | cns | q = q i j
-   ... | fc false x₁ | cns | fc false x₃ | fc false x₅ | q = q i j
-   ... | fc false x₁ | cns | fc false x₃ | fc true x₅ | q = q i j
-   ... | fc false x₁ | cns | fc true x₃ | fc false x₅ | q = q i j
-   ... | fc false x₁ | cns | fc true x₃ | fc true x₅ | q = q i j
-   ... | fc true x₁ | cns | fc false x₃ | fc false x₅ | q = q i j
-   ... | fc true x₁ | cns | fc false x₃ | fc true x₅ | q = q i j
-   ... | fc true x₁ | cns | fc true x₃ | fc false x₅ | q = q i j
-   ... | fc true x₁ | cns | fc true x₃ | fc true x₅ | q = q i j
-   ... | fc false x₁ | cns | fc false x₃ | cns | q = q i j
-   ... | fc false x₁ | cns | fc true x₃ | cns | q = q i j
-   ... | fc true x₁ | cns | fc false x₃ | cns | q = q i j
-   ... | fc true x₁ | cns | fc true x₃ | cns | q = q i j
-   ... | fc false x₁ | cns | cns | fc false x₃ | q = q i j
-   ... | fc false x₁ | cns | cns | fc true x₃ | q = q i j
-   ... | fc true x₁ | cns | cns | fc false x₃ | q = q i j
-   ... | fc true x₁ | cns | cns | fc true x₃ | q = q i j
-   ... | fc false x₁ | cns | cns | cns | q = q i j
-   ... | fc true x₁ | cns | cns | cns | q = q i j
-   ... | cns | fc false x₁ | fc false x₃ | fc false x₅ | q = q i j
-   ... | cns | fc false x₁ | fc false x₃ | fc true x₅ | q = q i j
-   ... | cns | fc false x₁ | fc true x₃ | fc false x₅ | q = q i j
-   ... | cns | fc false x₁ | fc true x₃ | fc true x₅ | q = q i j
-   ... | cns | fc true x₁ | fc false x₃ | fc false x₅ | q = q i j
-   ... | cns | fc true x₁ | fc false x₃ | fc true x₅ | q = q i j
-   ... | cns | fc true x₁ | fc true x₃ | fc false x₅ | q = q i j
-   ... | cns | fc true x₁ | fc true x₃ | fc true x₅ | q = q i j
-   ... | cns | fc false x₁ | fc false x₃ | cns | q = q i j
-   ... | cns | fc false x₁ | fc true x₃ | cns | q = q i j
-   ... | cns | fc true x₁ | fc false x₃ | cns | q = q i j
-   ... | cns | fc true x₁ | fc true x₃ | cns | q = q i j
-   ... | cns | fc false x₁ | cns | fc false x₃ | q = q i j
-   ... | cns | fc false x₁ | cns | fc true x₃ | q = q i j
-   ... | cns | fc true x₁ | cns | fc false x₃ | q = q i j
-   ... | cns | fc true x₁ | cns | fc true x₃ | q = q i j
-   ... | cns | fc false x₁ | cns | cns | q = q i j
-   ... | cns | fc true x₁ | cns | cns | q = q i j
-   ... | cns | cns | fc false x₁ | fc false x₃ | q = q i j
-   ... | cns | cns | fc false x₁ | fc true x₃ | q = q i j
-   ... | cns | cns | fc true x₁ | fc false x₃ | q = q i j
-   ... | cns | cns | fc true x₁ | fc true x₃ | q = q i j
-   ... | cns | cns | fc false x₁ | cns | q = q i j
-   ... | cns | cns | fc true x₁ | cns | q = q i j
-   ... | cns | cns | cns | fc false x₁ | q = q i j
-   ... | cns | cns | cns | fc true x₁ | q = q i j
-   ... | cns | cns | cns | cns | q = q i j
+  --  f : ∀ x → A x
+  --  f base = baseA
+  --  f (loop x i) = loopA x i
+  --  -- f (loopSym b ixG i i₁) = loopSymA b ixG i i₁
+  --  f (relSq ixR i j) with fc₋₀ (fst ixR) | fc₋₁ (fst ixR) | fc₀₋ (fst ixR) | fc₁₋ (fst ixR) |  relSqA ixR
+  --  ... | fc false x₁ | fc false x₃ | fc false x₅ | fc false x₇ | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | fc false x₅ | fc true x₇ | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | fc true x₅ | fc false x₇ | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | fc true x₅ | fc true x₇ | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | fc false x₅ | fc false x₇ | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | fc false x₅ | fc true x₇ | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | fc true x₅ | fc false x₇ | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | fc true x₅ | fc true x₇ | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | fc false x₅ | fc false x₇ | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | fc false x₅ | fc true x₇ | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | fc true x₅ | fc false x₇ | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | fc true x₅ | fc true x₇ | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | fc false x₅ | fc false x₇ | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | fc false x₅ | fc true x₇ | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | fc true x₅ | fc false x₇ | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | fc true x₅ | fc true x₇ | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | fc false x₅ | cns | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | fc true x₅ | cns | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | fc false x₅ | cns | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | fc true x₅ | cns | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | fc false x₅ | cns | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | fc true x₅ | cns | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | fc false x₅ | cns | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | fc true x₅ | cns | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | cns | fc false x₅ | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | cns | fc true x₅ | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | cns | fc false x₅ | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | cns | fc true x₅ | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | cns | fc false x₅ | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | cns | fc true x₅ | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | cns | fc false x₅ | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | cns | fc true x₅ | q = q i j
+  --  ... | fc false x₁ | fc false x₃ | cns | cns | q = q i j
+  --  ... | fc false x₁ | fc true x₃ | cns | cns | q = q i j
+  --  ... | fc true x₁ | fc false x₃ | cns | cns | q = q i j
+  --  ... | fc true x₁ | fc true x₃ | cns | cns | q = q i j
+  --  ... | fc false x₁ | cns | fc false x₃ | fc false x₅ | q = q i j
+  --  ... | fc false x₁ | cns | fc false x₃ | fc true x₅ | q = q i j
+  --  ... | fc false x₁ | cns | fc true x₃ | fc false x₅ | q = q i j
+  --  ... | fc false x₁ | cns | fc true x₃ | fc true x₅ | q = q i j
+  --  ... | fc true x₁ | cns | fc false x₃ | fc false x₅ | q = q i j
+  --  ... | fc true x₁ | cns | fc false x₃ | fc true x₅ | q = q i j
+  --  ... | fc true x₁ | cns | fc true x₃ | fc false x₅ | q = q i j
+  --  ... | fc true x₁ | cns | fc true x₃ | fc true x₅ | q = q i j
+  --  ... | fc false x₁ | cns | fc false x₃ | cns | q = q i j
+  --  ... | fc false x₁ | cns | fc true x₃ | cns | q = q i j
+  --  ... | fc true x₁ | cns | fc false x₃ | cns | q = q i j
+  --  ... | fc true x₁ | cns | fc true x₃ | cns | q = q i j
+  --  ... | fc false x₁ | cns | cns | fc false x₃ | q = q i j
+  --  ... | fc false x₁ | cns | cns | fc true x₃ | q = q i j
+  --  ... | fc true x₁ | cns | cns | fc false x₃ | q = q i j
+  --  ... | fc true x₁ | cns | cns | fc true x₃ | q = q i j
+  --  ... | fc false x₁ | cns | cns | cns | q = q i j
+  --  ... | fc true x₁ | cns | cns | cns | q = q i j
+  --  ... | cns | fc false x₁ | fc false x₃ | fc false x₅ | q = q i j
+  --  ... | cns | fc false x₁ | fc false x₃ | fc true x₅ | q = q i j
+  --  ... | cns | fc false x₁ | fc true x₃ | fc false x₅ | q = q i j
+  --  ... | cns | fc false x₁ | fc true x₃ | fc true x₅ | q = q i j
+  --  ... | cns | fc true x₁ | fc false x₃ | fc false x₅ | q = q i j
+  --  ... | cns | fc true x₁ | fc false x₃ | fc true x₅ | q = q i j
+  --  ... | cns | fc true x₁ | fc true x₃ | fc false x₅ | q = q i j
+  --  ... | cns | fc true x₁ | fc true x₃ | fc true x₅ | q = q i j
+  --  ... | cns | fc false x₁ | fc false x₃ | cns | q = q i j
+  --  ... | cns | fc false x₁ | fc true x₃ | cns | q = q i j
+  --  ... | cns | fc true x₁ | fc false x₃ | cns | q = q i j
+  --  ... | cns | fc true x₁ | fc true x₃ | cns | q = q i j
+  --  ... | cns | fc false x₁ | cns | fc false x₃ | q = q i j
+  --  ... | cns | fc false x₁ | cns | fc true x₃ | q = q i j
+  --  ... | cns | fc true x₁ | cns | fc false x₃ | q = q i j
+  --  ... | cns | fc true x₁ | cns | fc true x₃ | q = q i j
+  --  ... | cns | fc false x₁ | cns | cns | q = q i j
+  --  ... | cns | fc true x₁ | cns | cns | q = q i j
+  --  ... | cns | cns | fc false x₁ | fc false x₃ | q = q i j
+  --  ... | cns | cns | fc false x₁ | fc true x₃ | q = q i j
+  --  ... | cns | cns | fc true x₁ | fc false x₃ | q = q i j
+  --  ... | cns | cns | fc true x₁ | fc true x₃ | q = q i j
+  --  ... | cns | cns | fc false x₁ | cns | q = q i j
+  --  ... | cns | cns | fc true x₁ | cns | q = q i j
+  --  ... | cns | cns | cns | fc false x₁ | q = q i j
+  --  ... | cns | cns | cns | fc true x₁ | q = q i j
+  --  ... | cns | cns | cns | cns | q = q i j
 
-   f (trunc x y p q r s i i₁ i₂) =
-     isOfHLevel→isOfHLevelDep 3 isGroupoidA
-       (f x) (f y) (cong f p) (cong f q)
-         (λ i j → f (r i j)) (λ i j → f (s i j))
-        (trunc x y p q r s)
-        i i₁ i₂ 
+  --  f (trunc x y p q r s i i₁ i₂) =
+  --    isOfHLevel→isOfHLevelDep 3 isGroupoidA
+  --      (f x) (f y) (cong f p) (cong f q)
+  --        (λ i j → f (r i j)) (λ i j → f (s i j))
+  --       (trunc x y p q r s)
+  --       i i₁ i₂ 
 
 
-  record ElimSet𝔹T {ℓa} (A : 𝔹T → Type ℓa) : Type (ℓ-max ℓa ℓ) where
-   no-eta-equality
-   field
-    isSetA : ∀ x → isSet (A x) 
-    baseA : A base
-    loopA : ∀ ixG → PathP (λ i → A (loop ixG i) ) baseA baseA
+  -- record ElimSet𝔹T {ℓa} (A : 𝔹T → Type ℓa) : Type (ℓ-max ℓa ℓ) where
+  --  no-eta-equality
+  --  field
+  --   isSetA : ∀ x → isSet (A x) 
+  --   baseA : A base
+  --   loopA : ∀ ixG → PathP (λ i → A (loop ixG i) ) baseA baseA
 
-   r : Elim𝔹T (λ z → A z)
-   Elim𝔹T.isGroupoidA r = isSet→isGroupoid ∘ isSetA
-   Elim𝔹T.baseA r = baseA
-   Elim𝔹T.loopA r = loopA
-   Elim𝔹T.relSqA r ixR =
-     isSet→SquareP (λ _ _ → isSetA _)
-       _ _ _ _
+  --  r : Elim𝔹T (λ z → A z)
+  --  Elim𝔹T.isGroupoidA r = isSet→isGroupoid ∘ isSetA
+  --  Elim𝔹T.baseA r = baseA
+  --  Elim𝔹T.loopA r = loopA
+  --  Elim𝔹T.relSqA r ixR =
+  --    isSet→SquareP (λ _ _ → isSetA _)
+  --      _ _ _ _
                
-   f : ∀ x → A x
-   f = Elim𝔹T.f r
+  --  f : ∀ x → A x
+  --  f = Elim𝔹T.f r
 
 
-  record ElimProp𝔹T {ℓa} (A : 𝔹T → Type ℓa) : Type (ℓ-max ℓa ℓ) where
-   no-eta-equality
-   field
-    isPropA : ∀ x → isProp (A x) 
-    baseA : A base
+  -- record ElimProp𝔹T {ℓa} (A : 𝔹T → Type ℓa) : Type (ℓ-max ℓa ℓ) where
+  --  no-eta-equality
+  --  field
+  --   isPropA : ∀ x → isProp (A x) 
+  --   baseA : A base
 
-   r : ElimSet𝔹T (λ z → A z)
-   ElimSet𝔹T.isSetA r = isProp→isSet ∘ isPropA
-   ElimSet𝔹T.baseA r = baseA
-   ElimSet𝔹T.loopA r _ = isProp→PathP (λ _ → isPropA _) _ _
+  --  r : ElimSet𝔹T (λ z → A z)
+  --  ElimSet𝔹T.isSetA r = isProp→isSet ∘ isPropA
+  --  ElimSet𝔹T.baseA r = baseA
+  --  ElimSet𝔹T.loopA r _ = isProp→PathP (λ _ → isPropA _) _ _
                
-   f : ∀ x → A x
-   f = ElimSet𝔹T.f r
+  --  f : ∀ x → A x
+  --  f = ElimSet𝔹T.f r
 
 
 
-  module 𝔹T→hSet {ℓ*} (f₃ : 𝔹T → ∥ Type ℓ*  ∥₃) where
+  -- module 𝔹T→hSet {ℓ*} (f₃ : 𝔹T → ∥ Type ℓ*  ∥₃) where
 
-   isSet₃ : ∥ Type ℓ*  ∥₃ → hProp ℓ*
-   isSet₃ = GT.rec (isSet→isGroupoid isSetHProp)
-      (λ x → isSet x , isPropIsSet) 
+  --  isSet₃ : ∥ Type ℓ*  ∥₃ → hProp ℓ*
+  --  isSet₃ = GT.rec (isSet→isGroupoid isSetHProp)
+  --     (λ x → isSet x , isPropIsSet) 
       
-   module _ (isSet₃-base : ⟨ isSet₃ (f₃ base) ⟩) where
+  --  module _ (isSet₃-base : ⟨ isSet₃ (f₃ base) ⟩) where
    
-    p'r : ElimProp𝔹T λ bt → ⟨ isSet₃ (f₃ bt) ⟩  
-    ElimProp𝔹T.isPropA p'r = snd ∘ isSet₃ ∘ f₃
-    ElimProp𝔹T.baseA p'r = isSet₃-base
+  --   p'r : ElimProp𝔹T λ bt → ⟨ isSet₃ (f₃ bt) ⟩  
+  --   ElimProp𝔹T.isPropA p'r = snd ∘ isSet₃ ∘ f₃
+  --   ElimProp𝔹T.baseA p'r = isSet₃-base
 
-    p' : ∀ bt → ⟨ isSet₃ (f₃ bt) ⟩  
-    p' = ElimProp𝔹T.f p'r
+  --   p' : ∀ bt → ⟨ isSet₃ (f₃ bt) ⟩  
+  --   p' = ElimProp𝔹T.f p'r
 
-    hSet₃ : (x : ∥ Type ℓ* ∥₃) → (fst (isSet₃ x)) → hSet ℓ*
-    fst (hSet₃ ∣ x ∣₃ x₁) = x
-    snd (hSet₃ ∣ x ∣₃ x₁) = x₁
-    hSet₃ (squash₃ x y p q r s i i₁ i₂) =
-      isOfHLevel→isOfHLevelDep 3 {∥ Type ℓ* ∥₃}
-        {λ Ty₃ → ⟨ isSet₃ Ty₃ ⟩ → hSet ℓ*}
-         (λ _ → isGroupoidΠ λ _ → isGroupoidHSet)
-        _ _
-         _ _ (λ i₃ i₄ → hSet₃ (r i₃ i₄)) (λ i₃ i₄ → hSet₃ (s i₃ i₄))
-         (squash₃ x y p q r s) i i₁ i₂
+  --   hSet₃ : (x : ∥ Type ℓ* ∥₃) → (fst (isSet₃ x)) → hSet ℓ*
+  --   fst (hSet₃ ∣ x ∣₃ x₁) = x
+  --   snd (hSet₃ ∣ x ∣₃ x₁) = x₁
+  --   hSet₃ (squash₃ x y p q r s i i₁ i₂) =
+  --     isOfHLevel→isOfHLevelDep 3 {∥ Type ℓ* ∥₃}
+  --       {λ Ty₃ → ⟨ isSet₃ Ty₃ ⟩ → hSet ℓ*}
+  --        (λ _ → isGroupoidΠ λ _ → isGroupoidHSet)
+  --       _ _
+  --        _ _ (λ i₃ i₄ → hSet₃ (r i₃ i₄)) (λ i₃ i₄ → hSet₃ (s i₃ i₄))
+  --        (squash₃ x y p q r s) i i₁ i₂
 
-    f' : 𝔹T → hSet ℓ*
-    f' bt =  hSet₃ (f₃ bt) (p' bt)
+  --   f' : 𝔹T → hSet ℓ*
+  --   f' bt =  hSet₃ (f₃ bt) (p' bt)
 
 
-  CodeHR : Rec𝔹T (∥ Type ℓ ∥₃)
-  Rec𝔹T.isGroupoidA CodeHR = squash₃
-  Rec𝔹T.baseA CodeHR = ∣ T ∣₃
-  Rec𝔹T.loopA CodeHR = (cong ∣_∣₃) ∘ ua ∘ ∷≃  
-  Rec𝔹T.relSqA CodeHR ixR i j with fc₋₀ (fst ixR) | fc₋₁ (fst ixR) | fc₀₋ (fst ixR) | fc₁₋ (fst ixR) | (rel≡Sq ixR)
-  ... | fc false x₁ | fc false x₃ | fc false x₅ | fc false x₇ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc false x₃ | fc false x₅ | fc true x₇ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc false x₃ | fc true x₅ | fc false x₇ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc false x₃ | fc true x₅ | fc true x₇ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc true x₃ | fc false x₅ | fc false x₇ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc true x₃ | fc false x₅ | fc true x₇ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc true x₃ | fc true x₅ | fc false x₇ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc true x₃ | fc true x₅ | fc true x₇ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc false x₃ | fc false x₅ | fc false x₇ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc false x₃ | fc false x₅ | fc true x₇ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc false x₃ | fc true x₅ | fc false x₇ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc false x₃ | fc true x₅ | fc true x₇ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc true x₃ | fc false x₅ | fc false x₇ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc true x₃ | fc false x₅ | fc true x₇ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc true x₃ | fc true x₅ | fc false x₇ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc true x₃ | fc true x₅ | fc true x₇ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc false x₃ | fc false x₅ | cns | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc false x₃ | fc true x₅ | cns | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc true x₃ | fc false x₅ | cns | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc true x₃ | fc true x₅ | cns | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc false x₃ | fc false x₅ | cns | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc false x₃ | fc true x₅ | cns | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc true x₃ | fc false x₅ | cns | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc true x₃ | fc true x₅ | cns | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc false x₃ | cns | fc false x₅ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc false x₃ | cns | fc true x₅ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc true x₃ | cns | fc false x₅ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc true x₃ | cns | fc true x₅ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc false x₃ | cns | fc false x₅ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc false x₃ | cns | fc true x₅ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc true x₃ | cns | fc false x₅ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc true x₃ | cns | fc true x₅ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc false x₃ | cns | cns | q = ∣ q i j ∣₃
-  ... | fc false x₁ | fc true x₃ | cns | cns | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc false x₃ | cns | cns | q = ∣ q i j ∣₃
-  ... | fc true x₁ | fc true x₃ | cns | cns | q = ∣ q i j ∣₃
-  ... | fc false x₁ | cns | fc false x₃ | fc false x₅ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | cns | fc false x₃ | fc true x₅ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | cns | fc true x₃ | fc false x₅ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | cns | fc true x₃ | fc true x₅ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | cns | fc false x₃ | fc false x₅ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | cns | fc false x₃ | fc true x₅ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | cns | fc true x₃ | fc false x₅ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | cns | fc true x₃ | fc true x₅ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | cns | fc false x₃ | cns | q = ∣ q i j ∣₃
-  ... | fc false x₁ | cns | fc true x₃ | cns | q = ∣ q i j ∣₃
-  ... | fc true x₁ | cns | fc false x₃ | cns | q = ∣ q i j ∣₃
-  ... | fc true x₁ | cns | fc true x₃ | cns | q = ∣ q i j ∣₃
-  ... | fc false x₁ | cns | cns | fc false x₃ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | cns | cns | fc true x₃ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | cns | cns | fc false x₃ | q = ∣ q i j ∣₃
-  ... | fc true x₁ | cns | cns | fc true x₃ | q = ∣ q i j ∣₃
-  ... | fc false x₁ | cns | cns | cns | q = ∣ q i j ∣₃
-  ... | fc true x₁ | cns | cns | cns | q = ∣ q i j ∣₃
-  ... | cns | fc false x₁ | fc false x₃ | fc false x₅ | q = ∣ q i j ∣₃
-  ... | cns | fc false x₁ | fc false x₃ | fc true x₅ | q = ∣ q i j ∣₃
-  ... | cns | fc false x₁ | fc true x₃ | fc false x₅ | q = ∣ q i j ∣₃
-  ... | cns | fc false x₁ | fc true x₃ | fc true x₅ | q = ∣ q i j ∣₃
-  ... | cns | fc true x₁ | fc false x₃ | fc false x₅ | q = ∣ q i j ∣₃
-  ... | cns | fc true x₁ | fc false x₃ | fc true x₅ | q = ∣ q i j ∣₃
-  ... | cns | fc true x₁ | fc true x₃ | fc false x₅ | q = ∣ q i j ∣₃
-  ... | cns | fc true x₁ | fc true x₃ | fc true x₅ | q = ∣ q i j ∣₃
-  ... | cns | fc false x₁ | fc false x₃ | cns | q = ∣ q i j ∣₃
-  ... | cns | fc false x₁ | fc true x₃ | cns | q = ∣ q i j ∣₃
-  ... | cns | fc true x₁ | fc false x₃ | cns | q = ∣ q i j ∣₃
-  ... | cns | fc true x₁ | fc true x₃ | cns | q = ∣ q i j ∣₃
-  ... | cns | fc false x₁ | cns | fc false x₃ | q = ∣ q i j ∣₃
-  ... | cns | fc false x₁ | cns | fc true x₃ | q = ∣ q i j ∣₃
-  ... | cns | fc true x₁ | cns | fc false x₃ | q = ∣ q i j ∣₃
-  ... | cns | fc true x₁ | cns | fc true x₃ | q = ∣ q i j ∣₃
-  ... | cns | fc false x₁ | cns | cns | q = ∣ q i j ∣₃
-  ... | cns | fc true x₁ | cns | cns | q = ∣ q i j ∣₃
-  ... | cns | cns | fc false x₁ | fc false x₃ | q = ∣ q i j ∣₃
-  ... | cns | cns | fc false x₁ | fc true x₃ | q = ∣ q i j ∣₃
-  ... | cns | cns | fc true x₁ | fc false x₃ | q = ∣ q i j ∣₃
-  ... | cns | cns | fc true x₁ | fc true x₃ | q = ∣ q i j ∣₃
-  ... | cns | cns | fc false x₁ | cns | q = ∣ q i j ∣₃
-  ... | cns | cns | fc true x₁ | cns | q = ∣ q i j ∣₃
-  ... | cns | cns | cns | fc false x₁ | q = ∣ q i j ∣₃
-  ... | cns | cns | cns | fc true x₁ | q = ∣ q i j ∣₃
-  ... | cns | cns | cns | cns | q = ∣ q i j ∣₃
+  -- CodeHR : Rec𝔹T (∥ Type ℓ ∥₃)
+  -- Rec𝔹T.isGroupoidA CodeHR = squash₃
+  -- Rec𝔹T.baseA CodeHR = ∣ T ∣₃
+  -- Rec𝔹T.loopA CodeHR = (cong ∣_∣₃) ∘ ua ∘ ∷≃  
+  -- Rec𝔹T.relSqA CodeHR ixR i j with fc₋₀ (fst ixR) | fc₋₁ (fst ixR) | fc₀₋ (fst ixR) | fc₁₋ (fst ixR) | (rel≡Sq ixR)
+  -- ... | fc false x₁ | fc false x₃ | fc false x₅ | fc false x₇ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc false x₃ | fc false x₅ | fc true x₇ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc false x₃ | fc true x₅ | fc false x₇ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc false x₃ | fc true x₅ | fc true x₇ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc true x₃ | fc false x₅ | fc false x₇ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc true x₃ | fc false x₅ | fc true x₇ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc true x₃ | fc true x₅ | fc false x₇ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc true x₃ | fc true x₅ | fc true x₇ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc false x₃ | fc false x₅ | fc false x₇ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc false x₃ | fc false x₅ | fc true x₇ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc false x₃ | fc true x₅ | fc false x₇ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc false x₃ | fc true x₅ | fc true x₇ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc true x₃ | fc false x₅ | fc false x₇ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc true x₃ | fc false x₅ | fc true x₇ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc true x₃ | fc true x₅ | fc false x₇ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc true x₃ | fc true x₅ | fc true x₇ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc false x₃ | fc false x₅ | cns | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc false x₃ | fc true x₅ | cns | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc true x₃ | fc false x₅ | cns | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc true x₃ | fc true x₅ | cns | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc false x₃ | fc false x₅ | cns | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc false x₃ | fc true x₅ | cns | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc true x₃ | fc false x₅ | cns | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc true x₃ | fc true x₅ | cns | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc false x₃ | cns | fc false x₅ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc false x₃ | cns | fc true x₅ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc true x₃ | cns | fc false x₅ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc true x₃ | cns | fc true x₅ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc false x₃ | cns | fc false x₅ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc false x₃ | cns | fc true x₅ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc true x₃ | cns | fc false x₅ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc true x₃ | cns | fc true x₅ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc false x₃ | cns | cns | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | fc true x₃ | cns | cns | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc false x₃ | cns | cns | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | fc true x₃ | cns | cns | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | cns | fc false x₃ | fc false x₅ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | cns | fc false x₃ | fc true x₅ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | cns | fc true x₃ | fc false x₅ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | cns | fc true x₃ | fc true x₅ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | cns | fc false x₃ | fc false x₅ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | cns | fc false x₃ | fc true x₅ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | cns | fc true x₃ | fc false x₅ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | cns | fc true x₃ | fc true x₅ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | cns | fc false x₃ | cns | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | cns | fc true x₃ | cns | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | cns | fc false x₃ | cns | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | cns | fc true x₃ | cns | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | cns | cns | fc false x₃ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | cns | cns | fc true x₃ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | cns | cns | fc false x₃ | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | cns | cns | fc true x₃ | q = ∣ q i j ∣₃
+  -- ... | fc false x₁ | cns | cns | cns | q = ∣ q i j ∣₃
+  -- ... | fc true x₁ | cns | cns | cns | q = ∣ q i j ∣₃
+  -- ... | cns | fc false x₁ | fc false x₃ | fc false x₅ | q = ∣ q i j ∣₃
+  -- ... | cns | fc false x₁ | fc false x₃ | fc true x₅ | q = ∣ q i j ∣₃
+  -- ... | cns | fc false x₁ | fc true x₃ | fc false x₅ | q = ∣ q i j ∣₃
+  -- ... | cns | fc false x₁ | fc true x₃ | fc true x₅ | q = ∣ q i j ∣₃
+  -- ... | cns | fc true x₁ | fc false x₃ | fc false x₅ | q = ∣ q i j ∣₃
+  -- ... | cns | fc true x₁ | fc false x₃ | fc true x₅ | q = ∣ q i j ∣₃
+  -- ... | cns | fc true x₁ | fc true x₃ | fc false x₅ | q = ∣ q i j ∣₃
+  -- ... | cns | fc true x₁ | fc true x₃ | fc true x₅ | q = ∣ q i j ∣₃
+  -- ... | cns | fc false x₁ | fc false x₃ | cns | q = ∣ q i j ∣₃
+  -- ... | cns | fc false x₁ | fc true x₃ | cns | q = ∣ q i j ∣₃
+  -- ... | cns | fc true x₁ | fc false x₃ | cns | q = ∣ q i j ∣₃
+  -- ... | cns | fc true x₁ | fc true x₃ | cns | q = ∣ q i j ∣₃
+  -- ... | cns | fc false x₁ | cns | fc false x₃ | q = ∣ q i j ∣₃
+  -- ... | cns | fc false x₁ | cns | fc true x₃ | q = ∣ q i j ∣₃
+  -- ... | cns | fc true x₁ | cns | fc false x₃ | q = ∣ q i j ∣₃
+  -- ... | cns | fc true x₁ | cns | fc true x₃ | q = ∣ q i j ∣₃
+  -- ... | cns | fc false x₁ | cns | cns | q = ∣ q i j ∣₃
+  -- ... | cns | fc true x₁ | cns | cns | q = ∣ q i j ∣₃
+  -- ... | cns | cns | fc false x₁ | fc false x₃ | q = ∣ q i j ∣₃
+  -- ... | cns | cns | fc false x₁ | fc true x₃ | q = ∣ q i j ∣₃
+  -- ... | cns | cns | fc true x₁ | fc false x₃ | q = ∣ q i j ∣₃
+  -- ... | cns | cns | fc true x₁ | fc true x₃ | q = ∣ q i j ∣₃
+  -- ... | cns | cns | fc false x₁ | cns | q = ∣ q i j ∣₃
+  -- ... | cns | cns | fc true x₁ | cns | q = ∣ q i j ∣₃
+  -- ... | cns | cns | cns | fc false x₁ | q = ∣ q i j ∣₃
+  -- ... | cns | cns | cns | fc true x₁ | q = ∣ q i j ∣₃
+  -- ... | cns | cns | cns | cns | q = ∣ q i j ∣₃
   
 
 
-  CodeH₃ : 𝔹T → ∥ Type ℓ ∥₃
+  -- CodeH₃ : 𝔹T → ∥ Type ℓ ∥₃
   
-  CodeH₃ = Rec𝔹T.f CodeHR
+  -- CodeH₃ = Rec𝔹T.f CodeHR
 
-  CodeH : 𝔹T → hSet ℓ
-  CodeH = 𝔹T→hSet.f' CodeH₃ trunc
+  -- CodeH : 𝔹T → hSet ℓ
+  -- CodeH = 𝔹T→hSet.f' CodeH₃ trunc
 
-  Code : 𝔹T → Type ℓ
-  Code = fst ∘ CodeH
+  -- Code : 𝔹T → Type ℓ
+  -- Code = fst ∘ CodeH
 
-  encode : ∀ x → base ≡ x → Code x
-  encode _ p = subst Code p ε
+  -- encode : ∀ x → base ≡ x → Code x
+  -- encode _ p = subst Code p ε
 
 
-  dbr∷ : 𝟚 → IxG → base ≡ base → base ≡ base
-  dbr∷ x y = mkFc≡ (sym ∘ loop) (fc x y) ∙'_
+  -- dbr∷ : 𝟚 → IxG → base ≡ base → base ≡ base
+  -- dbr∷ x y = mkFc≡ (sym ∘ loop) (fc x y) ∙'_
 
-  drb-lem : ∀ x x' → (a : (base ≡ base)) →
-      FcCons.fcCons (uncurry dbr∷)
-      x
-      (FcCons.fcCons (uncurry dbr∷) x'
-       a) ≡
-        (sym (mkFc≡ loop x) ∙' (sym (mkFc≡ loop x') ∙' a ))
-  drb-lem (fc false x₁) (fc false x₃) a = refl
-  drb-lem (fc false x₁) (fc true x₃) a = refl
-  drb-lem (fc true x₁) (fc false x₃) a = refl
-  drb-lem (fc true x₁) (fc true x₃) a = refl
-  drb-lem (fc false x₁) cns a =
-    cong ((loop x₁) ∙'_) (doubleCompPath-filler _ _ _)
-  drb-lem (fc true x₁) cns a =
-   cong (sym (loop x₁) ∙'_) (doubleCompPath-filler refl a refl)
-  drb-lem cns (fc false x₁) a = doubleCompPath-filler _ _ _
-  drb-lem cns (fc true x₁) a = doubleCompPath-filler _ _ _
-  drb-lem cns cns a =
-   doubleCompPath-filler _ _ _ ∙ doubleCompPath-filler _ _ _
+  -- drb-lem : ∀ x x' → (a : (base ≡ base)) →
+  --     FcCons.fcCons (uncurry dbr∷)
+  --     x
+  --     (FcCons.fcCons (uncurry dbr∷) x'
+  --      a) ≡
+  --       (sym (mkFc≡ loop x) ∙' (sym (mkFc≡ loop x') ∙' a ))
+  -- drb-lem (fc false x₁) (fc false x₃) a = refl
+  -- drb-lem (fc false x₁) (fc true x₃) a = refl
+  -- drb-lem (fc true x₁) (fc false x₃) a = refl
+  -- drb-lem (fc true x₁) (fc true x₃) a = refl
+  -- drb-lem (fc false x₁) cns a =
+  --   cong ((loop x₁) ∙'_) (doubleCompPath-filler _ _ _)
+  -- drb-lem (fc true x₁) cns a =
+  --  cong (sym (loop x₁) ∙'_) (doubleCompPath-filler refl a refl)
+  -- drb-lem cns (fc false x₁) a = doubleCompPath-filler _ _ _
+  -- drb-lem cns (fc true x₁) a = doubleCompPath-filler _ _ _
+  -- drb-lem cns cns a =
+  --  doubleCompPath-filler _ _ _ ∙ doubleCompPath-filler _ _ _
 
-  decode-baseR : RecT (base ≡ base)
-  RecT.isSetA decode-baseR = trunc _ _
-  RecT.εA decode-baseR = refl
-  RecT.∷A decode-baseR = dbr∷
-  RecT.inv∷A decode-baseR false _ _ =
-    p∙'[p⁻∙'q]≡q _ _ 
-  RecT.inv∷A decode-baseR true _ _ =
-    p∙'[p⁻∙'q]≡q _ _
-  RecT.relA decode-baseR ixR a =
-     drb-lem (fc₋₁ (fst ixR)) (fc₀₋ (fst ixR)) a
-      ∙∙ (hlp∙'.sq ((λ i i₁ → relSq ixR (~ i) (~ i₁))) λ _ → a) ∙∙
-      sym (drb-lem (fc₁₋ (fst ixR)) (fc₋₀ (fst ixR)) a)
+  -- decode-baseR : RecT (base ≡ base)
+  -- RecT.isSetA decode-baseR = trunc _ _
+  -- RecT.εA decode-baseR = refl
+  -- RecT.∷A decode-baseR = dbr∷
+  -- RecT.inv∷A decode-baseR false _ _ =
+  --   p∙'[p⁻∙'q]≡q _ _ 
+  -- RecT.inv∷A decode-baseR true _ _ =
+  --   p∙'[p⁻∙'q]≡q _ _
+  -- RecT.relA decode-baseR ixR a =
+  --    drb-lem (fc₋₁ (fst ixR)) (fc₀₋ (fst ixR)) a
+  --     ∙∙ (hlp∙'.sq ((λ i i₁ → relSq ixR (~ i) (~ i₁))) λ _ → a) ∙∙
+  --     sym (drb-lem (fc₁₋ (fst ixR)) (fc₋₀ (fst ixR)) a)
     
-  decodeLoop : ∀ ixG →
-      PathP (λ i → (Code (loop ixG i)) → base ≡ loop ixG i)
-        (symP ∘ (RecT.f decode-baseR))
-        (symP ∘ (RecT.f decode-baseR))
-  decodeLoop ixG = ua→ (ElimPropT.f w)
-   where
-   w : ElimPropT λ z →
-            PathP (λ v → base ≡ loop ixG v) ((symP ∘ RecT.f decode-baseR) z)
-            ((symP ∘ RecT.f decode-baseR) (isoToEquiv (∷iso ixG) .fst z))
-   ElimPropT.isPropA w _ =
-     isOfHLevelPathP' 1
-      (trunc _ _)
-       _ _
-   ElimPropT.εA w = doubleCompPath-filler _ _ _       
-   ElimPropT.∷A w b x x₁ = doubleCompPath-filler _ _ _
+  -- decodeLoop : ∀ ixG →
+  --     PathP (λ i → (Code (loop ixG i)) → base ≡ loop ixG i)
+  --       (symP ∘ (RecT.f decode-baseR))
+  --       (symP ∘ (RecT.f decode-baseR))
+  -- decodeLoop ixG = ua→ (ElimPropT.f w)
+  --  where
+  --  w : ElimPropT λ z →
+  --           PathP (λ v → base ≡ loop ixG v) ((symP ∘ RecT.f decode-baseR) z)
+  --           ((symP ∘ RecT.f decode-baseR) (isoToEquiv (∷iso ixG) .fst z))
+  --  ElimPropT.isPropA w _ =
+  --    isOfHLevelPathP' 1
+  --     (trunc _ _)
+  --      _ _
+  --  ElimPropT.εA w = doubleCompPath-filler _ _ _       
+  --  ElimPropT.∷A w b x x₁ = doubleCompPath-filler _ _ _
      
 
-  decode : (x : 𝔹T) → Code x → base ≡ x
-  decode = ElimSet𝔹T.f w
-   where
-   w : ElimSet𝔹T (λ z → Code z → base ≡ z)
-   ElimSet𝔹T.isSetA w _ = isSet→ (trunc _ _)
-   ElimSet𝔹T.baseA w = sym ∘ RecT.f decode-baseR
-   ElimSet𝔹T.loopA w = decodeLoop 
+  -- decode : (x : 𝔹T) → Code x → base ≡ x
+  -- decode = ElimSet𝔹T.f w
+  --  where
+  --  w : ElimSet𝔹T (λ z → Code z → base ≡ z)
+  --  ElimSet𝔹T.isSetA w _ = isSet→ (trunc _ _)
+  --  ElimSet𝔹T.baseA w = sym ∘ RecT.f decode-baseR
+  --  ElimSet𝔹T.loopA w = decodeLoop 
 
 
-  decode∷true : ∀ x xs → decode base ((true , x) ∷ xs)
-                     ≡ (decode base xs) ∙ (loop x)
-  decode∷true x xs = refl
+  -- decode∷true : ∀ x xs → decode base ((true , x) ∷ xs)
+  --                    ≡ (decode base xs) ∙ (loop x)
+  -- decode∷true x xs = refl
   
 
-  decodeEncode : section (encode base) (decode base)
-  decodeEncode = ElimPropT.f w
-   where
-   w : ElimPropT (λ z → encode base (decode base z) ≡ z)
-   ElimPropT.isPropA w _ = trunc _ _
-   ElimPropT.εA w = refl
-   ElimPropT.∷A w {xs} false x p =
-         substComposite Code (decode base xs) (sym (loop x)) ε
-        ∙ cong ((false , x) ∷_) (transportRefl _ ∙ p)
+  -- decodeEncode : section (encode base) (decode base)
+  -- decodeEncode = ElimPropT.f w
+  --  where
+  --  w : ElimPropT (λ z → encode base (decode base z) ≡ z)
+  --  ElimPropT.isPropA w _ = trunc _ _
+  --  ElimPropT.εA w = refl
+  --  ElimPropT.∷A w {xs} false x p =
+  --        substComposite Code (decode base xs) (sym (loop x)) ε
+  --       ∙ cong ((false , x) ∷_) (transportRefl _ ∙ p)
 
 
-   ElimPropT.∷A w {xs} true x p =
-     substComposite Code (decode base xs) (loop x) ε
-        ∙ transportRefl _ ∙ cong ((true , x) ∷_) (p)
+  --  ElimPropT.∷A w {xs} true x p =
+  --    substComposite Code (decode base xs) (loop x) ε
+  --       ∙ transportRefl _ ∙ cong ((true , x) ∷_) (p)
     
-  encodeDecode : ∀ {x} → retract (encode x) (decode x)
-  encodeDecode = J (λ (y : 𝔹T) (p : base ≡ y) →
-       decode y (encode y p) ≡ p) refl
+  -- encodeDecode : ∀ {x} → retract (encode x) (decode x)
+  -- encodeDecode = J (λ (y : 𝔹T) (p : base ≡ y) →
+  --      decode y (encode y p) ≡ p) refl
 
-  encodeDecodeIso : Iso T (base ≡ base)
-  Iso.fun encodeDecodeIso = decode base
-  Iso.inv encodeDecodeIso = encode base
-  Iso.rightInv encodeDecodeIso = encodeDecode {base}
-  Iso.leftInv encodeDecodeIso = decodeEncode
+  -- encodeDecodeIso : Iso T (base ≡ base)
+  -- Iso.fun encodeDecodeIso = decode base
+  -- Iso.inv encodeDecodeIso = encode base
+  -- Iso.rightInv encodeDecodeIso = encodeDecode {base}
+  -- Iso.leftInv encodeDecodeIso = decodeEncode

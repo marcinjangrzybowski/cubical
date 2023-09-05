@@ -177,3 +177,7 @@ Discrete→Separated d x y = Dec→Stable (d x y)
 
 Discrete→isSet : Discrete A → isSet A
 Discrete→isSet = Separated→isSet ∘ Discrete→Separated
+
+Dec¬ : Dec A → Dec (¬ A)
+Dec¬ (yes p) = no (_$ p)
+Dec¬ (no ¬p) = yes ¬p

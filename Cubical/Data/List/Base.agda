@@ -50,3 +50,7 @@ module _ {ℓ} {A : Type ℓ} where
   foldl : ∀ {ℓ'} {B : Type ℓ'} → (B → A → B) → B → List A → B
   foldl f b [] = b
   foldl f b (x ∷ xs) = foldl f (f b x) xs
+
+  flatten : List (List A) → List A 
+  flatten [] = []
+  flatten (x ∷ x₁) = x ++ flatten x₁

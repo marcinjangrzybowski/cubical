@@ -179,3 +179,7 @@ length-map : ∀ {ℓA ℓB} {A : Type ℓA} {B : Type ℓB} → (f : A → B) �
   → length (map f as) ≡ length as
 length-map f [] = refl
 length-map f (a ∷ as) = cong suc (length-map f as)
+
+length++ : (xs ys : List A) → length (xs ++ ys) ≡ length xs + length ys
+length++ [] ys = refl
+length++ (x ∷ xs) ys = cong suc (length++ xs ys)

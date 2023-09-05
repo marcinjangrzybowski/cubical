@@ -233,6 +233,16 @@ Decₚ P = Dec ⟨ P ⟩ , isPropDec (isProp⟨⟩ P)
 ⊔-identityʳ : (P : hProp ℓ) → P ⊔ ⊥ ≡ P
 ⊔-identityʳ P = ⇔toPath (⊔-elim P ⊥ (λ _ → P) (λ x → x) λ ()) inl
 
+
+⊔-identityˡ* : (P : hProp ℓ) → (⊥.⊥* {ℓ} , ⊥.isProp⊥*) ⊔ P ≡ P
+⊔-identityˡ* P =
+  ⇒∶ (⊔-elim (Lift ⊥.⊥ , ⊥.isProp⊥*) P (λ _ → P) (λ ()) (λ x → x))
+  ⇐∶ inr
+
+⊔-identityʳ* : (P : hProp ℓ) → P ⊔ (⊥.⊥* {ℓ} , ⊥.isProp⊥*) ≡ P
+⊔-identityʳ* P = ⇔toPath (⊔-elim P (⊥.⊥* , ⊥.isProp⊥*) (λ _ → P) (λ x → x) λ ()) inl
+
+
 --------------------------------------------------------------------------------
 -- (hProp, ⊓, ⊤) is a bounded ⊓-lattice
 

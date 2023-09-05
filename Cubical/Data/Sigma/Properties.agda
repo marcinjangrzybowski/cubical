@@ -91,6 +91,11 @@ module _ {A : I → Type ℓ} {B : (i : I) → A i → Type ℓ'}
 ×≡Prop : isProp A' → {u v : A × A'} → u .fst ≡ v .fst → u ≡ v
 ×≡Prop pB {u} {v} p i = (p i) , (pB (u .snd) (v .snd) i)
 
+Dec× : {A : Type ℓ} {B : Type ℓ'} → Dec A → Dec B → Dec (A × B) 
+Dec× (yes p) (yes q) = yes (p , q)
+Dec× (yes _) (no ¬p) = no (¬p ∘ snd)
+Dec× (no ¬p) _ = no (¬p ∘ fst)
+
 -- Useful lemma to prove unique existence
 uniqueExists : (a : A) (b : B a) (h : (a' : A) → isProp (B a')) (H : (a' : A) → B a' → a ≡ a') → ∃![ a ∈ A ] B a
 fst (uniqueExists a b h H) = (a , b)

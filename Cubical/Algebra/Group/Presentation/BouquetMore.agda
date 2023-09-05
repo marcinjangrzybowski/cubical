@@ -84,6 +84,8 @@ module _ {ℓ} (A : Type ℓ) {B : Type ℓ} (rels : B → 𝟜 → Fc A) where
  Ty' x = Path (Bouquet A) base x
                        /₂ _~≡'_
 
+
+
  -- sq : ∀ b → Square {A = Type ℓ}
  --          (λ j → Path (Bouquet A) base (fst (mkFc≡ A loop) (rels b ₀₋) j)
  --         /₂ _~≡'_)
@@ -112,7 +114,18 @@ module _ {ℓ} (A : Type ℓ) {B : Type ℓ} (rels : B → 𝟜 → Fc A) where
     (sym (cong-∙ Ty' _ _) ∙∙
      isInjectiveTransport
       (funExt (SQ.elimProp (λ _ → squash/ _ _)
-       λ a → eq/ _ _ ((loop ( a , b)) , {!!})
+       λ a → eq/ _ _ ((loop (a , b)) ,
+          let pL = ((λ i₁ → fst (mkFc≡ A loop) (rels b ₀₋) i₁) ∙
+                     (λ i₁ → fst (mkFc≡ A loop) (rels b ₋₁) i₁))
+              pR =  ((λ i₂ → fst (mkFc≡ A loop) (rels b ₋₀) i₂) ∙
+                  (λ i₂ → fst (mkFc≡ A loop) (rels b ₁₋) i₂))
+          in cong₂ (_∙∙ refl ∙∙_) (substInPathsL pL a)
+                                  ((substInPathsR pR (sym a)) ∙
+                                    compPath≡compPath' _ _) ∙
+             (λ i →
+               compPath-filler a pL (~ i) ∙∙
+                 {!!} ∙∙
+                sym (compPath-filler a pR (~ i)) ) ∙ {!!} )
 
          )
          )
@@ -136,22 +149,64 @@ module _ {ℓ} (A : Type ℓ) {B : Type ℓ} (rels : B → 𝟜 → Fc A) where
 --  Iso.inv 𝔹P' = SQ.rec squash/ (SQ.[_] ∘ ∣_∣₂) {!!}
 --  Iso.rightInv 𝔹P' = {!!}
 --  Iso.leftInv 𝔹P' = {!!}
+
+ [relPa]≡/₃ : ∀ b → cong {B = λ _ → ⟨_∣_⟩} [_]≡/₃ (relPa b) ≡ (refl {x = [ base ]≡/₃})
+ [relPa]≡/₃ b =  (cong-∙ [_]≡/₃ _ _)  ∙
+      cong₂ _∙_ (cong-∙∙ [_]≡/₃ _ _ refl)
+        (cong-∙ [_]≡/₃ _ _) ∙
+         fst (equivAdjointEquiv (_ , (compPathl-isEquiv _)))
+          (Square→compPath (□ b) ∙ rUnit _) 
  
+ 𝔹FN→Ff' : (x : fst (Bouquet∙ (⟨ Ω (Bouquet∙ A) ⟩  × B))) →
+    singl {A = ⟨_∣_⟩} [ 𝔹FN→Ff x ]≡/₃
+ fst (𝔹FN→Ff' x) = [ base ]≡/₃
+ snd (𝔹FN→Ff' base) = refl
+ snd (𝔹FN→Ff' (loop (a , b) i)) j =
+   hcomp
+      (λ k → λ {
+        (j = i0) → [ doubleCompPath-filler
+             a (relPa b) (sym a) k i ]≡/₃
+       ;(j = i1) → [ a (~ k) ]≡/₃
+       ;(i = i0) → [ a (~ k) ]≡/₃
+       ;(i = i1) → [ a (~ k) ]≡/₃
+       }) ([relPa]≡/₃ b j i)
+
+ Ios𝔹P←lem : ∀ (p : Path (Bouquet (⟨ Ω (Bouquet∙ A) ⟩ × B)) base base )
+     → Path ⟨ Ω ⟨_∣_⟩∙ ⟩  (λ _ → [ base ]≡/₃)
+      (λ i → [ 𝔹FN→Ff (p i) ]≡/₃)
+ Ios𝔹P←lem p =  sym (flipSquare (cong (snd ∘ 𝔹FN→Ff') p))
+
+ Ios𝔹P← : ∀ x → Ty* x →  ∥ [ base ]≡/₃ ≡ x ∥₂
+ Ios𝔹P← = ElimSet≡/₃.f w
+  where
+  w : ElimSet≡/₃ _ _ _
+  ElimSet≡/₃.isSetX w _ = isSet→ squash₂ 
+  ElimSet≡/₃.a→x w x = SQ.rec squash₂  (∣_∣₂ ∘ cong [_]≡/₃)
+    λ a a' (p , q) → cong ∣_∣₂
+      (flipSquare (compPathR→PathP∙∙ (cong sym
+         (Ios𝔹P←lem p
+          ∙∙ cong (cong [_]≡/₃) (sym q)
+          ∙∙ cong-∙∙ [_]≡/₃ a' refl (sym a)))))
 
  Ios𝔹P→ : ∀ x →  [ base ]≡/₃ ≡ x → Ty* x
  Ios𝔹P→ x = J (λ x _ → Ty* x) SQ.[ refl ] {x}
 
---  Ios𝔹Pl : ∀ x → Ty' x →  ∥ [ base ]≡/₃ ≡ [ x ]≡/₃ ∥₂ 
---  Ios𝔹Pl x = SQ.rec squash₂  (∣_∣₂ ∘ cong [_]≡/₃)
---    λ a a' (p , b) → {!!}
-
-
+ Ios𝔹Pli : ∀ x →  (p : [ base ]≡/₃ ≡ x) →
+             Ios𝔹P← x (Ios𝔹P→ x p) ≡ ∣ p ∣₂  
+ Ios𝔹Pli x = J
+   (λ x p → Ios𝔹P← x (Ios𝔹P→ x p) ≡ ∣ p ∣₂)
+    (cong (∣_∣₂ ∘ cong [_]≡/₃) (sym (lUnit refl))) {x}
+ 
  Ios𝔹P : Iso ∥ ⟨ Ω ⟨_∣_⟩∙ ⟩ ∥₂ (Ty' base)
  Iso.fun Ios𝔹P = ST.rec squash/ (Ios𝔹P→ (snd ⟨_∣_⟩∙))
- Iso.inv Ios𝔹P = SQ.rec squash₂ (∣_∣₂ ∘ cong [_]≡/₃)
-   λ a a' → uncurry λ x  → {!!}
- Iso.rightInv Ios𝔹P = {!!}
- Iso.leftInv Ios𝔹P = {!!}
+ Iso.inv Ios𝔹P = Ios𝔹P← _
+   -- SQ.rec squash₂ (∣_∣₂ ∘ cong [_]≡/₃)
+   -- λ a a' → uncurry λ x  → {!!}
+ Iso.rightInv Ios𝔹P = 
+   SQ.elimProp (λ _ → squash/ _ _)
+    λ a → cong _/₂_.[_] (substInPathsL a refl ∙ sym (lUnit a)) 
+ Iso.leftInv Ios𝔹P =
+   ST.elim (λ x → isProp→isSet (squash₂ _ _)) (Ios𝔹Pli (snd ⟨_∣_⟩∙))
  
 
 -- -- -- --  𝔹P = {!!}
