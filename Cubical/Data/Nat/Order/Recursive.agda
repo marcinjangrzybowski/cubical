@@ -125,6 +125,12 @@ n≤k+n {k} n = transport (λ i → n ≤ +-comm n k i) (k≤k+n n)
 ≤-split {suc m} {suc n} m≤n
   = Sum.map (idfun _) (cong suc) (≤-split {m} {n} m≤n)
 
+≢-split : ¬ (m ≡ n) → (m < n) ⊎ (n < m)
+≢-split {zero} {zero} x = Empty.rec (x refl)
+≢-split {zero} {suc n} x = inl tt
+≢-split {suc m} {zero} x = inr tt
+≢-split {suc m} {suc n} x = ≢-split {m} {n} (x ∘ cong suc)
+
 module WellFounded where
   wf-< : WellFounded _<_
   wf-rec-< : ∀ n → WFRec _<_ (Acc _<_) n

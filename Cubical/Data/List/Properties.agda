@@ -180,6 +180,39 @@ length-map : ∀ {ℓA ℓB} {A : Type ℓA} {B : Type ℓB} → (f : A → B) �
 length-map f [] = refl
 length-map f (a ∷ as) = cong suc (length-map f as)
 
+map++ : ∀ {ℓA ℓB} {A : Type ℓA} {B : Type ℓB} → (f : A → B) → (as bs : List A)
+   → map f as ++ map f bs ≡ map f (as ++ bs)
+map++ f [] bs = refl
+map++ f (x ∷ as) bs = cong (f x ∷_) (map++ f as bs)
+
+rev-map-comm : ∀ {ℓA ℓB} {A : Type ℓA} {B : Type ℓB} → (f : A → B) → (as : List A)
+  → map f (rev as) ≡ rev (map f as)
+rev-map-comm f [] = refl
+rev-map-comm f (x ∷ as) =
+ sym (map++ f (rev as) _) ∙ cong (_++ [ f x ]) (rev-map-comm f as)
+
 length++ : (xs ys : List A) → length (xs ++ ys) ≡ length xs + length ys
 length++ [] ys = refl
 length++ (x ∷ xs) ys = cong suc (length++ xs ys)
+
+drop++ : (xs ys : List A) → drop (length xs) (xs ++ ys) ≡ ys
+drop++ [] ys = refl
+drop++ (x ∷ xs) ys = drop++ xs ys
+
+take++ : (xs ys : List A) → take (length xs) (xs ++ ys) ≡ xs
+take++ [] ys = refl
+take++ (x ∷ xs) ys = cong (x ∷_) (take++ xs ys)
+
+map-∘ : ∀ {ℓA ℓB ℓC} {A : Type ℓA} {B : Type ℓB} {C : Type ℓC}
+        (g : B → C) (f : A → B) (as : List A)
+        → map g (map f as) ≡ map (λ x → g (f x)) as
+map-∘ g f [] = refl
+map-∘ g f (x ∷ as) = cong (_ ∷_) (map-∘ g f as) 
+
+map-id : (as : List A) → map (λ x → x) as ≡ as
+map-id [] = refl
+map-id (x ∷ as) = cong (_ ∷_) (map-id as)
+
+lengthZero : (as : List A) → (length as ≡ 0) → as ≡ []
+lengthZero [] x = refl
+lengthZero (x₁ ∷ as) x = ⊥.rec (snotz x)

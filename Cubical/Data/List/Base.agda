@@ -54,3 +54,13 @@ module _ {ℓ} {A : Type ℓ} where
   flatten : List (List A) → List A 
   flatten [] = []
   flatten (x ∷ x₁) = x ++ flatten x₁
+
+  drop : ℕ → List A → List A
+  drop zero xs = xs
+  drop (suc n) [] = []
+  drop (suc n) (x ∷ xs) = drop n xs
+
+  take : ℕ → List A → List A
+  take zero xs = []
+  take (suc n) [] = []
+  take (suc n) (x ∷ xs) = x ∷ take n xs
