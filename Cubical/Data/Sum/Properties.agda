@@ -197,3 +197,14 @@ leftInv Σ⊎Iso (inr b , eb) = refl
 map-⊎ : (A → C) → (B → D) → A ⊎ B → C ⊎ D
 map-⊎ f _ (inl a) = inl (f a)
 map-⊎ _ g (inr b) = inr (g b)
+
+isInl :  A ⊎ B → Type
+isInl (inl x) = Unit
+isInl (inr x) = ⊥
+
+fromIsInl : ∀ x → isInl {A = A} {B = B} x → A
+fromIsInl (inl x) x₁ = x
+
+isInr :  A ⊎ B → Type
+isInr (inl x) = ⊥
+isInr (inr x) = Unit
