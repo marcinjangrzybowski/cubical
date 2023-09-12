@@ -336,6 +336,17 @@ module NormalForm {A : Type ℓ} where
  ∫⊕F {n} f = uncurry (∫⊕F' {n} f) 
 
 
+ ∫fromIx' : ∀ (r : Red) → (Idx r → Bool) → Bool → Idx×𝟚 r → Bool
+ ∫fromIx' (x₁ cj∷ r) f b' = uncurry $
+   let f? = f (inl _)
+   in ⊎.rec (λ _ bSide → if bSide then b' else (f? ⊕ b'))
+        (curry (∫fromIx' r (f ∘ inr) (f? ⊕ b')))
+ ∫fromIx' (x₁ ·∷ r) f b' =
+   uncurry $ ⊎.rec ((curry (∫fromIx' x₁ (f ∘ inl) b' ))) (curry (∫fromIx' r (f ∘ inr) b' )) 
+
+
+ ∫fromIx : ∀ (r : Red) → (Idx r → Bool) → Idx×𝟚 r → Bool
+ ∫fromIx r f = ∫fromIx' r f false 
  -- f : ℕ → Bool
  -- f 0 = false
  -- f 1 = false
