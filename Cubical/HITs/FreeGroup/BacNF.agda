@@ -92,7 +92,38 @@ module NormalForm {A : Type ℓ} where
  IsNormalised++ (x₁ ∷ xs) ys (u , v) = 
   let (u' , v')  = IsNormalised++ xs ys v
   in (u ∘  WillReduce++ʳ , u') , v'
+
+
+ module FG-alt (isSetA : isSet A) where
+  import Cubical.HITs.FreeGroup.Alt as FG
+
+  open GroupStr (snd (FG.freeGroupGroup A))
+
+  η* : Bool × A → FG.FreeGroup A
+  η* (b , a) = (if b then idfun _ else FG.inv) (FG.η a)
+
+
+  fromList' : FG.FreeGroup A → List (Bool × A) → FG.FreeGroup A
+  fromList' = foldr (FG._·_ ∘ η*) 
+
+  fromList : List (Bool × A) → FG.FreeGroup A
+  fromList = fromList' FG.ε
+
+
+
+  -- isFof' : List (Bool × A) → FG.FreeGroup A → hProp ℓ
+  -- isFof' xs g = (fromList xs ≡ g) , FG.trunc _ _
   
+  -- isNFof : ∀ xs → IsNormalised xs → (g : FG.FreeGroup A) → singl (isFof' xs g)
+  -- isNFof xs normXs = FG.ElimProp.go (w xs normXs)
+  --  where
+  --  w : ∀ xs → IsNormalised xs →
+  --         FG.ElimProp (λ g → singl (isFof' xs g))
+  --  FG.εB (FG.elim₁ (w [] x)) = L.⊤ , L.⇔toPath (λ _ → _) λ _ → refl
+  --  FG.∷B (FG.elim₁ (w [] x)) b a x₁ = {!!}
+  --  FG.isPropB (w [] x) = {!!}
+  --  w (x₁ ∷ xs) x = {!!}
+
  infixr 5 _∷↔_ 
 
  -- Red : (R : Type ℓ) → Type ℓ
@@ -303,73 +334,73 @@ module NormalForm {A : Type ℓ} where
 
 
 
- Idx[]→Fin : ∀ r → (Red[]Idx r) → (Σ ℕ (_< red[]Length/2 r ℕ.· 2))
- Idx[]→Fin (x₁ ∷↔ r) x = {!!}
+ -- Idx[]→Fin : ∀ r → (Red[]Idx r) → (Σ ℕ (_< red[]Length/2 r ℕ.· 2))
+ -- Idx[]→Fin (x₁ ∷↔ r) x = {!!}
 
- IsoIdx[]Fin : ∀ r → Iso (Red[]Idx r) (Σ ℕ (_< red[]Length/2 r ℕ.· 2)) 
- IsoIdx[]Fin ↔ = {!!}
- IsoIdx[]Fin (red· x ∷↔ r) = compIso (⊎Iso (IsoIdx[]Fin x) (IsoIdx[]Fin r))
-    {!!} 
- IsoIdx[]Fin (·A x ∷↔ r) = {!!}
-  -- compIso (⊎Iso {!!} (IsoIdx[]Fin r)) {!!} 
+ -- IsoIdx[]Fin : ∀ r → Iso (Red[]Idx r) (Σ ℕ (_< red[]Length/2 r ℕ.· 2)) 
+ -- IsoIdx[]Fin ↔ = {!!}
+ -- IsoIdx[]Fin (red· x ∷↔ r) = compIso (⊎Iso (IsoIdx[]Fin x) (IsoIdx[]Fin r))
+ --    {!!} 
+ -- IsoIdx[]Fin (·A x ∷↔ r) = {!!}
+ --  -- compIso (⊎Iso {!!} (IsoIdx[]Fin r)) {!!} 
 
 
 
- Iso[Bool×RedIdx/2]RedIdx : ∀ r → Iso (Bool × Red[]Idx/2 r) (Red[]Idx r)
- Iso[Bool×RedIdx/2]RedIdx r = w
-  where
+ -- Iso[Bool×RedIdx/2]RedIdx : ∀ r → Iso (Bool × Red[]Idx/2 r) (Red[]Idx r)
+ -- Iso[Bool×RedIdx/2]RedIdx r = w
+ --  where
 
-  w→ : (Red[]Idx/2 r × Bool) → (Red[]Idx r)
-  w→ = {!!}
+ --  w→ : (Red[]Idx/2 r × Bool) → (Red[]Idx r)
+ --  w→ = {!!}
   
-  w : Iso _ _
-  Iso.fun w = {!!}
-  Iso.inv w = {!!}
-  Iso.rightInv w = {!!}
-  Iso.leftInv w = {!!}
+ --  w : Iso _ _
+ --  Iso.fun w = {!!}
+ --  Iso.inv w = {!!}
+ --  Iso.rightInv w = {!!}
+ --  Iso.leftInv w = {!!}
   
 
- -- AtomRedexSpansCases : ∀ r k → atomRedexAt (evRed[] r) k →
- --            {!? ⊎ ?!}
- -- AtomRedexSpansCases = {!!}
+ -- -- AtomRedexSpansCases : ∀ r k → atomRedexAt (evRed[] r) k →
+ -- --            {!? ⊎ ?!}
+ -- -- AtomRedexSpansCases = {!!}
  
- removeAtomRedex : ∀ r k → atomRedexAt (evRed[] r) k →
-                      Σ _ λ r' → 
-                       evRed[] r' ≡ (removePairAt k (evRed[] r)) 
- removeAtomRedex = {!!}
+ -- removeAtomRedex : ∀ r k → atomRedexAt (evRed[] r) k →
+ --                      Σ _ λ r' → 
+ --                       evRed[] r' ≡ (removePairAt k (evRed[] r)) 
+ -- removeAtomRedex = {!!}
 
 
 
- subRedsEndL : ∀ ls xs ys rs → [ ls , xs , rs ]subRed ys →
-                 Σ Red[] λ r → evRed[] r ≡ ls ++ rs
- subRedsEndL ls xs ys rs x =
-   h (red[]Length/2 xs) ls xs ys rs (evRedLen xs) x (atomRedexRed[]Ev xs)
-  where
-  h : ∀ n ls xs ys rs
-        → length (evRed[] xs) ≡ n ℕ.· 2
-        → [ ls , xs , rs ]subRed ys
-        → atomRedex (evRed[] xs) ⊎ (evRed[] xs ≡ [])
-        → Σ Red[] λ r → evRed[] r ≡ ls ++ rs
-  h zero ls xs ys rs x x₁ _ = ys ,
-    sym x₁ ∙  cong (ls ++_) (cong (_++ rs) (lengthZero (evRed[] xs) x))
-  h (suc n) ls xs ys rs x x₁ (inl (k , rat)) =
-   let (xs' , pXs') = removeAtomRedex xs k rat
-       (ys' , pYs') = removeAtomRedex ys _
-           (subRedsAtomRedexAt ls xs ys rs k x₁ rat)
-       k< = atomRedexAt<length (evRed[] xs) k rat
-       l= = removePairAt-len (evRed[] xs) k k< ∙ x
-   in h n ls xs' ys' rs (cong length pXs' ∙ injSuc (injSuc l=))
-      ((cong (λ zs → ls ++ zs ++ rs) pXs'
-         ∙∙ cong (ls ++_)
-          (sym (removePairAt++ k  (evRed[] xs) rs
-            k<))
-          ∙∙
-         sym (++removePairAt k ls (evRed[] xs ++ rs)))
-        ∙∙ cong (removePairAt (length ls + k)) x₁ ∙∙
-        sym pYs')
-      (atomRedexRed[]Ev xs')
-  h (suc n) ls xs ys rs x x₁ (inr x₂) = 
-    ⊥.rec (znots (cong length (sym x₂) ∙ x)) 
+ -- subRedsEndL : ∀ ls xs ys rs → [ ls , xs , rs ]subRed ys →
+ --                 Σ Red[] λ r → evRed[] r ≡ ls ++ rs
+ -- subRedsEndL ls xs ys rs x =
+ --   h (red[]Length/2 xs) ls xs ys rs (evRedLen xs) x (atomRedexRed[]Ev xs)
+ --  where
+ --  h : ∀ n ls xs ys rs
+ --        → length (evRed[] xs) ≡ n ℕ.· 2
+ --        → [ ls , xs , rs ]subRed ys
+ --        → atomRedex (evRed[] xs) ⊎ (evRed[] xs ≡ [])
+ --        → Σ Red[] λ r → evRed[] r ≡ ls ++ rs
+ --  h zero ls xs ys rs x x₁ _ = ys ,
+ --    sym x₁ ∙  cong (ls ++_) (cong (_++ rs) (lengthZero (evRed[] xs) x))
+ --  h (suc n) ls xs ys rs x x₁ (inl (k , rat)) =
+ --   let (xs' , pXs') = removeAtomRedex xs k rat
+ --       (ys' , pYs') = removeAtomRedex ys _
+ --           (subRedsAtomRedexAt ls xs ys rs k x₁ rat)
+ --       k< = atomRedexAt<length (evRed[] xs) k rat
+ --       l= = removePairAt-len (evRed[] xs) k k< ∙ x
+ --   in h n ls xs' ys' rs (cong length pXs' ∙ injSuc (injSuc l=))
+ --      ((cong (λ zs → ls ++ zs ++ rs) pXs'
+ --         ∙∙ cong (ls ++_)
+ --          (sym (removePairAt++ k  (evRed[] xs) rs
+ --            k<))
+ --          ∙∙
+ --         sym (++removePairAt k ls (evRed[] xs ++ rs)))
+ --        ∙∙ cong (removePairAt (length ls + k)) x₁ ∙∙
+ --        sym pYs')
+ --      (atomRedexRed[]Ev xs')
+ --  h (suc n) ls xs ys rs x x₁ (inr x₂) = 
+ --    ⊥.rec (znots (cong length (sym x₂) ∙ x)) 
     
 
 
@@ -677,644 +708,667 @@ module NormalForm {A : Type ℓ} where
      (λ _ → squash/ _ _)
      λ xs → eq/ _ _ (↓→↙↘ {ys = []} (rev-fst-notXS++XS↓[] xs)))
 
+ eff-↙↘ : (a b : List (Bool × A)) → Iso ([ a ]/ ≡ [ b ]/) ∥ a ↙↘ b ∥₁
+ eff-↙↘ = isEquivRel→TruncIso isEquivRel↙↘
 
- module FG-basic where
-  import Cubical.HITs.FreeGroup as FG
+ open GroupStr List/↙↘Group
 
-  FGHom : GroupHom (FG.freeGroupGroup A) (_ , List/↙↘Group)
-  FGHom = fst FG.A→Group≃GroupHom ([_]/ ∘ [_] ∘ (true ,_))
+ open GroupTheory (_ , List/↙↘Group)
 
+ evRed[]≡1g : ∀ r → Path List/↙↘ [ evRed[] r ]/ 1g
+ evRed[]≡1g r = eq/ _ _ ((evRed[] r) , (↓refl (evRed[] r)) , r , refl)
+ 
+ subRedsEndL : ∀ r r' l →
+                 evRed[] r ≡ evRed[] r' ++ l → 
+                ∥ (Σ _ λ rl → evRed[] rl ≡ l) ∥₁                 
+ subRedsEndL r r' l p = 
+   let z : Path List/↙↘ ([ l ]/) ([ [] ]/)
+       z = (sym (·IdL [ l ]/) ∙
+              cong {x = [ [] ]/} {y = [ evRed[] r' ]/}
+                (_· [ l ]/) (sym (evRed[]≡1g r')))
+                 ∙∙ sym (cong [_]/ p) ∙∙ evRed[]≡1g r
+       z' : ∥ l ↙↘ [] ∥₁
+       z' = Iso.fun (eff-↙↘ l []) z
+ 
+   in PT.map {!!} z'
+   
+ -- module FG-basic where
+ --  import Cubical.HITs.FreeGroup as FG
 
-  η* : Bool × A → FG.FreeGroup A
-  η* (b , a) = (if b then idfun _ else FG.inv) (FG.η a)
-
-  fromList' : FG.FreeGroup A → List (Bool × A) → FG.FreeGroup A
-  fromList' = foldr (FG._·_ ∘ η*) 
-
-  fromList : List (Bool × A) → FG.FreeGroup A
-  fromList = fromList' FG.ε
-
-  open GroupStr (snd (FG.freeGroupGroup A))
-
-
-  fromList· : ∀ xs ys → fromList (xs ++ ys) ≡
-                            fromList xs FG.· fromList ys
-  fromList· [] _ = sym (·IdL _)
-  fromList· (_ ∷ xs) _ =
-   cong (_ ·_) (fromList· xs _) ∙
-    ·Assoc _ _ _
-
-  redex-ε-η* : ∀ x x' → IsRedex x x' → η* x · η* x' ≡ 1g
-  redex-ε-η* (false , _) (false , _) (p , _) = ⊥.rec (false≢true p)
-  redex-ε-η* (false , x) (true , _) (_ , q) = 
-    cong (inv (FG.η x) ·_) (cong (FG.η) (sym q)) ∙ ·InvL (FG.η x) 
-  redex-ε-η* (true , x) (false , _) (_ , q) =
-    cong (FG.η x ·_) (cong (inv ∘ FG.η) (sym q)) ∙ ·InvR (FG.η x)
-  redex-ε-η* (true , _) (true , _) (p , _) = ⊥.rec (true≢false p)
+ --  FGHom : GroupHom (FG.freeGroupGroup A) (_ , List/↙↘Group)
+ --  FGHom = fst FG.A→Group≃GroupHom ([_]/ ∘ [_] ∘ (true ,_))
 
 
-  →fg : List/↙↘ → FG.FreeGroup A
-  →fg = SQ.rec FG.trunc fromList
-    {!!}
+ --  η* : Bool × A → FG.FreeGroup A
+ --  η* (b , a) = (if b then idfun _ else FG.inv) (FG.η a)
+
+ --  fromList' : FG.FreeGroup A → List (Bool × A) → FG.FreeGroup A
+ --  fromList' = foldr (FG._·_ ∘ η*) 
+
+ --  fromList : List (Bool × A) → FG.FreeGroup A
+ --  fromList = fromList' FG.ε
+
+ --  open GroupStr (snd (FG.freeGroupGroup A))
+
+
+ --  fromList· : ∀ xs ys → fromList (xs ++ ys) ≡
+ --                            fromList xs FG.· fromList ys
+ --  fromList· [] _ = sym (·IdL _)
+ --  fromList· (_ ∷ xs) _ =
+ --   cong (_ ·_) (fromList· xs _) ∙
+ --    ·Assoc _ _ _
+
+ --  redex-ε-η* : ∀ x x' → IsRedex x x' → η* x · η* x' ≡ 1g
+ --  redex-ε-η* (false , _) (false , _) (p , _) = ⊥.rec (false≢true p)
+ --  redex-ε-η* (false , x) (true , _) (_ , q) = 
+ --    cong (inv (FG.η x) ·_) (cong (FG.η) (sym q)) ∙ ·InvL (FG.η x) 
+ --  redex-ε-η* (true , x) (false , _) (_ , q) =
+ --    cong (FG.η x ·_) (cong (inv ∘ FG.η) (sym q)) ∙ ·InvR (FG.η x)
+ --  redex-ε-η* (true , _) (true , _) (p , _) = ⊥.rec (true≢false p)
+
+
+ --  →fg : List/↙↘ → FG.FreeGroup A
+ --  →fg = SQ.rec FG.trunc fromList
+ --    {!!}
   
-  FGGIso : GroupIso (FG.freeGroupGroup A) (_ , List/↙↘Group)
-  Iso.fun (fst FGGIso) = fst FGHom
-  Iso.inv (fst FGGIso) = →fg
-  Iso.rightInv (fst FGGIso) = {!!}
-  Iso.leftInv (fst FGGIso) = {!!}
-  snd FGGIso = snd FGHom
+ --  FGGIso : GroupIso (FG.freeGroupGroup A) (_ , List/↙↘Group)
+ --  Iso.fun (fst FGGIso) = fst FGHom
+ --  Iso.inv (fst FGGIso) = →fg
+ --  Iso.rightInv (fst FGGIso) = {!!}
+ --  Iso.leftInv (fst FGGIso) = {!!}
+ --  snd FGGIso = snd FGHom
   
- -- -- -- ↙↘[]lem : ∀ r xs → IsNormalised xs → evRed[] r ↓ xs → xs ≡ [] 
- -- -- -- ↙↘[]lem = {!!}
+ -- -- -- -- ↙↘[]lem : ∀ r xs → IsNormalised xs → evRed[] r ↓ xs → xs ≡ [] 
+ -- -- -- -- ↙↘[]lem = {!!}
 
 
  
 
- -- -- ↙↘-norm-uniq : ∀ xs ys zs
- -- --    → IsNormalised xs
- -- --    → IsNormalised ys 
- -- --    → xs ↙ zs ↘ ys
- -- --    → xs ≡ ys  
- -- -- ↙↘-norm-uniq [] ys zs nX nY (rX , rY) =
- -- --   sym (↙↘[]lem (fst rX) ys nY (subst (_↓ ys) (sym (snd rX)) rY)) 
- -- -- ↙↘-norm-uniq xs@(_ ∷ _) [] zs nX nY (rX , rY) =
- -- --     ⊥.rec
- -- --      (¬cons≡nil (↙↘[]lem (fst rY) xs nX (subst (_↓ xs) (sym (snd rY)) rX))) 
- -- -- ↙↘-norm-uniq (x ∷ xs) (y ∷ ys) zs nX nY
- -- --    ((((rX , zLX) , pX) , qX) ,
- -- --     (((rY , zLY) , pY) , qY)) =
- -- --   decRec
- -- --     (λ lenRX≡lenRY →
- -- --       let z = congP (λ i → drop (((evRedLen rX ∙∙
- -- --             (cong (ℕ._· 2) lenRX≡lenRY) ∙∙ sym (evRedLen rY)) i))) (pX ∙ (sym pY))
- -- --           z' = (sym (drop++ (evRed[] rX) _) ∙∙ z ∙∙ drop++ (evRed[] rY) _)
- -- --       in cong₂ _∷_
- -- --            (cons-inj₁ z')
- -- --            (↙↘-norm-uniq xs ys zLX
- -- --               (snd nX) (snd nY)
- -- --               (qX , subst (_↓ ys) (sym (cons-inj₂ z')) qY)) )
- -- --     (⊥.rec ∘ ⊎.rec {!!} {!!} ∘ ≢-split
- -- --       )
- -- --    (ℕ.discreteℕ (red[]Length/2 rX)
- -- --                  (red[]Length/2 rY))
+ -- -- -- ↙↘-norm-uniq : ∀ xs ys zs
+ -- -- --    → IsNormalised xs
+ -- -- --    → IsNormalised ys 
+ -- -- --    → xs ↙ zs ↘ ys
+ -- -- --    → xs ≡ ys  
+ -- -- -- ↙↘-norm-uniq [] ys zs nX nY (rX , rY) =
+ -- -- --   sym (↙↘[]lem (fst rX) ys nY (subst (_↓ ys) (sym (snd rX)) rY)) 
+ -- -- -- ↙↘-norm-uniq xs@(_ ∷ _) [] zs nX nY (rX , rY) =
+ -- -- --     ⊥.rec
+ -- -- --      (¬cons≡nil (↙↘[]lem (fst rY) xs nX (subst (_↓ xs) (sym (snd rY)) rX))) 
+ -- -- -- ↙↘-norm-uniq (x ∷ xs) (y ∷ ys) zs nX nY
+ -- -- --    ((((rX , zLX) , pX) , qX) ,
+ -- -- --     (((rY , zLY) , pY) , qY)) =
+ -- -- --   decRec
+ -- -- --     (λ lenRX≡lenRY →
+ -- -- --       let z = congP (λ i → drop (((evRedLen rX ∙∙
+ -- -- --             (cong (ℕ._· 2) lenRX≡lenRY) ∙∙ sym (evRedLen rY)) i))) (pX ∙ (sym pY))
+ -- -- --           z' = (sym (drop++ (evRed[] rX) _) ∙∙ z ∙∙ drop++ (evRed[] rY) _)
+ -- -- --       in cong₂ _∷_
+ -- -- --            (cons-inj₁ z')
+ -- -- --            (↙↘-norm-uniq xs ys zLX
+ -- -- --               (snd nX) (snd nY)
+ -- -- --               (qX , subst (_↓ ys) (sym (cons-inj₂ z')) qY)) )
+ -- -- --     (⊥.rec ∘ ⊎.rec {!!} {!!} ∘ ≢-split
+ -- -- --       )
+ -- -- --    (ℕ.discreteℕ (red[]Length/2 rX)
+ -- -- --                  (red[]Length/2 rY))
 
- -- --   where
- -- --    h : red[]Length/2 rX < red[]Length/2 rY → ⊥
- -- --    h = {!!}
+ -- -- --   where
+ -- -- --    h : red[]Length/2 rX < red[]Length/2 rY → ⊥
+ -- -- --    h = {!!}
    
 
- -- -- -- _↘_↙_ : List (Bool × A) → List (Bool × A) → List (Bool × A) → Type ℓ
- -- -- -- xs ↘ zs ↙ ys = (xs ↓ zs) × (ys ↓ zs)
+ -- -- -- -- _↘_↙_ : List (Bool × A) → List (Bool × A) → List (Bool × A) → Type ℓ
+ -- -- -- -- xs ↘ zs ↙ ys = (xs ↓ zs) × (ys ↓ zs)
 
- -- -- -- _↘↙_ : List (Bool × A) → List (Bool × A) → Type ℓ
- -- -- -- xs ↘↙ ys = Σ _ (xs ↘_↙ ys)
+ -- -- -- -- _↘↙_ : List (Bool × A) → List (Bool × A) → Type ℓ
+ -- -- -- -- xs ↘↙ ys = Σ _ (xs ↘_↙ ys)
 
- -- -- -- ↘↙sym : ∀ x y → x ↘↙ y → y ↘↙ x
- -- -- -- ↘↙sym x y = map-snd λ (x , y) → y , x
+ -- -- -- -- ↘↙sym : ∀ x y → x ↘↙ y → y ↘↙ x
+ -- -- -- -- ↘↙sym x y = map-snd λ (x , y) → y , x
 
 
 
- -- -- -- ↘↙refl : ∀ x → x ↘↙ x
- -- -- -- ↘↙refl = λ x → x , ↓refl x , ↓refl x
+ -- -- -- -- ↘↙refl : ∀ x → x ↘↙ x
+ -- -- -- -- ↘↙refl = λ x → x , ↓refl x , ↓refl x
 
- -- -- -- ↘[]↙→↘↙ : ∀ x y → ↓[] x → ↓[] y → x ↘↙ y
- -- -- -- ↘[]↙→↘↙ _ _ u v = [] , u , v 
+ -- -- -- -- ↘[]↙→↘↙ : ∀ x y → ↓[] x → ↓[] y → x ↘↙ y
+ -- -- -- -- ↘[]↙→↘↙ _ _ u v = [] , u , v 
 
- -- -- -- ↙↘→↘↙ : ∀ x y z → z ↓ x → z ↓ y → x ↘ z ↙ y
- -- -- -- ↙↘→↘↙ = {!!}
+ -- -- -- -- ↙↘→↘↙ : ∀ x y z → z ↓ x → z ↓ y → x ↘ z ↙ y
+ -- -- -- -- ↙↘→↘↙ = {!!}
  
- -- -- -- -- ↘↙→↙↘ : ∀ x y z → x ↓ z → y ↓ z → x ↙↘ y
- -- -- -- -- ↘↙→↙↘ x y [] = ↘[]↙→↙↘ x y
- -- -- -- -- ↘↙→↙↘ xs ys (z ∷ zs)
- -- -- -- --   (((xsL , xsR) , pX) , qX)
- -- -- -- --   (((ysL , ysR) , pY) , qY) =
- -- -- -- --  let (w , w↓xsL , w↓ysL)  = ↘[]↙→↙↘ _ _ (xsL , refl) (ysL , refl)
- -- -- -- --      (ws , ws↓xsR , ws↓ysR ) = ↘↙→↙↘ _ _ _ qX qY
+ -- -- -- -- -- ↘↙→↙↘ : ∀ x y z → x ↓ z → y ↓ z → x ↙↘ y
+ -- -- -- -- -- ↘↙→↙↘ x y [] = ↘[]↙→↙↘ x y
+ -- -- -- -- -- ↘↙→↙↘ xs ys (z ∷ zs)
+ -- -- -- -- --   (((xsL , xsR) , pX) , qX)
+ -- -- -- -- --   (((ysL , ysR) , pY) , qY) =
+ -- -- -- -- --  let (w , w↓xsL , w↓ysL)  = ↘[]↙→↙↘ _ _ (xsL , refl) (ysL , refl)
+ -- -- -- -- --      (ws , ws↓xsR , ws↓ysR ) = ↘↙→↙↘ _ _ _ qX qY
       
- -- -- -- --  in w ++ z ∷ ws
- -- -- -- --      , subst (w ++ z ∷ ws ↓_) pX
- -- -- -- --         (↓++↓ _ _ _ _ w↓xsL
- -- -- -- --           (↓++↓ [ z ] _ [ z ] _ (↓refl [ z ]) (ws↓xsR))) 
- -- -- -- --      , subst (w ++ z ∷ ws ↓_) pY
- -- -- -- --         ((↓++↓ _ _ _ _ w↓ysL
- -- -- -- --           (↓++↓ [ z ] _ [ z ] _ (↓refl [ z ]) (ws↓ysR))))
+ -- -- -- -- --  in w ++ z ∷ ws
+ -- -- -- -- --      , subst (w ++ z ∷ ws ↓_) pX
+ -- -- -- -- --         (↓++↓ _ _ _ _ w↓xsL
+ -- -- -- -- --           (↓++↓ [ z ] _ [ z ] _ (↓refl [ z ]) (ws↓xsR))) 
+ -- -- -- -- --      , subst (w ++ z ∷ ws ↓_) pY
+ -- -- -- -- --         ((↓++↓ _ _ _ _ w↓ysL
+ -- -- -- -- --           (↓++↓ [ z ] _ [ z ] _ (↓refl [ z ]) (ws↓ysR))))
  
- -- -- -- -- ↙↘trans : ∀ x y z → x ↙↘ y → y ↙↘ z → x ↙↘ z
- -- -- -- -- ↙↘trans x y z (x' , p , q) (z' , r , s) =
- -- -- -- --  let (y' , p' , q') = ↘↙→↙↘ x' z' y q r
- -- -- -- --  in y' , (↓trans y' x' x p' p  , ↓trans y' z' z q' s)
+ -- -- -- -- -- ↙↘trans : ∀ x y z → x ↙↘ y → y ↙↘ z → x ↙↘ z
+ -- -- -- -- -- ↙↘trans x y z (x' , p , q) (z' , r , s) =
+ -- -- -- -- --  let (y' , p' , q') = ↘↙→↙↘ x' z' y q r
+ -- -- -- -- --  in y' , (↓trans y' x' x p' p  , ↓trans y' z' z q' s)
 
 
- -- -- -- -- isEquivRel↙↘ : isEquivRel _↙↘_ 
- -- -- -- -- isEquivRel.reflexive isEquivRel↙↘ = ↙↘refl
- -- -- -- -- isEquivRel.symmetric isEquivRel↙↘ = ↙↘sym
- -- -- -- -- isEquivRel.transitive isEquivRel↙↘ = ↙↘trans
-
-
-
-
- -- -- -- -- List/↓ : Type ℓ
- -- -- -- -- List/↓ = _ /₂ _↓_
-
-
- -- -- -- -- List/↓· : List/↓ → List/↓ → List/↓
- -- -- -- -- List/↓· =  SQ.rec2 squash/ (λ a b → SQ.[ a ++ b ])
- -- -- -- --    (λ a b c → eq/ _ _ ∘ flip (↓++↓ _ _ _ _) (↓refl c))
- -- -- -- --    (λ a b c → eq/ _ _ ∘ ↓++↓ _ _ _ _ (↓refl a))
-
-
- -- -- -- -- List/↓Group : GroupStr List/↓
- -- -- -- -- GroupStr.1g List/↓Group = SQ.[ [] ]
- -- -- -- -- GroupStr._·_ List/↓Group = List/↓·
-
- -- -- -- -- GroupStr.inv List/↓Group =
- -- -- -- --   SQ.rec squash/ (SQ.[_] ∘ rev)
- -- -- -- --    {!!}
- -- -- -- -- GroupStr.isGroup List/↓Group = {!!}
-
-
-
- -- -- -- -- module FG (freeGroupGroup : Group ℓ)
- -- -- -- --           (η : A → ⟨ freeGroupGroup ⟩) where 
-
- -- -- -- --  FreeGroup = ⟨ freeGroupGroup ⟩
-
- -- -- -- --  open GroupStr (snd freeGroupGroup)
-
- -- -- -- --  open GroupTheory freeGroupGroup
-
- -- -- -- --  η* : Bool × A → FreeGroup
- -- -- -- --  η* (b , a) = (if b then idfun _ else inv) (η a)
-
- -- -- -- --  fromList' : FreeGroup → List (Bool × A) → FreeGroup
- -- -- -- --  fromList' = foldr (_·_ ∘ η*) 
-
- -- -- -- --  fromList : List (Bool × A) → FreeGroup
- -- -- -- --  fromList = fromList' 1g
-
- -- -- -- --  fromList· : ∀ xs ys → fromList (xs ++ ys) ≡
- -- -- -- --                            fromList xs · fromList ys
- -- -- -- --  fromList· [] _ = sym (·IdL _)
- -- -- -- --  fromList· (_ ∷ xs) _ =
- -- -- -- --   cong (_ ·_) (fromList· xs _) ∙
- -- -- -- --    ·Assoc _ _ _
-
- -- -- -- --  redex-ε-η* : ∀ x x' → IsRedex x x' → η* x · η* x' ≡ 1g
- -- -- -- --  redex-ε-η* (false , _) (false , _) (p , _) = ⊥.rec (false≢true p)
- -- -- -- --  redex-ε-η* (false , x) (true , _) (_ , q) = 
- -- -- -- --    cong (inv (η x) ·_) (cong (η) (sym q)) ∙ ·InvL (η x) 
- -- -- -- --  redex-ε-η* (true , x) (false , _) (_ , q) =
- -- -- -- --    cong (η x ·_) (cong (inv ∘ η) (sym q)) ∙ ·InvR (η x)
- -- -- -- --  redex-ε-η* (true , _) (true , _) (p , _) = ⊥.rec (true≢false p)
+ -- -- -- -- -- isEquivRel↙↘ : isEquivRel _↙↘_ 
+ -- -- -- -- -- isEquivRel.reflexive isEquivRel↙↘ = ↙↘refl
+ -- -- -- -- -- isEquivRel.symmetric isEquivRel↙↘ = ↙↘sym
+ -- -- -- -- -- isEquivRel.transitive isEquivRel↙↘ = ↙↘trans
 
 
 
 
+ -- -- -- -- -- List/↓ : Type ℓ
+ -- -- -- -- -- List/↓ = _ /₂ _↓_
+
+
+ -- -- -- -- -- List/↓· : List/↓ → List/↓ → List/↓
+ -- -- -- -- -- List/↓· =  SQ.rec2 squash/ (λ a b → SQ.[ a ++ b ])
+ -- -- -- -- --    (λ a b c → eq/ _ _ ∘ flip (↓++↓ _ _ _ _) (↓refl c))
+ -- -- -- -- --    (λ a b c → eq/ _ _ ∘ ↓++↓ _ _ _ _ (↓refl a))
+
+
+ -- -- -- -- -- List/↓Group : GroupStr List/↓
+ -- -- -- -- -- GroupStr.1g List/↓Group = SQ.[ [] ]
+ -- -- -- -- -- GroupStr._·_ List/↓Group = List/↓·
+
+ -- -- -- -- -- GroupStr.inv List/↓Group =
+ -- -- -- -- --   SQ.rec squash/ (SQ.[_] ∘ rev)
+ -- -- -- -- --    {!!}
+ -- -- -- -- -- GroupStr.isGroup List/↓Group = {!!}
 
 
 
- -- -- -- -- -- -- -- -- -- ↓trans : isTrans _↓_
- -- -- -- -- -- -- -- -- -- ↓trans xs [] zs u v = subst (xs ↓_) (sym ([]↓ zs v)) u
- -- -- -- -- -- -- -- -- -- ↓trans xs (x ∷ ys) zs u v = {!!}
+ -- -- -- -- -- module FG (freeGroupGroup : Group ℓ)
+ -- -- -- -- --           (η : A → ⟨ freeGroupGroup ⟩) where 
+
+ -- -- -- -- --  FreeGroup = ⟨ freeGroupGroup ⟩
+
+ -- -- -- -- --  open GroupStr (snd freeGroupGroup)
+
+ -- -- -- -- --  open GroupTheory freeGroupGroup
+
+ -- -- -- -- --  η* : Bool × A → FreeGroup
+ -- -- -- -- --  η* (b , a) = (if b then idfun _ else inv) (η a)
+
+ -- -- -- -- --  fromList' : FreeGroup → List (Bool × A) → FreeGroup
+ -- -- -- -- --  fromList' = foldr (_·_ ∘ η*) 
+
+ -- -- -- -- --  fromList : List (Bool × A) → FreeGroup
+ -- -- -- -- --  fromList = fromList' 1g
+
+ -- -- -- -- --  fromList· : ∀ xs ys → fromList (xs ++ ys) ≡
+ -- -- -- -- --                            fromList xs · fromList ys
+ -- -- -- -- --  fromList· [] _ = sym (·IdL _)
+ -- -- -- -- --  fromList· (_ ∷ xs) _ =
+ -- -- -- -- --   cong (_ ·_) (fromList· xs _) ∙
+ -- -- -- -- --    ·Assoc _ _ _
+
+ -- -- -- -- --  redex-ε-η* : ∀ x x' → IsRedex x x' → η* x · η* x' ≡ 1g
+ -- -- -- -- --  redex-ε-η* (false , _) (false , _) (p , _) = ⊥.rec (false≢true p)
+ -- -- -- -- --  redex-ε-η* (false , x) (true , _) (_ , q) = 
+ -- -- -- -- --    cong (inv (η x) ·_) (cong (η) (sym q)) ∙ ·InvL (η x) 
+ -- -- -- -- --  redex-ε-η* (true , x) (false , _) (_ , q) =
+ -- -- -- -- --    cong (η x ·_) (cong (inv ∘ η) (sym q)) ∙ ·InvR (η x)
+ -- -- -- -- --  redex-ε-η* (true , _) (true , _) (p , _) = ⊥.rec (true≢false p)
+
+
+
+
+
+
+
+ -- -- -- -- -- -- -- -- -- -- ↓trans : isTrans _↓_
+ -- -- -- -- -- -- -- -- -- -- ↓trans xs [] zs u v = subst (xs ↓_) (sym ([]↓ zs v)) u
+ -- -- -- -- -- -- -- -- -- -- ↓trans xs (x ∷ ys) zs u v = {!!}
  
- -- -- -- -- -- -- -- -- -- -- infix 3 [_]_↓'_ [_]_∷↓'_ [_]_↓∷'_ _↓∷Fst_
+ -- -- -- -- -- -- -- -- -- -- -- infix 3 [_]_↓'_ [_]_∷↓'_ [_]_↓∷'_ _↓∷Fst_
 
 
- -- -- -- -- -- -- -- -- -- -- _↓∷Fst_ : List (Bool × A) → List (Bool × A) → Type ℓ 
- -- -- -- -- -- -- -- -- -- -- xs ↓∷Fst ys = Σ (_ × _)  λ (redL , xsR) → ((evRED redL) ++ xsR ≡ xs)
+ -- -- -- -- -- -- -- -- -- -- -- _↓∷Fst_ : List (Bool × A) → List (Bool × A) → Type ℓ 
+ -- -- -- -- -- -- -- -- -- -- -- xs ↓∷Fst ys = Σ (_ × _)  λ (redL , xsR) → ((evRED redL) ++ xsR ≡ xs)
 
- -- -- -- -- -- -- -- -- -- -- -- ↓∷Snd : (xs ys : List (Bool × A)) → xs ↓∷Fst ys → Type ℓ
- -- -- -- -- -- -- -- -- -- -- -- ↓∷Snd = {!!}
- -- -- -- -- -- -- -- -- -- -- -- ↓∷Fst  = Σ (_ × _)  λ (redL , xsR) → ((evRED redL) ++ xsR ≡ xs)
+ -- -- -- -- -- -- -- -- -- -- -- -- ↓∷Snd : (xs ys : List (Bool × A)) → xs ↓∷Fst ys → Type ℓ
+ -- -- -- -- -- -- -- -- -- -- -- -- ↓∷Snd = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- ↓∷Fst  = Σ (_ × _)  λ (redL , xsR) → ((evRED redL) ++ xsR ≡ xs)
  
- -- -- -- -- -- -- -- -- -- -- [_]_↓∷'_ : List (Bool × A) → List (Bool × A) → List (Bool × A) → Type ℓ
- -- -- -- -- -- -- -- -- -- -- [_]_↓'_ : List (Bool × A) → List (Bool × A) → List (Bool × A) → Type ℓ
- -- -- -- -- -- -- -- -- -- -- [_]_∷↓'_ : List (Bool × A) → List (Bool × A) → List (Bool × A) → Type ℓ
+ -- -- -- -- -- -- -- -- -- -- -- [_]_↓∷'_ : List (Bool × A) → List (Bool × A) → List (Bool × A) → Type ℓ
+ -- -- -- -- -- -- -- -- -- -- -- [_]_↓'_ : List (Bool × A) → List (Bool × A) → List (Bool × A) → Type ℓ
+ -- -- -- -- -- -- -- -- -- -- -- [_]_∷↓'_ : List (Bool × A) → List (Bool × A) → List (Bool × A) → Type ℓ
 
- -- -- -- -- -- -- -- -- -- -- [ [] ] xs ↓∷' ys = ⊥*
- -- -- -- -- -- -- -- -- -- -- [ x ∷ tx ] xs ↓∷' ys =
- -- -- -- -- -- -- -- -- -- --   Σ (xs ↓∷Fst ys)
- -- -- -- -- -- -- -- -- -- --      λ q → [ tx ] snd (fst q) ↓' ys 
+ -- -- -- -- -- -- -- -- -- -- -- [ [] ] xs ↓∷' ys = ⊥*
+ -- -- -- -- -- -- -- -- -- -- -- [ x ∷ tx ] xs ↓∷' ys =
+ -- -- -- -- -- -- -- -- -- -- --   Σ (xs ↓∷Fst ys)
+ -- -- -- -- -- -- -- -- -- -- --      λ q → [ tx ] snd (fst q) ↓' ys 
  
 
  
- -- -- -- -- -- -- -- -- -- -- [ _ ] [] ∷↓' [] = Unit*
- -- -- -- -- -- -- -- -- -- -- [ _ ] [] ∷↓' _ ∷ _ = ⊥*
- -- -- -- -- -- -- -- -- -- -- [ _ ] _ ∷ _ ∷↓' [] = ⊥*
- -- -- -- -- -- -- -- -- -- -- [ [] ] x₁ ∷ xs ∷↓' y ∷ ys = ⊥*
- -- -- -- -- -- -- -- -- -- -- [ _ ∷ tx ] x ∷ xs ∷↓' y ∷ ys =
- -- -- -- -- -- -- -- -- -- --    (x ≡ y) × ([ tx ] xs ↓' ys)
+ -- -- -- -- -- -- -- -- -- -- -- [ _ ] [] ∷↓' [] = Unit*
+ -- -- -- -- -- -- -- -- -- -- -- [ _ ] [] ∷↓' _ ∷ _ = ⊥*
+ -- -- -- -- -- -- -- -- -- -- -- [ _ ] _ ∷ _ ∷↓' [] = ⊥*
+ -- -- -- -- -- -- -- -- -- -- -- [ [] ] x₁ ∷ xs ∷↓' y ∷ ys = ⊥*
+ -- -- -- -- -- -- -- -- -- -- -- [ _ ∷ tx ] x ∷ xs ∷↓' y ∷ ys =
+ -- -- -- -- -- -- -- -- -- -- --    (x ≡ y) × ([ tx ] xs ↓' ys)
  
- -- -- -- -- -- -- -- -- -- -- [ tx ] xs ↓' ys =
- -- -- -- -- -- -- -- -- -- --   ([ tx ] xs ↓∷' ys) ⊎.⊎
- -- -- -- -- -- -- -- -- -- --     ([ tx ] xs ∷↓' ys)  
+ -- -- -- -- -- -- -- -- -- -- -- [ tx ] xs ↓' ys =
+ -- -- -- -- -- -- -- -- -- -- --   ([ tx ] xs ↓∷' ys) ⊎.⊎
+ -- -- -- -- -- -- -- -- -- -- --     ([ tx ] xs ∷↓' ys)  
 
- -- -- -- -- -- -- -- -- -- -- ↓∷'→len≥2 : ∀ ts xs ys → [ ts ] xs ↓∷' ys → 2 ≤ length xs  
- -- -- -- -- -- -- -- -- -- -- ↓∷'→len≥2 (_ ∷ _) xs ys (((redL , xsR) , p) , _) =
- -- -- -- -- -- -- -- -- -- --   let p' =  cong suc (cong (_+ length xsR)
- -- -- -- -- -- -- -- -- -- --              (sym (+-suc _ _) ∙ sym (length++ (flatten (Li.map (λ x₁ → evRed x₁ []) (snd redL)))
- -- -- -- -- -- -- -- -- -- --                [ (not (fst (fst redL)) , snd (fst redL)) ])) ∙ sym (length++
- -- -- -- -- -- -- -- -- -- --             ((flatten (Li.map (λ x₁ → evRed x₁ []) (snd redL)) ++
- -- -- -- -- -- -- -- -- -- --                (not (fst (fst redL)) , snd (fst redL)) ∷ [])
- -- -- -- -- -- -- -- -- -- --                ) xsR)) ∙ cong length p
- -- -- -- -- -- -- -- -- -- --   in subst (2 ≤_) p' tt   
+ -- -- -- -- -- -- -- -- -- -- -- ↓∷'→len≥2 : ∀ ts xs ys → [ ts ] xs ↓∷' ys → 2 ≤ length xs  
+ -- -- -- -- -- -- -- -- -- -- -- ↓∷'→len≥2 (_ ∷ _) xs ys (((redL , xsR) , p) , _) =
+ -- -- -- -- -- -- -- -- -- -- --   let p' =  cong suc (cong (_+ length xsR)
+ -- -- -- -- -- -- -- -- -- -- --              (sym (+-suc _ _) ∙ sym (length++ (flatten (Li.map (λ x₁ → evRed x₁ []) (snd redL)))
+ -- -- -- -- -- -- -- -- -- -- --                [ (not (fst (fst redL)) , snd (fst redL)) ])) ∙ sym (length++
+ -- -- -- -- -- -- -- -- -- -- --             ((flatten (Li.map (λ x₁ → evRed x₁ []) (snd redL)) ++
+ -- -- -- -- -- -- -- -- -- -- --                (not (fst (fst redL)) , snd (fst redL)) ∷ [])
+ -- -- -- -- -- -- -- -- -- -- --                ) xsR)) ∙ cong length p
+ -- -- -- -- -- -- -- -- -- -- --   in subst (2 ≤_) p' tt   
  
- -- -- -- -- -- -- -- -- -- -- open BinaryRelation
+ -- -- -- -- -- -- -- -- -- -- -- open BinaryRelation
 
- -- -- -- -- -- -- -- -- -- -- -- [[]]↓'→⊥ : ∀ xs ys → [ [] ] xs ↓' ys → xs ≡ ys
- -- -- -- -- -- -- -- -- -- -- -- [[]]↓'→⊥ [] [] (inr x) = {!!}
- -- -- -- -- -- -- -- -- -- -- -- [[]]↓'→⊥ (x₁ ∷ xs) [] (inr ())
- -- -- -- -- -- -- -- -- -- -- -- [[]]↓'→⊥ (x₁ ∷ xs) (x₂ ∷ ys) (inr ())
+ -- -- -- -- -- -- -- -- -- -- -- -- [[]]↓'→⊥ : ∀ xs ys → [ [] ] xs ↓' ys → xs ≡ ys
+ -- -- -- -- -- -- -- -- -- -- -- -- [[]]↓'→⊥ [] [] (inr x) = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- [[]]↓'→⊥ (x₁ ∷ xs) [] (inr ())
+ -- -- -- -- -- -- -- -- -- -- -- -- [[]]↓'→⊥ (x₁ ∷ xs) (x₂ ∷ ys) (inr ())
 
- -- -- -- -- -- -- -- -- -- -- -- isTrans-↓∷' : ∀ tx → isTrans [ tx ]_↓∷'_
- -- -- -- -- -- -- -- -- -- -- -- isTrans-∷↓' : ∀ tx → isTrans [ tx ]_∷↓'_
- -- -- -- -- -- -- -- -- -- -- isTrans-↓' : ∀ tx tx' → ∀ a b c →
- -- -- -- -- -- -- -- -- -- --                       ([ tx ] a ↓' b) →
- -- -- -- -- -- -- -- -- -- --                       ([ tx' ] b ↓' c) →
- -- -- -- -- -- -- -- -- -- --                       ([ tx ] a ↓' c)
+ -- -- -- -- -- -- -- -- -- -- -- -- isTrans-↓∷' : ∀ tx → isTrans [ tx ]_↓∷'_
+ -- -- -- -- -- -- -- -- -- -- -- -- isTrans-∷↓' : ∀ tx → isTrans [ tx ]_∷↓'_
+ -- -- -- -- -- -- -- -- -- -- -- isTrans-↓' : ∀ tx tx' → ∀ a b c →
+ -- -- -- -- -- -- -- -- -- -- --                       ([ tx ] a ↓' b) →
+ -- -- -- -- -- -- -- -- -- -- --                       ([ tx' ] b ↓' c) →
+ -- -- -- -- -- -- -- -- -- -- --                       ([ tx ] a ↓' c)
 
- -- -- -- -- -- -- -- -- -- -- -- isTrans-↓∷' (x ∷ tx) xs ys zs p q = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- isTrans-↓∷' (x ∷ tx) xs ys zs p q = {!!}
 
 
- -- -- -- -- -- -- -- -- -- -- isTrans-∷↓'-↓∷'-lem : ∀ tx → ∀ a x bL bR →
- -- -- -- -- -- -- -- -- -- --                       ([ tx ] (x ∷ a) ∷↓' (evRED (x , bL)) ++ bR) →
- -- -- -- -- -- -- -- -- -- --                       Σ (List Red × List (Bool × A))
- -- -- -- -- -- -- -- -- -- --                        λ (aL , aR) →
- -- -- -- -- -- -- -- -- -- --                          {!!} × ([ tx ] aR ↓' bR )
- -- -- -- -- -- -- -- -- -- -- isTrans-∷↓'-↓∷'-lem = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- isTrans-∷↓'-↓∷'-lem : ∀ tx → ∀ a x bL bR →
+ -- -- -- -- -- -- -- -- -- -- --                       ([ tx ] (x ∷ a) ∷↓' (evRED (x , bL)) ++ bR) →
+ -- -- -- -- -- -- -- -- -- -- --                       Σ (List Red × List (Bool × A))
+ -- -- -- -- -- -- -- -- -- -- --                        λ (aL , aR) →
+ -- -- -- -- -- -- -- -- -- -- --                          {!!} × ([ tx ] aR ↓' bR )
+ -- -- -- -- -- -- -- -- -- -- -- isTrans-∷↓'-↓∷'-lem = {!!}
  
- -- -- -- -- -- -- -- -- -- -- isTrans-∷↓'-↓∷' : ∀ tx tx' → ∀ a x bL bR c →
- -- -- -- -- -- -- -- -- -- --                       ([ tx ] (x ∷ a) ∷↓' (evRED (x , bL)) ++ bR) →
- -- -- -- -- -- -- -- -- -- --                       ([ tx' ] (evRED (x , bL)) ++ bR ↓∷' c) →
- -- -- -- -- -- -- -- -- -- --                       ([ tx ] (x ∷ a) ↓∷' c)
- -- -- -- -- -- -- -- -- -- -- isTrans-∷↓'-↓∷' tx tx' a x bL bR c = {!!}
- -- -- -- -- -- -- -- -- -- -- -- tx tx' (x ∷ a) (fst₁ , []) bR [] p q = {!!}
- -- -- -- -- -- -- -- -- -- -- -- isTrans-∷↓'-↓∷' tx tx' (x ∷ a) (fst₁ , []) bR (x₁ ∷ c) p q = {!!}
- -- -- -- -- -- -- -- -- -- -- -- isTrans-∷↓'-↓∷' tx tx' (x₁ ∷ a) (fst₁ , x ∷ snd₁) bR c p q = {!c!}
+ -- -- -- -- -- -- -- -- -- -- -- isTrans-∷↓'-↓∷' : ∀ tx tx' → ∀ a x bL bR c →
+ -- -- -- -- -- -- -- -- -- -- --                       ([ tx ] (x ∷ a) ∷↓' (evRED (x , bL)) ++ bR) →
+ -- -- -- -- -- -- -- -- -- -- --                       ([ tx' ] (evRED (x , bL)) ++ bR ↓∷' c) →
+ -- -- -- -- -- -- -- -- -- -- --                       ([ tx ] (x ∷ a) ↓∷' c)
+ -- -- -- -- -- -- -- -- -- -- -- isTrans-∷↓'-↓∷' tx tx' a x bL bR c = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- tx tx' (x ∷ a) (fst₁ , []) bR [] p q = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- isTrans-∷↓'-↓∷' tx tx' (x ∷ a) (fst₁ , []) bR (x₁ ∷ c) p q = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- isTrans-∷↓'-↓∷' tx tx' (x₁ ∷ a) (fst₁ , x ∷ snd₁) bR c p q = {!c!}
 
- -- -- -- -- -- -- -- -- -- -- isTrans-↓' tx [] a b c (inr x) (inl ())
- -- -- -- -- -- -- -- -- -- -- isTrans-↓' tx tx'@(_ ∷ _) a [] c (inr x) (inl x'@(((bL , bR) , p) , q)) =
- -- -- -- -- -- -- -- -- -- --   ⊥.rec (¬cons≡nil p)
- -- -- -- -- -- -- -- -- -- -- isTrans-↓' tx@(_ ∷ _) tx'@(_ ∷ _) (ha ∷ a) (x ∷ b) c (inr u) (inl x'@((((_ , bL) , bR) , p) , q)) =
- -- -- -- -- -- -- -- -- -- --  let pp = sym p ∙ cong (λ h → evRED (h , bL) ++ bR)
- -- -- -- -- -- -- -- -- -- --             (cons-inj₁ p ∙ sym (fst u))
- -- -- -- -- -- -- -- -- -- --  in inl (isTrans-∷↓'-↓∷' tx tx' a ha bL bR c
- -- -- -- -- -- -- -- -- -- --     (subst ([ tx ] (ha ∷ a) ∷↓'_) pp u)
- -- -- -- -- -- -- -- -- -- --     (subst ( [ tx' ]_↓∷' c) pp x')
- -- -- -- -- -- -- -- -- -- --    )
+ -- -- -- -- -- -- -- -- -- -- -- isTrans-↓' tx [] a b c (inr x) (inl ())
+ -- -- -- -- -- -- -- -- -- -- -- isTrans-↓' tx tx'@(_ ∷ _) a [] c (inr x) (inl x'@(((bL , bR) , p) , q)) =
+ -- -- -- -- -- -- -- -- -- -- --   ⊥.rec (¬cons≡nil p)
+ -- -- -- -- -- -- -- -- -- -- -- isTrans-↓' tx@(_ ∷ _) tx'@(_ ∷ _) (ha ∷ a) (x ∷ b) c (inr u) (inl x'@((((_ , bL) , bR) , p) , q)) =
+ -- -- -- -- -- -- -- -- -- -- --  let pp = sym p ∙ cong (λ h → evRED (h , bL) ++ bR)
+ -- -- -- -- -- -- -- -- -- -- --             (cons-inj₁ p ∙ sym (fst u))
+ -- -- -- -- -- -- -- -- -- -- --  in inl (isTrans-∷↓'-↓∷' tx tx' a ha bL bR c
+ -- -- -- -- -- -- -- -- -- -- --     (subst ([ tx ] (ha ∷ a) ∷↓'_) pp u)
+ -- -- -- -- -- -- -- -- -- -- --     (subst ( [ tx' ]_↓∷' c) pp x')
+ -- -- -- -- -- -- -- -- -- -- --    )
 
- -- -- -- -- -- -- -- -- -- -- isTrans-↓' tx tx' [] [] [] (inr x) (inr _) = inr _
- -- -- -- -- -- -- -- -- -- -- isTrans-↓' (_ ∷ tx) [] (x₂ ∷ xs) (x₃ ∷ ys) (x₄ ∷ zs) (inr (p , q)) (inr ())
- -- -- -- -- -- -- -- -- -- -- isTrans-↓' (_ ∷ tx) (_ ∷ tx') (x₂ ∷ xs) (x₃ ∷ ys) (x₄ ∷ zs) (inr (p , q)) (inr (p' , q'))  = inr (p ∙ p' , isTrans-↓' tx tx' xs ys zs q q')
- -- -- -- -- -- -- -- -- -- -- isTrans-↓' (_ ∷ tx) tx' xs ys zs (inl ((((rL , rs) , w) , q))) v =
- -- -- -- -- -- -- -- -- -- --  let u = isTrans-↓' tx tx' rs ys zs q v
- -- -- -- -- -- -- -- -- -- --  in inl (((rL , rs) , w) , u)
-
-
- -- -- -- -- -- -- -- -- -- -- -- infix 3 _↓_ _∷↓_ _↓∷_
-
- -- -- -- -- -- -- -- -- -- -- _↓_ : List (Bool × A) → List (Bool × A) → Type ℓ 
- -- -- -- -- -- -- -- -- -- -- xs ↓ ys = [ xs ] xs ↓' ys
-
- -- -- -- -- -- -- -- -- -- -- -- -- _↓∷_ : List (Bool × A) → List (Bool × A) → Type ℓ
- -- -- -- -- -- -- -- -- -- -- -- -- _↓_ : List (Bool × A) → List (Bool × A) → Type ℓ
- -- -- -- -- -- -- -- -- -- -- -- -- _∷↓_ : List (Bool × A) → List (Bool × A) → Type ℓ
-
- -- -- -- -- -- -- -- -- -- -- -- ↓∷H : ∀ n → (l : List (Bool × A)) → length l ≤ n  → List (Bool × A) → Type ℓ
- -- -- -- -- -- -- -- -- -- -- -- ↓H : ∀ n → (l : List (Bool × A)) → length l ≤ n  → List (Bool × A) → Type ℓ
-
- -- -- -- -- -- -- -- -- -- -- -- ↓∷H zero _ _ _ = ⊥*
- -- -- -- -- -- -- -- -- -- -- -- ↓∷H (suc n) xs l≤sn xs'  =
- -- -- -- -- -- -- -- -- -- -- --      Σ (_ × _)  λ (redL , xsR) →
- -- -- -- -- -- -- -- -- -- -- --     (((evRED redL) ++ xsR ≡ xs) ×
- -- -- -- -- -- -- -- -- -- -- --       (↓∷H n {!!} {!!} {!!} ⊎ ↓H n xsR {!!} xs') )
-
- -- -- -- -- -- -- -- -- -- -- -- ↓H n l x x₁ =
- -- -- -- -- -- -- -- -- -- -- --   {!!}
+ -- -- -- -- -- -- -- -- -- -- -- isTrans-↓' tx tx' [] [] [] (inr x) (inr _) = inr _
+ -- -- -- -- -- -- -- -- -- -- -- isTrans-↓' (_ ∷ tx) [] (x₂ ∷ xs) (x₃ ∷ ys) (x₄ ∷ zs) (inr (p , q)) (inr ())
+ -- -- -- -- -- -- -- -- -- -- -- isTrans-↓' (_ ∷ tx) (_ ∷ tx') (x₂ ∷ xs) (x₃ ∷ ys) (x₄ ∷ zs) (inr (p , q)) (inr (p' , q'))  = inr (p ∙ p' , isTrans-↓' tx tx' xs ys zs q q')
+ -- -- -- -- -- -- -- -- -- -- -- isTrans-↓' (_ ∷ tx) tx' xs ys zs (inl ((((rL , rs) , w) , q))) v =
+ -- -- -- -- -- -- -- -- -- -- --  let u = isTrans-↓' tx tx' rs ys zs q v
+ -- -- -- -- -- -- -- -- -- -- --  in inl (((rL , rs) , w) , u)
 
 
- -- -- -- -- -- -- -- -- -- -- -- xs ↓∷ xs' = ↓∷H (length xs) xs (≤-refl (length xs)) xs'
- -- -- -- -- -- -- -- -- -- -- --   -- Σ (_ × _)  λ (redL , xsR) →
- -- -- -- -- -- -- -- -- -- -- --   --   (((evRED redL) ++ xsR ≡ xs) × {!? ↓ ?!} )
- 
- -- -- -- -- -- -- -- -- -- -- -- [] ∷↓ [] = Unit*
- -- -- -- -- -- -- -- -- -- -- -- [] ∷↓ _ ∷ _ = ⊥*
- -- -- -- -- -- -- -- -- -- -- -- _ ∷ _ ∷↓ [] = ⊥*
- -- -- -- -- -- -- -- -- -- -- -- x ∷ xs ∷↓ x' ∷ xs' = (x ≡ x') × (xs ↓ xs')
- 
- -- -- -- -- -- -- -- -- -- -- -- xs ↓ xs' = (xs ↓∷ xs') ⊎ (xs ∷↓ xs')
+ -- -- -- -- -- -- -- -- -- -- -- -- infix 3 _↓_ _∷↓_ _↓∷_
 
- -- -- -- -- -- -- -- -- -- -- -- -- module FG (freeGroupGroup : Group ℓ)
- -- -- -- -- -- -- -- -- -- -- -- --           (η : A → ⟨ freeGroupGroup ⟩) where 
-
- -- -- -- -- -- -- -- -- -- -- -- --  FreeGroup = ⟨ freeGroupGroup ⟩
-
- -- -- -- -- -- -- -- -- -- -- -- --  open GroupStr (snd freeGroupGroup)
-
- -- -- -- -- -- -- -- -- -- -- -- --  open GroupTheory freeGroupGroup
-
- -- -- -- -- -- -- -- -- -- -- -- --  η* : Bool × A → FreeGroup
- -- -- -- -- -- -- -- -- -- -- -- --  η* (b , a) = (if b then idfun _ else inv) (η a)
-
- -- -- -- -- -- -- -- -- -- -- -- --  fromList' : FreeGroup → List (Bool × A) → FreeGroup
- -- -- -- -- -- -- -- -- -- -- -- --  fromList' = foldr (_·_ ∘ η*) 
-
- -- -- -- -- -- -- -- -- -- -- -- --  fromList : List (Bool × A) → FreeGroup
- -- -- -- -- -- -- -- -- -- -- -- --  fromList = fromList' 1g
-
- -- -- -- -- -- -- -- -- -- -- -- --  fromList· : ∀ xs ys → fromList (xs ++ ys) ≡
- -- -- -- -- -- -- -- -- -- -- -- --                            fromList xs · fromList ys
- -- -- -- -- -- -- -- -- -- -- -- --  fromList· [] _ = sym (·IdL _)
- -- -- -- -- -- -- -- -- -- -- -- --  fromList· (_ ∷ xs) _ =
- -- -- -- -- -- -- -- -- -- -- -- --   cong (_ ·_) (fromList· xs _) ∙
- -- -- -- -- -- -- -- -- -- -- -- --    ·Assoc _ _ _
-
- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* : ∀ x x' → IsRedex x x' → η* x · η* x' ≡ 1g
- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (false , _) (false , _) (p , _) = ⊥.rec (false≢true p)
- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (false , x) (true , _) (_ , q) = 
- -- -- -- -- -- -- -- -- -- -- -- --    cong (inv (η x) ·_) (cong (η) (sym q)) ∙ ·InvL (η x) 
- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (true , x) (false , _) (_ , q) =
- -- -- -- -- -- -- -- -- -- -- -- --    cong (η x ·_) (cong (inv ∘ η) (sym q)) ∙ ·InvR (η x)
- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (true , _) (true , _) (p , _) = ⊥.rec (true≢false p)
-
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- infix 3 _↓_ _∷↓_ _↓∷_
+ -- -- -- -- -- -- -- -- -- -- -- _↓_ : List (Bool × A) → List (Bool × A) → Type ℓ 
+ -- -- -- -- -- -- -- -- -- -- -- xs ↓ ys = [ xs ] xs ↓' ys
 
  -- -- -- -- -- -- -- -- -- -- -- -- -- _↓∷_ : List (Bool × A) → List (Bool × A) → Type ℓ
  -- -- -- -- -- -- -- -- -- -- -- -- -- _↓_ : List (Bool × A) → List (Bool × A) → Type ℓ
  -- -- -- -- -- -- -- -- -- -- -- -- -- _∷↓_ : List (Bool × A) → List (Bool × A) → Type ℓ
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- [] ↓∷ xs' = ⊥*
- -- -- -- -- -- -- -- -- -- -- -- -- -- (x ∷ []) ↓∷ xs' = ⊥*
- -- -- -- -- -- -- -- -- -- -- -- -- -- (x ∷ x' ∷ xs) ↓∷ xs' = IsRedex x x' × (xs ↓ xs')
+ -- -- -- -- -- -- -- -- -- -- -- -- ↓∷H : ∀ n → (l : List (Bool × A)) → length l ≤ n  → List (Bool × A) → Type ℓ
+ -- -- -- -- -- -- -- -- -- -- -- -- ↓H : ∀ n → (l : List (Bool × A)) → length l ≤ n  → List (Bool × A) → Type ℓ
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- [] ∷↓ [] = Unit*
- -- -- -- -- -- -- -- -- -- -- -- -- -- [] ∷↓ _ ∷ _ = ⊥*
- -- -- -- -- -- -- -- -- -- -- -- -- -- _ ∷ _ ∷↓ [] = ⊥*
- -- -- -- -- -- -- -- -- -- -- -- -- -- x ∷ xs ∷↓ x' ∷ xs' = (x ≡ x') × (xs ↓ xs')
+ -- -- -- -- -- -- -- -- -- -- -- -- ↓∷H zero _ _ _ = ⊥*
+ -- -- -- -- -- -- -- -- -- -- -- -- ↓∷H (suc n) xs l≤sn xs'  =
+ -- -- -- -- -- -- -- -- -- -- -- --      Σ (_ × _)  λ (redL , xsR) →
+ -- -- -- -- -- -- -- -- -- -- -- --     (((evRED redL) ++ xsR ≡ xs) ×
+ -- -- -- -- -- -- -- -- -- -- -- --       (↓∷H n {!!} {!!} {!!} ⊎ ↓H n xsR {!!} xs') )
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- xs ↓ xs' = (xs ↓∷ xs') ⊎ (xs ∷↓ xs')
+ -- -- -- -- -- -- -- -- -- -- -- -- ↓H n l x x₁ =
+ -- -- -- -- -- -- -- -- -- -- -- --   {!!}
 
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓refl : ∀ x → x ∷↓ x
- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓refl : ∀ x → x ↓ x
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓refl [] = tt*
- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓refl (_ ∷ xs) = refl , ↓refl xs
+ -- -- -- -- -- -- -- -- -- -- -- -- xs ↓∷ xs' = ↓∷H (length xs) xs (≤-refl (length xs)) xs'
+ -- -- -- -- -- -- -- -- -- -- -- --   -- Σ (_ × _)  λ (redL , xsR) →
+ -- -- -- -- -- -- -- -- -- -- -- --   --   (((evRED redL) ++ xsR ≡ xs) × {!? ↓ ?!} )
  
- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓refl x = ⊎.inr (∷↓refl x)
-
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓trans : ∀ x y z → x ∷↓ y → y ∷↓ z → x ∷↓ z
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓trans = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- [] ∷↓ [] = Unit*
+ -- -- -- -- -- -- -- -- -- -- -- -- [] ∷↓ _ ∷ _ = ⊥*
+ -- -- -- -- -- -- -- -- -- -- -- -- _ ∷ _ ∷↓ [] = ⊥*
+ -- -- -- -- -- -- -- -- -- -- -- -- x ∷ xs ∷↓ x' ∷ xs' = (x ≡ x') × (xs ↓ xs')
  
- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans-∷↓-↓∷ :  ∀ x y z → x ∷↓ y → y ↓∷ z → x ↓ z
+ -- -- -- -- -- -- -- -- -- -- -- -- xs ↓ xs' = (xs ↓∷ xs') ⊎ (xs ∷↓ xs')
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans : ∀ x y z → x ↓ y → y ↓ z → x ↓ z
- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans x y z (inr p) (inl q) = {!!}
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans (x ∷ []) (x' ∷ x₂ ∷ ys) zs (inr (fst₁ , inl ())) (inl x₁)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans (x ∷ []) (x' ∷ x₂ ∷ ys) zs (inr (fst₁ , inr ())) (inl x₁)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans (x ∷ x₃ ∷ x₄ ∷ xs) (x' ∷ x₂ ∷ ys) zs (inr (p , inl x₁)) (inl (q , r)) =    {!!}
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans (x ∷ x₃ ∷ xs) (x' ∷ x₂ ∷ ys) zs (inr (p , inr (p' , p''))) (inl (q , r)) =
- -- -- -- -- -- -- -- -- -- -- -- -- -- --   inl (subst2 IsRedex {!!} {!!} q
- -- -- -- -- -- -- -- -- -- -- -- -- -- --     , (↓trans _ _ _ p'' r))
+ -- -- -- -- -- -- -- -- -- -- -- -- -- module FG (freeGroupGroup : Group ℓ)
+ -- -- -- -- -- -- -- -- -- -- -- -- --           (η : A → ⟨ freeGroupGroup ⟩) where 
+
+ -- -- -- -- -- -- -- -- -- -- -- -- --  FreeGroup = ⟨ freeGroupGroup ⟩
+
+ -- -- -- -- -- -- -- -- -- -- -- -- --  open GroupStr (snd freeGroupGroup)
+
+ -- -- -- -- -- -- -- -- -- -- -- -- --  open GroupTheory freeGroupGroup
+
+ -- -- -- -- -- -- -- -- -- -- -- -- --  η* : Bool × A → FreeGroup
+ -- -- -- -- -- -- -- -- -- -- -- -- --  η* (b , a) = (if b then idfun _ else inv) (η a)
+
+ -- -- -- -- -- -- -- -- -- -- -- -- --  fromList' : FreeGroup → List (Bool × A) → FreeGroup
+ -- -- -- -- -- -- -- -- -- -- -- -- --  fromList' = foldr (_·_ ∘ η*) 
+
+ -- -- -- -- -- -- -- -- -- -- -- -- --  fromList : List (Bool × A) → FreeGroup
+ -- -- -- -- -- -- -- -- -- -- -- -- --  fromList = fromList' 1g
+
+ -- -- -- -- -- -- -- -- -- -- -- -- --  fromList· : ∀ xs ys → fromList (xs ++ ys) ≡
+ -- -- -- -- -- -- -- -- -- -- -- -- --                            fromList xs · fromList ys
+ -- -- -- -- -- -- -- -- -- -- -- -- --  fromList· [] _ = sym (·IdL _)
+ -- -- -- -- -- -- -- -- -- -- -- -- --  fromList· (_ ∷ xs) _ =
+ -- -- -- -- -- -- -- -- -- -- -- -- --   cong (_ ·_) (fromList· xs _) ∙
+ -- -- -- -- -- -- -- -- -- -- -- -- --    ·Assoc _ _ _
+
+ -- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* : ∀ x x' → IsRedex x x' → η* x · η* x' ≡ 1g
+ -- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (false , _) (false , _) (p , _) = ⊥.rec (false≢true p)
+ -- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (false , x) (true , _) (_ , q) = 
+ -- -- -- -- -- -- -- -- -- -- -- -- --    cong (inv (η x) ·_) (cong (η) (sym q)) ∙ ·InvL (η x) 
+ -- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (true , x) (false , _) (_ , q) =
+ -- -- -- -- -- -- -- -- -- -- -- -- --    cong (η x ·_) (cong (inv ∘ η) (sym q)) ∙ ·InvR (η x)
+ -- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (true , _) (true , _) (p , _) = ⊥.rec (true≢false p)
+
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- infix 3 _↓_ _∷↓_ _↓∷_
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- _↓∷_ : List (Bool × A) → List (Bool × A) → Type ℓ
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- _↓_ : List (Bool × A) → List (Bool × A) → Type ℓ
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- _∷↓_ : List (Bool × A) → List (Bool × A) → Type ℓ
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- [] ↓∷ xs' = ⊥*
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- (x ∷ []) ↓∷ xs' = ⊥*
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- (x ∷ x' ∷ xs) ↓∷ xs' = IsRedex x x' × (xs ↓ xs')
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- [] ∷↓ [] = Unit*
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- [] ∷↓ _ ∷ _ = ⊥*
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- _ ∷ _ ∷↓ [] = ⊥*
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- x ∷ xs ∷↓ x' ∷ xs' = (x ≡ x') × (xs ↓ xs')
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- xs ↓ xs' = (xs ↓∷ xs') ⊎ (xs ∷↓ xs')
+
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓refl : ∀ x → x ∷↓ x
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓refl : ∀ x → x ↓ x
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓refl [] = tt*
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓refl (_ ∷ xs) = refl , ↓refl xs
  
- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans [] [] _ (inr _) (inr x) = inr x
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓refl x = ⊎.inr (∷↓refl x)
+
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓trans : ∀ x y z → x ∷↓ y → y ∷↓ z → x ∷↓ z
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓trans = {!!}
+ 
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans-∷↓-↓∷ :  ∀ x y z → x ∷↓ y → y ↓∷ z → x ↓ z
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans : ∀ x y z → x ↓ y → y ↓ z → x ↓ z
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans x y z (inr p) (inl q) = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans (x ∷ []) (x' ∷ x₂ ∷ ys) zs (inr (fst₁ , inl ())) (inl x₁)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans (x ∷ []) (x' ∷ x₂ ∷ ys) zs (inr (fst₁ , inr ())) (inl x₁)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans (x ∷ x₃ ∷ x₄ ∷ xs) (x' ∷ x₂ ∷ ys) zs (inr (p , inl x₁)) (inl (q , r)) =    {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans (x ∷ x₃ ∷ xs) (x' ∷ x₂ ∷ ys) zs (inr (p , inr (p' , p''))) (inl (q , r)) =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   inl (subst2 IsRedex {!!} {!!} q
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- --     , (↓trans _ _ _ p'' r))
+ 
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans [] [] _ (inr _) (inr x) = inr x
     
- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans (x ∷ xs) (x' ∷ ys) [] (inr p) (inr ())
- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans (x ∷ xs) (x' ∷ ys) (z' ∷ zs) (inr (p , q)) (inr (p' , q')) =
- -- -- -- -- -- -- -- -- -- -- -- -- --   inr (p ∙ p' , ↓trans _ _ _ q q' )
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans (x ∷ xs) (x' ∷ ys) [] (inr p) (inr ())
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans (x ∷ xs) (x' ∷ ys) (z' ∷ zs) (inr (p , q)) (inr (p' , q')) =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- --   inr (p ∙ p' , ↓trans _ _ _ q q' )
  
- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans (x ∷ x₂ ∷ x₃) _ _ (inl (p , q)) r =
- -- -- -- -- -- -- -- -- -- -- -- -- --    inl (p , ↓trans _ _ _ q r)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans (x ∷ x₂ ∷ x₃) _ _ (inl (p , q)) r =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- --    inl (p , ↓trans _ _ _ q r)
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans-∷↓-↓∷ (x ∷ []) (x₃ ∷ x₄ ∷ y) z (fst₁ , inl ()) x₂
- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans-∷↓-↓∷ (x ∷ []) (x₃ ∷ x₄ ∷ y) z (fst₁ , inr ()) x₂
- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans-∷↓-↓∷ (x ∷ y ∷ xs) (x' ∷ y' ∷ ys) z (p , inr (p' , q')) (r , s) =
- -- -- -- -- -- -- -- -- -- -- -- -- --    inl (subst2 IsRedex (sym p) (sym p') r ,
- -- -- -- -- -- -- -- -- -- -- -- -- --        ↓trans _ _ _ q' s)
- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans-∷↓-↓∷ (x ∷ y ∷ u ∷ xs) (x' ∷ y' ∷ ys) z (p , inl (r' , s')) (r , s) =
- -- -- -- -- -- -- -- -- -- -- -- -- --   inl (subst2 IsRedex (sym p) {!!} r ,
- -- -- -- -- -- -- -- -- -- -- -- -- --     {!!} )
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans-∷↓-↓∷ (x ∷ []) (x₃ ∷ x₄ ∷ y) z (fst₁ , inl ()) x₂
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans-∷↓-↓∷ (x ∷ []) (x₃ ∷ x₄ ∷ y) z (fst₁ , inr ()) x₂
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans-∷↓-↓∷ (x ∷ y ∷ xs) (x' ∷ y' ∷ ys) z (p , inr (p' , q')) (r , s) =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- --    inl (subst2 IsRedex (sym p) (sym p') r ,
+ -- -- -- -- -- -- -- -- -- -- -- -- -- --        ↓trans _ _ _ q' s)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓trans-∷↓-↓∷ (x ∷ y ∷ u ∷ xs) (x' ∷ y' ∷ ys) z (p , inl (r' , s')) (r , s) =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- --   inl (subst2 IsRedex (sym p) {!!} r ,
+ -- -- -- -- -- -- -- -- -- -- -- -- -- --     {!!} )
  
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓→≤length : ∀ xs ys → xs ↓ ys → length ys ≤ length xs
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓∷→<length : ∀ xs ys → xs ↓∷ ys → length ys < length xs
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓→≤length : ∀ xs ys → xs ∷↓ ys → length ys ≤ length xs
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓→≤length : ∀ xs ys → xs ↓ ys → length ys ≤ length xs
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓∷→<length : ∀ xs ys → xs ↓∷ ys → length ys < length xs
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓→≤length : ∀ xs ys → xs ∷↓ ys → length ys ≤ length xs
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓→≤length [] [] x = tt
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓→≤length (x₁ ∷ xs) (x₂ ∷ ys) x = ↓→≤length xs ys (snd x)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓∷→<length (x₁ ∷ x₂ ∷ xs) ys x =
- -- -- -- -- -- -- -- -- -- -- -- -- -- --   <-weaken {length ys} (↓→≤length xs ys (snd x))
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓→≤length xs ys = ⊎.rec
- -- -- -- -- -- -- -- -- -- -- -- -- -- --   (<-weaken {length ys} ∘ ↓∷→<length xs ys)
- -- -- -- -- -- -- -- -- -- -- -- -- -- --   (∷↓→≤length xs ys)
-
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓∷asym : ∀ xs ys → xs ↓∷ ys → ys ↓∷ xs → ⊥
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓∷asym xs ys p p' =
- -- -- -- -- -- -- -- -- -- -- -- -- -- --  <-asym {length ys} (↓∷→<length xs ys p) (↓∷→<length ys xs p')
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓antisym : ∀ x y → x ∷↓ y → y ∷↓ x → x ≡ y
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓antisym : ∀ x y → x ↓ y → y ↓ x → x ≡ y
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓→≤length [] [] x = tt
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓→≤length (x₁ ∷ xs) (x₂ ∷ ys) x = ↓→≤length xs ys (snd x)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓∷→<length (x₁ ∷ x₂ ∷ xs) ys x =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   <-weaken {length ys} (↓→≤length xs ys (snd x))
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓→≤length xs ys = ⊎.rec
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   (<-weaken {length ys} ∘ ↓∷→<length xs ys)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   (∷↓→≤length xs ys)
 
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓antisym [] [] p q = refl
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓antisym (_ ∷ xs) (_ ∷ ys) (p , q) (p' , q') = 
- -- -- -- -- -- -- -- -- -- -- -- -- -- --   cong₂ _∷_ p (↓antisym xs ys q q')
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓∷asym : ∀ xs ys → xs ↓∷ ys → ys ↓∷ xs → ⊥
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓∷asym xs ys p p' =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  <-asym {length ys} (↓∷→<length xs ys p) (↓∷→<length ys xs p')
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓antisym : ∀ x y → x ∷↓ y → y ∷↓ x → x ≡ y
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓antisym : ∀ x y → x ↓ y → y ↓ x → x ≡ y
 
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓antisym xs ys (inl x) (inl x₁) = ⊥.rec (↓∷asym _ _ x x₁)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓antisym xs ys (inl x) (inr x₁) = {!!}
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓antisym xs ys (inr x) (inl x₁) = {!!}
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓antisym xs ys (inr x) (inr x₁) = ∷↓antisym xs ys x x₁
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓antisym [] [] p q = refl
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ∷↓antisym (_ ∷ xs) (_ ∷ ys) (p , q) (p' , q') = 
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   cong₂ _∷_ p (↓antisym xs ys q q')
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- _↙_↘_ : List (Bool × A) → List (Bool × A) → List (Bool × A) → Type ℓ
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- xs ↙ zs ↘ ys = (zs ↓ xs) × (zs ↓ ys)
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- _↙↘_ : List (Bool × A) → List (Bool × A) → Type ℓ
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- xs ↙↘ ys = Σ _ (xs ↙_↘ ys)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓antisym xs ys (inl x) (inl x₁) = ⊥.rec (↓∷asym _ _ x x₁)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓antisym xs ys (inl x) (inr x₁) = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓antisym xs ys (inr x) (inl x₁) = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓antisym xs ys (inr x) (inr x₁) = ∷↓antisym xs ys x x₁
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↙↘sym : ∀ x y → x ↙↘ y → y ↙↘ x
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↙↘sym x y = map-snd λ (x , y) → y , x
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- _↙_↘_ : List (Bool × A) → List (Bool × A) → List (Bool × A) → Type ℓ
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- xs ↙ zs ↘ ys = (zs ↓ xs) × (zs ↓ ys)
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↙↘refl : ∀ x → x ↙↘ x
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↙↘refl = λ x → x , ↓refl x , ↓refl x
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- _↙↘_ : List (Bool × A) → List (Bool × A) → Type ℓ
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- xs ↙↘ ys = Σ _ (xs ↙_↘ ys)
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↘↙→↙↘ : ∀ x y z → x ↓ z → y ↓ z → x ↙↘ y
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↘↙→↙↘ = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↙↘sym : ∀ x y → x ↙↘ y → y ↙↘ x
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↙↘sym x y = map-snd λ (x , y) → y , x
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↙↘refl : ∀ x → x ↙↘ x
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↙↘refl = λ x → x , ↓refl x , ↓refl x
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↘↙→↙↘ : ∀ x y z → x ↓ z → y ↓ z → x ↙↘ y
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↘↙→↙↘ = {!!}
  
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↙↘trans : ∀ x y z → x ↙↘ y → y ↙↘ z → x ↙↘ z
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↙↘trans x y z (x' , p , q) (z' , r , s) =
- -- -- -- -- -- -- -- -- -- -- -- -- -- --  let (y' , p' , q') = ↘↙→↙↘ x' z' y q r
- -- -- -- -- -- -- -- -- -- -- -- -- -- --  in y' , (↓trans y' x' x p' p  , ↓trans y' z' z q' s)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↙↘trans : ∀ x y z → x ↙↘ y → y ↙↘ z → x ↙↘ z
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↙↘trans x y z (x' , p , q) (z' , r , s) =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  let (y' , p' , q') = ↘↙→↙↘ x' z' y q r
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  in y' , (↓trans y' x' x p' p  , ↓trans y' z' z q' s)
  
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- open BinaryRelation _↓_
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- open BinaryRelation _↓_
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓EquivRel : isEquivRel
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- isEquivRel.reflexive ↓EquivRel = ↓refl
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- isEquivRel.symmetric ↓EquivRel = ↓sym
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- isEquivRel.transitive ↓EquivRel = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓EquivRel : isEquivRel
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- isEquivRel.reflexive ↓EquivRel = ↓refl
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- isEquivRel.symmetric ↓EquivRel = ↓sym
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- isEquivRel.transitive ↓EquivRel = {!!}
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- _↓∷_ : List (Bool × A) → List (Bool × A) → Type ℓ
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- [] ↓∷ xs' = ⊥*
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- (x ∷ []) ↓∷ xs' = ⊥*
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- (x ∷ x' ∷ xs) ↓∷ xs' = IsRedex x x' × (xs ≡ xs')
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- _↓∷_ : List (Bool × A) → List (Bool × A) → Type ℓ
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- [] ↓∷ xs' = ⊥*
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- (x ∷ []) ↓∷ xs' = ⊥*
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- (x ∷ x' ∷ xs) ↓∷ xs' = IsRedex x x' × (xs ≡ xs')
  
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- _↓_ : List (Bool × A) → List (Bool × A) → Type ℓ
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- [] ↓ xs' = ⊥*
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- (x ∷ xs) ↓ [] = (x ∷ xs) ↓∷ []
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- (x ∷ xs) ↓ (x' ∷ xs') =
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --     ((x ∷ xs) ↓∷ (x' ∷ xs'))
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   ⊎ ((x ≡ x') × (xs ↓ xs'))
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- _↓_ : List (Bool × A) → List (Bool × A) → Type ℓ
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- [] ↓ xs' = ⊥*
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- (x ∷ xs) ↓ [] = (x ∷ xs) ↓∷ []
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- (x ∷ xs) ↓ (x' ∷ xs') =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --     ((x ∷ xs) ↓∷ (x' ∷ xs'))
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   ⊎ ((x ≡ x') × (xs ↓ xs'))
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- redex∷↓ : ∀ x x' xs → IsRedex x x' → x ∷ x' ∷ xs ↓ xs
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- redex∷↓ x x' [] p = p , refl
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- redex∷↓ x x' (x₁ ∷ xs) p = inl (p , refl)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- redex∷↓ : ∀ x x' xs → IsRedex x x' → x ∷ x' ∷ xs ↓ xs
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- redex∷↓ x x' [] p = p , refl
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- redex∷↓ x x' (x₁ ∷ xs) p = inl (p , refl)
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓∷++ : ∀ {a b x x'} c → (x ∷ a) ↓∷ (x' ∷ b) → (x ∷ a ++ c) ↓∷ (x' ∷ b ++ c)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓∷++ {x₁ ∷ []} c (_ , q) = ⊥.rec (¬nil≡cons q)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓∷++ {x₁ ∷ x₂ ∷ a} c = map-snd (cong (_++ c))
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓∷++ : ∀ {a b x x'} c → (x ∷ a) ↓∷ (x' ∷ b) → (x ∷ a ++ c) ↓∷ (x' ∷ b ++ c)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓∷++ {x₁ ∷ []} c (_ , q) = ⊥.rec (¬nil≡cons q)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ↓∷++ {x₁ ∷ x₂ ∷ a} c = map-snd (cong (_++ c))
  
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ++L↓ : ∀ a b c → a ↓ b → a ++ c ↓ b ++ c
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ++L↓ (x₁ ∷ a) (x₂ ∷ b) c =
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  ⊎.map (↓∷++ c) (map-snd (++L↓ a b c))
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ++L↓ (x ∷ x' ∷ []) [] xs (p , _) = redex∷↓ x x' xs p 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ++L↓ (x₁ ∷ x₂ ∷ x₃ ∷ a) [] c (_ , q) = ⊥.rec (¬cons≡nil q)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ++L↓ : ∀ a b c → a ↓ b → a ++ c ↓ b ++ c
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ++L↓ (x₁ ∷ a) (x₂ ∷ b) c =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  ⊎.map (↓∷++ c) (map-snd (++L↓ a b c))
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ++L↓ (x ∷ x' ∷ []) [] xs (p , _) = redex∷↓ x x' xs p 
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ++L↓ (x₁ ∷ x₂ ∷ x₃ ∷ a) [] c (_ , q) = ⊥.rec (¬cons≡nil q)
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ++R↓ : ∀ a b c → b ↓ c → a ++ b ↓ a ++ c
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ++R↓ [] b c p = p
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ++R↓ (x ∷ a) b c p = inr (refl , ++R↓ a b c p)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ++R↓ : ∀ a b c → b ↓ c → a ++ b ↓ a ++ c
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ++R↓ [] b c p = p
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ++R↓ (x ∷ a) b c p = inr (refl , ++R↓ a b c p)
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- List/↓ : Type ℓ
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- List/↓ = _ /₂ _↓_
-
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- module _ (isSetA : isSet A) where
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  IsPropIsNormalised : ∀ x → isProp (IsNormalised x)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  IsPropIsNormalised = {!!}
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  𝑵 : ℙ (List (Bool × A)) 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  𝑵 x = IsNormalised x , IsPropIsNormalised x
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  isSet[𝟚×A] : isSet _
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  isSet[𝟚×A] = isOfHLevelList 0 (isSet× 𝟚.isSetBool isSetA)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- List/↓ : Type ℓ
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- List/↓ = _ /₂ _↓_
 
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  ηInj : ∀ a a' → Path List/↓ [ [ (true , a) ] ]/ [ [ (true , a') ] ]/ →
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --             a ≡ a' 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  ηInj a a' = PT.rec (isSetA _ _)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --     {!!} ∘' Iso.fun (SQ.TC.IsoTcTc' _↓_ _ _) 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   where
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w : ∀ a a' → TC.tc _↓_ ((true , a) ∷ []) ((true , a') ∷ []) → a ≡ a'
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.here (inl ()))
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.here (inr ()))
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.there [] x x₁) = {!!}
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.there ((false , a'') ∷ []) x x₁) =
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --      {!!}
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.there ((true , a'') ∷ []) x x₁) =
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --      w _ _ x ∙ w _ _ x₁
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.there (x₂ ∷ x₃ ∷ a'') x x₁) = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- module _ (isSetA : isSet A) where
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  IsPropIsNormalised : ∀ x → isProp (IsNormalised x)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  IsPropIsNormalised = {!!}
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  𝑵 : ℙ (List (Bool × A)) 
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  𝑵 x = IsNormalised x , IsPropIsNormalised x
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  isSet[𝟚×A] : isSet _
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  isSet[𝟚×A] = isOfHLevelList 0 (isSet× 𝟚.isSetBool isSetA)
+
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  ηInj : ∀ a a' → Path List/↓ [ [ (true , a) ] ]/ [ [ (true , a') ] ]/ →
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --             a ≡ a' 
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  ηInj a a' = PT.rec (isSetA _ _)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --     {!!} ∘' Iso.fun (SQ.TC.IsoTcTc' _↓_ _ _) 
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   where
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w : ∀ a a' → TC.tc _↓_ ((true , a) ∷ []) ((true , a') ∷ []) → a ≡ a'
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.here (inl ()))
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.here (inr ()))
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.there [] x x₁) = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.there ((false , a'') ∷ []) x x₁) =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --      {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.there ((true , a'') ∷ []) x x₁) =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --      w _ _ x ∙ w _ _ x₁
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.there (x₂ ∷ x₃ ∷ a'') x x₁) = {!!}
       
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.tcsym x) = sym (w a' a x)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.tcrefl x) = cong snd (cons-inj₁ x)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.tcsym x) = sym (w a' a x)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w a a' (TC.tcrefl x) = cong snd (cons-inj₁ x)
     
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- List/↓· : List/↓ → List/↓ → List/↓
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- List/↓· =  SQ.rec2 squash/ (λ a b → SQ.[ a ++ b ])
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    (λ a b c → eq/ _ _ ∘ (++L↓ a b c))
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    (λ a b c → eq/ _ _ ∘ (++R↓ a b c))
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- List/↓· : List/↓ → List/↓ → List/↓
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- List/↓· =  SQ.rec2 squash/ (λ a b → SQ.[ a ++ b ])
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    (λ a b c → eq/ _ _ ∘ (++L↓ a b c))
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    (λ a b c → eq/ _ _ ∘ (++R↓ a b c))
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- List/↓ : List/↓ → List/↓ → List/↓
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- List/↓· =  SQ.rec2 squash/ (λ a b → SQ.[ a ++ b ])
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    (λ a b c → eq/ _ _ ∘ (++L↓ a b c))
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    (λ a b c → eq/ _ _ ∘ (++R↓ a b c))
-
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- List/↓Group : GroupStr List/↓
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- GroupStr.1g List/↓Group = SQ.[ [] ]
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- GroupStr._·_ List/↓Group = List/↓·
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- GroupStr.inv List/↓Group =
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   SQ.rec squash/ (SQ.[_] ∘ rev)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    {!!}
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- GroupStr.isGroup List/↓Group = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- List/↓ : List/↓ → List/↓ → List/↓
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- List/↓· =  SQ.rec2 squash/ (λ a b → SQ.[ a ++ b ])
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    (λ a b c → eq/ _ _ ∘ (++L↓ a b c))
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    (λ a b c → eq/ _ _ ∘ (++R↓ a b c))
 
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- module FG (freeGroupGroup : Group ℓ)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --           (η : A → ⟨ freeGroupGroup ⟩) where 
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- List/↓Group : GroupStr List/↓
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- GroupStr.1g List/↓Group = SQ.[ [] ]
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- GroupStr._·_ List/↓Group = List/↓·
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  FreeGroup = ⟨ freeGroupGroup ⟩
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  open GroupStr (snd freeGroupGroup)
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  open GroupTheory freeGroupGroup
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  η* : Bool × A → FreeGroup
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  η* (b , a) = (if b then idfun _ else inv) (η a)
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  fromList' : FreeGroup → List (Bool × A) → FreeGroup
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  fromList' = foldr (_·_ ∘ η*) 
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  fromList : List (Bool × A) → FreeGroup
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  fromList = fromList' 1g
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  fromList· : ∀ xs ys → fromList (xs ++ ys) ≡
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --                            fromList xs · fromList ys
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  fromList· [] _ = sym (·IdL _)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  fromList· (_ ∷ xs) _ =
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   cong (_ ·_) (fromList· xs _) ∙
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    ·Assoc _ _ _
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* : ∀ x x' → IsRedex x x' → η* x · η* x' ≡ 1g
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (false , _) (false , _) (p , _) = ⊥.rec (false≢true p)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (false , x) (true , _) (_ , q) = 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    cong (inv (η x) ·_) (cong (η) (sym q)) ∙ ·InvL (η x) 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (true , x) (false , _) (_ , q) =
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    cong (η x ·_) (cong (inv ∘ η) (sym q)) ∙ ·InvR (η x)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (true , _) (true , _) (p , _) = ⊥.rec (true≢false p)
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -- 𝑵𝑭 : ⟨ freeGroupGroup ⟩ → ℙ (List (Bool × A))
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -- 𝑵𝑭 a l = ((fromList l ≡ a) , is-set _ _) L.⊓
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  --             𝑵 l
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -- NF : ⟨ freeGroupGroup ⟩ → Type ℓ
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -- NF a = ∃ (List (Bool × A))
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  --   λ l → (fromList l ≡ a)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  --     × IsNormalised l 
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- module FGAlt where
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  open import Cubical.HITs.FreeGroup.Alt 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  open FG (freeGroupGroup A) η
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -- hh : ∀ x b xs → ∀ l → {!NonEmpty (NF ((x , b) ∷ l)) → 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  --          !}
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -- hh = {!!}
-
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   non∅NF : ∀ x → NonEmpty (NF x) 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   non∅NF = ElimProp.go w
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    where
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    open ElimProp
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w : ElimProp _
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    εB (elim₁ w) q = q ∣ [] , refl , tt* ∣₁
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    ∷B (elim₁ w) false a x x₁ = x₁ {!!}
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    ∷B (elim₁ w) true a x x₁ = {!!}
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    isPropB w = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- GroupStr.inv List/↓Group =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   SQ.rec squash/ (SQ.[_] ∘ rev)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- GroupStr.isGroup List/↓Group = {!!}
 
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- module _ (_≟_ : Discrete A) where
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- module FG (freeGroupGroup : Group ℓ)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --           (η : A → ⟨ freeGroupGroup ⟩) where 
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  IsRedex? : ∀ x x' → Dec (IsRedex x x')
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  IsRedex? (b , x) (b' , x') =
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    subst Dec (sym ΣPathP≡PathPΣ)
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --      (discreteΣ 𝟚._≟_ (λ _ → _≟_) (b , x) (not b' , x'))
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  FreeGroup = ⟨ freeGroupGroup ⟩
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  WillReduce? : ∀ x xs → Dec (WillReduce (fst x) (snd x) xs)  
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  WillReduce? _ [] = no λ ()
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  WillReduce? _ (_ ∷ xs) = IsRedex? _ _
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  open GroupStr (snd freeGroupGroup)
 
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  IsNormalised? : ∀ xs → Dec (IsNormalised xs)  
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  IsNormalised? [] = yes _
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  IsNormalised? (x ∷ xs) =
- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    Dec× (Dec¬ (WillReduce? _ _)) (IsNormalised? _) 
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  open GroupTheory freeGroupGroup
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  η* : Bool × A → FreeGroup
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  η* (b , a) = (if b then idfun _ else inv) (η a)
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  fromList' : FreeGroup → List (Bool × A) → FreeGroup
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  fromList' = foldr (_·_ ∘ η*) 
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  fromList : List (Bool × A) → FreeGroup
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  fromList = fromList' 1g
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  fromList· : ∀ xs ys → fromList (xs ++ ys) ≡
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --                            fromList xs · fromList ys
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  fromList· [] _ = sym (·IdL _)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  fromList· (_ ∷ xs) _ =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   cong (_ ·_) (fromList· xs _) ∙
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    ·Assoc _ _ _
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* : ∀ x x' → IsRedex x x' → η* x · η* x' ≡ 1g
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (false , _) (false , _) (p , _) = ⊥.rec (false≢true p)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (false , x) (true , _) (_ , q) = 
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    cong (inv (η x) ·_) (cong (η) (sym q)) ∙ ·InvL (η x) 
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (true , x) (false , _) (_ , q) =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    cong (η x ·_) (cong (inv ∘ η) (sym q)) ∙ ·InvR (η x)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  redex-ε-η* (true , _) (true , _) (p , _) = ⊥.rec (true≢false p)
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -- 𝑵𝑭 : ⟨ freeGroupGroup ⟩ → ℙ (List (Bool × A))
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -- 𝑵𝑭 a l = ((fromList l ≡ a) , is-set _ _) L.⊓
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  --             𝑵 l
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -- NF : ⟨ freeGroupGroup ⟩ → Type ℓ
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -- NF a = ∃ (List (Bool × A))
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  --   λ l → (fromList l ≡ a)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  --     × IsNormalised l 
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- module FGAlt where
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  open import Cubical.HITs.FreeGroup.Alt 
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  open FG (freeGroupGroup A) η
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -- hh : ∀ x b xs → ∀ l → {!NonEmpty (NF ((x , b) ∷ l)) → 
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  --          !}
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  -- hh = {!!}
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   non∅NF : ∀ x → NonEmpty (NF x) 
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --   non∅NF = ElimProp.go w
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    where
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    open ElimProp
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    w : ElimProp _
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    εB (elim₁ w) q = q ∣ [] , refl , tt* ∣₁
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    ∷B (elim₁ w) false a x x₁ = x₁ {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    ∷B (elim₁ w) true a x x₁ = {!!}
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    isPropB w = {!!}
+
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- module _ (_≟_ : Discrete A) where
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  IsRedex? : ∀ x x' → Dec (IsRedex x x')
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  IsRedex? (b , x) (b' , x') =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    subst Dec (sym ΣPathP≡PathPΣ)
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --      (discreteΣ 𝟚._≟_ (λ _ → _≟_) (b , x) (not b' , x'))
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  WillReduce? : ∀ x xs → Dec (WillReduce (fst x) (snd x) xs)  
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  WillReduce? _ [] = no λ ()
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  WillReduce? _ (_ ∷ xs) = IsRedex? _ _
+
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  IsNormalised? : ∀ xs → Dec (IsNormalised xs)  
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  IsNormalised? [] = yes _
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  IsNormalised? (x ∷ xs) =
+ -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --    Dec× (Dec¬ (WillReduce? _ _)) (IsNormalised? _) 
 
 

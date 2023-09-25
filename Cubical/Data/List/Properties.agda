@@ -61,6 +61,7 @@ module _ {ℓ} {A : Type ℓ} where
     helper {l} sl [] = subst SnocView (sym (++-unit-r l)) sl
     helper {l} sl (x ∷ r) = subst SnocView (++-assoc l (x ∷ []) r) (helper (snoc x l sl) r)
 
+ 
 -- Path space of list type
 module ListPath {ℓ} {A : Type ℓ} where
 
@@ -137,6 +138,15 @@ cons-inj₁ {x = x} p = cong (safe-head x) p
 
 cons-inj₂ : ∀ {x y : A} {xs ys} → x ∷ xs ≡ y ∷ ys → xs ≡ ys
 cons-inj₂ = cong safe-tail
+
+snoc-inj₂ : ∀ {x y : A} {xs ys} → xs ∷ʳ x ≡ ys ∷ʳ y → x ≡ y
+snoc-inj₂ {xs = xs} {ys} p =
+ cons-inj₁ ((sym (rev-++ xs _)) ∙∙ cong rev p ∙∙ (rev-++ ys _))
+ 
+snoc-inj₁ : ∀ {x y : A} {xs ys} → xs ∷ʳ x ≡ ys ∷ʳ y → xs ≡ ys
+snoc-inj₁ {xs = xs} {ys} p =
+   sym (rev-rev _) ∙∙ cong rev (cons-inj₂ ((sym (rev-++ xs _)) ∙∙ cong rev p ∙∙ (rev-++ ys _)))
+        ∙∙ rev-rev _ 
 
 ¬cons≡nil : ∀ {x : A} {xs} → ¬ (x ∷ xs ≡ [])
 ¬cons≡nil {A = A} p = lower (subst (caseList (Lift ⊥) (List A)) p [])

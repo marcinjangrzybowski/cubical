@@ -91,6 +91,14 @@ isProp≤ {suc m} {suc n} = isProp≤ {m} {n}
 <-weaken {zero} _ = _
 <-weaken {suc m} {suc n} = <-weaken {m}
 
+≤-suc-weaken : m ≤ n → m ≤ suc n
+≤-suc-weaken {zero} x = tt
+≤-suc-weaken {suc m} {n = suc n} x = ≤-suc-weaken {m} {n} x
+
+≤-+-weaken : m ≤ n → m ≤ k + n
+≤-+-weaken {k = zero} x = x
+≤-+-weaken {m} {k = suc k} = ≤-suc-weaken {m} ∘ (≤-+-weaken {m}) 
+
 <-trans : k < m → m < n → k < n
 <-trans {k} {m} {n} k<m m<n
   = ≤-trans {suc k} {m} {n} k<m (<-weaken {m} m<n)
@@ -100,6 +108,9 @@ isProp≤ {suc m} {suc n} = isProp≤ {m} {n}
 
 <→≢ : n < m → ¬ n ≡ m
 <→≢ {n} {m} p q = ¬m<m {m = m} (subst {x = n} (_< m) q p)
+
+≡→≤ : n ≡ m → n ≤ m
+≡→≤ {n} p = subst (n ≤_) p (≤-refl n)
 
 Trichotomy-suc : Trichotomy m n → Trichotomy (suc m) (suc n)
 Trichotomy-suc (lt m<n) = lt m<n
@@ -130,6 +141,14 @@ n≤k+n {k} n = transport (λ i → n ≤ +-comm n k i) (k≤k+n n)
 ≢-split {zero} {suc n} x = inl tt
 ≢-split {suc m} {zero} x = inr tt
 ≢-split {suc m} {suc n} x = ≢-split {m} {n} (x ∘ cong suc)
+
+
+k+l≡m+n-⊓-k≤m-⇒n≤l : k + l ≡ m + n → k ≤ m → n ≤ l  
+k+l≡m+n-⊓-k≤m-⇒n≤l {zero} {l} {m} {n} x x₁ =
+  ≤-trans {n} {m + n} {l}
+   (≤-+-weaken {n} {n} {k = m} (≤-refl n)) (≡→≤ (sym x))
+k+l≡m+n-⊓-k≤m-⇒n≤l {suc k} {l} {suc m} {n} =
+  k+l≡m+n-⊓-k≤m-⇒n≤l {k} {l} {m} {n} ∘ injSuc 
 
 module WellFounded where
   wf-< : WellFounded _<_

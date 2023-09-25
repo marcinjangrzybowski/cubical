@@ -116,6 +116,11 @@ discrete⊎ decA decB (inr b) (inl a') = no ((λ p → lower (⊎Path.encode (in
 discrete⊎ decA decB (inr b) (inr b') =
   mapDec (cong inr) (λ p q → p (isEmbedding→Inj isEmbedding-inr _ _ q)) (decB b b')
 
+⊎Dec : Dec A → Dec B → Dec (A ⊎ B)
+⊎Dec (yes p) x₁ = yes (inl p)
+⊎Dec (no ¬p) (yes p) = yes (inr p)
+⊎Dec (no ¬p) (no ¬p₁) = no (Cubical.Data.Sum.Base.rec ¬p ¬p₁)
+
 ⊎Iso : Iso A C → Iso B D → Iso (A ⊎ B) (C ⊎ D)
 fun (⊎Iso iac ibd) (inl x) = inl (iac .fun x)
 fun (⊎Iso iac ibd) (inr x) = inr (ibd .fun x)
