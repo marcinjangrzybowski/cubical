@@ -384,16 +384,28 @@ module NormalForm (A : Type ℓ) where
              cong ((rl ++ (not b , a) ∷ rr) ++_)
               (++-assoc rl' _ _) ∙∙ cong₂ _++_ p p') ∙ sym p*) z
 
- Red⇒HasRedex : ∀ xs → 0 < length xs → Red xs → HasRedex xs 
- Red⇒HasRedex .(x ∷ ([] ∷ʳ not₁ x)) _ (cj x [] r) =
-   inl (symIsRedex _ _ (refl , refl))
+
+ reduce-HasRedex∷ʳ : ∀ x₁ xs₁ r' x → reduce (x₁ ∷ xs₁) r' ∷ʳ not₁ x ≡
+      reduce ((x₁ ∷ xs₁) ∷ʳ not₁ x)
+      (HasRedex∷ʳ ((fst x₁ , snd x₁) ∷ xs₁) (not₁ x) r')
+ reduce-HasRedex∷ʳ x₁ (x₃ ∷ xs₁) (inl x₂) x = refl
+ reduce-HasRedex∷ʳ x₁ (x₃ ∷ xs₁) (inr x₂) x = 
+     cong (x₁ ∷_)
+        (reduce-HasRedex∷ʳ x₃ xs₁ x₂ _)
+ 
+ Red⇒HasRedex : ∀ xs → 0 < length xs → Red xs → Σ _ λ hr → Red (reduce xs hr) 
+ Red⇒HasRedex .(x ∷ ([] ∷ʳ not₁ x)) _ (cj x [] r) = 
+   inl (symIsRedex _ _ (refl , refl)) , red[]
  Red⇒HasRedex .(x ∷ ((_ ∷ _) ∷ʳ not₁ x)) _ (cj x xs@(_ ∷ _) r) =
-   inr (HasRedex∷ʳ _ _ (Red⇒HasRedex xs _ r))
+   let (r' , p) = Red⇒HasRedex xs _ r
+   in inr (HasRedex∷ʳ _ _ r') , subst Red (cong (x ∷_) (reduce-HasRedex∷ʳ _ _ r' _)) (cj x _ p)
  Red⇒HasRedex .(xs ++ []) q ((xs · []) rX rY) = 
-   subst HasRedex (sym (++-unit-r xs))
+   subst (λ xs → Σ _ λ hr → Red (reduce xs hr)) (sym (++-unit-r xs))
      (Red⇒HasRedex _ (subst (λ xs → 0 < length xs) (++-unit-r xs) q) rX)
- Red⇒HasRedex .(xs ++ x ∷ ys) q ((xs · (x ∷ ys)) rX rY) =
-   ++HasRedex _ _ (Red⇒HasRedex _ _ rY)
+ Red⇒HasRedex .(xs ++ x ∷ ys) q ((xs · (x ∷ ys)) rX rY) = 
+   let (r' , p) = Red⇒HasRedex _ _ rY
+   in ++HasRedex _ _ r' ,
+      subst Red (sym (++reduce xs (x ∷ ys) r')) ((_ · _) rX p)
 
 
  reduce-length-≤ : ∀ x ys rdx → length (reduce (x ∷ ys) rdx) ≤ length ys
@@ -401,13 +413,16 @@ module NormalForm (A : Type ℓ) where
    <-weaken {m = length (reduce (x ∷ ys) rdx)}
     (≡→≤ (injSuc (reduceLength _ rdx)))
 
+ reduce-length-≤' : ∀ ys rdx → length (reduce (ys) rdx) < length ys
+ reduce-length-≤' (x ∷ ys) rdx = reduce-length-≤ x ys rdx
+
  inferRed' : ∀ n xs ys → length ys ≤ n → ∀ zs
              → Red (xs ++ ys ++ zs)
              → Red ys
              → Red (xs ++ zs)
  inferRed' n xs [] x zs x₁ x₂ = x₁
  inferRed' (suc n) xs ys@(_ ∷ ys') x zs x₁ r = 
-   let rdx = Red⇒HasRedex _ _ r
+   let (rdx , _) = Red⇒HasRedex _ _ r
    in inferRed' n xs (reduce ys rdx)
         ((≤-trans {length (reduce ys rdx)} {(length ys')} {n}
           (reduce-length-≤ _ ys' rdx)
@@ -575,6 +590,9 @@ module NormalForm (A : Type ℓ) where
  _↙↘_ : _ → _ → Type ℓ
  xs ↙↘ ys = Σ _ (xs ↙_↘ ys)
 
+ _↘↙_ : _ → _ → Type ℓ
+ xs ↘↙ ys = Σ _ (xs ↘_↙ ys)
+
  open isEquivRel
 
 
@@ -598,7 +616,7 @@ module NormalForm (A : Type ℓ) where
  isNormalisedRed : ∀ xs → IsNormalised xs →  Red xs → xs ≡ []
  isNormalisedRed [] isNrmxs _ = refl
  isNormalisedRed (x ∷ xs) isNrmxs r = ⊥.rec
-   (IsNormalised→¬HaseRedex _ isNrmxs (Red⇒HasRedex _ _ r))
+   (IsNormalised→¬HaseRedex _ isNrmxs (fst (Red⇒HasRedex _ _ r)))
 
 
  minimalNormalised : ∀ xs ys → IsNormalised xs → xs ↓ ys → xs ≡ ys
@@ -615,12 +633,14 @@ module NormalForm (A : Type ℓ) where
  
 
  ≢↓→HasRedex : ∀ xs ys → length ys < length xs →
-      xs ↓ ys → HasRedex xs
- ≢↓→HasRedex xs .[] x (x₁ ↓[]) = Red⇒HasRedex _ x x₁
+      xs ↓ ys → Σ (HasRedex xs) λ hr → reduce _ hr ↓ ys
+ ≢↓→HasRedex xs .[] x (x₁ ↓[]) = map-snd _↓[] (Red⇒HasRedex _ x x₁) 
  ≢↓→HasRedex .([] ++ x₂ ∷ ys) .(x₂ ∷ zs) x (_∶_↓∷_ {[]} x₁ {ys} x₂ {zs} x₃) =
-   inr (≢↓→HasRedex _ _ x x₃)
- ≢↓→HasRedex .((x₄ ∷ xs) ++ x₂ ∷ _) .(x₂ ∷ _) x (_∶_↓∷_ {x₄ ∷ xs} x₁ x₂ x₃) =
-   HasRedex++ _ _ (Red⇒HasRedex _ _ x₁) 
+  let (p , q) = ≢↓→HasRedex _ _ x x₃
+  in inr p , (x₂ ∷↓ q)
+ ≢↓→HasRedex .((x₄ ∷ xs) ++ x₂ ∷ _) .(x₂ ∷ _) x (_∶_↓∷_ {x₄ ∷ xs} x₁ x₂ {zs} x₃) = 
+  let (p , q) = Red⇒HasRedex _ _ x₁
+  in  HasRedex++ _ _ p , subst (_↓ (x₂ ∷ zs)) (sym (reduce++ _ _ p)) (Red++↓ q (x₂ ∷↓ x₃))
 
  reduce↓ : ∀ {xs ys} hr
      → xs ↓ ys
@@ -666,7 +686,7 @@ module NormalForm (A : Type ℓ) where
  N↙↘N→≡' (suc n) xs ys q@(zs , ↓xs , ↓ys) g xsN ysN =
   ⊎.rec
     (λ lenXS<lenZS →
-       let w = ≢↓→HasRedex zs xs lenXS<lenZS ↓xs
+       let (w , _) = ≢↓→HasRedex zs xs lenXS<lenZS ↓xs
          
        in N↙↘N→≡' n xs ys
            (_ , (reduce↓ w ↓xs xsN) , reduce↓ w ↓ys ysN)
