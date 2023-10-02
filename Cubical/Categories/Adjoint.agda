@@ -6,6 +6,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
+open import Cubical.Categories.Instances.Functors
 open import Cubical.Categories.NaturalTransformation
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Univalence
@@ -41,10 +42,10 @@ definition, followed by the natural bijection
 definition.
 -}
 
-module UnitCounit where
+module UnitCounit {C : Category ℓC ℓC'} {D : Category ℓD ℓD'} where
 
   -- Adjoint def 1: unit-counit
-  record _⊣_ {C : Category ℓC ℓC'} {D : Category ℓD ℓD'} (F : Functor C D) (G : Functor D C)
+  record _⊣_ (F : Functor C D) (G : Functor D C)
                   : Type (ℓ-max (ℓ-max ℓC ℓC') (ℓ-max ℓD ℓD')) where
     field
       -- unit
@@ -55,6 +56,72 @@ module UnitCounit where
       Δ₁ : ∀ c → F ⟪ η ⟦ c ⟧ ⟫ ⋆⟨ D ⟩ ε ⟦ F ⟅ c ⟆ ⟧ ≡ D .id
       Δ₂ : ∀ d → η ⟦ G ⟅ d ⟆ ⟧ ⋆⟨ C ⟩ G ⟪ ε ⟦ d ⟧ ⟫ ≡ C .id
 
+  module LeftAdjointUniqeUpToNatIso {F F' : Functor C D} {G : Functor D C}
+           (F⊣G : F ⊣ G) (F'⊣G : F' ⊣ G) where
+
+    open NatTrans
+
+    private
+      variable
+        H H' : Functor C D
+
+    _D⋆_ = seq' D
+  
+    m : (H⊣G : H ⊣ G) (H'⊣G : H' ⊣ G) →
+          ∀ {x} → D [ H ⟅ x ⟆ , H' ⟅ x ⟆ ]
+    m {H = H} H⊣G H'⊣G =
+      H ⟪ (H'⊣G .η) ⟦ _ ⟧ ⟫ ⋆⟨ D ⟩ (H⊣G .ε) ⟦ _ ⟧ where open _⊣_
+      
+    s : (H⊣G : H ⊣ G) (H'⊣G : H' ⊣ G) → ∀ {x} → 
+            seq' D (m H'⊣G H⊣G {x}) (m H⊣G H'⊣G {x})
+               ≡ D .id
+    s {H = H} {H' = H'} H⊣G H'⊣G = by-N-homs ∙ by-Δ
+      where
+       open _⊣_ H⊣G using (η ; Δ₂)
+       open _⊣_ H'⊣G using (ε ; Δ₁)
+       by-N-homs =
+         AssocCong₂⋆R {C = D} _
+         (AssocCong₂⋆L {C = D} (sym (N-hom ε _)) _)
+           ∙ cong₂ _D⋆_
+                (sym (F-seq H' _ _)
+                 ∙∙ cong (H' ⟪_⟫) ((sym (η .N-hom _)))
+                 ∙∙ F-seq H' _ _)
+                (sym (N-hom ε _))
+
+       by-Δ =
+         ⋆Assoc D _ _ _
+         ∙ cong (H' ⟪ _ ⟫ D⋆_)
+              (sym (⋆Assoc D _ _ _)
+              ∙ cong (_D⋆ ε ⟦ _ ⟧)
+                  (  sym (F-seq H' _ _)
+                  ∙∙ cong (H' ⟪_⟫) (Δ₂ (H' ⟅ _ ⟆))
+                  ∙∙ F-id H')
+              ∙ ⋆IdL D _)
+         ∙ Δ₁ _
+
+    open NatIso
+    open isIso
+
+    F≅ᶜF' : F ≅ᶜ F'
+    N-ob (trans F≅ᶜF') _ = m F⊣G F'⊣G
+    N-hom (trans F≅ᶜF') _ =
+         sym (⋆Assoc D _ _ _)
+      ∙∙ cong (_D⋆ (F⊣G .ε) ⟦ _ ⟧)
+           (sym (F-seq F _ _)
+           ∙∙ cong (F ⟪_⟫) (N-hom (F'⊣G .η) _)
+           ∙∙ (F-seq F _ _))
+      ∙∙ AssocCong₂⋆R {C = D} _ (N-hom (F⊣G .ε) _)
+     where open _⊣_
+    inv (nIso F≅ᶜF' _) = m F'⊣G F⊣G
+    sec (nIso F≅ᶜF' _) = s F⊣G F'⊣G
+    ret (nIso F≅ᶜF' _) = s F'⊣G F⊣G
+
+    F≡F' : isUnivalent D → F ≡ F' 
+    F≡F' univD =
+     isUnivalent.CatIsoToPath
+      (isUnivalentFUNCTOR _ _ univD)
+       (NatIso→FUNCTORIso _ _ F≅ᶜF') 
+  
 module NaturalBijection where
   -- Adjoint def 2: natural bijection
   record _⊣_ {C : Category ℓC ℓC'} {D : Category ℓD ℓD'} (F : Functor C D) (G : Functor D C) : Type (ℓ-max (ℓ-max ℓC ℓC') (ℓ-max ℓD ℓD')) where

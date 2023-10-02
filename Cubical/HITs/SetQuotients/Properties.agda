@@ -33,6 +33,7 @@ open import Cubical.HITs.PropositionalTruncation as PropTrunc
   using (∥_∥₁ ; ∣_∣₁ ; squash₁) renaming (rec to propRec)
 open import Cubical.HITs.SetTruncation as SetTrunc
   using (∥_∥₂ ; ∣_∣₂ ; squash₂ ; isSetSetTrunc)
+  renaming (rec to rec₂ ; rec2 to rec2₂ ; elim to elim₂ ; elim2 to elim2₂)
 
 
 private
@@ -286,6 +287,17 @@ Iso.fun truncRelIso = rec squash/ [_] λ _ _ r → eq/ _ _ ∣ r ∣₁
 Iso.inv truncRelIso = rec squash/ [_] λ _ _ → PropTrunc.rec (squash/ _ _) λ r → eq/ _ _ r
 Iso.rightInv truncRelIso = elimProp (λ _ → squash/ _ _) λ _ → refl
 Iso.leftInv truncRelIso = elimProp (λ _ → squash/ _ _) λ _ → refl
+
+truncIso : (PropR : ∀ a b → isProp (R a b)) →
+  Iso (A / R) (∥ A ∥₂ /
+       λ a b → fst (rec2₂ isSetHProp (λ a b → R a b , PropR a b) a b))
+Iso.fun (truncIso PropR) = rec squash/ ([_] ∘' ∣_∣₂) λ _ _ → eq/ _ _
+Iso.inv (truncIso PropR) = rec squash/ (rec₂ squash/ [_])
+  (elim2₂ (λ _ _ → isSet→ (isProp→isSet (squash/ _ _))) eq/)
+Iso.rightInv (truncIso PropR) =
+ elimProp (λ _ → squash/ _ _) (elim₂ (λ _ → isProp→isSet (squash/ _ _))
+   λ _ → refl)
+Iso.leftInv (truncIso PropR) = elimProp (λ _ → squash/ _ _) λ _ → refl
 
 truncRelEquiv : A / R ≃ A / (λ a b → ∥ R a b ∥₁)
 truncRelEquiv = isoToEquiv truncRelIso

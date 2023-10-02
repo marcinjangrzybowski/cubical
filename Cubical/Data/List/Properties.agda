@@ -6,6 +6,9 @@ open import Cubical.Core.Everything
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.Function
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat
 open import Cubical.Data.Sigma
@@ -226,3 +229,33 @@ map-id (x ∷ as) = cong (_ ∷_) (map-id as)
 lengthZero : (as : List A) → (length as ≡ 0) → as ≡ []
 lengthZero [] x = refl
 lengthZero (x₁ ∷ as) x = ⊥.rec (snotz x)
+
+
+module List₂ where
+ open import Cubical.HITs.SetTruncation renaming
+   (rec to rec₂ ; map to map₂ ; elim to elim₂ )
+
+
+ ∥List∥₂→List∥∥₂ : ∥ List A ∥₂ → List ∥ A ∥₂ 
+ ∥List∥₂→List∥∥₂ = rec₂ (isOfHLevelList 0 squash₂) (map ∣_∣₂)
+
+ List∥∥₂→∥List∥₂ : List ∥ A ∥₂ → ∥ List A ∥₂ 
+ List∥∥₂→∥List∥₂ [] = ∣ [] ∣₂
+ List∥∥₂→∥List∥₂ (x ∷ xs) =
+   rec2 squash₂ (λ x xs → ∣ x ∷ xs ∣₂) x (List∥∥₂→∥List∥₂ xs)
+
+ -- Iso∥List∥₂List∥∥₂ : Iso (List ∥ A ∥₂) ∥ List A ∥₂ 
+ -- Iso.fun Iso∥List∥₂List∥∥₂ = List∥∥₂→∥List∥₂
+ -- Iso.inv Iso∥List∥₂List∥∥₂ = ∥List∥₂→List∥∥₂
+ -- Iso.rightInv Iso∥List∥₂List∥∥₂ =
+ --   elim₂ (isProp→isSet ∘ λ _ → squash₂ _ _)
+ --     {!!}
+ --  where
+ --  w : (a : List A) → List∥∥₂→∥List∥₂ (map ∣_∣₂ a) ≡ ∣ a ∣₂
+ --  w [] = refl
+ --  w (x ∷ a) = {!!}
+ -- Iso.leftInv Iso∥List∥₂List∥∥₂ [] = refl
+ -- Iso.leftInv Iso∥List∥₂List∥∥₂ (x ∷ a) = {!!}
+
+ -- comm-List-∥∥₂ : List {ℓ} ∘ ∥_∥₂ ≡ ∥_∥₂ ∘ List {ℓ}
+ -- comm-List-∥∥₂ = funExt λ _ → isoToPath Iso∥List∥₂List∥∥₂

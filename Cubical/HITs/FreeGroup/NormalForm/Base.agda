@@ -1,6 +1,6 @@
 {-# OPTIONS --safe #-}
 
-module Cubical.HITs.FreeGroup.NormalFormIndexedPrim where
+module Cubical.HITs.FreeGroup.NormalForm.Base where
 
 -- open import Cubical.HITs.FreeGroup.Base renaming (assoc to ·assoc)
 
@@ -50,33 +50,29 @@ private
 
 module _ {A : Type ℓ} where
 
- ++=[] : ∀ (xs ys : List A) → xs ++ ys ≡ [] → ys ≡ [] 
- ++=[] [] ys x = x
- ++=[] (x₁ ∷ xs) ys x = ⊥.rec (¬cons≡nil x)
-
- pop : List A → List A 
- pop [] = []
- pop (x ∷ []) = []
- pop (x ∷ xs@(_ ∷ _)) = x ∷ pop xs
+ init : List A → List A 
+ init [] = []
+ init (x ∷ []) = []
+ init (x ∷ xs@(_ ∷ _)) = x ∷ init xs
 
  tail : List A → List A
  tail [] = []
  tail (x ∷ xs) = xs
 
- pop-red-lem : ∀ (x : A) xs → ¬ (xs ≡ []) → (x ∷ pop xs) ≡ (pop (x ∷ xs))
- pop-red-lem x [] x₁ = ⊥.rec (x₁ refl)
- pop-red-lem x (x₂ ∷ xs) x₁ = refl
+ init-red-lem : ∀ (x : A) xs → ¬ (xs ≡ []) → (x ∷ init xs) ≡ (init (x ∷ xs))
+ init-red-lem x [] x₁ = ⊥.rec (x₁ refl)
+ init-red-lem x (x₂ ∷ xs) x₁ = refl
 
- pop∷ʳ : ∀ x xs → pop (xs ∷ʳ x) ≡ xs
- pop∷ʳ x [] = refl
- pop∷ʳ x (x₁ ∷ []) = refl
- pop∷ʳ x (x₁ ∷ x₂ ∷ xs) = cong (x₁ ∷_) (pop∷ʳ x (x₂ ∷ xs))
+ init∷ʳ : ∀ x xs → init (xs ∷ʳ x) ≡ xs
+ init∷ʳ x [] = refl
+ init∷ʳ x (x₁ ∷ []) = refl
+ init∷ʳ x (x₁ ∷ x₂ ∷ xs) = cong (x₁ ∷_) (init∷ʳ x (x₂ ∷ xs))
 
- pop++ : ∀ x xs ys → xs ++ pop (x ∷ ys) ≡ pop (xs ++ x ∷ ys) 
- pop++ x [] ys = refl
- pop++ x (x₁ ∷ []) ys = refl
- pop++ x (x₁ ∷ x₂ ∷ xs) ys =
-  cong (x₁ ∷_) (pop++ x (x₂ ∷ xs) ys)
+ init++ : ∀ x xs ys → xs ++ init (x ∷ ys) ≡ init (xs ++ x ∷ ys) 
+ init++ x [] ys = refl
+ init++ x (x₁ ∷ []) ys = refl
+ init++ x (x₁ ∷ x₂ ∷ xs) ys =
+  cong (x₁ ∷_) (init++ x (x₂ ∷ xs) ys)
 
  length≡0→≡[] : ∀ (xs : List A) → length xs ≡ 0 → xs ≡ []
  length≡0→≡[] [] x = refl
@@ -84,12 +80,18 @@ module _ {A : Type ℓ} where
  
 module NormalForm (A : Type ℓ) where
 
+ not₁ : (Bool × A) → (Bool × A)
+ not₁ = map-fst not
+
+ not₁not₁ : ∀ x → not₁ (not₁ x) ≡ x 
+ not₁not₁ (x , y) = cong (_, y) (notnot x) 
+
 
  IsRedex : Bool × A → Bool × A → Type ℓ
- IsRedex (b , x) (b' , x') = (b ≡ not b') × (x ≡ x')
+ IsRedex x x' = x ≡ not₁ x'
 
  symIsRedex : ∀ x y → IsRedex x y → IsRedex y x
- symIsRedex x y (u , v) = (sym (notnot _) ∙ sym (cong not u) , sym v)
+ symIsRedex x y p = sym (not₁not₁ _) ∙ cong not₁ (sym p)
  
  WillReduce : Bool → A → (xs : List (Bool × A)) → Type ℓ
  WillReduce _ _ [] = ⊥* 
@@ -100,8 +102,6 @@ module NormalForm (A : Type ℓ) where
  WillReduceʳ b x (h' ∷ []) = IsRedex (b , x) h'
  WillReduceʳ b x (_ ∷ xs@(_ ∷ _)) = WillReduceʳ b x xs
 
-   
-
  HeadIsRedex : List (Bool × A) → Type ℓ
  HeadIsRedex [] = ⊥*
  HeadIsRedex ((b , a) ∷ xs) = WillReduce b a xs
@@ -109,6 +109,12 @@ module NormalForm (A : Type ℓ) where
  IsNormalised : List (Bool × A) → Type ℓ
  IsNormalised [] = Unit*
  IsNormalised ((b , x) ∷ xs) = (¬ WillReduce b x xs)  × IsNormalised xs
+
+ isPropIsNormalised : ∀ xs → isProp (IsNormalised xs)
+ isPropIsNormalised [] = isPropUnit*
+ isPropIsNormalised (_ ∷ _) = isProp× (isProp¬ _) (isPropIsNormalised _)
+
+
 
  WillReduce∷ʳ : ∀ x x' xs → WillReduce (fst x) (snd x) xs →
                  WillReduce (fst x) (snd x) (xs ∷ʳ x')
@@ -137,30 +143,6 @@ module NormalForm (A : Type ℓ) where
  WillReduceʳ++ {xs = []} u = u
  WillReduceʳ++ {x'} {xs = x ∷ xs} {ys} u =
    WillReduceʳ∷ x' _ (xs ++ ys) (WillReduceʳ++ {xs = xs} {ys} u)
-
- CasesWillReduce++ : ∀ x xs ys → Type ℓ
- CasesWillReduce++ x xs ys =
-   ((xs ≡ []) × WillReduce (fst x) (snd x) ys)
-     ⊎ WillReduce (fst x) (snd x) xs
-
- casesWillReduce++ : ∀ x xs ys → WillReduce (fst x) (snd x) (xs ++ ys)
-   → CasesWillReduce++ x xs ys
- casesWillReduce++ x [] ys q = inl (refl , q)
- casesWillReduce++ x (x₁ ∷ xs) ys q = inr q
-
- CasesWillReduceʳ++ : ∀ x xs ys → Type ℓ
- CasesWillReduceʳ++ x xs ys =
-   ((ys ≡ []) × WillReduceʳ (fst x) (snd x) xs)
-     ⊎ WillReduceʳ (fst x) (snd x) ys
--- snocView
- -- casesWillReduceʳ++' : ∀ x xs ys → WillReduceʳ (fst x) (snd x) (xs ++ ys)
- --   → SnocView ys → CasesWillReduceʳ++ x xs ys
- -- casesWillReduceʳ++' x xs .[] x₁ nil = {!!}
- -- casesWillReduceʳ++' x xs .(xs₁ ∷ʳ x₂) x₁ (snoc x₂ xs₁ x₃) = {!!}
- 
- -- casesWillReduceʳ++ : ∀ x xs ys → WillReduceʳ (fst x) (snd x) (xs ++ ys)
- --   → CasesWillReduceʳ++ x xs ys
- -- casesWillReduceʳ++ = {!!}
   
 
  IsNormalised∷ᵣ : ∀ x xs → IsNormalised (xs ∷ʳ x) → IsNormalised xs 
@@ -226,13 +208,6 @@ module NormalForm (A : Type ℓ) where
  
  -- infixr 5 _∷_ 
 
-
- not₁ : (Bool × A) → (Bool × A)
- not₁ = map-fst not
-
- not₁not₁ : ∀ x → not₁ (not₁ x) ≡ x 
- not₁not₁ (x , y) = cong (_, y) (notnot x) 
-
  
  WillReduceʳ++' : ∀ b a xs x₃ ys →
   WillReduceʳ b a (xs ++ x₃ ∷ ys) →  WillReduceʳ b a (x₃ ∷ ys)
@@ -246,12 +221,22 @@ module NormalForm (A : Type ℓ) where
   cj : ∀ x → ∀ xs → Red xs →  Red (x ∷ (xs ∷ʳ not₁ x) )
   _·_ : ∀ xs ys → Red xs → Red ys → Red (xs ++ ys)
 
+
+ ¬Red[len≡1] : ∀ xs → length xs ≡ 1 → ¬ Red xs
+ ¬Red[len≡1] .[] x red[] = znots x
+ ¬Red[len≡1] .(_ ∷ (_ ∷ʳ _)) x (cj _ xs _) =
+   snotz ((+-comm 1 _ ∙ sym (length++ xs _)) ∙ injSuc x) 
+ ¬Red[len≡1] .(xs ++ ys) x ((xs · ys) x₁ x₂) =
+  ⊎.rec (flip (¬Red[len≡1] ys) x₂ ∘ snd)
+        ((flip (¬Red[len≡1] xs) x₁ ∘ fst))
+    (m+n≡1→m≡0×n≡1⊎m≡1n≡0 {length xs} {length ys} (sym (length++ xs ys) ∙ x))
+
  HasRedexSplitCases++ : (xs : List (Bool × A)) → (ys : List (Bool × A)) →
    HasRedex (xs ++ ys) → Type ℓ
  HasRedexSplitCases++ xs ys hrx =
    ((Σ _ λ rxXs → reduce xs rxXs ++ ys ≡ reduce _ hrx)
       ⊎ (Σ _ λ rxYs → xs ++ reduce ys rxYs ≡ reduce _ hrx)) ⊎
-     ((reduce _ hrx ≡ pop xs ++ tail ys) ×
+     ((reduce _ hrx ≡ init xs ++ tail ys) ×
             Σ (Bool × A) λ (b , a) →
           WillReduceʳ (not b) a xs ×
             WillReduce b a ys)
@@ -267,13 +252,13 @@ module NormalForm (A : Type ℓ) where
          (λ (v , q) → v , cong (x ∷_) q))
       (λ (p , (a , b) , u , v) →
           (cong (x ∷_) p ∙ cong (_++ (tail ys))
-           (pop-red-lem x xs
+           (init-red-lem x xs
             (lower ∘ flip (subst (WillReduceʳ (not a) b)) u))) ,
               (a , b) , WillReduceʳ∷ (not a , b) x xs u , v)
      (hasRedexSplitCases++ xs ys u)
 
  hasRedexSplitCases++ (x ∷ []) ys (inl u) =
-   inr (reduceHead x ys u , _ , (refl , refl) , u)
+   inr (reduceHead x ys u , _ , refl , u)
  hasRedexSplitCases++ (x ∷ x₂ ∷ xs) ys (inl u) =
    inl (inl (inl u , refl))
 
@@ -282,7 +267,7 @@ module NormalForm (A : Type ℓ) where
         λ ((rl , _) , (rr , _)) →
            rl ++ [ b , a ] ++ rr ≡ tail ys
  RedWillReduceView b a .(x ∷ (xs ∷ʳ _)) (cj x xs x₃) x₁ =
-   ((_ , x₃) , (_ , red[])) , cong (xs ∷ʳ_) (ΣPathP x₁)
+   ((_ , x₃) , (_ , red[])) , cong (xs ∷ʳ_) x₁
  RedWillReduceView b a .([] ++ ys) (([] · ys) x x₂) x₁ =
    RedWillReduceView b a ys x₂ x₁
  RedWillReduceView b a .((_ ∷ _) ++ ys) ((xs@(_ ∷ _) · ys) x x₂) x₁ =
@@ -293,20 +278,20 @@ module NormalForm (A : Type ℓ) where
  RedWillReduceʳView : ∀ b a ys → Red ys → WillReduceʳ b a ys →
       Σ ((Σ _ Red) × (Σ _ Red))
         λ ((rl , _) , (rr , _)) →
-           rl ++ [ b , a ] ++ rr ≡ pop ys
+           rl ++ [ b , a ] ++ rr ≡ init ys
  RedWillReduceʳView b a .(x ∷ (xs ∷ʳ not₁ x)) (cj x xs x₂) x₁ =
-   ((_ , red[]) , (_ , x₂)) , cong (_∷ xs) (ΣPathP
+   ((_ , red[]) , (_ , x₂)) , cong (_∷ xs) (
      (WillReduceʳ[∷ʳ] b  a (x ∷ xs) (not₁ x) x₁) ∙
-      not₁not₁ _) ∙ sym (pop∷ʳ (not₁ x) (x ∷ xs))
+      not₁not₁ _) ∙ sym (init∷ʳ (not₁ x) (x ∷ xs))
  RedWillReduceʳView b a .(xs ++ []) ((xs · []) x x₂) x₁ =
   let z = RedWillReduceʳView b a xs x (subst (WillReduceʳ b a) (++-unit-r xs) x₁)
-  in map-snd (_∙ cong pop (sym (++-unit-r xs))) z 
+  in map-snd (_∙ cong init (sym (++-unit-r xs))) z 
  RedWillReduceʳView b a .(xs ++ _ ∷ _) ((xs · ys@(_ ∷ _)) x x₂) x₁ =
   let (((rl , rlR) , (rr , rrR)) , p) = RedWillReduceʳView b a ys x₂
         (WillReduceʳ++' b a xs _ _ x₁) 
   in ((_ , (_ · _) x rlR) , (_ , rrR)) ,
     ++-assoc xs rl _ ∙ cong (xs ++_) p ∙
-     pop++ _ _ _
+     init++ _ _ _
 
 
 
@@ -315,7 +300,7 @@ module NormalForm (A : Type ℓ) where
       (xs : List (Bool × A)) → HasRedex (x ∷ (xs ∷ʳ x')) → Type ℓ
  HasRedexSplitCases∷ (b , a) (b' , a') xs hr =
    ((WillReduce b a xs × (reduce _ hr ≡ (tail xs ∷ʳ (b' , a'))))
-     ⊎ (WillReduceʳ b' a' xs × (reduce _ hr ≡ ((b , a) ∷ pop xs))))
+     ⊎ (WillReduceʳ b' a' xs × (reduce _ hr ≡ ((b , a) ∷ init xs))))
     ⊎ ((Σ _ λ rdxs → (b , a) ∷ (reduce xs rdxs ∷ʳ (b' , a')) ≡ reduce _ hr  )
      ⊎ (reduce _ hr ≡ []))
 
@@ -395,7 +380,7 @@ module NormalForm (A : Type ℓ) where
  
  Red⇒HasRedex : ∀ xs → 0 < length xs → Red xs → Σ _ λ hr → Red (reduce xs hr) 
  Red⇒HasRedex .(x ∷ ([] ∷ʳ not₁ x)) _ (cj x [] r) = 
-   inl (symIsRedex _ _ (refl , refl)) , red[]
+   inl (symIsRedex _ _ refl) , red[]
  Red⇒HasRedex .(x ∷ ((_ ∷ _) ∷ʳ not₁ x)) _ (cj x xs@(_ ∷ _) r) =
    let (r' , p) = Red⇒HasRedex xs _ r
    in inr (HasRedex∷ʳ _ _ r') , subst Red (cong (x ∷_) (reduce-HasRedex∷ʳ _ _ r' _)) (cj x _ p)
@@ -408,33 +393,12 @@ module NormalForm (A : Type ℓ) where
       subst Red (sym (++reduce xs (x ∷ ys) r')) ((_ · _) rX p)
 
 
- reduce-length-≤ : ∀ x ys rdx → length (reduce (x ∷ ys) rdx) ≤ length ys
- reduce-length-≤ x ys rdx =
+   
+
+ reduce-length-≤ : ∀ ys rdx → length (reduce (ys) rdx) < length ys
+ reduce-length-≤ (x ∷ ys) rdx =
    <-weaken {m = length (reduce (x ∷ ys) rdx)}
     (≡→≤ (injSuc (reduceLength _ rdx)))
-
- reduce-length-≤' : ∀ ys rdx → length (reduce (ys) rdx) < length ys
- reduce-length-≤' (x ∷ ys) rdx = reduce-length-≤ x ys rdx
-
- inferRed' : ∀ n xs ys → length ys ≤ n → ∀ zs
-             → Red (xs ++ ys ++ zs)
-             → Red ys
-             → Red (xs ++ zs)
- inferRed' n xs [] x zs x₁ x₂ = x₁
- inferRed' (suc n) xs ys@(_ ∷ ys') x zs x₁ r = 
-   let (rdx , _) = Red⇒HasRedex _ _ r
-   in inferRed' n xs (reduce ys rdx)
-        ((≤-trans {length (reduce ys rdx)} {(length ys')} {n}
-          (reduce-length-≤ _ ys' rdx)
-         x)) zs
-           (subst Red (++reduce xs (ys ++ zs) _ ∙
-              cong (xs ++_) (reduce++ ys zs rdx))
-            ((reduceRed _ (++HasRedex _ _ (HasRedex++ _ _ rdx)))
-              x₁))
-           (reduceRed _ rdx r)
-
- inferRed : ∀ xs ys zs → Red (xs ++ ys ++ zs) → Red ys → Red (xs ++ zs)
- inferRed xs ys = inferRed' _ xs ys (≤-refl (length ys))
 
 
  infixr 5 _∶_↓∷_
@@ -575,43 +539,12 @@ module NormalForm (A : Type ℓ) where
    in subst (_↓ (x₂ ∷ c)) p' (ww ↓++↓ z)
  
  
- ↘↙⇒↙↘ : ∀ xs ys zs → xs ↘ ys ↙ zs → Σ _ (xs ↙_↘ zs) 
- ↘↙⇒↙↘ xs .[] zs ((x ↓[]) , (x₁ ↓[])) =
-   (xs ++ zs) , ↓++Red x₁ (↓refl _) , Red++↓ x (↓refl _)
- ↘↙⇒↙↘ .(_ ++ x₁ ∷ _) .(x₁ ∷ _) .(xs ++ x₁ ∷ _) (_∶_↓∷_  {xs'} x x₁ u , _∶_↓∷_ {xs} x₂ .x₁ v) = 
-   let (zs' , (u' , v')) = ↘↙⇒↙↘ _ _ _ (u , v)
-   in (xs ++ xs') ++ x₁ ∷ zs' ,
-        subst (_↓ (xs' ++ x₁ ∷ _)) (sym (++-assoc xs xs' _))
-           (Red++↓ x₂ (xs' ++↓ (x₁ ∷↓ u'))) ,
-            subst (_↓ (xs ++ x₁ ∷ _)) (sym (++-assoc xs xs' _))
-              (xs ++↓ (Red++↓ x (x₁ ∷↓ v')))
-
 
  _↙↘_ : _ → _ → Type ℓ
  xs ↙↘ ys = Σ _ (xs ↙_↘ ys)
 
  _↘↙_ : _ → _ → Type ℓ
  xs ↘↙ ys = Σ _ (xs ↘_↙ ys)
-
- open isEquivRel
-
-
- ↙↘refl : isRefl _↙↘_
- ↙↘refl _ = _ , ↓refl _ , ↓refl _ 
-
- ↙↘sym : isSym _↙↘_
- ↙↘sym _ _ = map-snd λ (x , y) → y , x 
-
- ↙↘trans : isTrans _↙↘_
- ↙↘trans _ _ _ (_ , (u , v)) (_ , (u' , v')) =
-  let (_ , (u'' , v'')) = ↘↙⇒↙↘ _ _ _ (v , u')
-  in _ , ↓trans _ _ _ u'' u , ↓trans _ _ _ v'' v' 
-
- ↙↘isEquivRel : isEquivRel _↙↘_
- reflexive ↙↘isEquivRel = ↙↘refl
- symmetric ↙↘isEquivRel = ↙↘sym
- transitive ↙↘isEquivRel = ↙↘trans
-
 
  isNormalisedRed : ∀ xs → IsNormalised xs →  Red xs → xs ≡ []
  isNormalisedRed [] isNrmxs _ = refl
@@ -626,10 +559,13 @@ module NormalForm (A : Type ℓ) where
   w : ∀ xs ys → IsNormalised xs → xs ↓ ys → length xs ≡ length ys
   w xs .[] isNrmXs (x ↓[]) = cong length (isNormalisedRed _ isNrmXs x)
   w .(xs ++ x₁ ∷ ys) .(x₁ ∷ zs) isNrmXs (_∶_↓∷_ {xs} x {ys} x₁ {zs} q) =
-    let (nrmXs , nrmX₁∷ys) = (IsNormalised++  xs (x₁ ∷ ys) isNrmXs)
+    let (nrmXs , nrmX₁∷ys) = IsNormalised++  xs (x₁ ∷ ys) isNrmXs
         xs≡[] = isNormalisedRed _ nrmXs x
      in cong (λ xs → length (xs ++ x₁ ∷ ys)) xs≡[] ∙
-          cong suc (w _ _ (snd (IsNormalised++ [ x₁ ] ys nrmX₁∷ys)) q) 
+          cong suc (w _ _
+            ((snd ∘ IsNormalised++ [ x₁ ] ys) nrmX₁∷ys)
+            
+            q) 
  
 
  ≢↓→HasRedex : ∀ xs ys → length ys < length xs →
@@ -641,197 +577,6 @@ module NormalForm (A : Type ℓ) where
  ≢↓→HasRedex .((x₄ ∷ xs) ++ x₂ ∷ _) .(x₂ ∷ _) x (_∶_↓∷_ {x₄ ∷ xs} x₁ x₂ {zs} x₃) = 
   let (p , q) = Red⇒HasRedex _ _ x₁
   in  HasRedex++ _ _ p , subst (_↓ (x₂ ∷ zs)) (sym (reduce++ _ _ p)) (Red++↓ q (x₂ ∷↓ x₃))
-
- reduce↓ : ∀ {xs ys} hr
-     → xs ↓ ys
-     → IsNormalised ys
-     → reduce xs hr ↓ ys
- reduce↓ hr (x ↓[]) x₁ = reduceRed _ hr x ↓[]
- reduce↓ hr (x ∶ x₂ ↓∷ x₃) x₁ with hasRedexSplitCases++ _ (x₂ ∷ _) hr
- ... | inl (inl (hr' , p)) =
-       subst (_↓ (x₂ ∷ _)) p (reduceRed _ hr' x ∶ x₂ ↓∷ x₃)
- reduce↓ hr (_∶_↓∷_ {xs} x {ys} x' (x₂ ↓[])) x₁ | inl (inr (inl u , p)) =
-   let (((_ , rlR') , (_ , rrR')) , p'') =
-            RedWillReduceView _ _ _ x₂ u 
-   in subst (_↓ (_ ∷ _)) (cong (xs ++_) (p'' ∙ sym (reduceHead _ _ u)) ∙ p)
-        (Red++↓ x (rlR' ∶ x' ↓∷ (rrR' ↓[])))
-   
- reduce↓ hr (x ∶ _ ↓∷ _∶_↓∷_ {[]} x₂ x₃ x₄) x₁ | inl (inr (inl u , p)) =
-    ⊥.rec (fst x₁ u)
- reduce↓ hr (_∶_↓∷_ {xs₁} x _ (_∶_↓∷_ {x₅ ∷ xs} x₂ {ys} x₃ x₄)) x₁ | inl (inr (inl u , p)) = 
-  let (((rl' , rlR') , (rr' , rrR')) , p'') =
-          RedWillReduceView _ _ _ x₂ u
-  in subst (_↓ (_ ∷ _)) (cong (xs₁ ++_) (sym (++-assoc rl' _ _))
-       ∙ cong (λ xs → xs₁ ++ xs ++ x₃ ∷ ys) p'' ∙ p)
-         (Red++↓ x (rlR' ∶ _ ↓∷ rrR' ∶ x₃ ↓∷ x₄))
- ... | inl (inr (inr u , p)) =
-    subst (_↓ (_ ∷ _)) p (x ∶ x₂ ↓∷ reduce↓ u x₃ (snd x₁))
- ... | inr (p , x₂' , (w , p')) =
-    let (((rl' , rlR') , (rr' , rrR')) , p'') =
-          RedWillReduceʳView _ _ _ x w
-        p* = cong (λ x* → rl' ++ x* ∷ rr') ((ΣPathP (symIsRedex _ _ p')))  ∙ p''
-        z = rlR' ∶ x₂ ↓∷ Red++↓ rrR' x₃
-    in subst (_↓ (_ ∷ _)) ( sym (++-assoc rl' _ _) ∙ cong (_++ _) p* ∙ sym p)
-          z
- 
-
- -- Red↓→↓Red : ∀ a b → Red a → a ↓ b → Red b
- -- Red↓→↓Red a b x x₁ = {!!}
-
- N↙↘N→≡' : ∀ n xs ys → (q : xs ↙↘ ys) → length (fst q) ≤ n → 
-     IsNormalised xs →
-     IsNormalised ys → Σ (xs ↙↘ ys) λ q' → length xs ≡ length (fst q')
- N↙↘N→≡' zero xs ys ([] , ↓xs , ↓ys) g xsN ysN =
-   ([] , ↓xs , ↓ys) , cong length ([]↓ _ ↓xs)
- N↙↘N→≡' (suc n) xs ys q@(zs , ↓xs , ↓ys) g xsN ysN =
-  ⊎.rec
-    (λ lenXS<lenZS →
-       let (w , _) = ≢↓→HasRedex zs xs lenXS<lenZS ↓xs
-         
-       in N↙↘N→≡' n xs ys
-           (_ , (reduce↓ w ↓xs xsN) , reduce↓ w ↓ys ysN)
-           (≤-trans {length (reduce _ w)} {suc (length (reduce _ w))}
-                {n}
-              (≤-suc-weaken {(length (reduce _ w))}
-                (≤-refl (length (reduce _ w))))
-             (subst (_≤ suc n) (sym (reduceLength _ w)) g)) xsN ysN)
-    (q ,_)
-   (≤-split {length xs} {length zs} (↓⇒length≥ ↓xs))
-
-
- N↙↘N→≡-eqLen : ∀ xs ys → (q : xs ↙↘ ys) → length xs ≡ length (fst q) → 
-     IsNormalised xs →
-     IsNormalised ys → xs ≡ ys
- N↙↘N→≡-eqLen xs ys (zs , ↓xs , ↓ys) p xsN ysN =
-   let zs≡xs = ↓EqualLengths⇒≡ ↓xs (sym p) 
-       zsN = subst IsNormalised (sym zs≡xs) xsN
-   in sym zs≡xs ∙ minimalNormalised zs ys zsN ↓ys
- 
- N↙↘N→≡ : ∀ xs ys → xs ↙↘ ys →
-     IsNormalised xs →
-     IsNormalised ys → xs ≡ ys
- N↙↘N→≡ xs ys q xsN ysN =
-  let (q' , p) = N↙↘N→≡' (length (fst q)) xs ys q
-        (≤-refl (length (fst q))) xsN ysN
-  in N↙↘N→≡-eqLen xs ys q' p xsN ysN
-
-
- _↙↘++↙↘_ : ∀ {xsL xsR ysL ysR} →
-    xsL ↙↘ ysL → xsR ↙↘ ysR →
-      (xsL ++ xsR) ↙↘ (ysL ++ ysR)
- (_ , xl , yl) ↙↘++↙↘ (_ , xr , yr) = _ , (xl ↓++↓ xr) , (yl ↓++↓ yr)
-
-
- List/↙↘ : Type ℓ
- List/↙↘ = _ /₂ _↙↘_
-
-
- List/↙↘· : List/↙↘ → List/↙↘ → List/↙↘
- List/↙↘· =  SQ.rec2 squash/ (λ a b → SQ.[ a ++ b ])
-    (λ _ _ c → eq/ _ _ ∘ _↙↘++↙↘ (↙↘refl c))
-    (λ a _ _ → eq/ _ _ ∘ (↙↘refl a) ↙↘++↙↘_ )
-
-
- Iso-↙↘-≡ : ∀ a b → Iso ([ a ]/ ≡ [ b ]/) ∥ a ↙↘ b ∥₁
- Iso-↙↘-≡ = isEquivRel→TruncIso ↙↘isEquivRel
-
- ≡→↙↘ : ∀ a b → ([ a ]/ ≡ [ b ]/) →  ∥ a ↙↘ b ∥₁
- ≡→↙↘ _ _ = Iso.fun (Iso-↙↘-≡ _ _)
- 
- NormalForm/ : List/↙↘ → Type ℓ
- NormalForm/ g = Σ _ λ l → ([ l ]/ ≡ g) × ∥ IsNormalised l ∥₁
-
-
-
-
-
- invLi : List (Bool × A) → List (Bool × A)
- invLi = rev ∘ Li.map (map-fst not)
-
- invLi++ : ∀ xs ys → invLi (xs ++ ys) ≡
-                 invLi ys ++ invLi xs
- invLi++ xs ys =
-   sym (cong rev (map++ _ xs ys)) ∙
-     rev-++ (Li.map _ xs) (Li.map _ ys)
- 
- invol-invLi : isInvolution invLi
- invol-invLi xs =
-  sym (rev-map-comm (map-fst not) (invLi xs)) ∙
-    cong (Li.map (map-fst not))
-      (rev-rev (Li.map (map-fst not) xs))
-     ∙ map-∘ (map-fst not) (map-fst not) xs ∙
-     (λ i → Li.map (map-fst (λ x → notnot x i) ) xs) ∙ map-id xs
-    
-
- Red-invLi : ∀ xs → Red xs → Red (invLi xs)
- Red-invLi .[] red[] = red[]
- Red-invLi .(x ∷ (xs ∷ʳ not₁ x)) (cj x xs x₁) =
-   let z = cj x _ (Red-invLi _ x₁)
-   in subst Red (cong
-     (_∷ rev (Li.map (map-fst not) xs) ++ (not (fst x) , snd x) ∷ [])
-       (sym (not₁not₁ x)) ∙ cong (_∷ʳ (not₁ x))
-     (sym (invLi++ xs [ not₁ x ])) ) z
- Red-invLi .(xs ++ ys) ((xs · ys) x x₁) =
-   subst Red (sym (invLi++ xs ys))
-     ((_ · _) (Red-invLi _ x₁) (Red-invLi _ x))
-
- invLi-↓ : ∀ xs ys → xs ↓ ys → invLi xs ↓ invLi ys
- invLi-↓ xs .[] (x ↓[]) = Red-invLi _ x ↓[] 
- invLi-↓ .(xs ++ x₁ ∷ ys) .(x₁ ∷ _) (_∶_↓∷_ {xs} x {ys} x₁ y) = 
-   subst (_↓ _) (sym (invLi++ xs (_ ∷ ys)))
-     (↓++Red (Red-invLi _ x) ((invLi-↓ _ _ y) ↓++↓ (↓refl _)) ) 
-
- invLi-↙↘ : ∀ xs ys → xs ↙↘ ys → (invLi xs) ↙↘ (invLi ys)
- invLi-↙↘ xs ys (zs , ↓xs , ↓ys) =
-   (invLi zs) ,
-     invLi-↓ _ _ ↓xs , invLi-↓ _ _ ↓ys
-
- Red[XS++invLiXS] : ∀ xs → Red (xs ++ invLi xs)
- Red[XS++invLiXS] [] = red[]
- Red[XS++invLiXS] (x ∷ xs) =
-   subst Red (sym (++-assoc [ x ] xs (invLi (x ∷ xs)) ∙
-         cong (x ∷_) (sym (++-assoc xs (invLi xs) _))))
-     (cj x _ (Red[XS++invLiXS] xs))
- 
- XS++invLiXS↓[] : ∀ xs → (xs ++ invLi xs) ↓ []
- XS++invLiXS↓[] xs = Red[XS++invLiXS] xs ↓[] 
-
- invLiXS++XS↓[] : ∀ xs → (invLi xs ++ xs) ↓ []
- invLiXS++XS↓[] xs = 
-   subst (λ xs' → (invLi xs ++ xs') ↓ [])
-      (invol-invLi xs)
-     (XS++invLiXS↓[] (invLi xs))
-
- ↓→↙↘ : ∀ {xs ys} → xs ↓ ys → xs ↙↘ ys
- ↓→↙↘ x = _ , ↓refl _ , x
- 
-
- List/↙↘Group : GroupStr List/↙↘
- GroupStr.1g List/↙↘Group = SQ.[ [] ]
- GroupStr._·_ List/↙↘Group = List/↙↘·
-
- GroupStr.inv List/↙↘Group =
-   SQ.rec squash/ (SQ.[_] ∘ invLi)
-    λ _ _ → eq/ _ _ ∘ invLi-↙↘ _ _
- GroupStr.isGroup List/↙↘Group = makeIsGroup
-   squash/ (SQ.elimProp3
-     (λ _ _ _ → squash/ _ _)
-      λ xs ys zs → cong SQ.[_] (sym (++-assoc xs ys zs)))
-   (SQ.elimProp
-     (λ _ → squash/ _ _)
-     λ xs → cong SQ.[_] (++-unit-r xs))
-   (SQ.elimProp
-     (λ _ → squash/ _ _)
-     λ _ → refl)
-   (SQ.elimProp
-     (λ _ → squash/ _ _)
-     λ xs → eq/ _ _ (↓→↙↘ {ys = []} (XS++invLiXS↓[] xs)))
-   (SQ.elimProp
-     (λ _ → squash/ _ _)
-     λ xs → eq/ _ _ (↓→↙↘ {ys = []} (invLiXS++XS↓[] xs)))
-
-
-
 
  module FG (freeGroupGroup : Group ℓ) (η : A → ⟨ freeGroupGroup ⟩) where 
 
@@ -859,111 +604,12 @@ module NormalForm (A : Type ℓ) where
     ·Assoc _ _ _
 
   redex-ε-η* : ∀ x x' → IsRedex x x' → η* x ·fg η* x' ≡ 1g
-  redex-ε-η* (false , _) (false , _) (p , _) = ⊥.rec (false≢true p)
-  redex-ε-η* (false , x) (true , _) (_ , q) = 
-    cong (inv (η x) ·fg_) (cong (η) (sym q)) ∙ ·InvL (η x) 
-  redex-ε-η* (true , x) (false , _) (_ , q) =
-    cong (η x ·fg_) (cong (inv ∘ η) (sym q)) ∙ ·InvR (η x)
-  redex-ε-η* (true , _) (true , _) (p , _) = ⊥.rec (true≢false p)
+  redex-ε-η* (false , _) (false , _) p = ⊥.rec (false≢true (cong fst p))
+  redex-ε-η* (false , x) (true , _) q = 
+    cong (inv (η x) ·fg_) (cong (η) (sym (cong snd q))) ∙ ·InvL (η x) 
+  redex-ε-η* (true , x) (false , _) q =
+    cong (η x ·fg_) (cong (inv ∘ η) (sym (cong snd q))) ∙ ·InvR (η x)
+  redex-ε-η* (true , _) (true , _) p = ⊥.rec (true≢false (cong fst p))
 
   NormalForm : FreeGroup → Type ℓ
   NormalForm g = Σ _ λ l → (fromList l ≡ g) × IsNormalised l
-  module _ (isSetA : isSet A) where
-  
--- -- -- --    isPropNormalForm : ∀ g → isProp (NormalForm g)
--- -- -- --    isPropNormalForm g (l , p , n) (l' , p' , n') =
--- -- -- --      {!!}
-
-
-
--- -- -- -- --  module HIT-FG where
-
--- -- -- -- --   open import Cubical.HITs.FreeGroup renaming (rec to recFG ; elimProp to elimPropFG)
-
--- -- -- -- --   open FG (freeGroupGroup A) η renaming (inv to invFG)
-  
-
--- -- -- -- --   FG→L/↙↘ : GroupHom (freeGroupGroup A) (_ , List/↙↘Group)
--- -- -- -- --   FG→L/↙↘ = recFG ([_]/ ∘ [_] ∘ (true ,_))
-
--- -- -- -- --   open IsGroupHom (snd (FG→L/↙↘))
-
--- -- -- -- --   Red→FG≡ : ∀ a → Red a → fromList a ≡ ε
--- -- -- -- --   Red→FG≡ .[] red[] = refl
--- -- -- -- --   Red→FG≡ .(x ∷ (xs ∷ʳ not₁ x)) (cj x xs x₁) =
--- -- -- -- --         cong (η* x ·fg_) (fromList· xs [ not₁ x ] ∙
--- -- -- -- --           cong₂ _·fg_ (Red→FG≡ _ x₁) (·IdR _) ∙ ·IdL _) ∙
--- -- -- -- --            redex-ε-η* x (not₁ x) (symIsRedex _ _ (refl , refl))
--- -- -- -- --   Red→FG≡ .(xs ++ ys) ((xs · ys) x x₁) =
--- -- -- -- --     fromList· xs ys
--- -- -- -- --       ∙∙ cong₂ _·fg_ (Red→FG≡ _ x) (Red→FG≡ _ x₁)
--- -- -- -- --       ∙∙ ·IdL _
-  
--- -- -- -- --   ↓→FG≡ : (a b : List (Bool × A)) → a ↓ b → fromList a ≡ fromList b
--- -- -- -- --   ↓→FG≡ a .[] (x ↓[]) = Red→FG≡ _ x
--- -- -- -- --   ↓→FG≡ .(xs ++ x₁ ∷ ys) .(x₁ ∷ _) (_∶_↓∷_ {xs} x {ys} x₁ x₂) =
--- -- -- -- --     fromList· xs (x₁ ∷ ys) ∙∙
--- -- -- -- --       cong (_·fg fromList (x₁ ∷ ys)) (Red→FG≡ xs x) ∙
--- -- -- -- --         ·IdL _ ∙∙ cong (η* x₁ ·fg_) (↓→FG≡ _ _ x₂)
-
--- -- -- -- --   ↙↘→FG≡ : (a b : List (Bool × A)) → a ↙↘ b → fromList a ≡ fromList b
--- -- -- -- --   ↙↘→FG≡ a b (c , ↓a , ↓b) = sym (↓→FG≡ c a ↓a)  ∙ ↓→FG≡ c b ↓b
-
--- -- -- -- --   section-FG-L/↙↘ : ∀ a → fst (FG→L/↙↘) (fromList a) ≡ [ a ]/
--- -- -- -- --   section-FG-L/↙↘ [] = refl
--- -- -- -- --   section-FG-L/↙↘ (x ∷ xs) =
--- -- -- -- --      pres· (η* x) (fromList xs) ∙
--- -- -- -- --        cong (List/↙↘· (fst FG→L/↙↘ (η* x)))
--- -- -- -- --          (section-FG-L/↙↘ xs)  ∙
--- -- -- -- --           w x
--- -- -- -- --    where
--- -- -- -- --    w : ∀ x → List/↙↘· (fst FG→L/↙↘ (η* x)) [ xs ]/ ≡ [ x ∷ xs ]/
--- -- -- -- --    w (false , a) = refl
--- -- -- -- --    w (true , a) = refl
-
--- -- -- -- --   fromL/ : List/↙↘ → _
--- -- -- -- --   fromL/ = SQ.rec trunc fromList ↙↘→FG≡
-
--- -- -- -- --   fromL/pres· : ∀ a b → fromL/ (List/↙↘· a b) ≡ fromL/ a ·fg fromL/ b 
--- -- -- -- --   fromL/pres· = SQ.elimProp2 (λ _ _ → trunc _ _) fromList·
-
--- -- -- -- --   fromL/presinv : ∀ xs →
--- -- -- -- --        fromL/ (GroupStr.inv List/↙↘Group xs) ≡
--- -- -- -- --       invFG (fromL/ xs)
--- -- -- -- --   fromL/presinv = SQ.elimProp (λ _ → trunc _ _) w
--- -- -- -- --    where
--- -- -- -- --    open GroupTheory (freeGroupGroup A)
-
--- -- -- -- --    w' : ∀ x → fromL/ [ [ not₁ x ] ]/ ≡ invFG (η* x)
--- -- -- -- --    w' (false , a) = ·IdR _ ∙ sym (invInv _)
--- -- -- -- --    w' (true , a) = ·IdR _
-   
--- -- -- -- --    w : (xs : List (Bool × A)) →
--- -- -- -- --       fromL/ [ invLi xs ]/ ≡ invFG (fromL/ [ xs ]/)
--- -- -- -- --    w [] = sym inv1g
--- -- -- -- --    w (x ∷ xs) = 
--- -- -- -- --         (fromL/pres· ([ invLi xs ]/) [ [ not₁ x ] ]/ ∙
--- -- -- -- --             cong (fromL/ [ invLi xs ]/ ·fg_) (w' x))
--- -- -- -- --          ∙∙ cong (_·fg invFG (η* x)) (w xs) ∙∙  sym (invDistr _ _) 
-  
--- -- -- -- --   retract-FG-L/↙↘ : ∀ b →  fromL/ (fst (FG→L/↙↘) b) ≡ b
--- -- -- -- --   retract-FG-L/↙↘ =
--- -- -- -- --     elimPropFG (λ _ → trunc _ _)
--- -- -- -- --       (λ _ → ·IdR _)
--- -- -- -- --       (λ g1 g2 p1 p2 →
--- -- -- -- --         cong fromL/ (pres· g1 g2) ∙
--- -- -- -- --           fromL/pres· (fst (FG→L/↙↘) g1) (fst (FG→L/↙↘) g2) ∙
--- -- -- -- --            cong₂ _·fg_ p1 p2)
--- -- -- -- --       refl
--- -- -- -- --       λ g p → cong fromL/ (presinv g) ∙
--- -- -- -- --          fromL/presinv (fst (FG→L/↙↘) g) ∙ cong invFG p 
-
--- -- -- -- --   GroupIso-FG-L/↙↘ : GroupIso (freeGroupGroup A) (_ , List/↙↘Group)
--- -- -- -- --   Iso.fun (fst GroupIso-FG-L/↙↘) = _
--- -- -- -- --   Iso.inv (fst GroupIso-FG-L/↙↘) = fromL/
-    
--- -- -- -- --   Iso.rightInv (fst GroupIso-FG-L/↙↘) =
--- -- -- -- --     SQ.elimProp (λ _ → squash/ _ _)
--- -- -- -- --      section-FG-L/↙↘
--- -- -- -- --   Iso.leftInv (fst GroupIso-FG-L/↙↘) = retract-FG-L/↙↘
--- -- -- -- --   snd GroupIso-FG-L/↙↘ = snd FG→L/↙↘

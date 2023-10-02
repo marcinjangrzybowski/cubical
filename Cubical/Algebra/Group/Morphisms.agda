@@ -21,6 +21,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Structure
+open import Cubical.Foundations.HLevels
 
 open import Cubical.Algebra.Group.Base
 open import Cubical.Algebra.Group.DirProd
@@ -64,6 +65,11 @@ GroupEquiv G H = Σ[ e ∈ (G .fst ≃ H .fst) ] IsGroupEquiv (G .snd) e (H .snd
 
 groupEquivFun : {G : Group ℓ} {H : Group ℓ'} → GroupEquiv G H → G .fst → H .fst
 groupEquivFun e = e .fst .fst
+
+GroupIso≃GroupEquiv : {G : Group ℓ} {H : Group ℓ'} → GroupIso G H ≃ GroupEquiv G H
+GroupIso≃GroupEquiv {G = G} {H} =
+  Σ-cong-equiv-fst (_ ,
+    isSet→isEquiv-isoToPath (isSetGroup G) (isSetGroup H)) 
 
 -- Image, kernel, surjective, injective, and bijections
 

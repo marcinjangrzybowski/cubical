@@ -20,8 +20,13 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Path
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Equiv.Properties
 open import Cubical.Foundations.Equiv.BiInvertible
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Isomorphism
+
+open import Cubical.Data.Sigma
+
 
 open import Cubical.Algebra.Group
 open import Cubical.Algebra.Group.Morphisms
@@ -29,9 +34,15 @@ open import Cubical.Algebra.Group.MorphismProperties
 open import Cubical.Algebra.Monoid.Base
 open import Cubical.Algebra.Semigroup.Base
 open import Cubical.Algebra.Group.Instances.Int
+open import Cubical.Algebra.Group.GroupPath
 
 import Cubical.Data.Int as Int
 
+
+open import Cubical.Categories.Functor.Base
+open import Cubical.Categories.Adjoint
+open import Cubical.Categories.Instances.Sets
+open import Cubical.Categories.Instances.Groups
 
 private
   variable
@@ -204,244 +215,22 @@ A→Group≃GroupHom {Group = Group} = biInvEquiv→Equiv-right biInv where
   BiInvEquiv.invl biInv (hom ,  _) a = hom (η a)
   BiInvEquiv.invl-leftInv biInv f    = funExt (λ a → refl)
 
-record Elim {A : Type ℓ} (B : FreeGroup A → Type ℓ') : Type (ℓ-max ℓ ℓ') where 
- field
-  isSetB : ∀ a → isSet (B a)
-  εB : B ε
-  ηB : ∀ a → B (η a)
-  invB : ∀ a → B a → B (inv a)
-  ·B : ∀ a b → B a → B b → B (a · b)
-  assocB : ∀ {a b c} a' b' c' →
-      PathP (λ i → B (assoc a b c i))
-        (·B _ _ a' (·B _ _ b' c'))
-        (·B _ _ (·B _ _ a' b') c')
-  idrB : ∀ {a} a' →
-      PathP (λ i → B (idr a i))
-        a'
-        (·B _ _ a' εB)
-  idlB : ∀ {a} a' →
-      PathP (λ i → B (idl a i))
-        a'
-        (·B _ _ εB a')
-  invrB : ∀ {a} a' →
-      PathP (λ i → B (invr a i))        
-        (·B _ _ a' (invB _ a'))
-        εB
-  invlB : ∀ {a} a' →
-      PathP (λ i → B (invl a i))        
-        (·B _ _ (invB _ a') a')
-        εB
+freeGroupFunctor : Functor (SET ℓ) (GroupCategory {ℓ})
+Functor.F-ob freeGroupFunctor (A , _) = freeGroupGroup A
+Functor.F-hom freeGroupFunctor f = rec (η ∘ f)
+Functor.F-id freeGroupFunctor =
+  freeGroupHom≡ λ _ → refl
+Functor.F-seq freeGroupFunctor _ _ =
+  freeGroupHom≡ λ _ → refl
 
- f : ∀ a → B a
- f (a · a₁) = ·B _ _ (f a) (f a₁)
- f ε = εB
- f (η x) = ηB x
- f (inv a) = invB _ (f a)
- f (assoc a b c i) = assocB (f a) (f b) (f c) i
- f (idr a i) = idrB (f a) i
- f (idl a i) = idlB (f a) i
- f (invr a i) = invrB (f a) i
- f (invl a i) = invlB (f a) i
- f (trunc a a₁ x y i i₁) =
-   isOfHLevel→isOfHLevelDep 2 (isSetB)
-    _ _ (cong f x) (cong f y) (trunc a a₁ x y) i i₁
+freeGroupFunctor⊣Forget : freeGroupFunctor NaturalBijection.⊣ (Forget {ℓ})
+NaturalBijection._⊣_.adjIso freeGroupFunctor⊣Forget =
+ invIso (equivToIso A→Group≃GroupHom)
+NaturalBijection._⊣_.adjNatInD freeGroupFunctor⊣Forget _ _ = refl
+NaturalBijection._⊣_.adjNatInC freeGroupFunctor⊣Forget _ _ = freeGroupHom≡ λ _ → refl
 
+windingHom : GroupHom (freeGroupGroup A) ℤGroup 
+windingHom = rec λ _ → Int.pos 1
 
--- invB : {!{A : Type ℓ} (B : FreeGroup A → Type ℓ')
---       → !}
--- invB = {!!}
-
--- record Elim' {A : Type ℓ} (B : FreeGroup A → Type ℓ') : Type (ℓ-max ℓ ℓ') where 
---  field
---   isSetB : ∀ a → isSet (B a)
---   εB : B ε
---   ηB : ∀ a → B (η a)
---   η⁻B : ∀ a → B (inv (η a))
---   ·B : ∀ a b → B a → B b → B (a · b)
---   assocB : ∀ {a b c} a' b' c' →
---       PathP (λ i → B (assoc a b c i))
---         (·B _ _ a' (·B _ _ b' c'))
---         (·B _ _ (·B _ _ a' b') c')
---   idrB : ∀ {a} a' →
---       PathP (λ i → B (idr a i))
---         a'
---         (·B _ _ a' εB)
---   idlB : ∀ {a} a' →
---       PathP (λ i → B (idl a i))
---         a'
---         (·B _ _ εB a')
---   -- invrB : ∀ {a} a' →
---   --     PathP (λ i → B (invr a i))        
---   --       (·B _ _ a' (invB _ a'))
---   --       εB
---   -- invlB : ∀ {a} a' →
---   --     PathP (λ i → B (invl a i))        
---   --       (·B _ _ (invB _ a') a')
---   --       εB
-
---  f : ∀ a → B a
---  f (η x) = ηB x
---  f (a · a₁) = ·B _ _ (f a) (f a₁)
---  f ε = εB
---  f (inv (η x)) = η⁻B x
---  f (inv (a · a₁)) =
---     subst B {!!} (·B _ _ (f (inv a)) (f (inv a₁)))
---  f (inv ε) = {!!}
---  f (inv (inv a)) = {!!}
---  f (inv (assoc a a₁ a₂ i)) = {!!}
---  f (inv (idr a i)) = {!!}
---  f (inv (idl a i)) = {!!}
---  f (inv (invr a i)) = {!!}
---  f (inv (invl a i)) = {!!}
---  f (inv (trunc a a₁ x y i i₁)) = {!!}
---  f (assoc a a₁ a₂ i) = {!!}
---  f (idr a i) = {!!}
---  f (idl a i) = {!!}
---  f (invr a i) = {!!}
---  f (invl a i) = {!!}
---  f (trunc a a₁ x y i i₁) = {!!}
-
-record ElimProp {A : Type ℓ} (B : FreeGroup A → Type ℓ') : Type (ℓ-max ℓ ℓ') where 
- field
-  isPropB : ∀ a → isProp (B a)
-  εB : B ε
-  ηB : ∀ a → B (η a)
-  invB : ∀ a → B a → B (inv a)
-  ·B : ∀ a b → B a → B b → B (a · b)
-
- f : ∀ a → B a
- f (a · a₁) = ·B _ _ (f a) (f a₁)
- f ε = εB
- f (η x) = ηB x
- f (inv a) = invB _ (f a)
- f (assoc a a₁ a₂ i) =
-   isProp→PathP (λ i → isPropB (assoc a a₁ a₂ i))
-     ((·B a (a₁ · a₂) (f a) (·B a₁ a₂ (f a₁) (f a₂))))
-     ((·B (a · a₁) a₂ (·B a a₁ (f a) (f a₁)) (f a₂))) i
- f (idr a i) =
-      isProp→PathP (λ i → isPropB (idr a i))
-       (f a)
-       (·B a ε (f a) εB)
-       i
- f (idl a i) =
-   isProp→PathP (λ i → isPropB (idl a i))
-       (f a)
-       (·B ε a εB (f a))
-       i
- f (invr a i) =
-   isProp→PathP (λ i → isPropB (invr a i))
-       (·B a (inv a) (f a) (invB a (f a)))
-       εB
-       i
- f (invl a i) =
-    isProp→PathP (λ i → isPropB (invl a i))
-       (·B (inv a) a (invB a (f a)) (f a))
-       εB
-       i
- f (trunc a a₁ x y i i₁) =
-   isOfHLevel→isOfHLevelDep 2 (isProp→isSet ∘ isPropB)
-    _ _ (cong f x) (cong f y) (trunc a a₁ x y) i i₁
-
-toℤHom : GroupHom (freeGroupGroup A) ℤGroup 
-toℤHom = rec λ _ → Int.pos 1
-
-toℤ : FreeGroup A → Int.ℤ 
-toℤ = fst toℤHom
-
--- record ElimProp' {A : Type ℓ} (B : FreeGroup A → Type ℓ') : Type (ℓ-max ℓ ℓ') where 
---  field
---   isPropB : ∀ a → isProp (B a)
---   εB : B ε
---   ηB : ∀ a → B (η a)
---   η⁻B : ∀ a → B (inv (η a))
---   ·B : ∀ a b → B a → B b → B (a · b)
-  
-
---  open GroupTheory (freeGroupGroup A)
-
---  f : ∀ a → B a
-
---  fHlp : ∀ {a₀ a₁ : FreeGroup A} → (p : a₀ ≡ a₁) (fa₀ : B a₀) (fa₁ : B a₁)  → PathP (λ z → B (p z))
---                fa₀ fa₁
---  fHlp {a₀} {a₁} p = isProp→PathP (λ i → isPropB (p i)) 
-
-
---  f (η x) = ηB x
---  f (a · a₁) = ·B _ _ (f a) (f a₁)
---  f ε = εB
---  f (inv (η x)) = η⁻B x
---  f (inv (a · a₁)) = subst B (sym (invDistr _ _)) (·B (inv a₁) (inv a) (f _) (f _)) 
---  f (inv ε) = subst B (sym (inv1g)) εB
---  f (inv (inv a)) = subst B (sym (invInv a)) (f a)
---  f (inv (assoc a a₁ a₂ i)) = 
---    fHlp (λ i → inv (assoc a a₁ a₂ i))
---     (subst B (λ i₁ → invDistr a (a₁ · a₂) (~ i₁))
---          (·B (inv (a₁ · a₂)) (inv a)
---           (subst B (λ i₁ → invDistr a₁ a₂ (~ i₁))
---            (·B (inv a₂) (inv a₁) (f (inv a₂)) (f (inv a₁))))
---           (f (inv a))))
---     (subst B (λ i₁ → invDistr (a · a₁) a₂ (~ i₁))
---          (·B (inv a₂) (inv (a · a₁)) (f (inv a₂))
---           (subst B (λ i₁ → invDistr a a₁ (~ i₁))
---            (·B (inv a₁) (inv a) (f (inv a₁)) (f (inv a)))))) i
-
---  f (inv (idr a i)) =
---    fHlp (λ i → inv (idr a i))
---     (f (inv a))
---     (subst B (sym (invDistr _ _)) 
---          (·B (inv ε) (inv a)
---           (subst B (sym inv1g) εB)
---           (f (inv a)))) i
---  f (inv (idl a i)) =
---       fHlp (λ i → inv (idl a i))
---         (f (inv a))
---         (subst B (λ i₁ → invDistr ε a (~ i₁))
---          (·B (inv a) (inv ε) (f (inv a)) (subst B (λ i₁ → inv1g (~ i₁)) εB))) i
-
---  f (inv (invr a i)) =
---       fHlp (λ i → inv (invr a i))
---         (subst B (λ i₁ → invDistr a (inv a) (~ i₁))
---          (·B (inv (inv a)) (inv a) (subst B (λ i₁ → invInv a (~ i₁)) (f a))
---           (f (inv a))))
---         (subst B (λ i₁ → inv1g (~ i₁)) εB) i
---  f (inv (invl a i)) =
---      fHlp (λ i → inv (invl a i))
---         (subst B (λ i₁ → invDistr (inv a) a (~ i₁))
---          (·B (inv a) (inv (inv a)) (f (inv a))
---           (subst B (λ i₁ → invInv a (~ i₁)) (f a))))
---         (subst B (λ i₁ → inv1g (~ i₁)) εB) i
-
---  f (inv (trunc a a₁ x y i i₁)) =
---     isProp→SquareP (λ i i₁ → isPropB (inv (trunc a a₁ x y i i₁)))
---        refl
---        refl
---        (λ i₁ → f (inv (x i₁)))
---        (λ i₁ → f (inv (y i₁))) i i₁
-
---  f (assoc a a₁ a₂ i) =
---       fHlp (λ i → assoc a a₁ a₂ i)
---         {!!}
---         {!!}
---         i
---  f (idr a i) = 
---       fHlp (λ i → idr a i)
---         (f a)
---         (·B a ε (f a) εB)
---         i
---  f (idl a i) = 
---       fHlp (λ i → idl a i)
---         (f a)
---         (·B ε a εB (f a) )
---         i
---  f (invr a i) = 
---       fHlp (λ i → invr  a i)
---         {!!}
---         εB
---         i
---  f (invl a i) = 
---       fHlp (λ i → invl a i)
---         (·B _ _ {!!} {!!})
---         εB
---         i
---  f (trunc a a₁ x y i i₁) = {!!}
-  
+winding : FreeGroup A → Int.ℤ 
+winding = fst windingHom
