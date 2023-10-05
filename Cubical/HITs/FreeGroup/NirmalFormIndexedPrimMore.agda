@@ -57,8 +57,8 @@ open import Cubical.Categories.Adjoint
 open import Cubical.Categories.Instances.Sets
 open import Cubical.Categories.Instances.Groups
 
-open import Cubical.HITs.Bouquet
-
+open import Cubical.HITs.Bouquet renaming (elimProp to elimBouquetProp)
+  hiding (winding)
 private
   variable
     ℓ : Level
@@ -359,13 +359,15 @@ module _ (A : Type ℓ) where
  -- isPropNormalForm g (l , p , n) (l' , p' , n') =
  --   {!!}
 
- module _ (isSetA : isSet A) where
+ module isSetA (isSetA : isSet A) where
+
+  isSet[𝟚×A] = isOfHLevelList 0 (isSet× isSetBool isSetA)
 
   isPropNormalForm/ : ∀ g → isProp (NormalForm/ g)
   isPropNormalForm/ = SQ.elimProp (λ _ → isPropIsProp)
     λ xs (l , p , n) (l' , p' , n') →      
       let h = λ _ → (isProp× (squash/ _ _) (isPropIsNormalised _))
-      in PT.rec (isSetΣ (isOfHLevelList 0 (isSet× isSetBool isSetA))
+      in PT.rec (isSetΣ isSet[𝟚×A]
          (isProp→isSet ∘ h) _ _)
               (λ p* → ΣPathPProp h (N↘↙N→≡ _ _ p* n n'))
               (≡→↘↙ l l' (p ∙ sym p'))
@@ -375,6 +377,9 @@ module _ (A : Type ℓ) where
 
  module _ (_≟_ : Discrete A) where
 
+  isSetA = Discrete→isSet _≟_
+
+  open isSetA isSetA
 
   IsNormalised⊎HasRedex : ∀ a → IsNormalised a ⊎ HasRedex a
   IsNormalised⊎HasRedex a = w _ a (≤-refl (length a)) where
@@ -548,8 +553,14 @@ module _ (A : Type ℓ) where
   Iso.inv EnDeIso = decodeBu base
   Iso.rightInv EnDeIso = encodeDecode
   Iso.leftInv EnDeIso = decodeEncodeBu base
-     
 
+  isGroupoidBouquet : isGroupoid (Bouquet A)
+  isGroupoidBouquet = elimBouquetProp
+    (λ _ → isPropΠ λ _ → isPropIsSet)
+    (elimBouquetProp (λ _ → isPropIsSet)
+       (isOfHLevelRetractFromIso 2
+         EnDeIso (isSetΣ isSet[𝟚×A] (isProp→isSet ∘ isPropIsNormalised))))
+  
   -- GroupStrΣNormalForm : GroupStr (Σ _ IsNormalised)
   -- GroupStr.1g GroupStrΣNormalForm =  [] , tt*
   -- GroupStr._·_ GroupStrΣNormalForm (xs , _) (ys , _) =
@@ -573,12 +584,9 @@ module _ (A : Type ℓ) where
 
   discreteA→NormalForm/ : ∀ a → NormalForm/ a
   discreteA→NormalForm/  =
-    SQ.elimProp (isPropNormalForm/ (Discrete→isSet _≟_))
+    SQ.elimProp isPropNormalForm/
       ((λ (z , u , v) →
           z , eq/ _ _ (↘↙sym _ _ (↓→↘↙ _ _ u)) , v)  ∘ discreteA→NormalForm)
-
-
-
 
   discreteList/↘↙ : Discrete List/↘↙
   discreteList/↘↙ =
@@ -596,171 +604,182 @@ module _ (A : Type ℓ) where
             (discreteList (discreteΣ 𝟚._≟_ (λ _ → _≟_)) n₀ n₁)
 
 
- -- module HIT-FG where
+ module HIT-FG where
 
- --   open import Cubical.HITs.FreeGroup renaming (rec to recFG ; elimProp to elimPropFG) public
+   open import Cubical.HITs.FreeGroup renaming (rec to recFG ; elimProp to elimPropFG) public
 
- --   open FG (freeGroupGroup A) η renaming (inv to invFG)  
+   open FG (freeGroupGroup A) η renaming (inv to invFG)  
 
- --   FG→L/↘↙ : GroupHom (freeGroupGroup A) (_ , List/↘↙GroupStr)
- --   FG→L/↘↙ = recFG ([_]/ ∘ [_] ∘ (true ,_))
+   FG→L/↘↙ : GroupHom (freeGroupGroup A) (_ , List/↘↙GroupStr)
+   FG→L/↘↙ = recFG ([_]/ ∘ [_] ∘ (true ,_))
 
- --   open IsGroupHom (snd (FG→L/↘↙))
+   open IsGroupHom (snd (FG→L/↘↙))
 
- --   Red→FG≡ : ∀ a → Red a → fromList a ≡ ε
- --   Red→FG≡ .[] red[] = refl
- --   Red→FG≡ .(x ∷ (xs ∷ʳ not₁ x)) (cj x xs x₁) =
- --         cong (η* x ·fg_) (fromList· xs [ not₁ x ] ∙
- --           cong₂ _·fg_ (Red→FG≡ _ x₁) (·IdR _) ∙ ·IdL _) ∙
- --            redex-ε-η* x (not₁ x) (symIsRedex _ _ refl)
- --   Red→FG≡ .(xs ++ ys) ((xs · ys) x x₁) =
- --     fromList· xs ys
- --       ∙∙ cong₂ _·fg_ (Red→FG≡ _ x) (Red→FG≡ _ x₁)
- --       ∙∙ ·IdL _
+   Red→FG≡ : ∀ a → Red a → fromList a ≡ ε
+   Red→FG≡ .[] red[] = refl
+   Red→FG≡ .(x ∷ (xs ∷ʳ not₁ x)) (cj x xs x₁) =
+         cong (η* x ·fg_) (fromList· xs [ not₁ x ] ∙
+           cong₂ _·fg_ (Red→FG≡ _ x₁) (·IdR _) ∙ ·IdL _) ∙
+            redex-ε-η* x (not₁ x) (symIsRedex _ _ refl)
+   Red→FG≡ .(xs ++ ys) ((xs · ys) x x₁) =
+     fromList· xs ys
+       ∙∙ cong₂ _·fg_ (Red→FG≡ _ x) (Red→FG≡ _ x₁)
+       ∙∙ ·IdL _
   
- --   ↓→FG≡ : (a b : List (Bool × A)) → a ↓ b → fromList a ≡ fromList b
- --   ↓→FG≡ a .[] (x ↓[]) = Red→FG≡ _ x
- --   ↓→FG≡ .(xs ++ x₁ ∷ ys) .(x₁ ∷ _) (_∶_↓∷_ {xs} x {ys} x₁ x₂) =
- --     fromList· xs (x₁ ∷ ys) ∙∙
- --       cong (_·fg fromList (x₁ ∷ ys)) (Red→FG≡ xs x) ∙
- --         ·IdL _ ∙∙ cong (η* x₁ ·fg_) (↓→FG≡ _ _ x₂)
+   ↓→FG≡ : (a b : List (Bool × A)) → a ↓ b → fromList a ≡ fromList b
+   ↓→FG≡ a .[] (x ↓[]) = Red→FG≡ _ x
+   ↓→FG≡ .(xs ++ x₁ ∷ ys) .(x₁ ∷ _) (_∶_↓∷_ {xs} x {ys} x₁ x₂) =
+     fromList· xs (x₁ ∷ ys) ∙∙
+       cong (_·fg fromList (x₁ ∷ ys)) (Red→FG≡ xs x) ∙
+         ·IdL _ ∙∙ cong (η* x₁ ·fg_) (↓→FG≡ _ _ x₂)
 
- --   ↘↙→FG≡ : (a b : List (Bool × A)) → a ↘↙ b → fromList a ≡ fromList b
- --   ↘↙→FG≡ a b (c , a↓ , b↓) = ↓→FG≡ a c a↓  ∙ sym (↓→FG≡ b c b↓)
+   ↘↙→FG≡ : (a b : List (Bool × A)) → a ↘↙ b → fromList a ≡ fromList b
+   ↘↙→FG≡ a b (c , a↓ , b↓) = ↓→FG≡ a c a↓  ∙ sym (↓→FG≡ b c b↓)
 
- --   section-FG-L/↘↙ : ∀ a → fst (FG→L/↘↙) (fromList a) ≡ [ a ]/
- --   section-FG-L/↘↙ [] = refl
- --   section-FG-L/↘↙ (x ∷ xs) =
- --      pres· (η* x) (fromList xs) ∙
- --        cong (List/↘↙· (fst FG→L/↘↙ (η* x)))
- --          (section-FG-L/↘↙ xs)  ∙
- --           w x
- --    where
- --    w : ∀ x → List/↘↙· (fst FG→L/↘↙ (η* x)) [ xs ]/ ≡ [ x ∷ xs ]/
- --    w (false , a) = refl
- --    w (true , a) = refl
+   section-FG-L/↘↙ : ∀ a → fst (FG→L/↘↙) (fromList a) ≡ [ a ]/
+   section-FG-L/↘↙ [] = refl
+   section-FG-L/↘↙ (x ∷ xs) =
+      pres· (η* x) (fromList xs) ∙
+        cong (List/↘↙· (fst FG→L/↘↙ (η* x)))
+          (section-FG-L/↘↙ xs)  ∙
+           w x
+    where
+    w : ∀ x → List/↘↙· (fst FG→L/↘↙ (η* x)) [ xs ]/ ≡ [ x ∷ xs ]/
+    w (false , a) = refl
+    w (true , a) = refl
 
- --   fromL/ : List/↘↙ → _
- --   fromL/ = SQ.rec trunc fromList ↘↙→FG≡
+   fromL/ : List/↘↙ → _
+   fromL/ = SQ.rec trunc fromList ↘↙→FG≡
 
- --   fromL/pres· : ∀ a b → fromL/ (List/↘↙· a b) ≡ fromL/ a ·fg fromL/ b 
- --   fromL/pres· = SQ.elimProp2 (λ _ _ → trunc _ _) fromList·
+   fromL/pres· : ∀ a b → fromL/ (List/↘↙· a b) ≡ fromL/ a ·fg fromL/ b 
+   fromL/pres· = SQ.elimProp2 (λ _ _ → trunc _ _) fromList·
 
- --   fromL/presinv : ∀ xs →
- --        fromL/ (GroupStr.inv List/↘↙GroupStr xs) ≡
- --       invFG (fromL/ xs)
- --   fromL/presinv = SQ.elimProp (λ _ → trunc _ _) w
- --    where
- --    open GroupTheory (freeGroupGroup A)
+   fromL/presinv : ∀ xs →
+        fromL/ (GroupStr.inv List/↘↙GroupStr xs) ≡
+       invFG (fromL/ xs)
+   fromL/presinv = SQ.elimProp (λ _ → trunc _ _) w
+    where
+    open GroupTheory (freeGroupGroup A)
 
- --    w' : ∀ x → fromL/ [ [ not₁ x ] ]/ ≡ invFG (η* x)
- --    w' (false , a) = ·IdR _ ∙ sym (invInv _)
- --    w' (true , a) = ·IdR _
+    w' : ∀ x → fromL/ [ [ not₁ x ] ]/ ≡ invFG (η* x)
+    w' (false , a) = ·IdR _ ∙ sym (invInv _)
+    w' (true , a) = ·IdR _
    
- --    w : (xs : List (Bool × A)) →
- --       fromL/ [ invLi xs ]/ ≡ invFG (fromL/ [ xs ]/)
- --    w [] = sym inv1g
- --    w (x ∷ xs) = 
- --         (fromL/pres· ([ invLi xs ]/) [ [ not₁ x ] ]/ ∙
- --             cong (fromL/ [ invLi xs ]/ ·fg_) (w' x))
- --          ∙∙ cong (_·fg invFG (η* x)) (w xs) ∙∙  sym (invDistr _ _) 
+    w : (xs : List (Bool × A)) →
+       fromL/ [ invLi xs ]/ ≡ invFG (fromL/ [ xs ]/)
+    w [] = sym inv1g
+    w (x ∷ xs) = 
+         (fromL/pres· ([ invLi xs ]/) [ [ not₁ x ] ]/ ∙
+             cong (fromL/ [ invLi xs ]/ ·fg_) (w' x))
+          ∙∙ cong (_·fg invFG (η* x)) (w xs) ∙∙  sym (invDistr _ _) 
   
- --   retract-FG-L/↘↙ : ∀ b →  fromL/ (fst (FG→L/↘↙) b) ≡ b
- --   retract-FG-L/↘↙ =
- --     elimPropFG (λ _ → trunc _ _)
- --       (λ _ → ·IdR _)
- --       (λ g1 g2 p1 p2 →
- --         cong fromL/ (pres· g1 g2) ∙
- --           fromL/pres· (fst (FG→L/↘↙) g1) (fst (FG→L/↘↙) g2) ∙
- --            cong₂ _·fg_ p1 p2)
- --       refl
- --       λ g p → cong fromL/ (presinv g) ∙
- --          fromL/presinv (fst (FG→L/↘↙) g) ∙ cong invFG p 
+   retract-FG-L/↘↙ : ∀ b →  fromL/ (fst (FG→L/↘↙) b) ≡ b
+   retract-FG-L/↘↙ =
+     elimPropFG (λ _ → trunc _ _)
+       (λ _ → ·IdR _)
+       (λ g1 g2 p1 p2 →
+         cong fromL/ (pres· g1 g2) ∙
+           fromL/pres· (fst (FG→L/↘↙) g1) (fst (FG→L/↘↙) g2) ∙
+            cong₂ _·fg_ p1 p2)
+       refl
+       λ g p → cong fromL/ (presinv g) ∙
+          fromL/presinv (fst (FG→L/↘↙) g) ∙ cong invFG p 
 
- --   GroupIso-FG-L/↘↙ : GroupIso (freeGroupGroup A) (_ , List/↘↙GroupStr)
- --   Iso.fun (fst GroupIso-FG-L/↘↙) = _
- --   Iso.inv (fst GroupIso-FG-L/↘↙) = fromL/
+   GroupIso-FG-L/↘↙ : GroupIso (freeGroupGroup A) (_ , List/↘↙GroupStr)
+   Iso.fun (fst GroupIso-FG-L/↘↙) = _
+   Iso.inv (fst GroupIso-FG-L/↘↙) = fromL/
     
- --   Iso.rightInv (fst GroupIso-FG-L/↘↙) =
- --     SQ.elimProp (λ _ → squash/ _ _)
- --      section-FG-L/↘↙
- --   Iso.leftInv (fst GroupIso-FG-L/↘↙) = retract-FG-L/↘↙
- --   snd GroupIso-FG-L/↘↙ = snd FG→L/↘↙
+   Iso.rightInv (fst GroupIso-FG-L/↘↙) =
+     SQ.elimProp (λ _ → squash/ _ _)
+      section-FG-L/↘↙
+   Iso.leftInv (fst GroupIso-FG-L/↘↙) = retract-FG-L/↘↙
+   snd GroupIso-FG-L/↘↙ = snd FG→L/↘↙
 
    
 
- --   isInjective-η : ∀ a a' → η a ≡ η a' → ∥ a ≡ a' ∥₁
- --   isInjective-η a a' p =
- --     PT.map ((cong  snd  ∘ cons-inj₁) ∘ (λ p → N↘↙N→≡ [ true , a ] [ true , a' ]
- --               p ((λ ()) , tt*) ((λ ()) , tt*)))
- --           (≡→↘↙ _ _ (invEq (congEquiv
- --             (isoToEquiv (invIso (fst (GroupIso-FG-L/↘↙)))))
- --              (·IdR _ ∙∙ p ∙∙ sym (·IdR _))))
+   isInjective-η : ∀ a a' → η a ≡ η a' → ∥ a ≡ a' ∥₁
+   isInjective-η a a' p =
+     PT.map ((cong  snd  ∘ cons-inj₁) ∘ (λ p → N↘↙N→≡ [ true , a ] [ true , a' ]
+               p ((λ ()) , tt*) ((λ ()) , tt*)))
+           (≡→↘↙ _ _ (invEq (congEquiv
+             (isoToEquiv (invIso (fst (GroupIso-FG-L/↘↙)))))
+              (·IdR _ ∙∙ p ∙∙ sym (·IdR _))))
 
- -- ↘↙Nrm⇒↓Nrm : ∀ xs ys → IsNormalised ys → xs ↘↙ ys → xs ↓ ys
- -- ↘↙Nrm⇒↓Nrm xs ys nrmYs (zs , xs↓ , ys↓) =
- --   subst (xs ↓_) (sym (minimalNormalised ys zs nrmYs ys↓)) xs↓
+ ↘↙Nrm⇒↓Nrm : ∀ xs ys → IsNormalised ys → xs ↘↙ ys → xs ↓ ys
+ ↘↙Nrm⇒↓Nrm xs ys nrmYs (zs , xs↓ , ys↓) =
+   subst (xs ↓_) (sym (minimalNormalised ys zs nrmYs ys↓)) xs↓
 
  
 
               
- --  open HIT-FG
+ open HIT-FG
 
+ module _ (isSetA : isSet A) where
   
 
- --  isContrNormalForm/⇒discreteA : 
- --     (∀ a → isContr (NormalForm/ a))
- --     → Discrete A
- --  isContrNormalForm/⇒discreteA nf a a' =
- --   let ((xs , u , v) , _) = nf ([ (true , a) ∷ [ (false , a') ] ]/)
- --   in PT.rec2 (isPropDec (isSetA _ _))
- --     (λ u xsN → w' xs ((↘↙Nrm⇒↓Nrm _ _ xsN (↘↙sym _ _ u)))
- --          (↓⇒length≥ (↘↙Nrm⇒↓Nrm _ _ xsN ((↘↙sym _ _ u)))) xsN) (≡→↘↙  _ _ u) v
- --   where
- --    w' : ∀ xs → 
- --          ((true , a) ∷ [ (false , a') ]) ↓ xs → length xs ≤ 2 
- --          → IsNormalised xs → Dec (a ≡ a')
- --    w' [] (x₁ ↓[]) _ x = yes (Red[x,y⁻¹]⇒x≡y _ _ x₁)
- --    w' ((false , snd₁) ∷ []) x₁ _ x =
- --      ⊥.rec (
- --         znots (cong (Int.abs ∘ toℤ ∘ fromL/) (eq/ _ _ (↓→↘↙ _ _ x₁) )))
- --    w' ((true , snd₁) ∷ []) x₁ _ x = 
- --      ⊥.rec (
- --         znots (cong (Int.abs ∘ toℤ ∘ fromL/) (eq/ _ _ (↓→↘↙ _ _ x₁) )))
- --    w' (x₂ ∷ x₃ ∷ []) x₁ _ x = no λ p → fst x
- --      let p' = ↓EqualLengths⇒≡  x₁ refl
- --      in subst2 IsRedex (cons-inj₁ p') (cons-inj₁ (cong tail p'))
- --             (cong (true ,_) p)
- --    w' (x₂ ∷ x₃ ∷ x₄ ∷ xs) x₁ ()
+  isContrNormalForm/⇒discreteA : 
+     (∀ a → isContr (NormalForm/ a))
+     → Discrete A
+  isContrNormalForm/⇒discreteA nf a a' =
+   let ((xs , u , v) , _) = nf ([ (true , a) ∷ [ (false , a') ] ]/)
+   in PT.rec (isPropDec (isSetA _ _))
+     (λ u → w' xs ((↘↙Nrm⇒↓Nrm _ _ v (↘↙sym _ _ u)))
+          (↓⇒length≥ (↘↙Nrm⇒↓Nrm _ _ v ((↘↙sym _ _ u)))) v) (≡→↘↙  _ _ u)
+   where
+    w' : ∀ xs → 
+          ((true , a) ∷ [ (false , a') ]) ↓ xs → length xs ≤ 2 
+          → IsNormalised xs → Dec (a ≡ a')
+    w' [] (x₁ ↓[]) _ x = yes (Red[x,y⁻¹]⇒x≡y _ _ x₁)
+    w' ((false , snd₁) ∷ []) x₁ _ x =
+      ⊥.rec (
+         znots (cong (Int.abs ∘ winding ∘ fromL/) (eq/ _ _ (↓→↘↙ _ _ x₁) )))
+    w' ((true , snd₁) ∷ []) x₁ _ x = 
+      ⊥.rec (
+         znots (cong (Int.abs ∘ winding ∘ fromL/) (eq/ _ _ (↓→↘↙ _ _ x₁) )))
+    w' (x₂ ∷ x₃ ∷ []) x₁ _ x = no λ p → fst x
+      let p' = ↓EqualLengths⇒≡  x₁ refl
+      in subst2 IsRedex (cons-inj₁ p') (cons-inj₁ (cong tail p'))
+             (cong (true ,_) p)
+    w' (x₂ ∷ x₃ ∷ x₄ ∷ xs) x₁ ()
+
+  isContrNormalForm/⇔discreteA :
+    ⟨ ((∀ a → isContr (NormalForm/ a))
+        , (isPropΠ (λ _ → isPropIsContr)))
+      L.⇔ Discrete A , isPropDiscrete ⟩
+  fst isContrNormalForm/⇔discreteA =
+    isContrNormalForm/⇒discreteA
+  snd isContrNormalForm/⇔discreteA (_≟_) a =
+    discreteA→NormalForm/ _≟_ a ,
+      isSetA.isPropNormalForm/ isSetA _ _
+ 
+
+ -- discreteA→NormalForm : Discrete A → ∀ a → NormalForm/ a
+ -- discreteA→NormalForm _≟_ =
+ --   SQ.elimProp isPropNormalForm/
+ --     λ a →
+ --       let (z , u , v) = w' _ a (≤-refl (length a))
+ --       in z , eq/ _ _ u , ∣ v ∣₁
+
+ --  where
+ --  w : ∀ n a → length a ≤ n → IsNormalised a ⊎ HasRedex a
+ --  w _ [] _ = inl _
+ --  w _ (_ ∷ []) _ =  inl ((λ ()) , tt*)
+ --  w (suc n) ((b , a) ∷ xs@((b' , a') ∷ xs')) x  with a ≟ a' | b 𝟚.≟ (not b')
+ --  ... | ww | no ¬p =
+ --    ⊎.map (¬p ∘ cong fst ,_) inr (w n xs x)
+ --  ... | yes p₁ | yes p = inr (inl (ΣPathP (p , p₁)))
+ --  ... | no ¬p | yes p = ⊎.map (¬p ∘ cong snd ,_) inr (w n xs x)
 
 
- --  discreteA→NormalForm : Discrete A → ∀ a → NormalForm/ a
- --  discreteA→NormalForm _≟_ =
- --    SQ.elimProp isPropNormalForm/
- --      λ a →
- --        let (z , u , v) = w' _ a (≤-refl (length a))
- --        in z , eq/ _ _ u , ∣ v ∣₁
-
- --   where
- --   w : ∀ n a → length a ≤ n → IsNormalised a ⊎ HasRedex a
- --   w _ [] _ = inl _
- --   w _ (_ ∷ []) _ =  inl ((λ ()) , tt*)
- --   w (suc n) ((b , a) ∷ xs@((b' , a') ∷ xs')) x  with a ≟ a' | b 𝟚.≟ (not b')
- --   ... | ww | no ¬p =
- --     ⊎.map (¬p ∘ cong fst ,_) inr (w n xs x)
- --   ... | yes p₁ | yes p = inr (inl (ΣPathP (p , p₁)))
- --   ... | no ¬p | yes p = ⊎.map (¬p ∘ cong snd ,_) inr (w n xs x)
-
-   
- --   w' : ∀ n a → length a ≤ n → Σ _ λ xs → xs ↘↙ a × IsNormalised xs
- --   w' _ [] _ = [] , ↘↙refl [] , tt*
- --   w' (suc n) a x with w (suc n) a x
- --   ... | inl nrmA = a , ↘↙refl a , nrmA
- --   ... | inr x₁ =
- --      let (z , u , v) =
- --           w' n (reduce a x₁) (
- --             ≤-trans {suc (length (reduce a x₁))}
- --               {length a} {suc n} (reduce-length-≤ a x₁) x)
- --      in z , ↘↙trans _ _ _ u (↘↙sym _ _ (↓→↘↙ _ _ (↓reduce a x₁))) , v
+ --  w' : ∀ n a → length a ≤ n → Σ _ λ xs → xs ↘↙ a × IsNormalised xs
+ --  w' _ [] _ = [] , ↘↙refl [] , tt*
+ --  w' (suc n) a x with w (suc n) a x
+ --  ... | inl nrmA = a , ↘↙refl a , nrmA
+ --  ... | inr x₁ =
+ --     let (z , u , v) =
+ --          w' n (reduce a x₁) (
+ --            ≤-trans {suc (length (reduce a x₁))}
+ --              {length a} {suc n} (reduce-length-≤ a x₁) x)
+ --     in z , ↘↙trans _ _ _ u (↘↙sym _ _ (↓→↘↙ _ _ (↓reduce a x₁))) , v
    
   

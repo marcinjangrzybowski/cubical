@@ -226,9 +226,33 @@ map-id : (as : List A) → map (λ x → x) as ≡ as
 map-id [] = refl
 map-id (x ∷ as) = cong (_ ∷_) (map-id as)
 
-lengthZero : (as : List A) → (length as ≡ 0) → as ≡ []
-lengthZero [] x = refl
-lengthZero (x₁ ∷ as) x = ⊥.rec (snotz x)
+length≡0→≡[] : ∀ (xs : List A) → length xs ≡ 0 → xs ≡ []
+length≡0→≡[] [] x = refl
+length≡0→≡[] (x₁ ∷ xs) x = ⊥.rec (snotz x)
+
+init : List A → List A 
+init [] = []
+init (x ∷ []) = []
+init (x ∷ xs@(_ ∷ _)) = x ∷ init xs
+
+tail : List A → List A
+tail [] = []
+tail (x ∷ xs) = xs
+
+init-red-lem : ∀ (x : A) xs → ¬ (xs ≡ []) → (x ∷ init xs) ≡ (init (x ∷ xs))
+init-red-lem x [] x₁ = ⊥.rec (x₁ refl)
+init-red-lem x (x₂ ∷ xs) x₁ = refl
+
+init∷ʳ : ∀ (x : A) xs → init (xs ∷ʳ x) ≡ xs
+init∷ʳ x [] = refl
+init∷ʳ x (x₁ ∷ []) = refl
+init∷ʳ x (x₁ ∷ x₂ ∷ xs) = cong (x₁ ∷_) (init∷ʳ x (x₂ ∷ xs))
+
+init++ : ∀ (x : A) xs ys → xs ++ init (x ∷ ys) ≡ init (xs ++ x ∷ ys) 
+init++ x [] ys = refl
+init++ x (x₁ ∷ []) ys = refl
+init++ x (x₁ ∷ x₂ ∷ xs) ys =
+ cong (x₁ ∷_) (init++ x (x₂ ∷ xs) ys)
 
 
 module List₂ where
@@ -243,6 +267,9 @@ module List₂ where
  List∥∥₂→∥List∥₂ [] = ∣ [] ∣₂
  List∥∥₂→∥List∥₂ (x ∷ xs) =
    rec2 squash₂ (λ x xs → ∣ x ∷ xs ∣₂) x (List∥∥₂→∥List∥₂ xs)
+
+
+
 
  -- Iso∥List∥₂List∥∥₂ : Iso (List ∥ A ∥₂) ∥ List A ∥₂ 
  -- Iso.fun Iso∥List∥₂List∥∥₂ = List∥∥₂→∥List∥₂

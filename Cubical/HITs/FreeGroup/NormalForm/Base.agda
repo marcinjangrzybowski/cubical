@@ -47,36 +47,6 @@ open import Cubical.Relation.Binary.Base
 private
   variable
     ℓ : Level
-
-module _ {A : Type ℓ} where
-
- init : List A → List A 
- init [] = []
- init (x ∷ []) = []
- init (x ∷ xs@(_ ∷ _)) = x ∷ init xs
-
- tail : List A → List A
- tail [] = []
- tail (x ∷ xs) = xs
-
- init-red-lem : ∀ (x : A) xs → ¬ (xs ≡ []) → (x ∷ init xs) ≡ (init (x ∷ xs))
- init-red-lem x [] x₁ = ⊥.rec (x₁ refl)
- init-red-lem x (x₂ ∷ xs) x₁ = refl
-
- init∷ʳ : ∀ x xs → init (xs ∷ʳ x) ≡ xs
- init∷ʳ x [] = refl
- init∷ʳ x (x₁ ∷ []) = refl
- init∷ʳ x (x₁ ∷ x₂ ∷ xs) = cong (x₁ ∷_) (init∷ʳ x (x₂ ∷ xs))
-
- init++ : ∀ x xs ys → xs ++ init (x ∷ ys) ≡ init (xs ++ x ∷ ys) 
- init++ x [] ys = refl
- init++ x (x₁ ∷ []) ys = refl
- init++ x (x₁ ∷ x₂ ∷ xs) ys =
-  cong (x₁ ∷_) (init++ x (x₂ ∷ xs) ys)
-
- length≡0→≡[] : ∀ (xs : List A) → length xs ≡ 0 → xs ≡ []
- length≡0→≡[] [] x = refl
- length≡0→≡[] (x₁ ∷ xs) x = ⊥.rec (snotz x)
  
 module NormalForm (A : Type ℓ) where
 

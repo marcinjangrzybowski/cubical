@@ -28,7 +28,7 @@ open import Cubical.Algebra.Group
 open import Cubical.Homotopy.Group.Base
 open import Cubical.Homotopy.Loopspace
 
-open import Cubical.HITs.Bouquet.Base
+open import Cubical.HITs.Bouquet.Base renaming (elimProp to elimBouquetProp)
 open import Cubical.HITs.FreeGroup.Base
 open import Cubical.HITs.FreeGroupoid
 
