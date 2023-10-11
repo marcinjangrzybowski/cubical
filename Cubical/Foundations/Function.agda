@@ -26,7 +26,7 @@ _$_ : ∀ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} → ((a : A) → B a) 
 f $ a = f a
 {-# INLINE _$_ #-}
 
-infixr 9 _∘_
+infixr 9 _∘_ _∘'_
 
 _∘_ : (g : {a : A} → (b : B a) → C a b) → (f : (a : A) → B a) → (a : A) → C a (f a)
 g ∘ f = λ x → g (f x)

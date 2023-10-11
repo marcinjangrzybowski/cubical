@@ -41,6 +41,7 @@ open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _/₂_ ; [_] to [_]
 open import Cubical.HITs.PropositionalTruncation as PT
 
 open import Cubical.Relation.Nullary
+open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Relation.Binary.Base
 
 
@@ -60,6 +61,13 @@ module NormalForm (A : Type ℓ) where
  IsRedex : Bool × A → Bool × A → Type ℓ
  IsRedex x x' = x ≡ not₁ x'
 
+
+ -- module isSetA (isSetA : isSet A) where
+ --  IsRedex' : Bool × A → Bool × A → Type ℓ
+ --  IsRedex' (b , a) (b' , a') with b 𝟚.≟ b'
+ --  ... | yes p = a ≡ a'
+ --  ... | no ¬p = ⊥*
+
  symIsRedex : ∀ x y → IsRedex x y → IsRedex y x
  symIsRedex x y p = sym (not₁not₁ _) ∙ cong not₁ (sym p)
  
@@ -72,6 +80,7 @@ module NormalForm (A : Type ℓ) where
  WillReduceʳ b x (h' ∷ []) = IsRedex (b , x) h'
  WillReduceʳ b x (_ ∷ xs@(_ ∷ _)) = WillReduceʳ b x xs
 
+ 
  HeadIsRedex : List (Bool × A) → Type ℓ
  HeadIsRedex [] = ⊥*
  HeadIsRedex ((b , a) ∷ xs) = WillReduce b a xs
@@ -113,7 +122,14 @@ module NormalForm (A : Type ℓ) where
  WillReduceʳ++ {xs = []} u = u
  WillReduceʳ++ {x'} {xs = x ∷ xs} {ys} u =
    WillReduceʳ∷ x' _ (xs ++ ys) (WillReduceʳ++ {xs = xs} {ys} u)
-  
+
+ 
+ WillReduceʳRev⇒WillReduce : ∀ b a xs → WillReduceʳ b a (rev xs)
+     → WillReduce b a xs 
+ WillReduceʳRev⇒WillReduce b a (x₁ ∷ []) x = x
+ WillReduceʳRev⇒WillReduce b a (x₁ ∷ xs@(_ ∷ _)) x =
+  WillReduceʳ[∷ʳ] b a (rev xs) _ x
+
 
  IsNormalised∷ᵣ : ∀ x xs → IsNormalised (xs ∷ʳ x) → IsNormalised xs 
  IsNormalised∷ᵣ x [] x₁ = tt*
@@ -191,6 +207,8 @@ module NormalForm (A : Type ℓ) where
   cj : ∀ x → ∀ xs → Red xs →  Red (x ∷ (xs ∷ʳ not₁ x) )
   _·_ : ∀ xs ys → Red xs → Red ys → Red (xs ++ ys)
 
+ _r·_ : ∀ {xs ys} → Red xs → Red ys → Red (xs ++ ys)
+ _r·_ = _·_ _ _ 
 
  ¬Red[len≡1] : ∀ xs → length xs ≡ 1 → ¬ Red xs
  ¬Red[len≡1] .[] x red[] = znots x
@@ -299,6 +317,35 @@ module NormalForm (A : Type ℓ) where
           ((+-comm 1 (length xs') ∙ sym (length++ xs' [ _ ])) ∙ (injSuc (injSuc ( sym (reduceLength _ u)))) ∙ cong length p)))
      (hasRedexSplitCases∷ x'' x' xs u)
 
+ reduce-HasRedex∷ʳ : ∀ x₁ xs₁ r' x → reduce (x₁ ∷ xs₁) r' ∷ʳ not₁ x ≡
+      reduce ((x₁ ∷ xs₁) ∷ʳ not₁ x)
+      (HasRedex∷ʳ ((fst x₁ , snd x₁) ∷ xs₁) (not₁ x) r')
+ reduce-HasRedex∷ʳ x₁ (x₃ ∷ xs₁) (inl x₂) x = refl
+ reduce-HasRedex∷ʳ x₁ (x₃ ∷ xs₁) (inr x₂) x = 
+     cong (x₁ ∷_)
+        (reduce-HasRedex∷ʳ x₃ xs₁ x₂ _)
+ 
+ Red⇒HasRedex : ∀ xs → 0 < length xs → Red xs → Σ _ λ hr → Red (reduce xs hr) 
+ Red⇒HasRedex .(x ∷ ([] ∷ʳ not₁ x)) _ (cj x [] r) = 
+   inl (symIsRedex _ _ refl) , red[]
+ Red⇒HasRedex .(x ∷ ((_ ∷ _) ∷ʳ not₁ x)) _ (cj x xs@(_ ∷ _) r) =
+   let (r' , p) = Red⇒HasRedex xs _ r
+   in inr (HasRedex∷ʳ _ _ r') , subst Red (cong (x ∷_) (reduce-HasRedex∷ʳ _ _ r' _)) (cj x _ p)
+ Red⇒HasRedex .(xs ++ []) q ((xs · []) rX rY) = 
+   subst (λ xs → Σ _ λ hr → Red (reduce xs hr)) (sym (++-unit-r xs))
+     (Red⇒HasRedex _ (subst (λ xs → 0 < length xs) (++-unit-r xs) q) rX)
+ Red⇒HasRedex .(xs ++ x ∷ ys) q ((xs · (x ∷ ys)) rX rY) = 
+   let (r' , p) = Red⇒HasRedex _ _ rY
+   in ++HasRedex _ _ r' ,
+      subst Red (sym (++reduce xs (x ∷ ys) r')) ((_ · _) rX p)
+   
+
+ reduce-length-≤ : ∀ ys rdx → length (reduce (ys) rdx) < length ys
+ reduce-length-≤ (x ∷ ys) rdx =
+   <-weaken {m = length (reduce (x ∷ ys) rdx)}
+    (≡→≤ (injSuc (reduceLength _ rdx)))
+
+
  reduceRed : ∀ xs hr → Red xs → Red (reduce xs hr)
  reduceRed .(x ∷ (xs ∷ʳ not₁ x)) hr (cj x xs x₁) with (hasRedexSplitCases∷ x (not₁ x) xs hr)
  ... | inl (inl (wr , p)) =
@@ -340,213 +387,184 @@ module NormalForm (A : Type ℓ) where
               (++-assoc rl' _ _) ∙∙ cong₂ _++_ p p') ∙ sym p*) z
 
 
- reduce-HasRedex∷ʳ : ∀ x₁ xs₁ r' x → reduce (x₁ ∷ xs₁) r' ∷ʳ not₁ x ≡
-      reduce ((x₁ ∷ xs₁) ∷ʳ not₁ x)
-      (HasRedex∷ʳ ((fst x₁ , snd x₁) ∷ xs₁) (not₁ x) r')
- reduce-HasRedex∷ʳ x₁ (x₃ ∷ xs₁) (inl x₂) x = refl
- reduce-HasRedex∷ʳ x₁ (x₃ ∷ xs₁) (inr x₂) x = 
-     cong (x₁ ∷_)
-        (reduce-HasRedex∷ʳ x₃ xs₁ x₂ _)
+
+
+ -- infixr 5 _∶_↓∷_
+
+
+ -- data _↓_ : List (Bool × A) → List (Bool × A) → Type ℓ where
+ --  _↓[] : ∀ {xs} → Red xs → xs ↓ []
+ --  _∶_↓∷_ : ∀ {xs} → Red xs → ∀ {ys} x {zs} → ys ↓ zs → (xs ++ x ∷ ys ) ↓ (x ∷ zs)
+
+ -- open BinaryRelation
+
+ -- _∷↓_ : ∀ {xs ys} x → xs ↓ ys → (x ∷ xs) ↓ (x ∷ ys)
+ -- _∷↓_ = red[] ∶_↓∷_
+
+ -- _++↓_ : ∀ {xs ys} zs → xs ↓ ys → (zs ++ xs) ↓ (zs ++ ys)
+ -- [] ++↓ x = x
+ -- (x₁ ∷ zs) ++↓ x = x₁ ∷↓ (zs ++↓ x)
+
+ -- ↓refl : isRefl _↓_ 
+ -- ↓refl [] = red[] ↓[]
+ -- ↓refl (x ∷ xs) = red[] ∶ x ↓∷ ↓refl xs
  
- Red⇒HasRedex : ∀ xs → 0 < length xs → Red xs → Σ _ λ hr → Red (reduce xs hr) 
- Red⇒HasRedex .(x ∷ ([] ∷ʳ not₁ x)) _ (cj x [] r) = 
-   inl (symIsRedex _ _ refl) , red[]
- Red⇒HasRedex .(x ∷ ((_ ∷ _) ∷ʳ not₁ x)) _ (cj x xs@(_ ∷ _) r) =
-   let (r' , p) = Red⇒HasRedex xs _ r
-   in inr (HasRedex∷ʳ _ _ r') , subst Red (cong (x ∷_) (reduce-HasRedex∷ʳ _ _ r' _)) (cj x _ p)
- Red⇒HasRedex .(xs ++ []) q ((xs · []) rX rY) = 
-   subst (λ xs → Σ _ λ hr → Red (reduce xs hr)) (sym (++-unit-r xs))
-     (Red⇒HasRedex _ (subst (λ xs → 0 < length xs) (++-unit-r xs) q) rX)
- Red⇒HasRedex .(xs ++ x ∷ ys) q ((xs · (x ∷ ys)) rX rY) = 
-   let (r' , p) = Red⇒HasRedex _ _ rY
-   in ++HasRedex _ _ r' ,
-      subst Red (sym (++reduce xs (x ∷ ys) r')) ((_ · _) rX p)
+ -- _↙_↘_ : List (Bool × A) → List (Bool × A) → List (Bool × A) → Type ℓ
+ -- xs ↙ ys ↘ zs = ys ↓ xs × (ys ↓ zs)
+
+ -- _↘_↙_ : List (Bool × A) → List (Bool × A) → List (Bool × A) → Type ℓ
+ -- xs ↘ ys ↙ zs = xs ↓ ys × (zs ↓ ys)
+
+ -- Red++↓ : ∀ {xs ys zs} → Red zs →  xs ↓ ys → (zs ++ xs) ↓ ys   
+ -- Red++↓ x (x₁ ↓[]) = (_ · _) x x₁ ↓[]
+ -- Red++↓ {.(xs ++ x₂ ∷ _)} {.(x₂ ∷ _)} {zs} x (_∶_↓∷_ {xs} x₁ x₂ x₃) = 
+ --   subst (_↓ (x₂ ∷ _)) (++-assoc zs xs _) (((_ · _) x x₁) ∶ x₂ ↓∷ x₃)
+
+ -- ↓++Red : ∀ {xs ys zs} → Red zs →  xs ↓ ys → (xs ++ zs) ↓ ys   
+ -- ↓++Red x (x₁ ↓[]) = (_ · _) x₁ x ↓[]
+ -- ↓++Red x (_∶_↓∷_ {xs} x₁ {ys} x₂ {zs} x₃) = 
+ --   let z = x₁ ∶ x₂ ↓∷  (↓++Red x x₃)
+ --   in subst (_↓ (x₂ ∷ _)) (sym (++-assoc xs (x₂ ∷ ys) _)) z
+
+ -- ↓⇒length≥ : ∀ {xs ys} → xs ↓ ys → length ys ≤ length xs
+ -- ↓⇒length≥ (x ↓[]) = tt
+ -- ↓⇒length≥ (_∶_↓∷_ {xs} x {ys} x₁ {zs} x₂) = 
+ --  let z' = ≤-+-weaken {suc (length zs)} {k = length xs} (↓⇒length≥ x₂)
+ --  in subst (suc (length zs) ≤_) (sym (length++ xs (x₁ ∷ ys))) z'
 
 
-   
+ -- ↓EqualLengths⇒≡ : ∀ {xs ys} → xs ↓ ys → length xs ≡ length ys → xs ≡ ys
+ -- ↓EqualLengths⇒≡ {xs} (x ↓[]) x₁ = length≡0→≡[] _ x₁
+ -- ↓EqualLengths⇒≡ (_∶_↓∷_ {xs} x {ys} x₂ {zs} x₃) p = 
+ --   let z = ↓⇒length≥ x₃
+ --       xs≡[] : xs ≡ []
+ --       xs≡[] = length≡0→≡[] xs (≤0→≡0 (k+l≡m+n-⊓-k≤m-⇒n≤l {length zs}
+ --                {1} {length ys} {suc (length xs) }
+ --                  (+-comm (length zs) 1 ∙∙ sym p ∙∙
+ --                    ((length++ xs (x₂ ∷ ys) ∙
+ --                     +-suc (length xs) (length ys))
+ --                      ∙ +-comm (suc (length xs)) ((length ys)) )) z))
+ --   in cong (_++ (x₂ ∷ ys)) xs≡[] ∙
+ --        cong (x₂ ∷_) (↓EqualLengths⇒≡ x₃
+ --          (injSuc
+ --           (cong (λ xs → length (xs ++ x₂ ∷ ys)) (sym (xs≡[])) ∙ p )))
 
- reduce-length-≤ : ∀ ys rdx → length (reduce (ys) rdx) < length ys
- reduce-length-≤ (x ∷ ys) rdx =
-   <-weaken {m = length (reduce (x ∷ ys) rdx)}
-    (≡→≤ (injSuc (reduceLength _ rdx)))
 
 
- infixr 5 _∶_↓∷_
 
 
- data _↓_ : List (Bool × A) → List (Bool × A) → Type ℓ where
-  _↓[] : ∀ {xs} → Red xs → xs ↓ []
-  _∶_↓∷_ : ∀ {xs} → Red xs → ∀ {ys} x {zs} → ys ↓ zs → (xs ++ x ∷ ys ) ↓ (x ∷ zs)
+ -- []↓ : ∀ xs → [] ↓ xs → xs ≡ [] 
+ -- []↓ [] x = refl
+ -- []↓ (x₁ ∷ xs) x = ⊥.rec (↓⇒length≥ x)
 
- open BinaryRelation
-
- _∷↓_ : ∀ {xs ys} x → xs ↓ ys → (x ∷ xs) ↓ (x ∷ ys)
- _∷↓_ = red[] ∶_↓∷_
-
- _++↓_ : ∀ {xs ys} zs → xs ↓ ys → (zs ++ xs) ↓ (zs ++ ys)
- [] ++↓ x = x
- (x₁ ∷ zs) ++↓ x = x₁ ∷↓ (zs ++↓ x)
-
- ↓refl : isRefl _↓_ 
- ↓refl [] = red[] ↓[]
- ↓refl (x ∷ xs) = red[] ∶ x ↓∷ ↓refl xs
+ -- ↓[x]View : ∀ a x → a ↓ [ x ] →
+ --    Σ (_ × _) λ (aL , aR) → (aL ++ x ∷ aR ≡ a) × Red aL × Red aR
+ -- ↓[x]View .(_ ++ x ∷ _) x (x₁ ∶ .x ↓∷ (x₂ ↓[])) = 
+ --   _ , (refl , (x₁ , x₂))
  
- _↙_↘_ : List (Bool × A) → List (Bool × A) → List (Bool × A) → Type ℓ
- xs ↙ ys ↘ zs = ys ↓ xs × (ys ↓ zs)
+ -- ↓View++' : ∀ a b c b++c → ((b ++ c) ≡ b++c) → a ↓ (b++c) →
+ --   Σ (_ × _) λ (aL , aR) → ((aL ↓ b) × (aR ↓ c)) × (aL ++ aR ≡ a)
+ -- ↓View++' a [] c b++c x x₁ =
+ --   ([] , a) , (↓refl [] , subst (a ↓_) (sym x) x₁) , refl
+ -- ↓View++' a (x₂ ∷ b) c .[] x (x₁ ↓[]) = ⊥.rec (¬cons≡nil x)
+ -- ↓View++' .(xs ++ x₃ ∷ ys) (x₂ ∷ b) c .(x₃ ∷ zs) x (_∶_↓∷_ {xs} x₁ {ys} x₃ {zs} x₄) = 
+ --  let ((aL , aR) , (l↓ , r↓) , p)  = ↓View++' _ b c _ (cons-inj₂ x) x₄
+ --  in (xs ++ x₂ ∷ aL , aR) , ((Red++↓ x₁ (x₂ ∷↓ l↓) , r↓) ,
+ --       ++-assoc xs _ _ ∙
+ --        cong (xs ++_) (cong₂ _∷_ (cons-inj₁ x) p))
 
- _↘_↙_ : List (Bool × A) → List (Bool × A) → List (Bool × A) → Type ℓ
- xs ↘ ys ↙ zs = xs ↓ ys × (zs ↓ ys)
-
- Red++↓ : ∀ {xs ys zs} → Red zs →  xs ↓ ys → (zs ++ xs) ↓ ys   
- Red++↓ x (x₁ ↓[]) = (_ · _) x x₁ ↓[]
- Red++↓ {.(xs ++ x₂ ∷ _)} {.(x₂ ∷ _)} {zs} x (_∶_↓∷_ {xs} x₁ x₂ x₃) = 
-   subst (_↓ (x₂ ∷ _)) (++-assoc zs xs _) (((_ · _) x x₁) ∶ x₂ ↓∷ x₃)
-
- ↓++Red : ∀ {xs ys zs} → Red zs →  xs ↓ ys → (xs ++ zs) ↓ ys   
- ↓++Red x (x₁ ↓[]) = (_ · _) x₁ x ↓[]
- ↓++Red x (_∶_↓∷_ {xs} x₁ {ys} x₂ {zs} x₃) = 
-   let z = x₁ ∶ x₂ ↓∷  (↓++Red x x₃)
-   in subst (_↓ (x₂ ∷ _)) (sym (++-assoc xs (x₂ ∷ ys) _)) z
-
- ↓⇒length≥ : ∀ {xs ys} → xs ↓ ys → length ys ≤ length xs
- ↓⇒length≥ (x ↓[]) = tt
- ↓⇒length≥ (_∶_↓∷_ {xs} x {ys} x₁ {zs} x₂) = 
-  let z' = ≤-+-weaken {suc (length zs)} {k = length xs} (↓⇒length≥ x₂)
-  in subst (suc (length zs) ≤_) (sym (length++ xs (x₁ ∷ ys))) z'
-
-
- ↓EqualLengths⇒≡ : ∀ {xs ys} → xs ↓ ys → length xs ≡ length ys → xs ≡ ys
- ↓EqualLengths⇒≡ {xs} (x ↓[]) x₁ = length≡0→≡[] _ x₁
- ↓EqualLengths⇒≡ (_∶_↓∷_ {xs} x {ys} x₂ {zs} x₃) p = 
-   let z = ↓⇒length≥ x₃
-       xs≡[] : xs ≡ []
-       xs≡[] = length≡0→≡[] xs (≤0→≡0 (k+l≡m+n-⊓-k≤m-⇒n≤l {length zs}
-                {1} {length ys} {suc (length xs) }
-                  (+-comm (length zs) 1 ∙∙ sym p ∙∙
-                    ((length++ xs (x₂ ∷ ys) ∙
-                     +-suc (length xs) (length ys))
-                      ∙ +-comm (suc (length xs)) ((length ys)) )) z))
-   in cong (_++ (x₂ ∷ ys)) xs≡[] ∙
-        cong (x₂ ∷_) (↓EqualLengths⇒≡ x₃
-          (injSuc
-           (cong (λ xs → length (xs ++ x₂ ∷ ys)) (sym (xs≡[])) ∙ p )))
+ -- ↓trans[] : ∀ a b → Red b → a ↓ b → Red a
+ -- ↓trans[] a .[] red[] (x ↓[]) = x
+ -- ↓trans[] a .(x ∷ (xs ∷ʳ not₁ x)) (cj x xs x₂) x₁ =
+ --  let ((aL , aR) , (l↓ , r↓) , p)  =
+ --           ↓View++' a [ x ] (xs ∷ʳ (not₁ x)) _ refl
+ --            x₁
+ --      ((aL' , aR') , (l↓' , r↓') , p')  =
+ --           ↓View++' aR xs [ not₁ x ] _ refl r↓
+ --      Red-aL' = ↓trans[] aL' xs x₂ l↓'
+ --      ((q1* , q2*) , pa1 , q1 , q2) = ↓[x]View _ _ l↓
+ --      ((q3* , q4*) , pa2 , q3 , q4) = ↓[x]View _ _ r↓'
+ --      z = (_ · _) q1 ((_ · _)
+ --            (cj x _ ((_ · _) ((_ · _) q2 Red-aL') q3)) q4)
+ --  in subst Red ((λ i → ++-assoc q1* [ x ]
+ --                 (++-assoc (q2* ++  aL') q3* [ not₁ x ] i ++ q4*)
+ --                 (~ i)) ∙∙  cong ((q1* ++ [ x ]) ++_)
+ --                          (++-assoc (q2* ++ aL') _ _ ∙ ++-assoc (q2*) aL' _) ∙
+ --                            sym (++-assoc (q1* ++ [ x ]) q2* _)
+ --                         ∙∙
+ --                (λ i → (++-assoc q1* [ x ] q2* ∙ pa1) i
+ --                 ++ aL' ++ (++-assoc q3* _ q4* ∙ pa2) i)
+ --          ∙ cong (aL ++_) p' ∙ p) z
 
 
+ -- ↓trans[] a .(xs ++ ys) ((xs · ys) x x₂) x₁ =
+ --  let ((aL , aR) , (l↓ , r↓) , p)  = ↓View++' a xs ys _ refl x₁
+ --      xx = ↓trans[] aL xs x l↓
+ --      yy = ↓trans[] aR ys x₂ r↓
+ --  in subst Red p ((_ · _) xx yy)
 
+ -- _↓++↓_ : ∀ {xs xs' ys ys'} → xs ↓ ys → xs' ↓ ys' → (xs ++ xs') ↓ (ys ++ ys') 
+ -- (x ↓[]) ↓++↓ x₁ = Red++↓ x x₁ 
+ -- _↓++↓_ {xs' = xs'} (_∶_↓∷_ {xs} x {ys} x₂ {zs} x₃) x₁ =
+ --  let z = x₃ ↓++↓ x₁
+ --  in subst (_↓ (x₂ ∷ zs ++ _)) (sym (++-assoc xs (x₂ ∷ ys) xs'))
+ --      (Red++↓ x (x₂ ∷↓ z))
 
-
- []↓ : ∀ xs → [] ↓ xs → xs ≡ [] 
- []↓ [] x = refl
- []↓ (x₁ ∷ xs) x = ⊥.rec (↓⇒length≥ x)
-
- ↓[x]View : ∀ a x → a ↓ [ x ] →
-    Σ (_ × _) λ (aL , aR) → (aL ++ x ∷ aR ≡ a) × Red aL × Red aR
- ↓[x]View .(_ ++ x ∷ _) x (x₁ ∶ .x ↓∷ (x₂ ↓[])) = 
-   _ , (refl , (x₁ , x₂))
- 
- ↓View++' : ∀ a b c b++c → ((b ++ c) ≡ b++c) → a ↓ (b++c) →
-   Σ (_ × _) λ (aL , aR) → ((aL ↓ b) × (aR ↓ c)) × (aL ++ aR ≡ a)
- ↓View++' a [] c b++c x x₁ =
-   ([] , a) , (↓refl [] , subst (a ↓_) (sym x) x₁) , refl
- ↓View++' a (x₂ ∷ b) c .[] x (x₁ ↓[]) = ⊥.rec (¬cons≡nil x)
- ↓View++' .(xs ++ x₃ ∷ ys) (x₂ ∷ b) c .(x₃ ∷ zs) x (_∶_↓∷_ {xs} x₁ {ys} x₃ {zs} x₄) = 
-  let ((aL , aR) , (l↓ , r↓) , p)  = ↓View++' _ b c _ (cons-inj₂ x) x₄
-  in (xs ++ x₂ ∷ aL , aR) , ((Red++↓ x₁ (x₂ ∷↓ l↓) , r↓) ,
-       ++-assoc xs _ _ ∙
-        cong (xs ++_) (cong₂ _∷_ (cons-inj₁ x) p))
-
- ↓trans[] : ∀ a b → Red b → a ↓ b → Red a
- ↓trans[] a .[] red[] (x ↓[]) = x
- ↓trans[] a .(x ∷ (xs ∷ʳ not₁ x)) (cj x xs x₂) x₁ =
-  let ((aL , aR) , (l↓ , r↓) , p)  =
-           ↓View++' a [ x ] (xs ∷ʳ (not₁ x)) _ refl
-            x₁
-      ((aL' , aR') , (l↓' , r↓') , p')  =
-           ↓View++' aR xs [ not₁ x ] _ refl r↓
-      Red-aL' = ↓trans[] aL' xs x₂ l↓'
-      ((q1* , q2*) , pa1 , q1 , q2) = ↓[x]View _ _ l↓
-      ((q3* , q4*) , pa2 , q3 , q4) = ↓[x]View _ _ r↓'
-      z = (_ · _) q1 ((_ · _)
-            (cj x _ ((_ · _) ((_ · _) q2 Red-aL') q3)) q4)
-  in subst Red ((λ i → ++-assoc q1* [ x ]
-                 (++-assoc (q2* ++  aL') q3* [ not₁ x ] i ++ q4*)
-                 (~ i)) ∙∙  cong ((q1* ++ [ x ]) ++_)
-                          (++-assoc (q2* ++ aL') _ _ ∙ ++-assoc (q2*) aL' _) ∙
-                            sym (++-assoc (q1* ++ [ x ]) q2* _)
-                         ∙∙
-                (λ i → (++-assoc q1* [ x ] q2* ∙ pa1) i
-                 ++ aL' ++ (++-assoc q3* _ q4* ∙ pa2) i)
-          ∙ cong (aL ++_) p' ∙ p) z
-
-
- ↓trans[] a .(xs ++ ys) ((xs · ys) x x₂) x₁ =
-  let ((aL , aR) , (l↓ , r↓) , p)  = ↓View++' a xs ys _ refl x₁
-      xx = ↓trans[] aL xs x l↓
-      yy = ↓trans[] aR ys x₂ r↓
-  in subst Red p ((_ · _) xx yy)
-
- _↓++↓_ : ∀ {xs xs' ys ys'} → xs ↓ ys → xs' ↓ ys' → (xs ++ xs') ↓ (ys ++ ys') 
- (x ↓[]) ↓++↓ x₁ = Red++↓ x x₁ 
- _↓++↓_ {xs' = xs'} (_∶_↓∷_ {xs} x {ys} x₂ {zs} x₃) x₁ =
-  let z = x₃ ↓++↓ x₁
-  in subst (_↓ (x₂ ∷ zs ++ _)) (sym (++-assoc xs (x₂ ∷ ys) xs'))
-      (Red++↓ x (x₂ ∷↓ z))
-
- ↓trans : isTrans _↓_
- ↓trans a b [] x (x₁ ↓[]) = ↓trans[] _ _ x₁ x ↓[]
- ↓trans a b (x₂ ∷ c) x x₁ =
-   let ((aL , aR) , (l↓ , r↓) , p) = ↓View++' b [ x₂ ] c _ refl x₁
-       ((aL' , aR') , (l↓' , r↓') , p') = ↓View++' a aL aR b p x
-       z = ↓trans _ _ c r↓' r↓
-       ((q1* , q2*) , pa1 , q1 , q2) = ↓[x]View _ _ l↓
-       ((aL* , aR*) , (l↓* , r↓*) , p*) =
-         ↓View++' aL' q1* (x₂ ∷ q2*) aL pa1 l↓'
-       ((aL*' , aR*') , (l↓*' , r↓*') , p*') =
-         ↓View++' aR* [ x₂ ] q2* _ refl r↓*
-       ww' = Red++↓ (↓trans[] aL* q1* q1 l↓*)
-          (↓++Red (↓trans[] aR*' q2* q2 r↓*') l↓*')
-       ww = subst (_↓ [ x₂ ]) (cong (aL* ++_) p*' ∙ p*) ww'
-   in subst (_↓ (x₂ ∷ c)) p' (ww ↓++↓ z)
+ -- ↓trans : isTrans _↓_
+ -- ↓trans a b [] x (x₁ ↓[]) = ↓trans[] _ _ x₁ x ↓[]
+ -- ↓trans a b (x₂ ∷ c) x x₁ =
+ --   let ((aL , aR) , (l↓ , r↓) , p) = ↓View++' b [ x₂ ] c _ refl x₁
+ --       ((aL' , aR') , (l↓' , r↓') , p') = ↓View++' a aL aR b p x
+ --       z = ↓trans _ _ c r↓' r↓
+ --       ((q1* , q2*) , pa1 , q1 , q2) = ↓[x]View _ _ l↓
+ --       ((aL* , aR*) , (l↓* , r↓*) , p*) =
+ --         ↓View++' aL' q1* (x₂ ∷ q2*) aL pa1 l↓'
+ --       ((aL*' , aR*') , (l↓*' , r↓*') , p*') =
+ --         ↓View++' aR* [ x₂ ] q2* _ refl r↓*
+ --       ww' = Red++↓ (↓trans[] aL* q1* q1 l↓*)
+ --          (↓++Red (↓trans[] aR*' q2* q2 r↓*') l↓*')
+ --       ww = subst (_↓ [ x₂ ]) (cong (aL* ++_) p*' ∙ p*) ww'
+ --   in subst (_↓ (x₂ ∷ c)) p' (ww ↓++↓ z)
  
  
 
- _↙↘_ : _ → _ → Type ℓ
- xs ↙↘ ys = Σ _ (xs ↙_↘ ys)
+ -- _↙↘_ : _ → _ → Type ℓ
+ -- xs ↙↘ ys = Σ _ (xs ↙_↘ ys)
 
- _↘↙_ : _ → _ → Type ℓ
- xs ↘↙ ys = Σ _ (xs ↘_↙ ys)
+ -- _↘↙_ : _ → _ → Type ℓ
+ -- xs ↘↙ ys = Σ _ (xs ↘_↙ ys)
 
  isNormalisedRed : ∀ xs → IsNormalised xs →  Red xs → xs ≡ []
  isNormalisedRed [] isNrmxs _ = refl
  isNormalisedRed (x ∷ xs) isNrmxs r = ⊥.rec
    (IsNormalised→¬HaseRedex _ isNrmxs (fst (Red⇒HasRedex _ _ r)))
-
-
- minimalNormalised : ∀ xs ys → IsNormalised xs → xs ↓ ys → xs ≡ ys
- minimalNormalised _ _ isNrmXs q = 
-     ↓EqualLengths⇒≡ q (w _ _ isNrmXs q)
-  where
-  w : ∀ xs ys → IsNormalised xs → xs ↓ ys → length xs ≡ length ys
-  w xs .[] isNrmXs (x ↓[]) = cong length (isNormalisedRed _ isNrmXs x)
-  w .(xs ++ x₁ ∷ ys) .(x₁ ∷ zs) isNrmXs (_∶_↓∷_ {xs} x {ys} x₁ {zs} q) =
-    let (nrmXs , nrmX₁∷ys) = IsNormalised++  xs (x₁ ∷ ys) isNrmXs
-        xs≡[] = isNormalisedRed _ nrmXs x
-     in cong (λ xs → length (xs ++ x₁ ∷ ys)) xs≡[] ∙
-          cong suc (w _ _
-            ((snd ∘ IsNormalised++ [ x₁ ] ys) nrmX₁∷ys)
-            
-            q) 
  
 
- ≢↓→HasRedex : ∀ xs ys → length ys < length xs →
-      xs ↓ ys → Σ (HasRedex xs) λ hr → reduce _ hr ↓ ys
- ≢↓→HasRedex xs .[] x (x₁ ↓[]) = map-snd _↓[] (Red⇒HasRedex _ x x₁) 
- ≢↓→HasRedex .([] ++ x₂ ∷ ys) .(x₂ ∷ zs) x (_∶_↓∷_ {[]} x₁ {ys} x₂ {zs} x₃) =
-  let (p , q) = ≢↓→HasRedex _ _ x x₃
-  in inr p , (x₂ ∷↓ q)
- ≢↓→HasRedex .((x₄ ∷ xs) ++ x₂ ∷ _) .(x₂ ∷ _) x (_∶_↓∷_ {x₄ ∷ xs} x₁ x₂ {zs} x₃) = 
-  let (p , q) = Red⇒HasRedex _ _ x₁
-  in  HasRedex++ _ _ p , subst (_↓ (x₂ ∷ zs)) (sym (reduce++ _ _ p)) (Red++↓ q (x₂ ∷↓ x₃))
+ -- minimalNormalised : ∀ xs ys → IsNormalised xs → xs ↓ ys → xs ≡ ys
+ -- minimalNormalised _ _ isNrmXs q = 
+ --     ↓EqualLengths⇒≡ q (w _ _ isNrmXs q)
+ --  where
+ --  w : ∀ xs ys → IsNormalised xs → xs ↓ ys → length xs ≡ length ys
+ --  w xs .[] isNrmXs (x ↓[]) = cong length (isNormalisedRed _ isNrmXs x)
+ --  w .(xs ++ x₁ ∷ ys) .(x₁ ∷ zs) isNrmXs (_∶_↓∷_ {xs} x {ys} x₁ {zs} q) =
+ --    let (nrmXs , nrmX₁∷ys) = IsNormalised++  xs (x₁ ∷ ys) isNrmXs
+ --        xs≡[] = isNormalisedRed _ nrmXs x
+ --     in cong (λ xs → length (xs ++ x₁ ∷ ys)) xs≡[] ∙
+ --          cong suc (w _ _
+ --            ((snd ∘ IsNormalised++ [ x₁ ] ys) nrmX₁∷ys)
+            
+ --            q) 
+ 
+
+ -- ≢↓→HasRedex : ∀ xs ys → length ys < length xs →
+ --      xs ↓ ys → Σ (HasRedex xs) λ hr → reduce _ hr ↓ ys
+ -- ≢↓→HasRedex xs .[] x (x₁ ↓[]) = map-snd _↓[] (Red⇒HasRedex _ x x₁) 
+ -- ≢↓→HasRedex .([] ++ x₂ ∷ ys) .(x₂ ∷ zs) x (_∶_↓∷_ {[]} x₁ {ys} x₂ {zs} x₃) =
+ --  let (p , q) = ≢↓→HasRedex _ _ x x₃
+ --  in inr p , (x₂ ∷↓ q)
+ -- ≢↓→HasRedex .((x₄ ∷ xs) ++ x₂ ∷ _) .(x₂ ∷ _) x (_∶_↓∷_ {x₄ ∷ xs} x₁ x₂ {zs} x₃) = 
+ --  let (p , q) = Red⇒HasRedex _ _ x₁
+ --  in  HasRedex++ _ _ p , subst (_↓ (x₂ ∷ zs)) (sym (reduce++ _ _ p)) (Red++↓ q (x₂ ∷↓ x₃))
 
  module FG (freeGroupGroup : Group ℓ) (η : A → ⟨ freeGroupGroup ⟩) where 
 
