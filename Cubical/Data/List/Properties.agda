@@ -13,9 +13,10 @@ open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
+open import Cubical.Data.Sum as ⊎ hiding (map)
 open import Cubical.Relation.Nullary
 
-open import Cubical.Data.List.Base
+open import Cubical.Data.List.Base renaming (elim to elimList)
 
 module _ {ℓ} {A : Type ℓ} where
 
@@ -121,8 +122,11 @@ isOfHLevelList n ofLevel xs ys =
 
 private
   variable
-    ℓ : Level
+    ℓ ℓ' : Level
     A : Type ℓ
+    B : Type ℓ'
+    x y : A
+    xs ys : List A
 
   caseList : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → (n c : B) → List A → B
   caseList n _ []      = n
@@ -136,18 +140,18 @@ private
   safe-tail []       = []
   safe-tail (_ ∷ xs) = xs
 
-cons-inj₁ : ∀ {x y : A} {xs ys} → x ∷ xs ≡ y ∷ ys → x ≡ y
+cons-inj₁ : x ∷ xs ≡ y ∷ ys → x ≡ y
 cons-inj₁ {x = x} p = cong (safe-head x) p
 
-cons-inj₂ : ∀ {x y : A} {xs ys} → x ∷ xs ≡ y ∷ ys → xs ≡ ys
+cons-inj₂ : x ∷ xs ≡ y ∷ ys → xs ≡ ys
 cons-inj₂ = cong safe-tail
 
-snoc-inj₂ : ∀ {x y : A} {xs ys} → xs ∷ʳ x ≡ ys ∷ʳ y → x ≡ y
-snoc-inj₂ {xs = xs} {ys} p =
+snoc-inj₂ : xs ∷ʳ x ≡ ys ∷ʳ y → x ≡ y
+snoc-inj₂ {xs = xs} {ys = ys} p =
  cons-inj₁ ((sym (rev-++ xs _)) ∙∙ cong rev p ∙∙ (rev-++ ys _))
  
-snoc-inj₁ : ∀ {x y : A} {xs ys} → xs ∷ʳ x ≡ ys ∷ʳ y → xs ≡ ys
-snoc-inj₁ {xs = xs} {ys} p =
+snoc-inj₁ : xs ∷ʳ x ≡ ys ∷ʳ y → xs ≡ ys
+snoc-inj₁ {xs = xs} {ys = ys} p =
    sym (rev-rev _) ∙∙ cong rev (cons-inj₂ ((sym (rev-++ xs _)) ∙∙ cong rev p ∙∙ (rev-++ ys _)))
         ∙∙ rev-rev _ 
 
@@ -157,11 +161,11 @@ snoc-inj₁ {xs = xs} {ys} p =
 ¬nil≡cons : ∀ {x : A} {xs} → ¬ ([] ≡ x ∷ xs)
 ¬nil≡cons {A = A} p = lower (subst (caseList (List A) (Lift ⊥)) p [])
 
-¬snoc≡nil : ∀ {x : A} {xs} → ¬ (xs ∷ʳ x ≡ [])
+¬snoc≡nil : ¬ (xs ∷ʳ x ≡ [])
 ¬snoc≡nil {xs = []} contra = ¬cons≡nil contra
 ¬snoc≡nil {xs = x ∷ xs} contra = ¬cons≡nil contra
 
-¬nil≡snoc : ∀ {x : A} {xs} → ¬ ([] ≡ xs ∷ʳ x)
+¬nil≡snoc : ¬ ([] ≡ xs ∷ʳ x)
 ¬nil≡snoc contra = ¬snoc≡nil (sym contra)
 
 cons≡rev-snoc : (x : A) → (xs : List A) → x ∷ rev xs ≡ rev (xs ∷ʳ x)
@@ -171,7 +175,7 @@ cons≡rev-snoc x (y ∷ ys) = λ i → cons≡rev-snoc x ys i ++ y ∷ []
 isContr[]≡[] : isContr (Path (List A) [] [])
 isContr[]≡[] = refl , ListPath.decodeEncode [] []
 
-isPropXs≡[] : {xs : List A} → isProp (xs ≡ [])
+isPropXs≡[] : isProp (xs ≡ [])
 isPropXs≡[] {xs = []} = isOfHLevelSuc 0 isContr[]≡[]
 isPropXs≡[] {xs = x ∷ xs} = λ p _ → ⊥.rec (¬cons≡nil p)
 
@@ -188,17 +192,17 @@ foldrCons : (xs : List A) → foldr _∷_ [] xs ≡ xs
 foldrCons [] = refl
 foldrCons (x ∷ xs) = cong (x ∷_) (foldrCons xs)
 
-length-map : ∀ {ℓA ℓB} {A : Type ℓA} {B : Type ℓB} → (f : A → B) → (as : List A)
+length-map : (f : A → B) → (as : List A)
   → length (map f as) ≡ length as
 length-map f [] = refl
 length-map f (a ∷ as) = cong suc (length-map f as)
 
-map++ : ∀ {ℓA ℓB} {A : Type ℓA} {B : Type ℓB} → (f : A → B) → (as bs : List A)
+map++ : (f : A → B) → (as bs : List A)
    → map f as ++ map f bs ≡ map f (as ++ bs)
 map++ f [] bs = refl
 map++ f (x ∷ as) bs = cong (f x ∷_) (map++ f as bs)
 
-rev-map-comm : ∀ {ℓA ℓB} {A : Type ℓA} {B : Type ℓB} → (f : A → B) → (as : List A)
+rev-map-comm : (f : A → B) → (as : List A)
   → map f (rev as) ≡ rev (map f as)
 rev-map-comm f [] = refl
 rev-map-comm f (x ∷ as) =
@@ -208,13 +212,35 @@ length++ : (xs ys : List A) → length (xs ++ ys) ≡ length xs + length ys
 length++ [] ys = refl
 length++ (x ∷ xs) ys = cong suc (length++ xs ys)
 
-drop++ : (xs ys : List A) → drop (length xs) (xs ++ ys) ≡ ys
-drop++ [] ys = refl
-drop++ (x ∷ xs) ys = drop++ xs ys
+drop++ : ∀ (xs ys : List A) k →
+   drop (length xs + k) (xs ++ ys) ≡ drop k ys
+drop++ [] ys k = refl
+drop++ (x ∷ xs) ys k = drop++ xs ys k
 
-take++ : (xs ys : List A) → take (length xs) (xs ++ ys) ≡ xs
-take++ [] ys = refl
-take++ (x ∷ xs) ys = cong (x ∷_) (take++ xs ys)
+dropLength++ : (xs : List A) → drop (length xs) (xs ++ ys) ≡ ys
+dropLength++ {ys = ys} xs =
+  cong (flip drop (xs ++ ys)) (sym (+-zero (length xs))) ∙ drop++ xs ys 0 
+
+
+dropLength : (xs : List A) → drop (length xs) xs ≡ []
+dropLength xs =
+    cong (drop (length xs)) (sym (++-unit-r xs))
+  ∙ dropLength++ xs
+
+
+take++ : ∀ (xs ys : List A) k → take (length xs + k) (xs ++ ys) ≡ xs ++ take k ys
+take++ [] ys k = refl
+take++ (x ∷ xs) ys k = cong (_ ∷_) (take++ _ _ k)
+
+
+takeLength++ : ∀ ys → take (length xs) (xs ++ ys) ≡ xs
+takeLength++ {xs = xs} ys = 
+      cong (flip take (xs ++ ys)) (sym (+-zero (length xs)))
+   ∙∙ take++ xs ys 0
+   ∙∙ ++-unit-r xs
+
+takeLength : take (length xs) xs ≡ xs
+takeLength = cong (take _) (sym (++-unit-r _)) ∙ takeLength++ []
 
 map-∘ : ∀ {ℓA ℓB ℓC} {A : Type ℓA} {B : Type ℓB} {C : Type ℓC}
         (g : B → C) (f : A → B) (as : List A)
@@ -243,22 +269,50 @@ init-red-lem : ∀ (x : A) xs → ¬ (xs ≡ []) → (x ∷ init xs) ≡ (init (
 init-red-lem x [] x₁ = ⊥.rec (x₁ refl)
 init-red-lem x (x₂ ∷ xs) x₁ = refl
 
-init∷ʳ : ∀ (x : A) xs → init (xs ∷ʳ x) ≡ xs
-init∷ʳ x [] = refl
-init∷ʳ x (x₁ ∷ []) = refl
-init∷ʳ x (x₁ ∷ x₂ ∷ xs) = cong (x₁ ∷_) (init∷ʳ x (x₂ ∷ xs))
+init∷ʳ : init (xs ∷ʳ x) ≡ xs
+init∷ʳ {xs = []} = refl
+init∷ʳ {xs = _ ∷ []} = refl
+init∷ʳ {xs = _ ∷ _ ∷ _} = cong (_ ∷_) init∷ʳ
 
-init++ : ∀ (x : A) xs ys → xs ++ init (x ∷ ys) ≡ init (xs ++ x ∷ ys) 
-init++ x [] ys = refl
-init++ x (x₁ ∷ []) ys = refl
-init++ x (x₁ ∷ x₂ ∷ xs) ys =
- cong (x₁ ∷_) (init++ x (x₂ ∷ xs) ys)
+-- ∷ʳinit : init (x ∷ xs) ∷ʳ y ≡ x ∷ (xs ∷ʳ y)
+-- ∷ʳinit = {!!}
 
+init++ : ∀ xs → xs ++ init (x ∷ ys) ≡ init (xs ++ x ∷ ys) 
+init++ [] = refl
+init++ (_ ∷ []) = refl
+init++ (_ ∷ _ ∷ _) = cong (_ ∷_) (init++ (_ ∷ _))
+
+Split++ : (xs ys xs' ys' zs : List A) → Type _
+Split++ xs ys xs' ys' zs = ((xs ++ zs ≡ xs') × (ys ≡ zs ++ ys')) 
+
+split++ : ∀ (xs' ys' xs ys : List A) → xs' ++ ys' ≡ xs ++ ys → 
+              Σ _ λ zs →
+                ((Split++ xs' ys' xs ys zs)
+                ⊎ (Split++ xs ys xs' ys' zs))
+split++ [] ys' xs ys x = xs , inl (refl , x)
+split++ xs'@(_ ∷ _) ys' [] ys x = xs' , inr (refl , sym x)
+split++ (x₁ ∷ xs') ys' (x₂ ∷ xs) ys x =
+ let (zs , q) = split++ xs' ys' xs ys (cons-inj₂ x)
+     p = cons-inj₁ x
+ in zs , ⊎.map (map-fst (λ q i → p    i  ∷ q i))
+               (map-fst (λ q i → p (~ i) ∷ q i)) q
+
+rot : List A → List A
+rot [] = []
+rot (x ∷ xs) = xs ∷ʳ x
+
+
+take[] : ∀ n → take {A = A} n [] ≡ []
+take[] zero = refl
+take[] (suc n) = refl
+
+drop[] : ∀ n → drop {A = A} n [] ≡ []
+drop[] zero = refl
+drop[] (suc n) = refl
 
 module List₂ where
  open import Cubical.HITs.SetTruncation renaming
    (rec to rec₂ ; map to map₂ ; elim to elim₂ )
-
 
  ∥List∥₂→List∥∥₂ : ∥ List A ∥₂ → List ∥ A ∥₂ 
  ∥List∥₂→List∥∥₂ = rec₂ (isOfHLevelList 0 squash₂) (map ∣_∣₂)
@@ -267,22 +321,20 @@ module List₂ where
  List∥∥₂→∥List∥₂ [] = ∣ [] ∣₂
  List∥∥₂→∥List∥₂ (x ∷ xs) =
    rec2 squash₂ (λ x xs → ∣ x ∷ xs ∣₂) x (List∥∥₂→∥List∥₂ xs)
+ 
+ Iso∥List∥₂List∥∥₂ : Iso (List ∥ A ∥₂) ∥ List A ∥₂ 
+ Iso.fun Iso∥List∥₂List∥∥₂ = List∥∥₂→∥List∥₂
+ Iso.inv Iso∥List∥₂List∥∥₂ = ∥List∥₂→List∥∥₂
+ Iso.rightInv Iso∥List∥₂List∥∥₂ = 
+   elim₂ (isProp→isSet ∘ λ _ → squash₂ _ _)
+     (elimList refl (cong (rec2 squash₂ (λ x₁ xs → ∣ x₁ ∷ xs ∣₂) ∣ _ ∣₂)))
+ Iso.leftInv Iso∥List∥₂List∥∥₂ = elimList refl (lem _ _ ∙_ ∘' cong (_ ∷_))
+  where
+  lem = elim2 {C = λ a l' → ∥List∥₂→List∥∥₂ 
+      (rec2 squash₂ (λ x₁ xs → ∣ x₁ ∷ xs ∣₂) a l')
+      ≡ a ∷ ∥List∥₂→List∥∥₂ l'}
+       (λ _ _ → isProp→isSet (isOfHLevelList 0 squash₂ _ _))
+        λ _ _ → refl
 
-
-
-
- -- Iso∥List∥₂List∥∥₂ : Iso (List ∥ A ∥₂) ∥ List A ∥₂ 
- -- Iso.fun Iso∥List∥₂List∥∥₂ = List∥∥₂→∥List∥₂
- -- Iso.inv Iso∥List∥₂List∥∥₂ = ∥List∥₂→List∥∥₂
- -- Iso.rightInv Iso∥List∥₂List∥∥₂ =
- --   elim₂ (isProp→isSet ∘ λ _ → squash₂ _ _)
- --     {!!}
- --  where
- --  w : (a : List A) → List∥∥₂→∥List∥₂ (map ∣_∣₂ a) ≡ ∣ a ∣₂
- --  w [] = refl
- --  w (x ∷ a) = {!!}
- -- Iso.leftInv Iso∥List∥₂List∥∥₂ [] = refl
- -- Iso.leftInv Iso∥List∥₂List∥∥₂ (x ∷ a) = {!!}
-
- -- comm-List-∥∥₂ : List {ℓ} ∘ ∥_∥₂ ≡ ∥_∥₂ ∘ List {ℓ}
- -- comm-List-∥∥₂ = funExt λ _ → isoToPath Iso∥List∥₂List∥∥₂
+ List-comm-∥∥₂ : ∀ {ℓ} → List {ℓ} ∘ ∥_∥₂ ≡ ∥_∥₂ ∘ List 
+ List-comm-∥∥₂ = funExt λ A → isoToPath (Iso∥List∥₂List∥∥₂ {A = A})

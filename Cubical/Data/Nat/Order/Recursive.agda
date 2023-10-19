@@ -58,6 +58,15 @@ isProp≤ {suc m} {suc n} = isProp≤ {m} {n}
 ≤-+k {m} {n} {k} m≤n
   = transport (λ i → +-comm k m i ≤ +-comm k n i) (≤-k+ {m} {n} {k} m≤n)
 
+∸-≤-∸ : m ≤ n → m ∸ k ≤ n ∸ k
+∸-≤-∸ {k = zero} x = x
+∸-≤-∸ {zero} {n} {k = suc k} _ = _
+∸-≤-∸ {suc m} {suc n} {k = suc k} = ∸-≤-∸ {m} {n} {k}
+
+n≤m→n+[m∸n] : n ≤ m → n + (m ∸ n) ≡ m
+n≤m→n+[m∸n] {zero} x = refl
+n≤m→n+[m∸n] {suc n} {suc m} = cong suc ∘ n≤m→n+[m∸n] {n} {m}
+
 ≤-refl : ∀ m → m ≤ m
 ≤-refl zero = _
 ≤-refl (suc m) = ≤-refl m
@@ -92,8 +101,12 @@ isProp≤ {suc m} {suc n} = isProp≤ {m} {n}
 <-weaken {suc m} {suc n} = <-weaken {m}
 
 ≤-suc-weaken : m ≤ n → m ≤ suc n
-≤-suc-weaken {zero} x = tt
-≤-suc-weaken {suc m} {n = suc n} x = ≤-suc-weaken {m} {n} x
+≤-suc-weaken {zero} _ = tt
+≤-suc-weaken {suc m} {n = suc n} = ≤-suc-weaken {m} {n}
+
+≤-weaken-+ : m ≤ n → m ≤ n + k
+≤-weaken-+ {zero} _ = _
+≤-weaken-+ {suc m} {suc n} = ≤-weaken-+ {m} {n}
 
 ≤-+-weaken : m ≤ n → m ≤ k + n
 ≤-+-weaken {k = zero} x = x
@@ -111,6 +124,12 @@ isProp≤ {suc m} {suc n} = isProp≤ {m} {n}
 
 ≡→≤ : n ≡ m → n ≤ m
 ≡→≤ {n} p = subst (n ≤_) p (≤-refl n)
+
+¬≤→> : ¬ n ≤ m → m < n 
+¬≤→> {zero} {zero} x = x _
+¬≤→> {suc n} {zero} _ = _
+¬≤→> {zero} {suc m} x = x _
+¬≤→> {suc n} {suc m} x = ¬≤→> {n} {m} x
 
 Trichotomy-suc : Trichotomy m n → Trichotomy (suc m) (suc n)
 Trichotomy-suc (lt m<n) = lt m<n

@@ -181,3 +181,7 @@ Discrete→isSet = Separated→isSet ∘ Discrete→Separated
 Dec¬ : Dec A → Dec (¬ A)
 Dec¬ (yes p) = no (_$ p)
 Dec¬ (no ¬p) = yes ¬p
+
+≡no : ∀ {A : Type ℓ} x y → Path (Dec A) x (no y)
+≡no (yes p) y = ⊥.rec (y p)
+≡no (no ¬p) y i = no (isProp¬ _ ¬p y i)

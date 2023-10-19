@@ -359,6 +359,10 @@ isEmbeddingFstΣProp {B = B} pB {u = u} {v = v} .equiv-proof x = ctr , isCtr
        → (p : u .fst ≡ v .fst) → u ≡ v
 Σ≡Prop pB p = equivFun (Σ≡PropEquiv pB) p
 
+discreteΣProp : Discrete A → ((x : A) → isProp (B x)) → Discrete (Σ A B)
+discreteΣProp _≟_ isPropA _ _ =
+  EquivPresDec (Σ≡PropEquiv isPropA) (_ ≟ _)
+  
 -- dependent version
 ΣPathPProp : ∀ {ℓ ℓ'} {A : I → Type ℓ} {B : (i : I) → A i → Type ℓ'}
            → {u : Σ (A i0) (B i0)} {v : Σ (A i1) (B i1)}
