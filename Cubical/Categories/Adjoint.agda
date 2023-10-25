@@ -138,7 +138,7 @@ module AdjointUniqeUpToNatIso where
         ∙∙ cong (H' ⟪ _ ⟫ D⋆_)
              (sym (⋆Assoc D _ _ _)
              ∙ cong (_D⋆ ε ⟦ _ ⟧)
-                 (  sym (F-seq H' _ _)
+                 ( sym (F-seq H' _ _)
                  ∙∙ cong (H' ⟪_⟫) (Δ₂ (H' ⟅ _ ⟆))
                  ∙∙ F-id H')
              ∙ ⋆IdL D _)
