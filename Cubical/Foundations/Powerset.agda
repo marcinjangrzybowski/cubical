@@ -18,6 +18,7 @@ open import Cubical.Foundations.Function
 open import Cubical.Foundations.Univalence using (hPropExt)
 
 open import Cubical.Data.Sigma
+open import Cubical.Data.Empty
 
 private
   variable
@@ -63,3 +64,6 @@ subst-∈ A = subst (_∈ A)
                                             (⊆-refl-consequence A B)
                                             (λ _ → isSetℙ A B _ _)
                                             (λ _ → isPropΣ (⊆-isProp A B) (λ _ → ⊆-isProp B A) _ _))
+
+∅ : {X : Type ℓ} → ℙ X
+∅ _ = ⊥* , isProp⊥*

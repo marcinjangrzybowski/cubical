@@ -110,7 +110,7 @@ module NormalForm (A : Type ℓ) where
    ∀ {x x'} → ¬ IsRedex x x' → ⟨ IsNormalised (x ∷ [ x' ]) ⟩ 
  ¬IsRedex→IsNormalisedPair {x' = x'} ¬ir = ⊎.rec ¬ir (IsNormalised[x] x')
  
- invLi : List (Bool × A) → List (Bool × A)
+ invLi : [𝟚× A ] → [𝟚× A ]
  invLi = rev ∘ Li.map (map-fst not)
 
  invLi++ : ∀ xs ys → invLi (xs ++ ys) ≡
@@ -158,20 +158,22 @@ module NormalForm (A : Type ℓ) where
   w (x ∷ xs) _ = refl
 
 
-
  module NF {ℓ'} (G : Group ℓ') (η : A → ⟨ G ⟩) where
 
   open GroupStr (snd G) renaming (_·_ to _·fg_) public
 
-
   η* : Bool × A → ⟨ G ⟩
   η* (b , a) = (if b then idfun _ else inv) (η a)
 
-  fromList' : ⟨ G ⟩ → [𝟚× A ] → ⟨ G ⟩
-  fromList' = foldr (_·fg_ ∘ η*) 
-
   fromList : [𝟚× A ] → ⟨ G ⟩
-  fromList = fromList' 1g
+  fromList = foldr (_·fg_ ∘ η*) 1g
+
+  record NF (g : _) : Type (ℓ-max ℓ ℓ') where
+   constructor _nf_,_
+   field
+    𝒘 : [𝟚× A ]
+    fromList𝒘≡ : fromList 𝒘 ≡ g
+    isNormalised𝒘 : ⟨ IsNormalised 𝒘 ⟩
 
 
   fromList· : ∀ xs ys → fromList (xs ++ ys) ≡
@@ -188,57 +190,3 @@ module NormalForm (A : Type ℓ) where
   redex-ε-η* (true , x) (false , _) q =
     cong (η x ·fg_) (cong (inv ∘ η) (sym (cong snd q))) ∙ ·InvR (η x)
   redex-ε-η* (true , _) (true , _) = ⊥.rec ∘ true≢false ∘ cong fst
-
-
-  record NF (g : _) : Type (ℓ-max ℓ ℓ') where
-   constructor _nf_,_
-   field
-    𝒘 : [𝟚× A ]
-    fromList𝒘≡ : fromList 𝒘 ≡ g
-    isNormalised𝒘 : ⟨ IsNormalised 𝒘 ⟩ 
-
-  NFΣ : ∀ g → Σ _ (Iso (NF g)) 
-  NFΣ g = _ , iso _ (uncurry (uncurry _nf_,_)) (λ _ → refl) (λ _ → refl)
-
-
-
-
-
-
--- -- --  -- module FG (freeGroupGroup : Group ℓ) (η : A → ⟨ freeGroupGroup ⟩) where 
-
--- -- --  --  FreeGroup = ⟨ freeGroupGroup ⟩
-
--- -- --  --  open GroupStr (snd freeGroupGroup) renaming (_·_ to _·fg_) public
-  
--- -- --  --  open GroupTheory freeGroupGroup
-
--- -- --  --  η* : Bool × A → FreeGroup
--- -- --  --  η* (b , a) = (if b then idfun _ else inv) (η a)
-
--- -- --  --  fromList' : FreeGroup → [𝟚× A ] → FreeGroup
--- -- --  --  fromList' = foldr (_·fg_ ∘ η*) 
-
--- -- --  --  fromList : [𝟚× A ] → FreeGroup
--- -- --  --  fromList = fromList' 1g
-
--- -- --  --  fromList₂ : ST.∥ [𝟚× A ] ∥₂ → FreeGroup
--- -- --  --  fromList₂ = ST.rec is-set fromList
-
--- -- --  --  fromList· : ∀ xs ys → fromList (xs ++ ys) ≡
--- -- --  --                            fromList xs ·fg fromList ys
--- -- --  --  fromList· [] _ = sym (·IdL _)
--- -- --  --  fromList· (_ ∷ xs) _ =
--- -- --  --   cong (_ ·fg_) (fromList· xs _) ∙
--- -- --  --    ·Assoc _ _ _
-
--- -- --  --  redex-ε-η* : ∀ x x' → IsRedex x x' → η* x ·fg η* x' ≡ 1g
--- -- --  --  redex-ε-η* (false , _) (false , _) p = ⊥.rec (false≢true (cong fst p))
--- -- --  --  redex-ε-η* (false , x) (true , _) q = 
--- -- --  --    cong (inv (η x) ·fg_) (cong (η) (sym (cong snd q))) ∙ ·InvL (η x) 
--- -- --  --  redex-ε-η* (true , x) (false , _) q =
--- -- --  --    cong (η x ·fg_) (cong (inv ∘ η) (sym (cong snd q))) ∙ ·InvR (η x)
--- -- --  --  redex-ε-η* (true , _) (true , _) p = ⊥.rec (true≢false (cong fst p))
-
--- -- --  --  NormalForm : FreeGroup → Type ℓ
--- -- --  --  NormalForm g = Σ _ λ l → (fromList l ≡ g) × ⟨ IsNormalised l ⟩

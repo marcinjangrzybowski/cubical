@@ -127,6 +127,7 @@ module BinaryRelation {ℓ ℓ' : Level} {A : Type ℓ} (R : Rel A A ℓ') where
         q = isOfHLevelRespectEquiv 0 (t , totalEquiv _ _ f λ x → invEquiv (u a x) .snd)
                                    (isContrSingl a)
 
+
 EquivRel : ∀ {ℓ} (A : Type ℓ) (ℓ' : Level) → Type (ℓ-max ℓ (ℓ-suc ℓ'))
 EquivRel A ℓ' = Σ[ R ∈ Rel A A ℓ' ] BinaryRelation.isEquivRel R
 
@@ -155,3 +156,24 @@ Iso.rightInv (RelIso→Iso _ _ uni uni' f) a'
   = uni' (RelIso.rightInv f a')
 Iso.leftInv (RelIso→Iso _ _ uni uni' f) a
   = uni (RelIso.leftInv f a)
+
+_⇒_ : ∀ {ℓ} {ℓ'} {A : Type ℓ} →
+          Rel (Rel A A ℓ') (Rel A A ℓ') (ℓ-max ℓ ℓ')
+A ⇒ B =  ∀ x y → A x y → B x y
+
+module _ {ℓ} {ℓ'} {A : Type ℓ} where
+ record IsEquivalenceClosure (R : Rel A A ℓ') (R' : Rel A A ℓ') :
+      Type (ℓ-max (ℓ-suc ℓ') ℓ) where
+   field
+    implied : R ⇒ R'
+    property : isEquivRel R'
+    prop : isPropValued R'
+    smallest : ∀ R'' → isEquivRel {ℓ' = ℓ'} R'' →
+                 R ⇒ R'' → R' ⇒ R''
+
+
+isEquivRelation≡ : ∀ {ℓ} {A : Type ℓ} → isEquivRel {ℓ} {A = A} _≡_
+isEquivRel.reflexive isEquivRelation≡ = λ _ → refl
+isEquivRel.symmetric isEquivRelation≡ = λ _ _ → sym
+isEquivRel.transitive isEquivRelation≡ = λ _ _ _ → _∙_
+

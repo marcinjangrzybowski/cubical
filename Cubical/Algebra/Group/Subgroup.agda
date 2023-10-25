@@ -23,6 +23,12 @@ open import Cubical.Algebra.Group.Properties
 open import Cubical.Algebra.Group.Morphisms
 open import Cubical.Algebra.Group.MorphismProperties
 
+open import Cubical.HITs.PropositionalTruncation as PT
+open import Cubical.Functions.Logic
+
+open import Cubical.HITs.FreeGroup.NormalForm.Demo
+
+
 private
   variable
     ℓ : Level
@@ -80,6 +86,7 @@ module _ (G' : Group ℓ) where
     invrHG : (x : HG) → x ·HG invHG x ≡ 1HG
     invrHG (x , Hx) = ΣPathP (·InvR x , isProp→PathP (λ i → H (·InvR x i) .snd) _ _)
 
+
 ⟪_⟫ : {G' : Group ℓ} → Subgroup G' → ℙ (G' .fst)
 ⟪ H , _ ⟫ = H
 
@@ -99,15 +106,10 @@ module _ {G' : Group ℓ} where
   ·CommNormalSubgroup : (H : Subgroup G') (Hnormal : isNormal H) {x y : G}
                       → x · y ∈ ⟪ H ⟫ → y · x ∈ ⟪ H ⟫
   ·CommNormalSubgroup H Hnormal {x = x} {y = y} Hxy =
-    subst-∈ ⟪ H ⟫ rem (Hnormal (inv x) (x · y) Hxy)
-      where
-      rem : inv x · (x · y) · inv (inv x) ≡ y · x
-      rem = inv x · (x · y) · inv (inv x) ≡⟨ ·Assoc _ _ _ ⟩
-            (inv x · x · y) · inv (inv x) ≡⟨ (λ i → ·Assoc (inv x) x y i · invInv x i) ⟩
-            ((inv x · x) · y) · x         ≡⟨ cong (λ z → (z · y) · x) (·InvL x) ⟩
-            (1g · y) · x                  ≡⟨ cong (_· x) (·IdL y) ⟩
-            y · x                         ∎
-
+    subst-∈ ⟪ H ⟫
+      ( (inv x · (x · y) · inv (inv x)) gs⟨ G' ⟩ (y · x))
+      (Hnormal (inv x) (x · y) Hxy)
+      
 
   -- Examples of subgroups
 
@@ -141,6 +143,46 @@ module _ {G' : Group ℓ} where
     (g · 1g · inv g) ≡⟨ ·Assoc _ _ _ ∙ cong (_· inv g) (·IdR g) ⟩
     (g · inv g)      ≡⟨ ·InvR g ⟩
     1g ∎
+
+
+  module _ (P : ℙ G) where
+
+    data ∈NC : G → Type ℓ where
+     ∈id : ∈NC 1g
+     ∈inj : ∀ {x} → x ∈ P → ∈NC x
+     ∈inv : ∀ {x} → ∈NC x → ∈NC (inv x)
+     ∈op : ∀ {x y} → ∈NC x → ∈NC y → ∈NC (x · y)
+     ∈normal : ∀ {h} g →  ∈NC h → ∈NC (g · h · inv g)
+     
+    NC : ℙ G
+    NC = λ x → ∥ ∈NC x ∥₁ , squash₁
+
+    ⊆NC : P ⊆ NC  
+    ⊆NC _ x = PT.∣ ∈inj x ∣₁
+
+    isSubgroupNC : isSubgroup G' NC
+    id-closed isSubgroupNC = PT.∣ ∈id ∣₁
+    op-closed isSubgroupNC = PT.map2 ∈op
+    inv-closed isSubgroupNC = PT.map ∈inv
+
+   
+    normalClosure : Σ _ isNormal
+    fst (fst normalClosure) = _
+    snd (fst normalClosure) = isSubgroupNC
+    snd normalClosure _ _ = PT.map (∈normal _)
+
+    idempotentNormalClosure : ∀ isSG → isNormal (P , isSG) →
+       NC ≡ P
+    idempotentNormalClosure isSG isN =
+      ⊆-extensionality _ _ ((λ _ → PT.rec (snd (P _)) w) , ⊆NC)  
+     where
+     w : ∀ {x} → ∈NC x → _
+     w ∈id = id-closed isSG
+     w (∈inj x) = x
+     w (∈inv {g} x) = inv-closed isSG (w x)
+     w (∈op x y) = op-closed isSG (w x) (w y)
+     w (∈normal g x) = isN g _ (w x)
+
 
 NormalSubgroup : (G : Group ℓ) → Type _
 NormalSubgroup G = Σ[ G ∈ Subgroup G ] isNormal G
@@ -177,14 +219,7 @@ module _ {G H : Group ℓ} (ϕ : GroupHom G H) where
             → isNormal imSubgroup
   isNormalIm comm x y =
     map λ {(g , p)
-      → g ,
-      (ϕ .fst g                  ≡⟨ p ⟩
-      y                          ≡⟨ sym (H.·IdR y) ⟩
-      (y H.· H.1g)               ≡⟨ cong (y H.·_) (sym (H.·InvR x)) ⟩
-      (y H.· (x H.· H.inv x))    ≡⟨ H.·Assoc y x (H.inv x) ⟩
-      ((y H.· x) H.· H.inv x)    ≡⟨ cong (H._· H.inv x) (comm y x) ⟩
-      ((x H.· y) H.· H.inv x)    ≡⟨ sym (H.·Assoc x y (H.inv x)) ⟩
-      x H.· y H.· H.inv x        ∎ )}
+      → g , p ∙∙ y gs⟨ H ⟩ ((y H.· H.inv x) H.· x) ∙∙ comm _ _ }
 
   kerSubset : ℙ ⟨ G ⟩
   kerSubset x = isInKer ϕ x , isPropIsInKer ϕ x

@@ -180,6 +180,9 @@ module _ (Ĝ : Group ℓ) where
   ΩEM₁≡ : (Path (EM₁ Ĝ) embase embase) ≡ G
   ΩEM₁≡ = isoToPath ΩEM₁Iso
 
+  injEmloop : ∀ g h → emloop {Group = Ĝ} g ≡ emloop h → g ≡ h 
+  injEmloop = isoInvInjective ΩEM₁Iso
+
 --------- Ω (EMₙ₊₁ G) ≃ EMₙ G ---------
 module _ {G : AbGroup ℓ} where
   open AbGroupStr (snd G)

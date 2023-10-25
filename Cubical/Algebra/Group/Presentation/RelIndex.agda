@@ -78,10 +78,7 @@ module _ (IxG : Type ℓ) where
    pa cns = refl
 
    pa₀₋ pa₁₋ pa₋₀ pa₋₁ : base ≡ base
-   pa₀₋ = pa fc₀₋
-   pa₁₋ = pa fc₁₋
-   pa₋₀ = pa fc₋₀
-   pa₋₁ = pa fc₋₁
+   pa₀₋ = pa fc₀₋ ; pa₁₋ = pa fc₁₋ ; pa₋₀ = pa fc₋₀ ; pa₋₁ = pa fc₋₁
 
    SqTy : Type (ℓ-max ℓ ℓ')
    SqTy = Square pa₀₋ pa₁₋ pa₋₀ pa₋₁
@@ -90,10 +87,7 @@ module _ (IxG : Type ℓ) where
 
 
    pa₀₋ pa₁₋ pa₋₀ pa₋₁ : base ≡ base
-   pa₀₋ = pa fc₀₋
-   pa₁₋ = pa fc₁₋
-   pa₋₀ = pa fc₋₀
-   pa₋₁ = pa fc₋₁
+   pa₀₋ = pa fc₀₋ ; pa₁₋ = pa fc₁₋ ; pa₋₀ = pa fc₋₀ ; pa₋₁ = pa fc₋₁
 
    SqTy : Type (ℓa)
    SqTy = Square pa₀₋ pa₁₋ pa₋₀ pa₋₁

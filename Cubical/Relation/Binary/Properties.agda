@@ -3,6 +3,8 @@ module Cubical.Relation.Binary.Properties where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Relation.Binary.Base
+open import Cubical.HITs.SetQuotients.Base
+
 
 private
   variable
@@ -39,3 +41,14 @@ module _
   reflexive (isEquivRelPulledbackRel isEquivRelR) = isReflPulledbackRel (reflexive isEquivRelR)
   symmetric (isEquivRelPulledbackRel isEquivRelR) = isSymPulledbackRel (symmetric isEquivRelR)
   transitive (isEquivRelPulledbackRel isEquivRelR) = isTransPulledbackRel (transitive isEquivRelR)
+
+-- open IsEquivalenceClosure
+-- isContrΣIsEquivalenceClosure : ∀ {ℓ} {A : Type ℓ} (R : Rel A A ℓ) →
+--   isContr (Σ _ (IsEquivalenceClosure R))
+-- fst (fst (isContrΣIsEquivalenceClosure R)) = pulledbackRel [_] (Path (_ / R))
+-- snd (fst (isContrΣIsEquivalenceClosure R)) =
+--   record { implied = eq/
+--         ; property = isEquivRelPulledbackRel _ _ isEquivRelation≡ 
+--         ; prop = λ _ _ → squash/ _ _
+--         ; smallest = {!!} }
+-- snd (isContrΣIsEquivalenceClosure R) = {!!}
