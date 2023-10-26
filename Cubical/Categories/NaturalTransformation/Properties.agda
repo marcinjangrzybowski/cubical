@@ -111,6 +111,8 @@ module _ {C : Category ℓC ℓC'} {D : Category ℓD ℓD'} where
 -- Natural isomorphism is path when the target category is univalent.
 
 module _
+  {C : Category ℓC ℓC'}
+  {D : Category ℓD ℓD'}
   (isUnivD : isUnivalent D)
   {F G : Functor C D} where
 
