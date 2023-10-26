@@ -244,7 +244,7 @@ definition to the first.
 The second unnamed module does the reverse.
 -}
 
-module _ (F : Functor C D) (G : Functor D C) where
+module _ {C : Category ℓC ℓC'} {D : Category ℓD ℓD'} (F : Functor C D) (G : Functor D C) where
   open UnitCounit
   open NaturalBijection renaming (_⊣_ to _⊣²_)
   module _ (adj : F ⊣² G) where
