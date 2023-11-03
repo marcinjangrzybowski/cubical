@@ -52,7 +52,8 @@ record IsAlgebra (R : Ring ℓ) {A : Type ℓ'}
 
   isRing : IsRing _ _ _ _ _
   isRing = isring (IsLeftModule.+IsAbGroup +IsLeftModule) ·IsMonoid ·DistR+ ·DistL+
-  open IsRing isRing public hiding (_-_; +Assoc; +IdL; +InvL; +IdR; +InvR; +Comm ; ·DistR+ ; ·DistL+)
+  open IsRing isRing public
+    hiding (_-_; +Assoc; +IdL; +InvL; +IdR; +InvR; +Comm; ·DistR+; ·DistL+; is-set)
 
 unquoteDecl IsAlgebraIsoΣ = declareRecordIsoΣ IsAlgebraIsoΣ (quote IsAlgebra)
 
@@ -110,9 +111,6 @@ module commonExtractors {R : Ring ℓ} where
   Algebra→MultMonoid : (A : Algebra R ℓ') → Monoid ℓ'
   Algebra→MultMonoid A = Ring→MultMonoid (Algebra→Ring A)
 
-  isSetAlgebra : (A : Algebra R ℓ') → isSet ⟨ A ⟩
-  isSetAlgebra A = isSetAbGroup (Algebra→AbGroup A)
-
   open RingStr (snd R) using (1r; ·DistL+) renaming (_+_ to _+r_; _·_ to _·s_)
 
   module _ {A : Type ℓ'} {0a 1a : A}
@@ -168,22 +166,26 @@ record IsAlgebraHom {R : Ring ℓ} {A : Type ℓ'} {B : Type ℓ''}
 unquoteDecl IsAlgebraHomIsoΣ = declareRecordIsoΣ IsAlgebraHomIsoΣ (quote IsAlgebraHom)
 open IsAlgebraHom
 
-AlgebraHom : {R : Ring ℓ} (M : Algebra R ℓ') (N : Algebra R ℓ'') → Type (ℓ-max ℓ (ℓ-max ℓ' ℓ''))
+private
+  variable
+    R : Ring ℓ
+    A B : Algebra R ℓ
+
+AlgebraHom : (M : Algebra R ℓ') (N : Algebra R ℓ'') → Type _
 AlgebraHom M N = Σ[ f ∈ (⟨ M ⟩ → ⟨ N ⟩) ] IsAlgebraHom (M .snd) f (N .snd)
 
-IsAlgebraEquiv : {R : Ring ℓ} {A : Type ℓ'} {B : Type ℓ''}
+IsAlgebraEquiv : {A : Type ℓ'} {B : Type ℓ''}
   (M : AlgebraStr R A) (e : A ≃ B) (N : AlgebraStr R B)
-  → Type (ℓ-max (ℓ-max ℓ ℓ') ℓ'')
+  → Type _
 IsAlgebraEquiv M e N = IsAlgebraHom M (e .fst) N
 
-AlgebraEquiv : {R : Ring ℓ} (M : Algebra R ℓ') (N : Algebra R ℓ'') → Type (ℓ-max (ℓ-max ℓ ℓ') ℓ'')
+AlgebraEquiv : (M : Algebra R ℓ') (N : Algebra R ℓ'') → Type _
 AlgebraEquiv M N = Σ[ e ∈ ⟨ M ⟩ ≃ ⟨ N ⟩ ] IsAlgebraEquiv (M .snd) e (N .snd)
 
-_$a_ : {R : Ring ℓ} {A : Algebra R ℓ'} {B : Algebra R ℓ''} → AlgebraHom A B → ⟨ A ⟩ → ⟨ B ⟩
+_$a_ : AlgebraHom A B → ⟨ A ⟩ → ⟨ B ⟩
 f $a x = fst f x
 
-AlgebraEquiv→AlgebraHom : {R : Ring ℓ} {A : Algebra R ℓ'} {B : Algebra R ℓ''}
-                        → AlgebraEquiv A B → AlgebraHom A B
+AlgebraEquiv→AlgebraHom : AlgebraEquiv A B → AlgebraHom A B
 AlgebraEquiv→AlgebraHom (e , eIsHom) = e .fst , eIsHom
 
 isPropIsAlgebra : (R : Ring ℓ) {A : Type ℓ'}
@@ -207,25 +209,32 @@ isPropIsAlgebraHom : (R : Ring ℓ) {A : Type ℓ'} {B : Type ℓ''}
                      (AS : AlgebraStr R A) (f : A → B) (BS : AlgebraStr R B)
                    → isProp (IsAlgebraHom AS f BS)
 isPropIsAlgebraHom R AS f BS = isOfHLevelRetractFromIso 1 IsAlgebraHomIsoΣ
-                               (isProp×5 (isSetAlgebra (_ , BS) _ _)
-                                         (isSetAlgebra (_ , BS) _ _)
-                                         (isPropΠ2 λ _ _ → isSetAlgebra (_ , BS) _ _)
-                                         (isPropΠ2 λ _ _ → isSetAlgebra (_ , BS) _ _)
-                                         (isPropΠ λ _ → isSetAlgebra (_ , BS) _ _)
-                                         (isPropΠ2 λ _ _ → isSetAlgebra (_ , BS) _ _))
+                               (isProp×5 (is-set _ _)
+                                         (is-set _ _)
+                                         (isPropΠ2 λ _ _ → is-set _ _)
+                                         (isPropΠ2 λ _ _ → is-set _ _)
+                                         (isPropΠ λ _ → is-set _ _)
+                                         (isPropΠ2 λ _ _ → is-set _ _))
+  where
+  open AlgebraStr BS
 
-isSetAlgebraHom : {R : Ring ℓ} (M : Algebra R ℓ') (N : Algebra R ℓ'')
+isSetAlgebraHom : (M : Algebra R ℓ') (N : Algebra R ℓ'')
                 → isSet (AlgebraHom M N)
-isSetAlgebraHom _ N = isSetΣ (isSetΠ (λ _ → isSetAlgebra N))
+isSetAlgebraHom _ N = isSetΣ (isSetΠ (λ _ → is-set))
                         λ _ → isProp→isSet (isPropIsAlgebraHom _ _ _ _)
+  where
+  open AlgebraStr (str N)
 
 
-isSetAlgebraEquiv : {R : Ring ℓ} (M N : Algebra R ℓ')
+isSetAlgebraEquiv : (M : Algebra R ℓ') (N : Algebra R ℓ'')
                   → isSet (AlgebraEquiv M N)
-isSetAlgebraEquiv M N = isSetΣ (isOfHLevel≃ 2 (isSetAlgebra M) (isSetAlgebra N))
+isSetAlgebraEquiv M N = isSetΣ (isOfHLevel≃ 2 M.is-set N.is-set)
                           λ _ → isProp→isSet (isPropIsAlgebraHom _ _ _ _)
+  where
+  module M = AlgebraStr (str M)
+  module N = AlgebraStr (str N)
 
-AlgebraHom≡ : {R : Ring ℓ} {A B : Algebra R ℓ'} {φ ψ : AlgebraHom A B} → fst φ ≡ fst ψ → φ ≡ ψ
+AlgebraHom≡ : {φ ψ : AlgebraHom A B} → fst φ ≡ fst ψ → φ ≡ ψ
 AlgebraHom≡ = Σ≡Prop λ f → isPropIsAlgebraHom _ _ f _
 
 𝒮ᴰ-Algebra : (R : Ring ℓ) → DUARel (𝒮-Univ ℓ') (AlgebraStr R) (ℓ-max ℓ ℓ')
@@ -246,19 +255,24 @@ AlgebraHom≡ = Σ≡Prop λ f → isPropIsAlgebraHom _ _ f _
   nul = autoDUARel (𝒮-Univ _) (λ A → A)
   bin = autoDUARel (𝒮-Univ _) (λ A → A → A → A)
 
-AlgebraPath : {R : Ring ℓ} (A B : Algebra R ℓ') → (AlgebraEquiv A B) ≃ (A ≡ B)
+AlgebraPath : (A B : Algebra R ℓ') → (AlgebraEquiv A B) ≃ (A ≡ B)
 AlgebraPath {R = R} = ∫ (𝒮ᴰ-Algebra R) .UARel.ua
 
-uaAlgebra : {R : Ring ℓ} {A B : Algebra R ℓ'} → AlgebraEquiv A B → A ≡ B
+uaAlgebra : AlgebraEquiv A B → A ≡ B
 uaAlgebra {A = A} {B = B} = equivFun (AlgebraPath A B)
 
-isGroupoidAlgebra : {R : Ring ℓ} → isGroupoid (Algebra R ℓ')
+isGroupoidAlgebra : isGroupoid (Algebra R ℓ')
 isGroupoidAlgebra _ _ = isOfHLevelRespectEquiv 2 (AlgebraPath _ _) (isSetAlgebraEquiv _ _)
 
--- Smart constructor for ring homomorphisms
--- that infers the other equations from pres1, pres+, and pres·
+-- Smart constructor for algebra homomorphisms
+-- that infers the other equations from pres1, pres+, pres·, and pres⋆
 
-module _  {R : Ring ℓ} {A : Algebra R ℓ'} {B : Algebra R ℓ''} {f : ⟨ A ⟩ → ⟨ B ⟩} where
+module _
+  -- Variable generalization would fail below without the module parameters A and B.
+  {A : Algebra R ℓ}
+  {B : Algebra R ℓ'}
+  {f : ⟨ A ⟩ → ⟨ B ⟩}
+  where
 
   private
     module A = AlgebraStr (A .snd)

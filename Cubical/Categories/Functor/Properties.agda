@@ -5,7 +5,7 @@ module Cubical.Categories.Functor.Properties where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Equiv.Properties
-open import Cubical.Foundations.Function renaming (_∘_ to _◍_)
+open import Cubical.Foundations.Function hiding (_∘_)
 open import Cubical.Foundations.GroupoidLaws using (lUnit; rUnit; assoc; cong-∙)
 open import Cubical.Foundations.HLevels
 open import Cubical.Functions.Surjection
@@ -14,6 +14,7 @@ open import Cubical.HITs.PropositionalTruncation as Prop
 open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
 open import Cubical.Categories.Isomorphism
+open import Cubical.Categories.Morphism
 open import Cubical.Categories.Functor.Base
 
 
@@ -25,38 +26,10 @@ private
 open Category
 open Functor
 
-{-
-x ---p--- x'
-         ⇓ᵍ
-       g x' ---q--- y
-                   ⇓ʰ
-                 h y ---r--- z
-
-The path from `h (g x) ≡ z` obtained by
-  1. first applying cong to p and composing with q; then applying cong again and composing with r
-  2. first applying cong to q and composing with r; then applying a double cong to p and precomposing
-are path equal.
--}
-congAssoc : ∀ {X : Type ℓ} {Y : Type ℓ'} {Z : Type ℓ''} (g : X → Y) (h : Y → Z) {x x' : X} {y : Y} {z : Z}
-          → (p : x ≡ x') (q : g x' ≡ y) (r : h y ≡ z)
-          → cong (h ◍ g) p ∙ (cong h q ∙ r) ≡ cong h (cong g p ∙ q) ∙ r
-congAssoc g h p q r
-  = cong (h ◍ g) p ∙ (cong h q ∙ r)
-  ≡⟨ assoc _ _ _ ⟩
-    ((cong (h ◍ g) p) ∙ (cong h q)) ∙ r
-  ≡⟨ refl ⟩
-    (cong h (cong g p) ∙ (cong h q)) ∙ r
-  ≡⟨ cong (_∙ r) (sym (cong-∙ h _ _)) ⟩
-    cong h (cong g p ∙ q) ∙ r
-  ∎
-
--- composition is associative
 F-assoc : {F : Functor B C} {G : Functor C D} {H : Functor D E}
         → H ∘F (G ∘F F) ≡ (H ∘F G) ∘F F
-F-assoc {F = F} {G} {H} i .F-ob x = H ⟅ G ⟅ F ⟅ x ⟆ ⟆ ⟆
-F-assoc {F = F} {G} {H} i .F-hom f = H ⟪ G ⟪ F ⟪ f ⟫ ⟫ ⟫
-F-assoc {F = F} {G} {H} i .F-id {x} =  congAssoc (G ⟪_⟫) (H ⟪_⟫) (F .F-id {x}) (G .F-id {F ⟅ x ⟆}) (H .F-id) (~ i)
-F-assoc {F = F} {G} {H} i .F-seq f g =  congAssoc (G ⟪_⟫) (H ⟪_⟫) (F .F-seq f g) (G .F-seq _ _) (H .F-seq _ _) (~ i)
+F-assoc = Functor≡ (λ _ → refl) (λ _ → refl)
+
 
 -- Results about functors
 
@@ -124,6 +97,11 @@ module _ {F : Functor C D} where
         g⁻¹ : D [ y' , x' ]
         g⁻¹ = F ⟪ f⁻¹ ⟫
 
+  -- hacky lemma helping with type inferences
+  functorCongP : {x y v w : ob C} {p : x ≡ y} {q : v ≡ w} {f : C [ x , v ]} {g : C [ y , w ]}
+               → PathP (λ i → C [ p i , q i ]) f g
+               → PathP (λ i → D [ F .F-ob (p i) , F. F-ob (q i) ]) (F .F-hom f) (F .F-hom g)
+  functorCongP r i = F .F-hom (r i)
 
 isSetFunctor : isSet (D .ob) → isSet (Functor C D)
 isSetFunctor {D = D} {C = C} isSet-D-ob F G p q = w
@@ -166,7 +144,15 @@ module _ {F : Functor C D} where
 
   isFull+Faithful→isFullyFaithful : isFull F → isFaithful F → isFullyFaithful F
   isFull+Faithful→isFullyFaithful full faith x y = isEmbedding×isSurjection→isEquiv
-    (injEmbedding (C .isSetHom) (D .isSetHom) (faith x y _ _) , full x y)
+    (injEmbedding (D .isSetHom) (faith x y _ _) , full x y)
+
+  isFaithful→reflectsMono : isFaithful F → {x y : C .ob} (f : C [ x , y ])
+    → isMonic D (F ⟪ f ⟫) → isMonic C f
+  isFaithful→reflectsMono F-faithful f Ff-mon {a = a} {a' = a'} a⋆f≡a'⋆f =
+    let Fa⋆Ff≡Fa'⋆Ff = sym (F .F-seq a f)
+                     ∙ cong (F ⟪_⟫) a⋆f≡a'⋆f
+                     ∙ F .F-seq a' f
+    in F-faithful _ _ _ _ (Ff-mon Fa⋆Ff≡Fa'⋆Ff)
 
 
   -- Fully-faithful functor is conservative
@@ -188,6 +174,17 @@ module _ {F : Functor C D} where
       ∙ (λ i → F .F-hom f ⋆⟨ D ⟩ secIsEq (fullfaith _ _) (isoFf .inv) i)
       ∙ isoFf .ret
       ∙ sym (F .F-id))
+
+  -- Lifting isomorphism upwards a fully faithful functor
+
+  module _ (fullfaith : isFullyFaithful F) where
+
+    liftIso : {x y : C .ob} → CatIso D (F .F-ob x) (F .F-ob y) → CatIso C x y
+    liftIso f .fst = invEq (_ , fullfaith _ _) (f .fst)
+    liftIso f .snd = isFullyFaithful→Conservative fullfaith (subst (isIso D) (sym (secEq (_ , fullfaith _ _) (f .fst))) (f .snd))
+
+    liftIso≡ : {x y : C .ob} → (f : CatIso D (F .F-ob x) (F .F-ob y)) → F-Iso {F = F} (liftIso f) ≡ f
+    liftIso≡ f = CatIso≡ _ _ (secEq (_ , fullfaith _ _) (f .fst))
 
 
 -- Functors inducing surjection on objects is essentially surjective
@@ -229,8 +226,8 @@ module _
 
   -- Fully-faithful functor between univalent target induces embedding on objects
 
-  isFullyFaithful→isEmbb-ob : isFullyFaithful F → isEmbedding (F .F-ob)
-  isFullyFaithful→isEmbb-ob fullfaith x y =
+  isFullyFaithful→isEmbd-ob : isFullyFaithful F → isEmbedding (F .F-ob)
+  isFullyFaithful→isEmbd-ob fullfaith x y =
     isEquiv[equivFunA≃B∘f]→isEquiv[f] _ (_ , isUnivD .univ _ _)
       (subst isEquiv (F-pathToIso-∘ {F = F})
       (compEquiv (_ , isUnivC .univ _ _)

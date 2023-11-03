@@ -119,14 +119,32 @@ rec set f feq (squash/ x y p q i j) = set (g x) (g y) (cong g p) (cong g q) i j
   g = rec set f feq
 
 rec2 : isSet C
-  → (f : A → B → C)
-  → (∀ a b c → R a b → f a c ≡ f b c)
-  → (∀ a b c → S b c → f a b ≡ f a c)
-  → A / R → B / S → C
-rec2 set f feql feqr =
-  rec (isSetΠ (λ _ → set))
-    (λ a → rec set (f a) (feqr a))
-    (λ a b r → funExt (elimProp (λ _ → set _ _) (λ c → feql a b c r)))
+     → (f : A → B → C)
+     → (∀ a b c → R a b → f a c ≡ f b c)
+     → (∀ a b c → S b c → f a b ≡ f a c)
+     → A / R → B / S → C
+rec2 {_} {C} {_} {A} {_} {B} {_} {R} {_} {S} set f feql feqr = fun
+  where
+    fun₀ : A → B / S → C
+    fun₀ a [ b ] = f a b
+    fun₀ a (eq/ b c r i) = feqr a b c r i
+    fun₀ a (squash/ x y p q i j) = isSet→SquareP (λ _ _ → set)
+      (λ _ → fun₀ a x)
+      (λ _ → fun₀ a y)
+      (λ i → fun₀ a (p i))
+      (λ i → fun₀ a (q i)) j i
+
+    toPath : ∀ (a b : A) (x : R a b) (y : B / S) → fun₀ a y ≡ fun₀ b y
+    toPath a b rab = elimProp (λ _ → set _ _) λ c → feql a b c rab
+
+    fun : A / R → B / S → C
+    fun [ a ] y = fun₀ a y
+    fun (eq/ a b r i) y = toPath a b r y i
+    fun (squash/ x y p q i j) z = isSet→SquareP (λ _ _ → set)
+      (λ _ → fun x z)
+      (λ _ → fun y z)
+      (λ i → fun (p i) z)
+      (λ i → fun (q i) z) j i
 
 -- the recursor for maps into groupoids:
 -- i.e. for any type A with a binary relation R and groupoid B,
@@ -278,36 +296,6 @@ isEquivRel→isEffective : isPropValued R → isEquivRel R → isEffective R
 isEquivRel→isEffective Rprop Req a b =
   isoToIsEquiv (invIso (isEquivRel→effectiveIso Rprop Req a b))
 
-discreteSetQuotients : Discrete A → isPropValued R → isEquivRel R
-  → (∀ a₀ a₁ → Dec (R a₀ a₁))
-  → Discrete (A / R)
-discreteSetQuotients {A = A} {R = R} Adis Rprop Req Rdec =
-  elim (λ a₀ → isSetΠ (λ a₁ → isProp→isSet (isPropDec (squash/ a₀ a₁))))
-    discreteSetQuotients' discreteSetQuotients'-eq
-  where
-  discreteSetQuotients' : (a : A) (y : A / R) → Dec ([ a ] ≡ y)
-  discreteSetQuotients' a₀ =
-    elim (λ a₁ → isProp→isSet (isPropDec (squash/ [ a₀ ] a₁))) dis dis-eq
-    where
-    dis : (a₁ : A) → Dec ([ a₀ ] ≡ [ a₁ ])
-    dis a₁ with Rdec a₀ a₁
-    ... | (yes p) = yes (eq/ a₀ a₁ p)
-    ... | (no ¬p) = no λ eq → ¬p (effective Rprop Req a₀ a₁ eq )
-
-    dis-eq : (a b : A) (r : R a b) →
-      PathP (λ i → Dec ([ a₀ ] ≡ eq/ a b r i)) (dis a) (dis b)
-    dis-eq a b ab = J (λ b ab → ∀ k → PathP (λ i → Dec ([ a₀ ] ≡ ab i)) (dis a) k)
-                      (λ k → isPropDec (squash/ _ _) _  _) (eq/ a b ab) (dis b)
-
-  discreteSetQuotients'-eq : (a b : A) (r : R a b) →
-    PathP (λ i → (y : A / R) → Dec (eq/ a b r i ≡ y))
-          (discreteSetQuotients' a) (discreteSetQuotients' b)
-  discreteSetQuotients'-eq a b ab =
-    J (λ b ab → ∀ k → PathP (λ i → (y : A / R) → Dec (ab i ≡ y))
-                            (discreteSetQuotients' a) k)
-      (λ k → funExt (λ x → isPropDec (squash/ _ _) _ _)) (eq/ a b ab) (discreteSetQuotients' b)
-
-
 -- Quotienting by the truncated relation is equivalent to quotienting by untruncated relation
 truncRelIso : Iso (A / R) (A / (λ a b → ∥ R a b ∥₁))
 Iso.fun truncRelIso = rec squash/ [_] λ _ _ r → eq/ _ _ ∣ r ∣₁
@@ -334,6 +322,16 @@ isEquivRel→TruncIso {A = A} {R = R} Req a b =
   reflexive ∥R∥eq a = ∣ reflexive Req a ∣₁
   symmetric ∥R∥eq a b = PropTrunc.map (symmetric Req a b)
   transitive ∥R∥eq a b c = PropTrunc.map2 (transitive Req a b c)
+
+discreteSetQuotients : isEquivRel R
+  → (∀ a₀ a₁ → Dec (R a₀ a₁))
+  → Discrete (A / R)
+discreteSetQuotients {A = A} {R = R} Req Rdec =
+  elimProp2
+    (λ _ _ → isPropDec (squash/ _ _))
+    λ _ _ → EquivPresDec
+              (isoToEquiv (invIso (isEquivRel→TruncIso Req _ _)))
+              (Dec∥∥ (Rdec _ _))
 
 -- quotienting by 'logically equivalent' relations gives the same quotient
 relBiimpl→TruncIso : ({a b : A} → R a b → S a b) → ({a b : A} → S a b → R a b) → Iso (A / R) (A / S)

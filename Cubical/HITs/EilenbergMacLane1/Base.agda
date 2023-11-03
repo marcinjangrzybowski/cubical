@@ -4,6 +4,11 @@ This file contains:
 
 - The first Eilenberg–Mac Lane type as a HIT
 
+Remark: The proof that there is an isomorphism of types
+between Ω EM₁ and G is in
+
+Cubical.Homotopy.EilenbergMacLane.Properties
+
 -}
 {-# OPTIONS --cubical --no-import-sorts --safe #-}
 module Cubical.HITs.EilenbergMacLane1.Base where
@@ -59,3 +64,11 @@ module _ (Group@(G , str) : Group ℓ) where
     ∙∙ assoc∙ _ _ _
     ∙∙ cong (_∙ sym (emloop g)) (sym (emloop-comp (inv g) g) ∙∙ cong emloop (·InvL g) ∙∙ emloop-1g)
     ∙∙ sym (lUnit _)
+
+  data EM₁-raw : Type ℓ where
+    embase-raw : EM₁-raw
+    emloop-raw : (g : G) → embase-raw ≡ embase-raw
+
+  EM₁-raw→EM₁ : EM₁-raw → EM₁
+  EM₁-raw→EM₁ embase-raw = embase
+  EM₁-raw→EM₁ (emloop-raw g i) = emloop g i

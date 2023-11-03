@@ -9,7 +9,7 @@
 -- 2. "sorting" finite multisets by converting into sorted lists.
 ------------------------------------------------------------------------
 
-{-# OPTIONS --safe --experimental-lossy-unification #-}
+{-# OPTIONS --safe --lossy-unification #-}
 
 module Cubical.Data.DescendingList.Examples where
 
@@ -19,7 +19,6 @@ open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat
 
 open import Cubical.Relation.Nullary
-open import Cubical.Relation.Nullary.DecidableEq
 
 open import Cubical.HITs.FiniteMultiset
 

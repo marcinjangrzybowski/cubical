@@ -1,21 +1,34 @@
 {-# OPTIONS --safe #-}
 
+{-
+   Category whose objects are functors and morphisms are natural transformations.
+
+   Includes the following
+   - isos in FUNCTOR are precisely the pointwise isos
+   - FUNCTOR C D is univalent when D is
+   - currying of functors
+
+   TODO: show that currying of functors is an isomorphism.
+-}
+
 module Cubical.Categories.Instances.Functors where
 
-open import Cubical.Categories.Category renaming (isIso to isIsoC)
-open import Cubical.Categories.Functor.Base
-open import Cubical.Categories.NaturalTransformation.Base
-open import Cubical.Categories.NaturalTransformation.Properties
-open import Cubical.Categories.Morphism
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Equiv.Properties
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 
+open import Cubical.Categories.Category renaming (isIso to isIsoC)
+open import Cubical.Categories.Constructions.BinProduct
+open import Cubical.Categories.Functor.Base
+open import Cubical.Categories.Morphism
+open import Cubical.Categories.NaturalTransformation.Base
+open import Cubical.Categories.NaturalTransformation.Properties
+
 private
   variable
-    ℓC ℓC' ℓD ℓD' : Level
+    ℓC ℓC' ℓD ℓD' ℓE ℓE' : Level
 
 module _ (C : Category ℓC ℓC') (D : Category ℓD ℓD') where
   open Category
@@ -66,20 +79,23 @@ module _ (C : Category ℓC ℓC') (D : Category ℓD ℓD') where
   open Iso
   open NatIso
 
-  Iso→NatIso : {F G : Functor C D} → CatIso FUNCTOR F G → NatIso F G
-  Iso→NatIso α .trans = α .fst
-  Iso→NatIso α .nIso = FUNCTORIso' _ (α .snd)
+  FUNCTORIso→NatIso : {F G : Functor C D} → CatIso FUNCTOR F G → NatIso F G
+  FUNCTORIso→NatIso α .trans = α .fst
+  FUNCTORIso→NatIso α .nIso = FUNCTORIso' _ (α .snd)
 
-  Path→Iso→NatIso : {F G : Functor C D} → (p : F ≡ G) → pathToNatIso p ≡ Iso→NatIso (pathToIso p)
-  Path→Iso→NatIso {F = F} p = J (λ _ p → pathToNatIso p ≡ Iso→NatIso (pathToIso p)) (NatIso≡ refl-helper) p
+  NatIso→FUNCTORIso : {F G : Functor C D} → NatIso F G → CatIso FUNCTOR F G
+  NatIso→FUNCTORIso α = α .trans , FUNCTORIso _ (α .nIso)
+
+  Path→FUNCTORIso→NatIso : {F G : Functor C D} → (p : F ≡ G) → pathToNatIso p ≡ FUNCTORIso→NatIso (pathToIso p)
+  Path→FUNCTORIso→NatIso {F = F} p = J (λ _ p → pathToNatIso p ≡ FUNCTORIso→NatIso (pathToIso p)) (NatIso≡ refl-helper) p
     where
     refl-helper : _
     refl-helper i x = ((λ i → pathToIso-refl {C = D} {x = F .F-ob x} i .fst)
       ∙ (λ i → pathToIso-refl {C = FUNCTOR} {x = F} (~ i) .fst .N-ob x)) i
 
   Iso-FUNCTORIso-NatIso : {F G : Functor C D} → Iso (CatIso FUNCTOR F G) (NatIso F G)
-  Iso-FUNCTORIso-NatIso .fun = Iso→NatIso
-  Iso-FUNCTORIso-NatIso .inv α = α .trans , FUNCTORIso _ (α .nIso)
+  Iso-FUNCTORIso-NatIso .fun = FUNCTORIso→NatIso
+  Iso-FUNCTORIso-NatIso .inv = NatIso→FUNCTORIso
   Iso-FUNCTORIso-NatIso .rightInv α i .trans = α .trans
   Iso-FUNCTORIso-NatIso .rightInv α i .nIso =
     isProp→PathP (λ i → isPropΠ (λ _ → isPropIsIso _)) (FUNCTORIso' (α .trans) (FUNCTORIso _ (α .nIso))) (α .nIso) i
@@ -98,4 +114,58 @@ module _ (C : Category ℓC ℓC') (D : Category ℓD ℓD') where
   isUnivalentFUNCTOR : isUnivalent D → isUnivalent FUNCTOR
   isUnivalentFUNCTOR isUnivD .univ _ _ =
     isEquiv[equivFunA≃B∘f]→isEquiv[f] _ FUNCTORIso≃NatIso
-      (subst isEquiv (λ i p → Path→Iso→NatIso p i) (Path≃NatIso isUnivD .snd))
+      (subst isEquiv (λ i p → Path→FUNCTORIso→NatIso p i) (Path≃NatIso isUnivD .snd))
+
+  appF : Functor (FUNCTOR ×C C) D
+  appF .F-ob (F , c) = F ⟅ c ⟆
+  appF .F-hom {F , c} {G , d} (α , f) = α .N-ob d ∘⟨ D ⟩ F .F-hom f
+  appF .F-id {F , c} =
+    D .id ∘⟨ D ⟩ F .F-hom (C .id) ≡⟨ D .⋆IdR (F .F-hom (C .id)) ⟩
+    F .F-hom (C .id) ≡⟨ F .F-id ⟩
+    D .id ∎
+  appF .F-seq {F , c}{G , d}{H , e} (α , f) (β , g ) =
+    (β .N-ob e ∘⟨ D ⟩ α .N-ob e) ∘⟨ D ⟩ F .F-hom (g ∘⟨ C ⟩ f)
+      ≡⟨ (λ i → (β .N-ob e ∘⟨ D ⟩ α .N-ob e) ∘⟨ D ⟩ F .F-seq f g i) ⟩
+    (β .N-ob e ∘⟨ D ⟩ α .N-ob e) ∘⟨ D ⟩ (F .F-hom g ∘⟨ D ⟩ F .F-hom f)
+      ≡⟨ sym (D .⋆Assoc _ _ _) ⟩
+    β .N-ob e ∘⟨ D ⟩ (α .N-ob e ∘⟨ D ⟩ (F .F-hom g ∘⟨ D ⟩ F .F-hom f))
+      ≡⟨ (λ i → β .N-ob e
+                ∘⟨ D ⟩ D .⋆Assoc (F .F-hom f) (F .F-hom g) (α .N-ob e) i) ⟩
+    β .N-ob e ∘⟨ D ⟩ ((α .N-ob e ∘⟨ D ⟩ F .F-hom g) ∘⟨ D ⟩ F .F-hom f)
+      ≡⟨ (λ i → β .N-ob e ∘⟨ D ⟩ α .N-hom g i ∘⟨ D ⟩ F .F-hom f) ⟩
+    β .N-ob e ∘⟨ D ⟩ ((G .F-hom g ∘⟨ D ⟩ α .N-ob d) ∘⟨ D ⟩ F .F-hom f)
+      ≡⟨ (λ i → β .N-ob e
+                ∘⟨ D ⟩ D .⋆Assoc (F .F-hom f) (α .N-ob d) (G .F-hom g) (~ i) ) ⟩
+    β .N-ob e ∘⟨ D ⟩ (G .F-hom g ∘⟨ D ⟩ (α .N-ob d ∘⟨ D ⟩ F .F-hom f))
+      ≡⟨ D .⋆Assoc _ _ _ ⟩
+    (β .N-ob e ∘⟨ D ⟩ G .F-hom g) ∘⟨ D ⟩ (α .N-ob d ∘⟨ D ⟩ F .F-hom f) ∎
+  module _ (E : Category ℓE ℓE') where
+    λF : Functor (E ×C C) D → Functor E FUNCTOR
+    λF F .F-ob e .F-ob c = F ⟅ e , c ⟆
+    λF F .F-ob e .F-hom f = F ⟪ (E .id) , f ⟫
+    λF F .F-ob e .F-id = F .F-id
+    λF F .F-ob e .F-seq f g =
+      F ⟪ E .id , g ∘⟨ C ⟩ f ⟫
+        ≡⟨ (λ i → F ⟪ (E .⋆IdL (E .id) (~ i)) , (g ∘⟨ C ⟩ f) ⟫) ⟩
+      (F ⟪ (E .id ∘⟨ E ⟩ E .id) , g ∘⟨ C ⟩ f ⟫)
+        ≡⟨ F .F-seq (E .id , f) (E .id , g) ⟩
+      (F ⟪ E .id , g ⟫ ∘⟨ D ⟩ F ⟪ E .id , f ⟫) ∎
+    λF F .F-hom h .N-ob c = F ⟪ h , (C .id) ⟫
+    λF F .F-hom h .N-hom f =
+      F ⟪ h , C .id ⟫ ∘⟨ D ⟩ F ⟪ E .id , f ⟫ ≡⟨ sym (F .F-seq _ _) ⟩
+      F ⟪ h ∘⟨ E ⟩ E .id , C .id ∘⟨ C ⟩ f ⟫
+        ≡⟨ (λ i → F ⟪ E .⋆IdL h i , C .⋆IdR f i  ⟫) ⟩
+      F ⟪ h , f ⟫ ≡⟨ (λ i → F ⟪ (E .⋆IdR h (~ i)) , (C .⋆IdL f (~ i)) ⟫) ⟩
+      F ⟪ E .id ∘⟨ E ⟩ h , f ∘⟨ C ⟩ C .id ⟫ ≡⟨ F .F-seq _ _ ⟩
+      F ⟪ E .id , f ⟫ ∘⟨ D ⟩ F ⟪ h , C .id ⟫ ∎
+    λF F .F-id = makeNatTransPath (funExt λ c → F .F-id)
+    λF F .F-seq f g = makeNatTransPath (funExt lem) where
+      lem : (c : C .ob) →
+            F ⟪ g ∘⟨ E ⟩ f , C .id ⟫ ≡
+            F ⟪ g , C .id ⟫ ∘⟨ D ⟩ F ⟪ f , C .id ⟫
+      lem c =
+        F ⟪ g ∘⟨ E ⟩ f , C .id ⟫
+          ≡⟨ (λ i → F ⟪ (g ∘⟨ E ⟩ f) , (C .⋆IdR (C .id) (~ i)) ⟫) ⟩
+        F ⟪ g ∘⟨ E ⟩ f , C .id ∘⟨ C ⟩ C .id ⟫
+          ≡⟨ F .F-seq (f , C .id) (g , C .id) ⟩
+        (F ⟪ g , C .id ⟫) ∘⟨ D ⟩ (F ⟪ f , C .id ⟫) ∎
