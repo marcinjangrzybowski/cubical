@@ -51,6 +51,9 @@ elim3 : {B : (x y z : ∥ A ∥₃) → Type ℓ}
 elim3 gB g = elim2 (λ _ _ → isGroupoidΠ (λ _ → gB _ _ _))
                    (λ a b → elim (λ _ → gB _ _ _) (g a b))
 
+map : ∀ {ℓ'} {B : Type ℓ'} → (A → B) → ∥ A ∥₃ → ∥ B ∥₃ 
+map f = rec squash₃ (∣_∣₃ ∘ f)
+
 isGroupoidGroupoidTrunc : isGroupoid ∥ A ∥₃
 isGroupoidGroupoidTrunc a b p q r s = squash₃ a b p q r s
 

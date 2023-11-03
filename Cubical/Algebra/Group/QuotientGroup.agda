@@ -169,6 +169,10 @@ module _ (G : Group ℓ) (P : ℙ ⟨ G ⟩) where
  data _⇊_ : ⟨ G ⟩ → ⟨ G ⟩ → Type ℓ where
   _·_↘1g·_ : ∀ g {x} → x ∈ P → ∀ h → (g G.· (x  G.· h)) ⇊ (g G.· h)
 
+
+ ⇊1g/ : ∀ {x} → x ∈ P →  x ⇊ G.1g
+ ⇊1g/ {x} p = subst2 _⇊_ (G.·IdL _ ∙ G.·IdR _) (G.·IdR _) (G.1g · p ↘1g· G.1g)
+ 
  rec⇊ : ∀ {ℓ'} (B : ⟨ G ⟩ → ⟨ G ⟩ → Type ℓ') →
               (∀ g x h → x ∈ P →
                 B (g G.· (x  G.· h)) ((g G.· h)) ) → ∀ x y → x ⇊ y →  B x y

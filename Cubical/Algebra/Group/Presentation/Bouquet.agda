@@ -119,6 +119,10 @@ P□Ωfit P x =
   (P□Ωfit' P (x ₋₀))
      × (x ₀₋ ≡ refl) × (x ₋₁ ≡ refl) × (x ₁₋ ≡ refl)  
 
+asP□Ω : ∀ {ℓ} {A∙ : Pointed ℓ} → (⟨ Ω A∙ ⟩ → Type ℓ) → (□Ω A∙ → Type ℓ) 
+asP□Ω P x =
+ P (x ₋₀) × (x ₀₋ ≡ refl) × (x ₋₁ ≡ refl) × (x ₁₋ ≡ refl)  
+
 module _ {ℓ} (A : Pointed ℓ) (rels : □Ω A → Type ℓ) where
 
  data _≡/₃_ : Type ℓ 
@@ -221,14 +225,16 @@ module _ {ℓ} (A∙ : Pointed ℓ) (rels : □Ω A∙ → Type ℓ) where
            (sym (b ₀₋ ∙' b ₋₁)) (b ₋₀) (b ₁₋) (~ k) i ]≡/₃
        ;(i₁ = i1) → [ b ₋₁ (i ∨ ~ k) ]≡/₃
       }
- 
- IsoFit : Iso (A∙ ≡/₃ rels) (A∙ ≡/₃ P□Ωfit rels)
- Iso.fun IsoFit [ x ]≡/₃ = [ x ]≡/₃
- Iso.fun IsoFit ((□_ {b} x) i i₁) = 
+
+ IsoFitFun : (A∙ ≡/₃ rels) → (A∙ ≡/₃ P□Ωfit rels)
+ IsoFitFun [ x ]≡/₃ = [ x ]≡/₃
+ IsoFitFun ((□_ {b} x) i i₁) = 
    hcomp (hlp b i i₁) ((□_ {b = λ { ₋₀ → _ ; _ →  refl}}
                ((b , (x , refl)) , (refl , refl , refl ))) i i₁)
- Iso.inv IsoFit [ x ]≡/₃ = [ x ]≡/₃
- Iso.inv IsoFit (□_ {b} ((b' , (x , p₋₀) ) , p₀₋ , p₋₁ , p₁₋) i i₁) = 
+ 
+ IsoFitInv : (A∙ ≡/₃ P□Ωfit rels) → (A∙ ≡/₃ rels)
+ IsoFitInv [ x ]≡/₃ = [ x ]≡/₃
+ IsoFitInv (□_ {b} ((b' , (x , p₋₀) ) , p₀₋ , p₋₁ , p₁₋) i i₁) = 
       hcomp (λ k → λ {
         (i = i0) → [ p₀₋ (~ k) i₁ ]≡/₃
        ;(i = i1) → [ p₁₋ (~ k) i₁ ]≡/₃
@@ -237,10 +243,60 @@ module _ {ℓ} (A∙ : Pointed ℓ) (rels : □Ω A∙ → Type ℓ) where
       })
       (hcomp (λ k → hlp b' i i₁ (~ k))
         (□_ {b = b'} x i i₁))
-       
- Iso.rightInv IsoFit = {!!}
-      
- Iso.leftInv IsoFit = {!!}
+
+ -- IsoFit : Iso (A∙ ≡/₃ rels) (A∙ ≡/₃ P□Ωfit rels)
+ -- Iso.fun IsoFit = IsoFitFun
+ -- Iso.inv IsoFit = IsoFitInv 
+ -- Iso.rightInv IsoFit [ x ]≡/₃ = refl
+ -- Iso.rightInv IsoFit (□_ {b} ((b' , (x , p₋₀) ) , p₀₋ , p₋₁ , p₁₋) i i₁) j =
+ --    hcomp
+ --       (λ k →
+ --          λ { (j = i0) → 
+ --            hcomp
+ --              (λ kk →
+ --                (λ { (i = i0) → 
+ --                    transp (λ i₃ → A∙ ≡/₃ P□Ωfit rels) (kk ∨ ~ k)
+ --                       [ p₀₋ (~ kk) i₁ ]≡/₃
+ --                     ; (i = i1) →
+ --                       transp (λ i₃ → A∙ ≡/₃ P□Ωfit rels) (kk ∨ ~ k)
+ --                        [ p₁₋ (~ kk) i₁ ]≡/₃
+ --                     ; (i₁ = i0) →
+ --                       transp (λ i₃ → A∙ ≡/₃ P□Ωfit rels) (kk ∨ ~ k)
+ --                         [ p₋₀ (~ kk) i ]≡/₃
+ --                     ; (i₁ = i1) →
+ --                      transp (λ i₃ → A∙ ≡/₃ P□Ωfit rels) (kk ∨ ~ k)
+ --                          [ p₋₁ (~ kk) i ]≡/₃
+ --                     }))
+ --             (transp (λ i₂ → A∙ ≡/₃ P□Ωfit rels) (~ k)
+ --              (IsoFitFun (hcomp (λ k → hlp b' i i₁ (~ k)) ((□ x) i i₁))))
+ --             ;(j = i1) → {!!}
+ --             ;(i = i0) → [ {!!} ]≡/₃
+ --             ;(i = i1) → [ {!!} ]≡/₃
+ --             ;(i₁ = i0) → [ {!!} ]≡/₃
+ --             ;(i₁ = i1) → [ {!!} ]≡/₃
+ --            })
+ --       {!!}
+ -- Iso.leftInv IsoFit = {!!}
+
+ IsoFit₂ : Iso ∥ A∙ ≡/₃ rels ∥₃ ∥ A∙ ≡/₃ P□Ωfit rels ∥₃
+ Iso.fun IsoFit₂ = GT.map IsoFitFun
+ Iso.inv IsoFit₂ = GT.map IsoFitInv
+ Iso.rightInv IsoFit₂ =
+   GT.elim (λ _ → isOfHLevelPath 3 GT.squash₃ _ _)
+     (ElimSet≡/₃.f w)
+  where
+  w : ElimSet≡/₃ _ _ _
+  ElimSet≡/₃.isSetX w _ = isOfHLevelPath' 2 GT.squash₃ _ _
+  ElimSet≡/₃.a→x w _ = refl
+ Iso.leftInv IsoFit₂ =    GT.elim (λ _ → isOfHLevelPath 3 GT.squash₃ _ _)
+     (ElimSet≡/₃.f w)
+  where
+  w : ElimSet≡/₃ _ _ _
+  ElimSet≡/₃.isSetX w _ = isOfHLevelPath' 2 GT.squash₃ _ _
+  ElimSet≡/₃.a→x w _ = refl
+
+
+
 -- IsoTrunc⊥ : Iso ⟨ A∙ ⟩ (A∙ ≡/₃ ∅)
 -- Iso.fun IsoTrunc⊥ = [_]≡/₃ 
 -- Iso.inv IsoTrunc⊥ [ x ]≡/₃ = x
@@ -258,408 +314,458 @@ module _ {ℓ} (A∙ : Pointed ℓ) (rels : □Ω A∙ → Type ℓ) where
  
  
 
--- -- module X (A : Type ℓ) (rels : _) where
--- --  ⟨_∣_⟩ : Type ℓ 
--- --  ⟨_∣_⟩ = Bouquet∙ A ≡/₃ rels
+module X (A : Type ℓ) (rels : _) where
+ ⟨_∣_⟩ : Type ℓ 
+ ⟨_∣_⟩ = Bouquet∙ A ≡/₃ rels
 
--- --  ⟨_∣_⟩∙ : Pointed ℓ 
--- --  ⟨_∣_⟩∙ = Bouquet∙ A ≡/₃∙ rels
+ ⟨_∣_⟩∙ : Pointed ℓ 
+ ⟨_∣_⟩∙ = Bouquet∙ A ≡/₃∙ rels
 
 
--- --  record RecSet (∙X : Pointed ℓ') : Type (ℓ-max ℓ ℓ') where
--- --   field
--- --    loopX : A → ⟨ Ω ∙X ⟩
+ record RecSet (∙X : Pointed ℓ') : Type (ℓ-max ℓ ℓ') where
+  field
+   loopX : A → ⟨ Ω ∙X ⟩
 
--- --   bq : Bouquet∙ A →∙ ∙X
--- --   fst bq base = _
--- --   fst bq (loop x i) = loopX x i
--- --   snd bq = refl
+  bq : Bouquet∙ A →∙ ∙X
+  fst bq base = _
+  fst bq (loop x i) = loopX x i
+  snd bq = refl
 
--- --   record RecGpd : Type (ℓ-max ℓ ℓ') where
--- --    field
--- --     sqX : ∀ {b} → b ∈ rels → _
+  record RecGpd : Type (ℓ-max ℓ ℓ') where
+   field
+    sqX : ∀ {b} → rels b → _
     
--- --    R : Rec≡/₃ (Bouquet∙ A) rels ∙X
--- --    Rec≡/₃.a→x R = bq
--- --    Rec≡/₃.sq R = sqX
+   R : Rec≡/₃ (Bouquet∙ A) rels ∙X
+   Rec≡/₃.a→x R = bq
+   Rec≡/₃.sq R = sqX
 
--- --    f = Rec≡/₃.f R
+   f = Rec≡/₃.f R
 
--- --  record ElimProp (P : typ ⟨_∣_⟩∙ → Type ℓ') 
--- --                    : Type (ℓ-max ℓ ℓ') where
--- --   field
--- --    isPropP : ∀ x → isProp (P x) 
--- --    baseP : P [ base ]≡/₃ 
-
-
--- --   go : ∀ x → P x 
--- --   go [ x ]≡/₃ = Bq.elimProp (isPropP ∘ [_]≡/₃) baseP x
--- --   go ((□_ {b} x) i j) =
--- --      isSet→SquareP
--- --       (λ i j → isProp→isSet (isPropP (((□ x) i j))) )
--- --         (λ j → Bq.elimProp (λ x₁ → isPropP [ x₁ ]≡/₃) baseP (b ₀₋ j))
--- --         (λ j → Bq.elimProp (λ x₁ → isPropP [ x₁ ]≡/₃) baseP (b ₁₋ j))     
--- --         (λ i → Bq.elimProp (λ x₁ → isPropP [ x₁ ]≡/₃) baseP (b ₋₀ i))
--- --         (λ i →  Bq.elimProp (λ x₁ → isPropP [ x₁ ]≡/₃) baseP (b ₋₁ i)) i j
+ record ElimProp (P : typ ⟨_∣_⟩∙ → Type ℓ') 
+                   : Type (ℓ-max ℓ ℓ') where
+  field
+   isPropP : ∀ x → isProp (P x) 
+   baseP : P [ base ]≡/₃ 
 
 
--- --  record ElimSet (∙X : typ ⟨_∣_⟩∙ → Pointed ℓ') 
--- --                    : Type (ℓ-max ℓ ℓ') where
--- --   field
--- --    loopX : ∀ a → PathP (λ i → typ (∙X [ loop a i ]≡/₃))
--- --                   (pt (∙X [ base ]≡/₃))
--- --                   (pt (∙X [ base ]≡/₃))
+  go : ∀ x → P x 
+  go [ x ]≡/₃ = Bq.elimProp (isPropP ∘ [_]≡/₃) baseP x
+  go ((□_ {b} x) i j) =
+     isSet→SquareP
+      (λ i j → isProp→isSet (isPropP (((□ x) i j))) )
+        (λ j → Bq.elimProp (λ x₁ → isPropP [ x₁ ]≡/₃) baseP (b ₀₋ j))
+        (λ j → Bq.elimProp (λ x₁ → isPropP [ x₁ ]≡/₃) baseP (b ₁₋ j))     
+        (λ i → Bq.elimProp (λ x₁ → isPropP [ x₁ ]≡/₃) baseP (b ₋₀ i))
+        (λ i →  Bq.elimProp (λ x₁ → isPropP [ x₁ ]≡/₃) baseP (b ₋₁ i)) i j
 
 
--- --   bq : ⟨ Πᵖ∙ (Bouquet∙ A) (∙X ∘ [_]≡/₃) ⟩
--- --   fst bq base = _
--- --   fst bq (loop x i) = loopX x i
--- --   snd bq = refl
+ record ElimSet (∙X : typ ⟨_∣_⟩∙ → Pointed ℓ') 
+                   : Type (ℓ-max ℓ ℓ') where
+  field
+   loopX : ∀ a → PathP (λ i → typ (∙X [ loop a i ]≡/₃))
+                  (pt (∙X [ base ]≡/₃))
+                  (pt (∙X [ base ]≡/₃))
 
--- --   record ElimGpd : Type (ℓ-max (ℓ-max ℓ ℓ') ℓ'') where
--- --    field
--- --     sqX : ∀ {b} → (x : b ∈ rels) → SquareP _ _ _ _ _
+
+  bq : ⟨ Πᵖ∙ (Bouquet∙ A) (∙X ∘ [_]≡/₃) ⟩
+  fst bq base = _
+  fst bq (loop x i) = loopX x i
+  snd bq = refl
+
+  record ElimGpd : Type (ℓ-max (ℓ-max ℓ ℓ') ℓ'') where
+   field
+    sqX : ∀ {b} → (x : rels b) → SquareP _ _ _ _ _
     
--- --    R : Elim≡/₃ (Bouquet∙ A) rels (fst ∘ ∙X)
--- --    Elim≡/₃.a→x R = fst bq
--- --    Elim≡/₃.sq R = sqX
+   R : Elim≡/₃ (Bouquet∙ A) rels (fst ∘ ∙X)
+   Elim≡/₃.a→x R = fst bq
+   Elim≡/₃.sq R = sqX
 
--- --    f = Elim≡/₃.f R
+   f = Elim≡/₃.f R
 
 
 
--- -- --  data PP : typ (Ω (Bouquet∙ A)) → Type ℓ where
--- -- --   pp : ∀ {x} → x ∈ rels → PP (sym (x ₀₋ ∙ x ₋₁) ∙ (x ₋₀ ∙ x ₁₋))
+module PPP (A : Type ℓ) (rel : Path (Bouquet A) base base → Type ℓ) where
 
--- -- --  fromPP : ∀ {p} → PP p → Path ⟨ Ω ⟨_∣_⟩∙ ⟩ (cong [_]≡/₃ p) refl
--- -- --  fromPP (pp {x'} x) =
--- -- --    (cong-∙ [_]≡/₃ _ _) ∙
--- -- --      cong (sym ((cong [_]≡/₃ (x' ₀₋ ∙ x' ₋₁))) ∙_)
--- -- --        ((cong-∙ [_]≡/₃ _ _
--- -- --            ∙∙ Square→compPath (□ x) ∙∙
--- -- --             sym (cong-∙ [_]≡/₃ _ _))) ∙
--- -- --               lCancel ((cong [_]≡/₃ (x' ₀₋ ∙ x' ₋₁)))
+
+ P/ : ℙ ⟨ πGr 0 (Bouquet∙ A) ⟩
+ P/ = ST.rec isSetHProp (L.∥_∥ₚ ∘  rel )
+
+ -- P/' : ℙ {!!}
+ -- P/' = {!invEq (TruncatedFamiliesEquiv base) !}
+ 
+ open X _ (asP□Ω rel)
+
+ 𝔹IsoFun : EM₁ (G/⇊ (πGr 0 (Bouquet∙ A)) P/) → ∥ ⟨_∣_⟩ ∥₃
+ 𝔹IsoFun = EM.rec _
+   squash₃
+   ∣ [ base ]≡/₃ ∣₃
+    (SQ.rec (squash₃ _ _ )
+      (ST.rec (GT.squash₃ _ _) (cong (∣_∣₃ ∘ [_]≡/₃)))
+      (rec⇊ _ _ _ (ST.elim3
+        (λ x y z p → {!!})
+         λ a b c p →
+          let bb : □Ω (Bouquet A , snd ((Ω^ 0) (Bouquet∙ A)))
+              bb = {!!}
+              b=refl : cong [_]≡/₃ b ≡ refl
+              b=refl = flipSquare (□_ {b = λ { ₋₀ → b ; _ →  refl}}
+                 ({!p!} , refl , refl , refl))
+              
+          in (((cong (cong (∣_∣₃ ∘ [_]≡/₃)))
+                ((assoc _ _ _) ∙ sym (doubleCompPath-elim a b c)))) ∙ 
+           cong (cong ∣_∣₃) (cong-∙∙ [_]≡/₃ a b c ∙
+              cong ((cong [_]≡/₃ a ∙∙_∙∙ cong [_]≡/₃ c))
+                b=refl ∙ {!!}))))
+    ((SQ.elimProp2 {!!} (ST.elim2 {!!}
+      λ _ _ → congP (λ _ → cong (∣_∣₃ ∘ [_]≡/₃)) (compPath-filler _ _))))
+
+ 𝔹IsoInv : ∥ ⟨_∣_⟩ ∥₃ → EM₁ (G/⇊ (πGr 0 (Bouquet∙ A)) P/)
+ 𝔹IsoInv = GT.rec emsquash
+   (RecSet.RecGpd.f w)
+  where
+  w' : RecSet (EM₁ (G/⇊ (πGr 0 (Bouquet∙ A)) P/) , embase)
+  RecSet.loopX w' a =  emloop SQ.[ ∣ loop a ∣₂ ]
+
+ 
+  w : RecSet.RecGpd w'
+  X.RecSet.RecGpd.sqX w {b} = {!b ₋₀ ?!}
+ 𝔹Iso : Iso (EM₁ (G/⇊ (πGr 0 (Bouquet∙ A)) P/)) GT.∥ ⟨_∣_⟩ ∥₃  
+ Iso.fun 𝔹Iso = 𝔹IsoFun
+ Iso.inv 𝔹Iso = 𝔹IsoInv
+ Iso.rightInv 𝔹Iso = {!!}
+ Iso.leftInv 𝔹Iso = {!!}
+
+--  data PP : typ (Ω (Bouquet∙ A)) → Type ℓ where
+--   pp : ∀ {x} → x ∈ rels → PP (sym (x ₀₋ ∙ x ₋₁) ∙ (x ₋₀ ∙ x ₁₋))
+
+--  fromPP : ∀ {p} → PP p → Path ⟨ Ω ⟨_∣_⟩∙ ⟩ (cong [_]≡/₃ p) refl
+--  fromPP (pp {x'} x) =
+--    (cong-∙ [_]≡/₃ _ _) ∙
+--      cong (sym ((cong [_]≡/₃ (x' ₀₋ ∙ x' ₋₁))) ∙_)
+--        ((cong-∙ [_]≡/₃ _ _
+--            ∙∙ Square→compPath (□ x) ∙∙
+--             sym (cong-∙ [_]≡/₃ _ _))) ∙
+--               lCancel ((cong [_]≡/₃ (x' ₀₋ ∙ x' ₋₁)))
   
--- -- --  P/ : ℙ ⟨ πGr 0 (Bouquet∙ A) ⟩
--- -- --  P/ = ST.rec isSetHProp
--- -- --    (λ p → ∥ PP p ∥₁ , squash₁)
+--  P/ : ℙ ⟨ πGr 0 (Bouquet∙ A) ⟩
+--  P/ = ST.rec isSetHProp
+--    (λ p → ∥ PP p ∥₁ , squash₁)
 
 
--- -- --  P/FG : ℙ (FreeGroup A)
--- -- --  P/FG x = {!!} , {!!}
+--  P/FG : ℙ (FreeGroup A)
+--  P/FG x = {!!} , {!!}
  
--- -- --  𝔹Iso : Iso (EM₁ (G/⇊ (πGr 0 (Bouquet∙ A)) P/)) ∥ ⟨_∣_⟩ ∥₃ 
--- -- --  𝔹Iso = {!!}
+--  𝔹Iso : Iso (EM₁ (G/⇊ (πGr 0 (Bouquet∙ A)) P/)) ∥ ⟨_∣_⟩ ∥₃ 
+--  𝔹Iso = {!!}
  
--- -- -- -- Iso.fun 𝔹Iso = EM.rec _
--- -- -- --    squash₃
--- -- -- --    ∣ [ base ]≡/₃ ∣₃
--- -- -- --    (SQ.rec (squash₃ _ _ ) (ST.rec (squash₃ _ _) (cong (∣_∣₃ ∘ [_]≡/₃)))
--- -- -- --      (rec⇊ _ _ _ (ST.elim3 (λ _ _ _ → isSet→ (isProp→isSet (squash₃ _ _ _ _)))
--- -- -- --         λ a b c → PT.rec (squash₃ _ _ _ _)
--- -- -- --           ((λ p → cong-∙ (∣_∣₃ ∘ [_]≡/₃) _ _ ∙
--- -- -- --                    cong (cong (λ x → ∣ [ x ]≡/₃ ∣₃) a ∙_)
--- -- -- --                      (cong-∙ (∣_∣₃ ∘ [_]≡/₃) _ _ ∙
--- -- -- --                        cong (_∙ (cong (λ x → ∣ [ x ]≡/₃ ∣₃) c))
--- -- -- --                          (cong (cong ∣_∣₃) p) ∙ sym (lUnit _)) ∙
--- -- -- --                      sym (cong-∙ (∣_∣₃ ∘ [_]≡/₃) _ _) ) ∘' fromPP))))
--- -- -- --    (SQ.elimProp2 {!!} (ST.elim2 {!!}
--- -- -- --       λ _ _ → congP (λ _ → cong (∣_∣₃ ∘ [_]≡/₃)) (compPath-filler _ _)))
+-- -- Iso.fun 𝔹Iso = EM.rec _
+-- --    squash₃
+-- --    ∣ [ base ]≡/₃ ∣₃
+-- --    (SQ.rec (squash₃ _ _ ) (ST.rec (squash₃ _ _) (cong (∣_∣₃ ∘ [_]≡/₃)))
+-- --      (rec⇊ _ _ _ (ST.elim3 (λ _ _ _ → isSet→ (isProp→isSet (squash₃ _ _ _ _)))
+-- --         λ a b c → PT.rec (squash₃ _ _ _ _)
+-- --           ((λ p → cong-∙ (∣_∣₃ ∘ [_]≡/₃) _ _ ∙
+-- --                    cong (cong (λ x → ∣ [ x ]≡/₃ ∣₃) a ∙_)
+-- --                      (cong-∙ (∣_∣₃ ∘ [_]≡/₃) _ _ ∙
+-- --                        cong (_∙ (cong (λ x → ∣ [ x ]≡/₃ ∣₃) c))
+-- --                          (cong (cong ∣_∣₃) p) ∙ sym (lUnit _)) ∙
+-- --                      sym (cong-∙ (∣_∣₃ ∘ [_]≡/₃) _ _) ) ∘' fromPP))))
+-- --    (SQ.elimProp2 {!!} (ST.elim2 {!!}
+-- --       λ _ _ → congP (λ _ → cong (∣_∣₃ ∘ [_]≡/₃)) (compPath-filler _ _)))
 
--- -- -- --  Iso.inv 𝔹Iso =
+-- --  Iso.inv 𝔹Iso =
 
--- -- -- --   GT.rec emsquash
--- -- -- --    (RecSet.RecGpd.f w)
--- -- -- --   where
--- -- -- --   w' : RecSet (EM₁ (G/⇊ (πGr 0 (Bouquet∙ A)) P/) , embase)
--- -- -- --   RecSet.loopX w' a =  emloop SQ.[ ∣ loop a ∣₂ ]
+-- --   GT.rec emsquash
+-- --    (RecSet.RecGpd.f w)
+-- --   where
+-- --   w' : RecSet (EM₁ (G/⇊ (πGr 0 (Bouquet∙ A)) P/) , embase)
+-- --   RecSet.loopX w' a =  emloop SQ.[ ∣ loop a ∣₂ ]
 
--- -- -- --   -- w'Lem* : ∀ x → congS {x = base} {y = base} (fst (RecSet.bq w')) {!!} ≡
--- -- -- --   --               emloop SQ.[ ∣ {!!} ∣₂ ]
--- -- -- --   -- w'Lem* x = {!!}
+-- --   -- w'Lem* : ∀ x → congS {x = base} {y = base} (fst (RecSet.bq w')) {!!} ≡
+-- --   --               emloop SQ.[ ∣ {!!} ∣₂ ]
+-- --   -- w'Lem* x = {!!}
 
 
--- -- -- --   w'Lem : ∀ x → congS {x = base} {y = base} (fst (RecSet.bq w')) x ≡
--- -- -- --                 emloop SQ.[ ∣ x ∣₂ ]
--- -- -- --   w'Lem = {!!} where
--- -- -- --    w'LemR : {!!}
--- -- -- --    w'LemR = {!!}
+-- --   w'Lem : ∀ x → congS {x = base} {y = base} (fst (RecSet.bq w')) x ≡
+-- --                 emloop SQ.[ ∣ x ∣₂ ]
+-- --   w'Lem = {!!} where
+-- --    w'LemR : {!!}
+-- --    w'LemR = {!!}
 
  
--- -- -- --   w : RecSet.RecGpd w'
--- -- -- --   RecSet.RecGpd.sqX w {b} x =
--- -- -- --     let zz : cong [_]≡/₃ (sym (b ₀₋ ∙ b ₋₁) ∙ b ₋₀ ∙ b ₁₋) ≡ refl
--- -- -- --         zz = fromPP (p x)
+-- --   w : RecSet.RecGpd w'
+-- --   RecSet.RecGpd.sqX w {b} x =
+-- --     let zz : cong [_]≡/₃ (sym (b ₀₋ ∙ b ₋₁) ∙ b ₋₀ ∙ b ₁₋) ≡ refl
+-- --         zz = fromPP (p x)
 
--- -- -- --         z' : Path (Path (EM₁
--- -- -- --                          (G/⇊ (πGr 0 (Bouquet∙ A)) P/)) embase embase)
--- -- -- --                          _
--- -- -- --                            _
--- -- -- --         z' = refl
--- -- -- --                -- ({!!} ∙ sym (emloop-comp _ SQ.[ ∣ _ ∣₂ ]
--- -- -- --                --                         SQ.[ ∣ _ ∣₂ ]))
--- -- -- --           ∙∙ cong emloop (cong (SQ.[_] ∘' ∣_∣₂) (rUnit _ ∙
--- -- -- --                 (lUnit (((λ i → (b ₀₋ ∙ b ₋₁) (~ i)) ∙ b ₋₀ ∙ b ₁₋) ∙ refl)))
--- -- -- --               ∙∙ SQ.eq/ ∣ refl ∙ ((sym (b ₀₋ ∙ b ₋₁) ∙ (b ₋₀ ∙ b ₁₋))) ∙ refl ∣₂
--- -- -- --                        ∣ refl ∙ refl ∣₂
--- -- -- --                        (_·_↘1g·_ ∣ refl ∣₂
--- -- -- --                           {∣ (sym (b ₀₋ ∙ b ₋₁) ∙ (b ₋₀ ∙ b ₁₋)) ∣₂}
--- -- -- --                            ∣ p x ∣₁ ∣ refl ∣₂)
+-- --         z' : Path (Path (EM₁
+-- --                          (G/⇊ (πGr 0 (Bouquet∙ A)) P/)) embase embase)
+-- --                          _
+-- --                            _
+-- --         z' = refl
+-- --                -- ({!!} ∙ sym (emloop-comp _ SQ.[ ∣ _ ∣₂ ]
+-- --                --                         SQ.[ ∣ _ ∣₂ ]))
+-- --           ∙∙ cong emloop (cong (SQ.[_] ∘' ∣_∣₂) (rUnit _ ∙
+-- --                 (lUnit (((λ i → (b ₀₋ ∙ b ₋₁) (~ i)) ∙ b ₋₀ ∙ b ₁₋) ∙ refl)))
+-- --               ∙∙ SQ.eq/ ∣ refl ∙ ((sym (b ₀₋ ∙ b ₋₁) ∙ (b ₋₀ ∙ b ₁₋))) ∙ refl ∣₂
+-- --                        ∣ refl ∙ refl ∣₂
+-- --                        (_·_↘1g·_ ∣ refl ∣₂
+-- --                           {∣ (sym (b ₀₋ ∙ b ₋₁) ∙ (b ₋₀ ∙ b ₁₋)) ∣₂}
+-- --                            ∣ p x ∣₁ ∣ refl ∣₂)
                         
--- -- -- --              ∙∙ cong (SQ.[_] ∘' ∣_∣₂) (sym (lUnit _)) ) ∙∙ refl
--- -- -- --               -- emloop-1g _
+-- --              ∙∙ cong (SQ.[_] ∘' ∣_∣₂) (sym (lUnit _)) ) ∙∙ refl
+-- --               -- emloop-1g _
 
--- -- -- --         z : Path (Path (EM₁
--- -- -- --                          (G/⇊ (πGr 0 (Bouquet∙ A)) P/))
--- -- -- --                            embase
--- -- -- --                            embase)
--- -- -- --                     (cong (fst (RecSet.bq w')) (b ₋₀ ∙ b ₁₋))
--- -- -- --                     (cong (fst (RecSet.bq w')) (b ₀₋ ∙ b ₋₁))
--- -- -- --         z = w'Lem (_ ∙ _) ∙∙ {!z'!} ∙∙ sym (w'Lem (_ ∙ _)) 
--- -- -- --            -- congS {x = b ₋₀ ∙ b ₁₋} {y = b ₀₋ ∙ b ₋₁}
--- -- -- --            --  (cong (fst (RecSet.bq w')))
--- -- -- --            --    {!!}
+-- --         z : Path (Path (EM₁
+-- --                          (G/⇊ (πGr 0 (Bouquet∙ A)) P/))
+-- --                            embase
+-- --                            embase)
+-- --                     (cong (fst (RecSet.bq w')) (b ₋₀ ∙ b ₁₋))
+-- --                     (cong (fst (RecSet.bq w')) (b ₀₋ ∙ b ₋₁))
+-- --         z = w'Lem (_ ∙ _) ∙∙ {!z'!} ∙∙ sym (w'Lem (_ ∙ _)) 
+-- --            -- congS {x = b ₋₀ ∙ b ₁₋} {y = b ₀₋ ∙ b ₋₁}
+-- --            --  (cong (fst (RecSet.bq w')))
+-- --            --    {!!}
      
--- -- -- --     in compPath→Square
--- -- -- --         (sym (cong-∙ (fst (RecSet.bq w')) (b ₋₀) (b ₁₋))
--- -- -- --           ∙∙ z ∙∙
--- -- -- --           (cong-∙ (fst (RecSet.bq w')) (b ₀₋) (b ₋₁)))
--- -- -- --  Iso.rightInv 𝔹Iso = {!!}
--- -- -- --  Iso.leftInv 𝔹Iso = {!!}
+-- --     in compPath→Square
+-- --         (sym (cong-∙ (fst (RecSet.bq w')) (b ₋₀) (b ₁₋))
+-- --           ∙∙ z ∙∙
+-- --           (cong-∙ (fst (RecSet.bq w')) (b ₀₋) (b ₋₁)))
+-- --  Iso.rightInv 𝔹Iso = {!!}
+-- --  Iso.leftInv 𝔹Iso = {!!}
 
--- -- -- --  -- GroupIsoPres :
--- -- -- --  --  GroupIso
--- -- -- --  --    (πGr 0 ⟨_∣_⟩∙)
--- -- -- --  --    (G/⇊ (πGr 0 (Bouquet∙ A)) P/)
--- -- -- --  -- Iso.fun (fst GroupIsoPres) =
--- -- -- --  --  ST.rec SQ.squash/ {!!} 
--- -- -- --  -- Iso.inv (fst GroupIsoPres) = {!!}
--- -- -- --  -- Iso.rightInv (fst GroupIsoPres) = {!!}
--- -- -- --  -- Iso.leftInv (fst GroupIsoPres) = {!!}
--- -- -- --  -- snd GroupIsoPres = {!!}
+-- --  -- GroupIsoPres :
+-- --  --  GroupIso
+-- --  --    (πGr 0 ⟨_∣_⟩∙)
+-- --  --    (G/⇊ (πGr 0 (Bouquet∙ A)) P/)
+-- --  -- Iso.fun (fst GroupIsoPres) =
+-- --  --  ST.rec SQ.squash/ {!!} 
+-- --  -- Iso.inv (fst GroupIsoPres) = {!!}
+-- --  -- Iso.rightInv (fst GroupIsoPres) = {!!}
+-- --  -- Iso.leftInv (fst GroupIsoPres) = {!!}
+-- --  -- snd GroupIsoPres = {!!}
 
--- -- -- -- -- module _ (IxG : Type ℓ) where
+-- -- -- module _ (IxG : Type ℓ) where
 
--- -- -- -- --  data Fc : Type ℓ where
--- -- -- -- --   fc : 𝟚 → IxG → Fc
--- -- -- -- --   cns : Fc
+-- -- --  data Fc : Type ℓ where
+-- -- --   fc : 𝟚 → IxG → Fc
+-- -- --   cns : Fc
 
--- -- -- -- --  Fc∙ : Pointed ℓ
--- -- -- -- --  Fc∙ = Fc , cns
+-- -- --  Fc∙ : Pointed ℓ
+-- -- --  Fc∙ = Fc , cns
 
--- -- -- -- --  mkFc≡ : (IxG → ⟨ Ω A∙ ⟩) → Fc∙ →∙ Ω A∙ 
--- -- -- -- --  fst (mkFc≡ f) (fc b x) = 𝟚.if b then f x else sym (f x)
--- -- -- -- --  fst (mkFc≡ _) cns = _
--- -- -- -- --  snd (mkFc≡ _) = refl
+-- -- --  mkFc≡ : (IxG → ⟨ Ω A∙ ⟩) → Fc∙ →∙ Ω A∙ 
+-- -- --  fst (mkFc≡ f) (fc b x) = 𝟚.if b then f x else sym (f x)
+-- -- --  fst (mkFc≡ _) cns = _
+-- -- --  snd (mkFc≡ _) = refl
 
 
--- -- -- -- -- module Pres (A : Type ℓ) {B : Type ℓ} (rels : B → 𝟜 → Fc A) where
--- -- -- -- --  open X A (λ b → fst (mkFc≡ _ loop) ∘ rels b) public
+-- -- -- module Pres (A : Type ℓ) {B : Type ℓ} (rels : B → 𝟜 → Fc A) where
+-- -- --  open X A (λ b → fst (mkFc≡ _ loop) ∘ rels b) public
 
--- -- -- -- --  module F𝔹 = X A ⊥.rec
+-- -- --  module F𝔹 = X A ⊥.rec
 
--- -- -- -- --  F = freeGroupGroup A
+-- -- --  F = freeGroupGroup A
 
--- -- -- -- --  fc→fg : Fc A → FreeGroup A
--- -- -- -- --  fc→fg (fc x a) = 𝟚.if x then η a else inv (η a)
--- -- -- -- --  fc→fg cns = ε
+-- -- --  fc→fg : Fc A → FreeGroup A
+-- -- --  fc→fg (fc x a) = 𝟚.if x then η a else inv (η a)
+-- -- --  fc→fg cns = ε
 
--- -- -- -- --  rels' : B → 𝟜 → FreeGroup A
--- -- -- -- --  rels' = λ b → fc→fg ∘' rels b 
+-- -- --  rels' : B → 𝟜 → FreeGroup A
+-- -- --  rels' = λ b → fc→fg ∘' rels b 
  
 
 
--- -- -- -- --  relatorsF : B → FreeGroup A 
--- -- -- -- --  relatorsF b =
--- -- -- -- --   let r = rels' b
--- -- -- -- --   in inv (r ₁₋ · r ₋₀) · (r ₋₁ · r ₀₋)
+-- -- --  relatorsF : B → FreeGroup A 
+-- -- --  relatorsF b =
+-- -- --   let r = rels' b
+-- -- --   in inv (r ₁₋ · r ₋₀) · (r ₋₁ · r ₀₋)
 
--- -- -- -- --  FN = freeGroupGroup (FreeGroup A × B)
+-- -- --  FN = freeGroupGroup (FreeGroup A × B)
 
--- -- -- -- --  FN→F : GroupHom FN F
--- -- -- -- --  FN→F = fst A→Group≃GroupHom λ (g , b) → inv g · (relatorsF b · g) 
+-- -- --  FN→F : GroupHom FN F
+-- -- --  FN→F = fst A→Group≃GroupHom λ (g , b) → inv g · (relatorsF b · g) 
 
--- -- -- -- --  h→ : ⟨ F ⟩ → GroupHom FN FN
--- -- -- -- --  h→ a = fst A→Group≃GroupHom λ (g , b) → η (g · a , b) 
-
-
-
--- -- -- -- --  -- _∼ₚ_ :  (FreeGroup A) → (FreeGroup A) → Type ℓ 
--- -- -- -- --  -- g ∼ₚ g' = Σ B λ b → let r = rels' b
--- -- -- -- --  --   in Path (FreeGroup A)
--- -- -- -- --  --       (r ₋₁ · (r ₀₋ · g)) (r ₁₋ · (r ₋₀ · g'))
+-- -- --  h→ : ⟨ F ⟩ → GroupHom FN FN
+-- -- --  h→ a = fst A→Group≃GroupHom λ (g , b) → η (g · a , b) 
 
 
--- -- -- -- --  open GroupTheory F
 
--- -- -- -- --  module FGS = GroupStr (snd F)
+-- -- --  -- _∼ₚ_ :  (FreeGroup A) → (FreeGroup A) → Type ℓ 
+-- -- --  -- g ∼ₚ g' = Σ B λ b → let r = rels' b
+-- -- --  --   in Path (FreeGroup A)
+-- -- --  --       (r ₋₁ · (r ₀₋ · g)) (r ₁₋ · (r ₋₀ · g'))
+
+
+-- -- --  open GroupTheory F
+
+-- -- --  module FGS = GroupStr (snd F)
  
 
--- -- -- -- --  isNormalN : isNormal (imSubgroup FN→F)
--- -- -- -- --  isNormalN a h = PT.map
--- -- -- -- --    λ (g , p) → _ , lemGen g ∙ λ i → (a · (p i · inv a))
--- -- -- -- --   where
--- -- -- -- --    open GroupSolver (freeGroupGroup A)
+-- -- --  isNormalN : isNormal (imSubgroup FN→F)
+-- -- --  isNormalN a h = PT.map
+-- -- --    λ (g , p) → _ , lemGen g ∙ λ i → (a · (p i · inv a))
+-- -- --   where
+-- -- --    open GroupSolver (freeGroupGroup A)
 
--- -- -- -- --    lemGen : ∀ y → FN→F .fst (fst (h→ (inv a)) y) ≡
--- -- -- -- --                         (a · (fst FN→F y · inv a))
--- -- -- -- --    lemGen = HIT-FG.propElimCons _ (λ _ → _ , trunc _ _)
--- -- -- -- --      (𝑺 ε (0 · (ε · inv 0)) _)
--- -- -- -- --       λ a₁ x → map-× (cong (_ ·_) x ∙_) (cong (_ ·_) x ∙_)
--- -- -- -- --          ((𝑺 ((inv (0 · -2) · (1 · (0 · -2))) · (2 · (3 · -2)))
--- -- -- -- --               (2 · (((inv 0 · (1 · 0)) · 3) · -2)) _ _ _ _)
--- -- -- -- --         , (𝑺 (inv (inv (0 · -2) · (1 · (0 · -2))) · (2 · (3 · -2)))
--- -- -- -- --              (2 · ((inv (inv 0 · (1 · 0)) · 3) · -2)) _ _ _ _))
+-- -- --    lemGen : ∀ y → FN→F .fst (fst (h→ (inv a)) y) ≡
+-- -- --                         (a · (fst FN→F y · inv a))
+-- -- --    lemGen = HIT-FG.propElimCons _ (λ _ → _ , trunc _ _)
+-- -- --      (𝑺 ε (0 · (ε · inv 0)) _)
+-- -- --       λ a₁ x → map-× (cong (_ ·_) x ∙_) (cong (_ ·_) x ∙_)
+-- -- --          ((𝑺 ((inv (0 · -2) · (1 · (0 · -2))) · (2 · (3 · -2)))
+-- -- --               (2 · (((inv 0 · (1 · 0)) · 3) · -2)) _ _ _ _)
+-- -- --         , (𝑺 (inv (inv (0 · -2) · (1 · (0 · -2))) · (2 · (3 · -2)))
+-- -- --              (2 · ((inv (inv 0 · (1 · 0)) · 3) · -2)) _ _ _ _))
       
 
--- -- -- -- --  P : Group ℓ 
--- -- -- -- --  P = F / (imSubgroup FN→F , isNormalN)
+-- -- --  P : Group ℓ 
+-- -- --  P = F / (imSubgroup FN→F , isNormalN)
 
--- -- -- -- --  P'rel : (g h : Path (Bouquet A) base base) → Type ℓ 
--- -- -- -- --  P'rel g h = Σ B λ b → {!!}
+-- -- --  P'rel : (g h : Path (Bouquet A) base base) → Type ℓ 
+-- -- --  P'rel g h = Σ B λ b → {!!}
 
--- -- -- -- --  P' : Group ℓ
--- -- -- -- --  fst P' = Path (Bouquet A) base base
--- -- -- -- --             SQ./ P'rel
--- -- -- -- --  snd P' = {!!}
+-- -- --  P' : Group ℓ
+-- -- --  fst P' = Path (Bouquet A) base base
+-- -- --             SQ./ P'rel
+-- -- --  snd P' = {!!}
  
--- -- -- -- --  𝔹P = EM₁ P
+-- -- --  𝔹P = EM₁ P
 
--- -- -- -- --  -- →𝔹P : ⟨_∣_⟩ → 𝔹P
--- -- -- -- --  -- →𝔹P = RecSet.RecGpd.f w
--- -- -- -- --  --  where
--- -- -- -- --  --  w' : RecSet (EM₁ P , embase)
--- -- -- -- --  --  X.RecSet.loopX w' a = emloop SQ.[ η a ]
+-- -- --  -- →𝔹P : ⟨_∣_⟩ → 𝔹P
+-- -- --  -- →𝔹P = RecSet.RecGpd.f w
+-- -- --  --  where
+-- -- --  --  w' : RecSet (EM₁ P , embase)
+-- -- --  --  X.RecSet.loopX w' a = emloop SQ.[ η a ]
   
--- -- -- -- --  --  w : RecSet.RecGpd w'
--- -- -- -- --  --  X.RecSet.RecGpd.sqX w b =
--- -- -- -- --  --   let z : Path ⟨ P ⟩
--- -- -- -- --  --            SQ.[ (fc→fg (rels b ₁₋) · fc→fg (rels b ₋₀)) ]
--- -- -- -- --  --            SQ.[ (fc→fg (rels b ₋₁) · fc→fg (rels b ₀₋)) ]
--- -- -- -- --  --       z = SQ.eq/
--- -- -- -- --  --         (((fc→fg (rels b ₁₋) · fc→fg (rels b ₋₀))))
--- -- -- -- --  --         ((fc→fg (rels b ₋₁) · fc→fg (rels b ₀₋)))
--- -- -- -- --  --          ∣ (inv (η (ε , b))) , {!!} ∣₁
--- -- -- -- --  --   in compPath→Square ({!sym (emloop-comp _ _ _)!} ∙∙ {!!} ∙∙ {!!})
+-- -- --  --  w : RecSet.RecGpd w'
+-- -- --  --  X.RecSet.RecGpd.sqX w b =
+-- -- --  --   let z : Path ⟨ P ⟩
+-- -- --  --            SQ.[ (fc→fg (rels b ₁₋) · fc→fg (rels b ₋₀)) ]
+-- -- --  --            SQ.[ (fc→fg (rels b ₋₁) · fc→fg (rels b ₀₋)) ]
+-- -- --  --       z = SQ.eq/
+-- -- --  --         (((fc→fg (rels b ₁₋) · fc→fg (rels b ₋₀))))
+-- -- --  --         ((fc→fg (rels b ₋₁) · fc→fg (rels b ₀₋)))
+-- -- --  --          ∣ (inv (η (ε , b))) , {!!} ∣₁
+-- -- --  --   in compPath→Square ({!sym (emloop-comp _ _ _)!} ∙∙ {!!} ∙∙ {!!})
 
 
--- -- -- -- --   -- →𝔹P [ base ]≡/₃ = embase
--- -- -- -- --  -- →𝔹P [ loop x i ]≡/₃ = emloop SQ.[ η x ] i
--- -- -- -- --  -- →𝔹P ((□ b) i i₁) = {!!}
+-- -- --   -- →𝔹P [ base ]≡/₃ = embase
+-- -- --  -- →𝔹P [ loop x i ]≡/₃ = emloop SQ.[ η x ] i
+-- -- --  -- →𝔹P ((□ b) i i₁) = {!!}
  
--- -- -- -- --  -- 𝔹PIso : {!!}
--- -- -- -- --  -- 𝔹PIso = {!!}
- 
-
-
--- -- -- -- -- -- -- --  𝔹P = {!!}
-
--- -- -- -- -- -- -- --  -- ℙ = ? / ?
-
--- -- -- -- -- -- -- -- --  3→2T : ∥ Bouquet A ∥₃ → hSet ℓ
--- -- -- -- -- -- -- -- --  3→2T = GT.rec isGroupoidHSet λ x → ∥ base ≡ x ∥₂ , squash₂ 
--- -- -- -- -- -- -- -- --    -- λ {base → ∥ Path (Bouquet A) base base ∥₂ , squash₂
--- -- -- -- -- -- -- -- --    --   ; (loop a i) → ∥ Path (Bouquet A) base (loop a i) ∥₂ , {!!} }
-
--- -- -- -- -- -- -- -- --  3→2 : ∀ x → (Path (∥ Bouquet A ∥₃) ∣ base ∣₃ x) → 
--- -- -- -- -- -- -- -- --              ⟨ 3→2T x ⟩
--- -- -- -- -- -- -- -- --  3→2 x = J (λ x → λ v → ⟨ 3→2T x ⟩) ∣ refl ∣₂
-
--- -- -- -- -- -- -- -- --  -- 2→3 : ∀ x → Path (Bouquet A) base x 
--- -- -- -- -- -- -- -- --  --           → (Path (∥ Bouquet A ∥₃) ∣ base ∣₃ ∣ x ∣₃)
--- -- -- -- -- -- -- -- --  -- 2→3 x = cong ∣_∣₃
--- -- -- -- -- -- -- -- --  --  -- J (λ x _ → (Path (∥ Bouquet A ∥₃) ∣ base ∣₃ ∣ x ∣₃)) refl
-
-
--- -- -- -- -- -- -- -- --  2→3' : ∀ x → ⟨ 3→2T x ⟩ 
--- -- -- -- -- -- -- -- --            → (Path (∥ Bouquet A ∥₃) ∣ base ∣₃ x) 
--- -- -- -- -- -- -- -- --  2→3' = GT.elim (λ _ → isGroupoidΠ λ _ → isSet→isGroupoid (squash₃ _ _))
--- -- -- -- -- -- -- -- --             λ x → ST.rec (squash₃ _ _) (cong ∣_∣₃)
+-- -- --  -- 𝔹PIso : {!!}
+-- -- --  -- 𝔹PIso = {!!}
  
 
--- -- -- -- -- -- -- -- --  sec2' : ∀ x → (p : Path (Bouquet A) base x) →
--- -- -- -- -- -- -- -- --                (3→2 (∣ x ∣₃) (2→3' ∣ x ∣₃ ∣ p ∣₂)) ≡ ∣ p ∣₂ 
--- -- -- -- -- -- -- -- --  sec2' x = J (λ x (p : Path (Bouquet A) base x) →
--- -- -- -- -- -- -- -- --                (3→2 (∣ x ∣₃) (2→3' ∣ x ∣₃ ∣ p ∣₂)) ≡ ∣ p ∣₂)
--- -- -- -- -- -- -- -- --                   (cong ∣_∣₂ (transportRefl _))
--- -- -- -- -- -- -- -- --                   -- (cong ∣_∣₂ (transportRefl _ ∙∙ transportRefl _ ∙∙ transportRefl _)
--- -- -- -- -- -- -- -- --                   -- )
 
--- -- -- -- -- -- -- -- --  sec3 : ∀ x → (p : Path (∥ Bouquet A ∥₃) ∣ base ∣₃ x)  →
--- -- -- -- -- -- -- -- --                (2→3' (x) ((3→2 x p))) ≡ p 
--- -- -- -- -- -- -- -- --  sec3 x = J (λ x → λ (p : Path (∥ Bouquet A ∥₃) ∣ base ∣₃ x)  →
--- -- -- -- -- -- -- -- --                (2→3' (x) ((3→2 x p))) ≡ p)
--- -- -- -- -- -- -- -- --                  λ j i → ∣ doubleCompPath-filler refl (λ _ → base) refl (~ j) i ∣₃
+-- -- -- -- -- --  𝔹P = {!!}
+
+-- -- -- -- -- --  -- ℙ = ? / ?
+
+-- -- -- -- -- -- --  3→2T : ∥ Bouquet A ∥₃ → hSet ℓ
+-- -- -- -- -- -- --  3→2T = GT.rec isGroupoidHSet λ x → ∥ base ≡ x ∥₂ , squash₂ 
+-- -- -- -- -- -- --    -- λ {base → ∥ Path (Bouquet A) base base ∥₂ , squash₂
+-- -- -- -- -- -- --    --   ; (loop a i) → ∥ Path (Bouquet A) base (loop a i) ∥₂ , {!!} }
+
+-- -- -- -- -- -- --  3→2 : ∀ x → (Path (∥ Bouquet A ∥₃) ∣ base ∣₃ x) → 
+-- -- -- -- -- -- --              ⟨ 3→2T x ⟩
+-- -- -- -- -- -- --  3→2 x = J (λ x → λ v → ⟨ 3→2T x ⟩) ∣ refl ∣₂
+
+-- -- -- -- -- -- --  -- 2→3 : ∀ x → Path (Bouquet A) base x 
+-- -- -- -- -- -- --  --           → (Path (∥ Bouquet A ∥₃) ∣ base ∣₃ ∣ x ∣₃)
+-- -- -- -- -- -- --  -- 2→3 x = cong ∣_∣₃
+-- -- -- -- -- -- --  --  -- J (λ x _ → (Path (∥ Bouquet A ∥₃) ∣ base ∣₃ ∣ x ∣₃)) refl
+
+
+-- -- -- -- -- -- --  2→3' : ∀ x → ⟨ 3→2T x ⟩ 
+-- -- -- -- -- -- --            → (Path (∥ Bouquet A ∥₃) ∣ base ∣₃ x) 
+-- -- -- -- -- -- --  2→3' = GT.elim (λ _ → isGroupoidΠ λ _ → isSet→isGroupoid (squash₃ _ _))
+-- -- -- -- -- -- --             λ x → ST.rec (squash₃ _ _) (cong ∣_∣₃)
+ 
+
+-- -- -- -- -- -- --  sec2' : ∀ x → (p : Path (Bouquet A) base x) →
+-- -- -- -- -- -- --                (3→2 (∣ x ∣₃) (2→3' ∣ x ∣₃ ∣ p ∣₂)) ≡ ∣ p ∣₂ 
+-- -- -- -- -- -- --  sec2' x = J (λ x (p : Path (Bouquet A) base x) →
+-- -- -- -- -- -- --                (3→2 (∣ x ∣₃) (2→3' ∣ x ∣₃ ∣ p ∣₂)) ≡ ∣ p ∣₂)
+-- -- -- -- -- -- --                   (cong ∣_∣₂ (transportRefl _))
+-- -- -- -- -- -- --                   -- (cong ∣_∣₂ (transportRefl _ ∙∙ transportRefl _ ∙∙ transportRefl _)
+-- -- -- -- -- -- --                   -- )
+
+-- -- -- -- -- -- --  sec3 : ∀ x → (p : Path (∥ Bouquet A ∥₃) ∣ base ∣₃ x)  →
+-- -- -- -- -- -- --                (2→3' (x) ((3→2 x p))) ≡ p 
+-- -- -- -- -- -- --  sec3 x = J (λ x → λ (p : Path (∥ Bouquet A ∥₃) ∣ base ∣₃ x)  →
+-- -- -- -- -- -- --                (2→3' (x) ((3→2 x p))) ≡ p)
+-- -- -- -- -- -- --                  λ j i → ∣ doubleCompPath-filler refl (λ _ → base) refl (~ j) i ∣₃
                    
 
--- -- -- -- -- -- -- -- --  Iso₂₃ : Iso (Path (∥ Bouquet A ∥₃) ∣ base ∣₃ ∣ base ∣₃)
--- -- -- -- -- -- -- -- --              ∥ Path (Bouquet A) base base ∥₂
--- -- -- -- -- -- -- -- --  Iso.fun Iso₂₃ = 3→2 ∣ base ∣₃
--- -- -- -- -- -- -- -- --  Iso.inv Iso₂₃ = (2→3' ∣ base ∣₃)
--- -- -- -- -- -- -- -- --  Iso.rightInv Iso₂₃ = ST.elim (λ _ → isProp→isSet (squash₂ _ _)) (sec2' base)  
--- -- -- -- -- -- -- -- --  Iso.leftInv Iso₂₃ = sec3 ∣ base ∣₃
+-- -- -- -- -- -- --  Iso₂₃ : Iso (Path (∥ Bouquet A ∥₃) ∣ base ∣₃ ∣ base ∣₃)
+-- -- -- -- -- -- --              ∥ Path (Bouquet A) base base ∥₂
+-- -- -- -- -- -- --  Iso.fun Iso₂₃ = 3→2 ∣ base ∣₃
+-- -- -- -- -- -- --  Iso.inv Iso₂₃ = (2→3' ∣ base ∣₃)
+-- -- -- -- -- -- --  Iso.rightInv Iso₂₃ = ST.elim (λ _ → isProp→isSet (squash₂ _ _)) (sec2' base)  
+-- -- -- -- -- -- --  Iso.leftInv Iso₂₃ = sec3 ∣ base ∣₃
 
 
--- -- -- -- -- -- -- -- --  -- FF : F𝔹.⟨_∣_⟩∙ →∙ (Bouquet∙ A)
--- -- -- -- -- -- -- -- --  -- fst FF [ x ] = x
--- -- -- -- -- -- -- -- --  -- snd FF = {!!}
--- -- -- -- -- -- -- -- --  -- -- fst FF = F𝔹.RecSet.RecGpd.f  w
--- -- -- -- -- -- -- -- --  -- --  where
--- -- -- -- -- -- -- -- --  -- --  w' : F𝔹.RecSet (∥ Bouquet A ∥₃ , ∣ base ∣₃)
--- -- -- -- -- -- -- -- --  -- --  X.RecSet.loopX w' a = cong ∣_∣₃ (loop a)
+-- -- -- -- -- -- --  -- FF : F𝔹.⟨_∣_⟩∙ →∙ (Bouquet∙ A)
+-- -- -- -- -- -- --  -- fst FF [ x ] = x
+-- -- -- -- -- -- --  -- snd FF = {!!}
+-- -- -- -- -- -- --  -- -- fst FF = F𝔹.RecSet.RecGpd.f  w
+-- -- -- -- -- -- --  -- --  where
+-- -- -- -- -- -- --  -- --  w' : F𝔹.RecSet (∥ Bouquet A ∥₃ , ∣ base ∣₃)
+-- -- -- -- -- -- --  -- --  X.RecSet.loopX w' a = cong ∣_∣₃ (loop a)
   
--- -- -- -- -- -- -- -- --  --  w : F𝔹.RecSet.RecGpd w'
--- -- -- -- -- -- -- -- --  --  X.RecSet.RecGpd.isGroupoidX w _ _ = squash₃ _ _
--- -- -- -- -- -- -- -- --  -- snd FF = refl
+-- -- -- -- -- -- --  --  w : F𝔹.RecSet.RecGpd w'
+-- -- -- -- -- -- --  --  X.RecSet.RecGpd.isGroupoidX w _ _ = squash₃ _ _
+-- -- -- -- -- -- --  -- snd FF = refl
 
--- -- -- -- -- -- -- -- --  -- GHF𝔹 : GroupIso {!F𝔹!} F
--- -- -- -- -- -- -- -- --  -- fst GHF𝔹 = {!compIso TruncatedFamiliesIso {A = ?} base !}
--- -- -- -- -- -- -- -- --  -- snd GHF𝔹 = {!!}
+-- -- -- -- -- -- --  -- GHF𝔹 : GroupIso {!F𝔹!} F
+-- -- -- -- -- -- --  -- fst GHF𝔹 = {!compIso TruncatedFamiliesIso {A = ?} base !}
+-- -- -- -- -- -- --  -- snd GHF𝔹 = {!!}
  
 
--- -- -- -- -- -- -- -- -- --  P𝔹 = πGr 1 (Bouquet∙ A ) / (imSubgroup {!!} , {!!})
+-- -- -- -- -- -- -- --  P𝔹 = πGr 1 (Bouquet∙ A ) / (imSubgroup {!!} , {!!})
 
--- -- -- -- -- -- -- -- -- --   -- X = ⟨ ∙X ⟩
--- -- -- -- -- -- -- -- -- -- --   field
--- -- -- -- -- -- -- -- -- -- --    isGroupoidX : isGroupoid X
--- -- -- -- -- -- -- -- -- -- --    bq : Bouquet A → X
+-- -- -- -- -- -- -- --   -- X = ⟨ ∙X ⟩
+-- -- -- -- -- -- -- -- --   field
+-- -- -- -- -- -- -- -- --    isGroupoidX : isGroupoid X
+-- -- -- -- -- -- -- -- --    bq : Bouquet A → X
 
--- -- -- -- -- -- -- -- -- -- --    □X : ∀ b → Square
--- -- -- -- -- -- -- -- -- -- --                (cong bq (Sq'.fc₀₋ (rels b)))
--- -- -- -- -- -- -- -- -- -- --                (cong bq (Sq'.fc₁₋ (rels b)))
--- -- -- -- -- -- -- -- -- -- --                (cong bq (Sq'.fc₋₀ (rels b)))
--- -- -- -- -- -- -- -- -- -- --                (cong bq (Sq'.fc₋₁ (rels b)))
+-- -- -- -- -- -- -- -- --    □X : ∀ b → Square
+-- -- -- -- -- -- -- -- --                (cong bq (Sq'.fc₀₋ (rels b)))
+-- -- -- -- -- -- -- -- --                (cong bq (Sq'.fc₁₋ (rels b)))
+-- -- -- -- -- -- -- -- --                (cong bq (Sq'.fc₋₀ (rels b)))
+-- -- -- -- -- -- -- -- --                (cong bq (Sq'.fc₋₁ (rels b)))
 
--- -- -- -- -- -- -- -- -- -- --   f : ⟨_∣_⟩ → X
--- -- -- -- -- -- -- -- -- -- --   f [ x ] = bq x
--- -- -- -- -- -- -- -- -- -- --   f ((□ b) i i₁) =  □X b i i₁
--- -- -- -- -- -- -- -- -- -- --   f (trunc x₁ x₂ x₃ y x₄ y₁ i i₁ x₅) = {!!}
-
-
+-- -- -- -- -- -- -- -- --   f : ⟨_∣_⟩ → X
+-- -- -- -- -- -- -- -- --   f [ x ] = bq x
+-- -- -- -- -- -- -- -- --   f ((□ b) i i₁) =  □X b i i₁
+-- -- -- -- -- -- -- -- --   f (trunc x₁ x₂ x₃ y x₄ y₁ i i₁ x₅) = {!!}
 
 
--- -- -- -- -- -- -- -- -- -- --  Sq = Sq' Fc
 
--- -- -- -- -- -- -- -- -- -- --  Sq→SqΩ : ∀ {ℓa} {A : Type ℓa} {base : A} → (loop : IxG → base ≡ base)
--- -- -- -- -- -- -- -- -- -- --               → Sq → SqΩ (A , base)
--- -- -- -- -- -- -- -- -- -- --  Sq'.fc₀₋ (Sq→SqΩ l x) = mkFc≡ l (Sq'.fc₀₋ x)
--- -- -- -- -- -- -- -- -- -- --  Sq'.fc₁₋ (Sq→SqΩ l x) = mkFc≡ l (Sq'.fc₁₋ x)
--- -- -- -- -- -- -- -- -- -- --  Sq'.fc₋₀ (Sq→SqΩ l x) = mkFc≡ l (Sq'.fc₋₀ x)
--- -- -- -- -- -- -- -- -- -- --  Sq'.fc₋₁ (Sq→SqΩ l x) = mkFc≡ l (Sq'.fc₋₁ x)
 
--- -- -- -- -- -- -- -- -- -- -- -- module _ (A : Type ℓ) {B : Type ℓ'} (rels : B → Sq A) where
--- -- -- -- -- -- -- -- -- -- -- --  open X A (Sq→SqΩ _ loop ∘ rels)
+-- -- -- -- -- -- -- -- --  Sq = Sq' Fc
+
+-- -- -- -- -- -- -- -- --  Sq→SqΩ : ∀ {ℓa} {A : Type ℓa} {base : A} → (loop : IxG → base ≡ base)
+-- -- -- -- -- -- -- -- --               → Sq → SqΩ (A , base)
+-- -- -- -- -- -- -- -- --  Sq'.fc₀₋ (Sq→SqΩ l x) = mkFc≡ l (Sq'.fc₀₋ x)
+-- -- -- -- -- -- -- -- --  Sq'.fc₁₋ (Sq→SqΩ l x) = mkFc≡ l (Sq'.fc₁₋ x)
+-- -- -- -- -- -- -- -- --  Sq'.fc₋₀ (Sq→SqΩ l x) = mkFc≡ l (Sq'.fc₋₀ x)
+-- -- -- -- -- -- -- -- --  Sq'.fc₋₁ (Sq→SqΩ l x) = mkFc≡ l (Sq'.fc₋₁ x)
+
+-- -- -- -- -- -- -- -- -- -- module _ (A : Type ℓ) {B : Type ℓ'} (rels : B → Sq A) where
+-- -- -- -- -- -- -- -- -- --  open X A (Sq→SqΩ _ loop ∘ rels)
    
   
--- -- -- -- -- -- -- -- -- -- -- -- private
--- -- -- -- -- -- -- -- -- -- -- --   variable
--- -- -- -- -- -- -- -- -- -- -- --     A : Type ℓ
--- -- -- -- -- -- -- -- -- -- -- --     B : Type ℓ'
--- -- -- -- -- -- -- -- -- -- -- --     rels : B → SqΩ (Bouquet∙ A)
+-- -- -- -- -- -- -- -- -- -- private
+-- -- -- -- -- -- -- -- -- --   variable
+-- -- -- -- -- -- -- -- -- --     A : Type ℓ
+-- -- -- -- -- -- -- -- -- --     B : Type ℓ'
+-- -- -- -- -- -- -- -- -- --     rels : B → SqΩ (Bouquet∙ A)
 
 
--- -- -- -- -- -- -- -- -- -- -- -- -- zz : X.⟨ A ∣ rels ⟩ → A
--- -- -- -- -- -- -- -- -- -- -- -- -- zz [ base ] = {!!}
--- -- -- -- -- -- -- -- -- -- -- -- -- zz [ loop x i ] = {!!}
--- -- -- -- -- -- -- -- -- -- -- -- -- zz ((□ b) i i₁) = {!!}
--- -- -- -- -- -- -- -- -- -- -- -- -- zz (trunc x x₁ x₂ y x₃ y₁ i i₁ x₄) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- zz : X.⟨ A ∣ rels ⟩ → A
+-- -- -- -- -- -- -- -- -- -- -- zz [ base ] = {!!}
+-- -- -- -- -- -- -- -- -- -- -- zz [ loop x i ] = {!!}
+-- -- -- -- -- -- -- -- -- -- -- zz ((□ b) i i₁) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- zz (trunc x x₁ x₂ y x₃ y₁ i i₁ x₄) = {!!}
