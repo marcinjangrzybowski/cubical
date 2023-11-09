@@ -709,6 +709,13 @@ snd (ΣSquareSet {B = B} pB {p = p} {q = q} {r = r} {s = s} sq i j) = lem i j
           (cong snd p) (cong snd r) (cong snd s) (cong snd q)
   lem = toPathP (isOfHLevelPathP' 1 (pB _) _ _ _ _)
 
+TypeOfHLevel≡Path : (n : HLevel) {X Y : TypeOfHLevel ℓ n} →
+    {p q : X ≡ Y} → (∀ x → subst fst p x ≡ subst fst q x)  → p ≡ q
+TypeOfHLevel≡Path  _ p =
+ ΣSquareSet (isProp→isSet ∘ λ _ → isPropIsOfHLevel _ )
+  (isInjectiveTransport (funExt p)) 
+ 
+
 module _ (isSet-A : isSet A) (isSet-A' : isSet A') where
 
 

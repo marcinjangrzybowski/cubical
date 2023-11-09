@@ -9,10 +9,13 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Equiv.Fiberwise
 open import Cubical.Functions.Embedding
-open import Cubical.Functions.Logic using (_⊔′_)
+open import Cubical.Foundations.Function
+open import Cubical.Functions.FunExtEquiv
+open import Cubical.Functions.Logic using (_⊔′_;⇔toPath)
 
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sigma
+open import Cubical.Data.Unit
 open import Cubical.Data.Sum.Base as ⊎
 open import Cubical.HITs.SetQuotients.Base
 open import Cubical.HITs.PropositionalTruncation as ∥₁
@@ -22,19 +25,35 @@ open import Cubical.Relation.Nullary.Base
 private
   variable
     ℓA ℓ≅A ℓA' ℓ≅A' : Level
-
+    A : Type ℓA
+    A' : Type ℓA'
+    
 Rel : ∀ {ℓ} (A B : Type ℓ) (ℓ' : Level) → Type (ℓ-max ℓ (ℓ-suc ℓ'))
 Rel A B ℓ' = A → B → Type ℓ'
 
 PropRel : ∀ {ℓ} (A B : Type ℓ) (ℓ' : Level) → Type (ℓ-max ℓ (ℓ-suc ℓ'))
 PropRel A B ℓ' = Σ[ R ∈ Rel A B ℓ' ] ∀ a b → isProp (R a b)
 
-SetRel : ∀ {ℓ} (A B : Type ℓ) (ℓ' : Level) → Type (ℓ-max ℓ (ℓ-suc ℓ'))
-SetRel A B ℓ' = Σ[ R ∈ Rel A B ℓ' ] ∀ a b → isSet (R a b)
+isSetPropRel : isSet (PropRel A A' ℓ≅A) 
+isSetPropRel {A = A} {A' = A'} = isOfHLevelRetract 2 _
+   (λ r → _ , λ x y → snd (r x y) ) (λ _ → refl) (isSet→ (isSet→ isSetHProp) )
 
-idPropRel : ∀ {ℓ} (A : Type ℓ) → PropRel A A ℓ
-idPropRel A .fst a a' = ∥ a ≡ a' ∥₁
-idPropRel A .snd _ _ = squash₁
+propTruncRel : Rel A A' ℓ≅A → PropRel A A' ℓ≅A  
+fst (propTruncRel R) a a' = ∥ R a a' ∥₁
+snd (propTruncRel R) _ _ = squash₁
+
+liftRel : Rel A A' ℓ≅A → Rel A A' (ℓ-max ℓ≅A ℓ≅A')
+liftRel {ℓ≅A' = ℓ≅A'} R a a' = Lift {j = ℓ≅A'} (R a a')
+
+idRel : Rel A A _
+idRel = _≡_
+
+idPropRel : PropRel A A _
+idPropRel = propTruncRel idRel
+
+fullPropRel : PropRel A A' ℓ≅A
+fst fullPropRel _ _ = Unit*
+snd fullPropRel _ _ = isPropUnit*
 
 invPropRel : ∀ {ℓ ℓ'} {A B : Type ℓ}
   → PropRel A B ℓ' → PropRel B A ℓ'
@@ -200,15 +219,65 @@ module BinaryRelation {ℓ ℓ' : Level} {A : Type ℓ} (R : Rel A A ℓ') where
         q = isOfHLevelRespectEquiv 0 (t , totalEquiv _ _ f λ x → invEquiv (u a x) .snd)
                                    (isContrSingl a)
 
+  
+  isPropIsEquivPropRel : isPropValued → isProp isEquivRel
+  isPropIsEquivPropRel ipv =
+    isOfHLevelRetract 1 _ (uncurry (uncurry equivRel))
+     (λ _ → refl)
+     (isProp× (isProp× (isPropΠ λ _ → ipv _ _)
+       (isPropΠ2 λ _ _ → isProp→ (ipv _ _)))
+       (isPropΠ3 λ _ _ _ → isProp→ (isProp→ (ipv _ _)))) 
+
+
 EquivRel : ∀ {ℓ} (A : Type ℓ) (ℓ' : Level) → Type (ℓ-max ℓ (ℓ-suc ℓ'))
 EquivRel A ℓ' = Σ[ R ∈ Rel A A ℓ' ] BinaryRelation.isEquivRel R
 
 EquivPropRel : ∀ {ℓ} (A : Type ℓ) (ℓ' : Level) → Type (ℓ-max ℓ (ℓ-suc ℓ'))
 EquivPropRel A ℓ' = Σ[ R ∈ PropRel A A ℓ' ] BinaryRelation.isEquivRel (R .fst)
 
-EquivSetRel : ∀ {ℓ} (A : Type ℓ) (ℓ' : Level) → Type (ℓ-max ℓ (ℓ-suc ℓ'))
-EquivSetRel A ℓ' = Σ[ R ∈ SetRel A A ℓ' ] BinaryRelation.isEquivRel (R .fst)
+isSetEquivPropRel : isSet (EquivPropRel A ℓ≅A) 
+isSetEquivPropRel = isSetΣ isSetPropRel
+  (isProp→isSet ∘ BinaryRelation.isPropIsEquivPropRel _ ∘ snd )
 
+
+EquivPropRel≡ : {R R' : EquivPropRel A ℓ≅A} →
+                  (∀ x y → (fst (fst R) x y → fst (fst R') x y) ×
+                          (fst (fst R') x y → fst (fst R) x y))
+                  → (R ≡ R')
+EquivPropRel≡ {R = (_ , R) , _} {(_ , R') , _} x =
+ Σ≡Prop (BinaryRelation.isPropIsEquivPropRel _ ∘ snd )
+      (Σ≡Prop (λ _ → isPropΠ2 λ _ _ → isPropIsProp)
+        (funExt₂ λ _ _ → cong fst (⇔toPath
+          {P = _ , R _ _}
+          {_ , R' _ _} (fst (x _ _)) (snd (x _ _)))))
+
+isEquivEquivPropRel≡ : {R R' : EquivPropRel A ℓ≅A}
+   → isEquiv (EquivPropRel≡ {R = R} {R'})
+isEquivEquivPropRel≡ {R = (_ , R) , _} {(_ , R') , _} =
+  snd (propBiimpl→Equiv
+    ((isPropΠ2 λ _ _ →
+       isProp× (isProp→ (R' _ _)) (isProp→ (R _ _))))
+    (isSetEquivPropRel _ _) _
+    λ p x y → (subst (λ R → fst (fst R) x y) p) ,
+               (subst (λ R → fst (fst R) x y) (sym p))) 
+
+
+fullEquivPropRel : EquivPropRel A ℓ≅A
+fst fullEquivPropRel = fullPropRel
+snd fullEquivPropRel = _
+
+isEquivRelIdRel : BinaryRelation.isEquivRel (idRel {A = A})
+BinaryRelation.isEquivRel.reflexive isEquivRelIdRel _ = refl
+BinaryRelation.isEquivRel.symmetric isEquivRelIdRel _ _ = sym
+BinaryRelation.isEquivRel.transitive isEquivRelIdRel _ _ _ = _∙_
+
+propTruncEquivRel : EquivRel A ℓ≅A → EquivPropRel A ℓ≅A
+fst (propTruncEquivRel (R , isER)) = propTruncRel R
+snd (propTruncEquivRel (R , isER)) =
+  BinaryRelation.equivRel
+   (∣_∣₁ ∘ BinaryRelation.isEquivRel.reflexive isER)
+   (λ _ _ → ∥₁.map (BinaryRelation.isEquivRel.symmetric isER _ _))
+   λ _ _ _ → ∥₁.map2 (BinaryRelation.isEquivRel.transitive isER _ _ _)
 
 record RelIso {A : Type ℓA} (_≅_ : Rel A A ℓ≅A)
               {A' : Type ℓA'} (_≅'_ : Rel A' A' ℓ≅A') : Type (ℓ-max (ℓ-max ℓA ℓA') (ℓ-max ℓ≅A ℓ≅A')) where
@@ -221,8 +290,7 @@ record RelIso {A : Type ℓA} (_≅_ : Rel A A ℓ≅A)
 
 open BinaryRelation
 
-RelIso→Iso : {A : Type ℓA} {A' : Type ℓA'}
-             (_≅_ : Rel A A ℓ≅A) (_≅'_ : Rel A' A' ℓ≅A')
+RelIso→Iso : (_≅_ : Rel A A ℓ≅A) (_≅'_ : Rel A' A' ℓ≅A')
              (uni : impliesIdentity _≅_) (uni' : impliesIdentity _≅'_)
              (f : RelIso _≅_ _≅'_)
              → Iso A A'
@@ -233,13 +301,13 @@ Iso.rightInv (RelIso→Iso _ _ uni uni' f) a'
 Iso.leftInv (RelIso→Iso _ _ uni uni' f) a
   = uni (RelIso.leftInv f a)
 
-isIrreflIrreflKernel : ∀{ℓ ℓ'} {A : Type ℓ} (R : Rel A A ℓ') → isIrrefl (IrreflKernel R)
+isIrreflIrreflKernel : (R : Rel A A ℓ≅A) → isIrrefl (IrreflKernel R)
 isIrreflIrreflKernel _ _ (_ , ¬a≡a) = ¬a≡a refl
 
-isReflReflClosure : ∀{ℓ ℓ'} {A : Type ℓ} (R : Rel A A ℓ') → isRefl (ReflClosure R)
+isReflReflClosure : (R : Rel A A ℓ≅A) → isRefl (ReflClosure R)
 isReflReflClosure _ _ = inr refl
 
-isConnectedStronglyConnectedIrreflKernel : ∀{ℓ ℓ'} {A : Type ℓ} (R : Rel A A ℓ')
+isConnectedStronglyConnectedIrreflKernel : (R : Rel A A ℓ≅A)
                                          → isStronglyConnected R
                                          → isConnected (IrreflKernel R)
 isConnectedStronglyConnectedIrreflKernel R strong a b ¬a≡b
@@ -247,12 +315,40 @@ isConnectedStronglyConnectedIrreflKernel R strong a b ¬a≡b
                         (λ Rba → inr (Rba , (λ b≡a → ¬a≡b (sym b≡a)))) x)
                         (strong a b)
 
-isSymSymKernel : ∀{ℓ ℓ'} {A : Type ℓ} (R : Rel A A ℓ') → isSym (SymKernel R)
+isSymSymKernel : (R : Rel A A ℓ≅A) → isSym (SymKernel R)
 isSymSymKernel _ _ _ (Rab , Rba) = Rba , Rab
 
-isSymSymClosure : ∀{ℓ ℓ'} {A : Type ℓ} (R : Rel A A ℓ') → isSym (SymClosure R)
+isSymSymClosure : (R : Rel A A ℓ≅A) → isSym (SymClosure R)
 isSymSymClosure _ _ _ (inl Rab) = inr Rab
 isSymSymClosure _ _ _ (inr Rba) = inl Rba
 
-isAsymAsymKernel : ∀ {ℓ ℓ'} {A : Type ℓ} (R : Rel A A ℓ') → isAsym (AsymKernel R)
+isAsymAsymKernel : (R : Rel A A ℓ≅A) → isAsym (AsymKernel R)
 isAsymAsymKernel _ _ _ (Rab , _) (_ , ¬Rab) = ¬Rab Rab
+
+respects : (R : Rel A A ℓ≅A) (R' : Rel A' A' ℓ≅A') →
+           (A → A') → Type _ 
+respects _R_ _R'_ f = ∀ x x' → x R x' → f x R' f x'
+
+private
+ variable
+  R : Rel A A ℓ≅A
+  R' : Rel A' A' ℓ≅A'
+
+isPropRespects : (∀ a b → isProp (R' a b))
+               → (f : A → A') → isProp (respects R R' f)
+isPropRespects isPropRelR' f = isPropΠ3 λ _ _ _ → isPropRelR' _ _
+
+Setoid : ∀ ℓA ℓ≅A → Type (ℓ-suc (ℓ-max ℓA ℓ≅A))
+Setoid ℓA ℓ≅A = Σ (hSet ℓA) λ (X , _) → EquivPropRel X ℓ≅A
+
+SetoidMor : (Setoid ℓA ℓ≅A) → (Setoid ℓA' ℓ≅A') → Type _
+SetoidMor (_ , ((R , _) , _)) (_ , ((R' , _) , _)) = Σ _ (respects R R')
+
+SetoidMor≡ : ∀ A A' → {f g : SetoidMor {ℓA = ℓA} {ℓ≅A} {ℓA'} {ℓ≅A'} A A'}
+              → fst f ≡ fst g → f ≡ g
+SetoidMor≡ _ ((_ , (_ , pr) , _)) = Σ≡Prop (isPropRespects pr)  
+
+substRel : ∀ {x y : A'} → {f g : A' → A} → (R : Rel A A ℓ≅A)
+              → (∀ x → f x ≡ g x) →
+               R (f x) (f y) → R (g x) (g y)
+substRel R p = subst2 R (p _) (p _)
