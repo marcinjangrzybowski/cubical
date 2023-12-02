@@ -4,9 +4,11 @@ module Cubical.Functions.FunExtEquiv where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.CartesianKanOps
 open import Cubical.Foundations.Equiv
+
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.Path
 
 open import Cubical.Data.Vec.Base
 open import Cubical.Data.Vec.NAry
@@ -30,6 +32,16 @@ module _ {A : Type ℓ} {B : A → I → Type ℓ₁}
 
   funExtIso : Iso (∀ x → PathP (B x) (f x) (g x)) (PathP (λ i → ∀ x → B x i) f g)
   funExtIso = iso funExt funExt⁻ (λ x → refl {x = x}) (λ x → refl {x = x})
+
+module _ {A : Type ℓ} {B : A → I → Type ℓ₁}
+  {f : {x : A} → B x i0} {g : {x : A} → B x i1} where
+
+  implicitFunExtEquiv :    (∀ {x} → PathP (B x) (f {x}) (g {x}))
+                         ≃ PathP (λ i → ∀ {x} → B x i) f g
+  unquoteDef implicitFunExtEquiv =
+     defStrictEquiv implicitFunExtEquiv
+      (implicitFunExt {f = f} {g}) implicitFunExt⁻
+
 
 -- Function extensionality for binary functions
 funExt₂ : {A : Type ℓ} {B : A → Type ℓ₁} {C : (x : A) → B x → I → Type ℓ₂}
@@ -191,3 +203,56 @@ heteroHomotopy≃Homotopy {A = A} {B} {f} {g} = isoToEquiv isom
       (λ i → PathP B (f x₀) (g (isContrSinglP A x₀ .snd (x₁ , p) (i ∨ j) .fst)))
       j
       (h (isContrSinglP A x₀ .snd (x₁ , p) j .snd))
+
+
+relTransp≃ : ∀ {ℓ ℓ'} {A A' : Type ℓ} 
+          {B : A → A → Type ℓ'} {B' : A' → A' → Type ℓ'}
+          (p : A ≡ A')
+         → PathP (λ i → (p i) → (p i) → Type ℓ') B B'
+          ≃ (∀ (x y : A') →
+                B (invEq (pathToEquiv p) x) (invEq (pathToEquiv p) y)
+              ≃ B' x y )
+relTransp≃ {B = B} _ = PathP≃Path _ _ _ ∙ₑ
+  invEquiv funExt₂Equiv ∙ₑ
+    isoToEquiv (codomainIsoDep₂
+      λ _ _ → compIso (equivToIso
+       (compPathlEquiv (cong₂ B (transportRefl _) (transportRefl _))))
+        univalenceIso)
+
+
+
+
+  -- {!!} ∙ ({!!} ≡$ a)
+   -- sym (fromPathP {A = λ i → B {!transportRefl _ i!} } {!!})
+    -- {!!} ∙
+    --   λ j → transp (λ i → p (transp (λ _ → A) (~ i ∧ j) a)) (~ j)
+    --   {!!}
+    -- compPathlEquiv (refl)
+
+
+-- transportΠ : ∀ {ℓ} {ℓ'} {A A' : Type ℓ} (p : A ≡ A') {B₀} {B₁}
+--                (B : PathP (λ i → p i → Type ℓ') B₀ B₁) →
+--                 (f₀ : (x : A) → B₀ x)
+--                 (f₁ : (x : A') → B₁ x) → 
+--                PathP (λ i → (x : p i) → B i x) f₀ f₁
+--                 ≃ ((λ {a} → transport (λ i → B i
+--                    (transp (λ j → p ((~ j) ∨ i) ) i a  ))) ∘ f₀
+--                      ∘ transport (sym p) ≡ f₁ )
+-- transportΠ p B f₀ f₁ = PathP≃Path _ _ _
+--     -- compPathlEquiv (refl)
+
+
+
+-- transportImplΠ : ∀ {ℓ} {ℓ'} {A A' : Type ℓ} (p : A ≡ A') {B₀} {B₁}
+--                (B : PathP (λ i → p i → Type ℓ') B₀ B₁) →
+--                 (f₀ : {x : A} → B₀ x)
+--                 (f₁ : {x : A'} → B₁ x) → 
+--                PathP (λ i → {x : p i} → B i x) f₀ f₁
+--                 ≃ (∀ {a} → transport ((λ i → B i
+--                    (transp (λ j → p ((~ j) ∨ i) ) i a  )))
+--                       (f₀ {transport (sym p) a}) ≡ f₁ {a})
+                   
+-- transportImplΠ p B f₀ f₁ = PathP≃Path _ _ _ ∙ₑ
+--   isoToEquiv (invIso implcitFunExtIso)
+--   --PathP≃Path _ _ _
+--     -- compPathlEquiv (refl)

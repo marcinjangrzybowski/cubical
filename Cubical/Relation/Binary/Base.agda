@@ -91,6 +91,9 @@ module BinaryRelation {ℓ ℓ' : Level} {A : Type ℓ} (R : Rel A A ℓ') where
   isTrans : Type (ℓ-max ℓ ℓ')
   isTrans = (a b c : A) → R a b → R b c → R a c
 
+  isTrans' : Type (ℓ-max ℓ ℓ')
+  isTrans' = {a b c : A} → R a b → R b c → R a c
+
   -- Sum types don't play nicely with props, so we truncate
   isCotrans : Type (ℓ-max ℓ ℓ')
   isCotrans = (a b c : A) → R a b → (R a c ⊔′ R b c)
@@ -152,6 +155,9 @@ module BinaryRelation {ℓ ℓ' : Level} {A : Type ℓ} (R : Rel A A ℓ') where
       symmetric : isSym
       transitive : isTrans
 
+    _Ṙ_ : {a b c : A} → R a b → R b c → R a c
+    _Ṙ_ = transitive _ _ _
+    
   isUniversalRel→isEquivRel : HeterogenousRelation.isUniversalRel R → isEquivRel
   isUniversalRel→isEquivRel u .isEquivRel.reflexive a = u a a
   isUniversalRel→isEquivRel u .isEquivRel.symmetric a b _ = u b a
@@ -239,27 +245,33 @@ isSetEquivPropRel : isSet (EquivPropRel A ℓ≅A)
 isSetEquivPropRel = isSetΣ isSetPropRel
   (isProp→isSet ∘ BinaryRelation.isPropIsEquivPropRel _ ∘ snd )
 
-
-EquivPropRel≡ : {R R' : EquivPropRel A ℓ≅A} →
-                  (∀ x y → (fst (fst R) x y → fst (fst R') x y) ×
-                          (fst (fst R') x y → fst (fst R) x y))
+PropRel≡ : {R R' : PropRel A A' ℓ≅A} →
+                  (∀ {x y} → ((fst R) x y → (fst R') x y) ×
+                          ((fst R') x y → (fst R) x y))
                   → (R ≡ R')
-EquivPropRel≡ {R = (_ , R) , _} {(_ , R') , _} x =
- Σ≡Prop (BinaryRelation.isPropIsEquivPropRel _ ∘ snd )
+PropRel≡ {R = _ , R} {_ , R'} x =
       (Σ≡Prop (λ _ → isPropΠ2 λ _ _ → isPropIsProp)
         (funExt₂ λ _ _ → cong fst (⇔toPath
           {P = _ , R _ _}
-          {_ , R' _ _} (fst (x _ _)) (snd (x _ _)))))
+          {_ , R' _ _} (fst x) (snd x))))
 
+
+EquivPropRel≡ : {R R' : EquivPropRel A ℓ≅A} →
+                  (∀ {x y} → (fst (fst R) x y → fst (fst R') x y) ×
+                          (fst (fst R') x y → fst (fst R) x y))
+                  → (R ≡ R')
+EquivPropRel≡ {R = (_ , R) , _} {(_ , R') , _} x =
+ Σ≡Prop (BinaryRelation.isPropIsEquivPropRel _ ∘ snd ) (PropRel≡ x)
+ 
 isEquivEquivPropRel≡ : {R R' : EquivPropRel A ℓ≅A}
    → isEquiv (EquivPropRel≡ {R = R} {R'})
 isEquivEquivPropRel≡ {R = (_ , R) , _} {(_ , R') , _} =
   snd (propBiimpl→Equiv
-    ((isPropΠ2 λ _ _ →
+    ((isPropImplicitΠ2 λ _ _ →
        isProp× (isProp→ (R' _ _)) (isProp→ (R _ _))))
     (isSetEquivPropRel _ _) _
-    λ p x y → (subst (λ R → fst (fst R) x y) p) ,
-               (subst (λ R → fst (fst R) x y) (sym p))) 
+    λ p {x y} → (subst (λ R → fst (fst R) x y) p) ,
+                (subst (λ R → fst (fst R) x y) (sym p))) 
 
 
 fullEquivPropRel : EquivPropRel A ℓ≅A
@@ -327,28 +339,14 @@ isAsymAsymKernel _ _ _ (Rab , _) (_ , ¬Rab) = ¬Rab Rab
 
 respects : (R : Rel A A ℓ≅A) (R' : Rel A' A' ℓ≅A') →
            (A → A') → Type _ 
-respects _R_ _R'_ f = ∀ x x' → x R x' → f x R' f x'
+respects _R_ _R'_ f = ∀ {x x'} → x R x' → f x R' f x'
 
 private
  variable
   R : Rel A A ℓ≅A
   R' : Rel A' A' ℓ≅A'
 
-isPropRespects : (∀ a b → isProp (R' a b))
+isPropRespects : isPropValued R'
                → (f : A → A') → isProp (respects R R' f)
-isPropRespects isPropRelR' f = isPropΠ3 λ _ _ _ → isPropRelR' _ _
-
-Setoid : ∀ ℓA ℓ≅A → Type (ℓ-suc (ℓ-max ℓA ℓ≅A))
-Setoid ℓA ℓ≅A = Σ (hSet ℓA) λ (X , _) → EquivPropRel X ℓ≅A
-
-SetoidMor : (Setoid ℓA ℓ≅A) → (Setoid ℓA' ℓ≅A') → Type _
-SetoidMor (_ , ((R , _) , _)) (_ , ((R' , _) , _)) = Σ _ (respects R R')
-
-SetoidMor≡ : ∀ A A' → {f g : SetoidMor {ℓA = ℓA} {ℓ≅A} {ℓA'} {ℓ≅A'} A A'}
-              → fst f ≡ fst g → f ≡ g
-SetoidMor≡ _ ((_ , (_ , pr) , _)) = Σ≡Prop (isPropRespects pr)  
-
-substRel : ∀ {x y : A'} → {f g : A' → A} → (R : Rel A A ℓ≅A)
-              → (∀ x → f x ≡ g x) →
-               R (f x) (f y) → R (g x) (g y)
-substRel R p = subst2 R (p _) (p _)
+isPropRespects isPropRelR' f =
+ isPropImplicitΠ2 λ _ _ →  isPropΠ λ _ → isPropRelR' _ _

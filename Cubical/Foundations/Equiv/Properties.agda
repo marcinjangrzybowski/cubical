@@ -21,9 +21,14 @@ open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Equiv.HalfAdjoint
 open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Path
 open import Cubical.Foundations.HLevels
+
+import Agda.Builtin.Cubical.HCompU as HCompU
+
 
 open import Cubical.Functions.FunExtEquiv
 
@@ -258,3 +263,162 @@ isPointedTarget→isEquiv→isEquiv : {A B : Type ℓ} (f : A → B)
     → (B → isEquiv f) → isEquiv f
 equiv-proof (isPointedTarget→isEquiv→isEquiv f hf) =
   λ y → equiv-proof (hf y) y
+
+transportΠ : ∀ {ℓ} {ℓ'} {A : Type ℓ}
+               (B : A → Type ℓ') → (f : ∀ a → B a) → 
+                ∀ a → f (transport refl a) ≡
+                   subst B (sym (transportRefl _)) (f a) 
+transportΠ {A = A} B f a =   
+   sym (fst (equivAdjointEquiv (_ , isEquivTransport (λ i → B (transp (λ _ → A) (~ i) a)))) ((λ i → transp (λ j → B (transp (λ _ → A) (j ∨ ~ i) a)) (~ i)
+         (f (transp (λ i₁ → A) (~ i) a))) ∙ sym (transportRefl _) ))
+
+
+
+_∙∙P_∙∙P_ : ∀ {ℓ} {A : Type ℓ} {w x y z : A}
+             (p : w ≡ x)
+             (q : x ≡ y)
+             (r : y ≡ z)
+             → w ≡ z
+
+_∙∙P_∙∙P_ {A = A} p q r i =
+  comp (λ _ → A) (doubleComp-faces p r i) (q i)
+
+
+fixComp : ∀ {ℓ} {A : Type ℓ} {w x y z : A}
+             (p : w ≡ x)
+             (q : x ≡ y)
+             (r : y ≡ z)
+             → (p ∙∙ q ∙∙ r) ≡ p ∙∙P q ∙∙P r 
+fixComp {A = A} p q r j i =
+       hcomp
+       (doubleComp-faces (λ i₁ → transp (λ _ → A) (~ j ∨ ~ i₁) (p i₁))
+        (λ i₁ → transp (λ _ → A) (~ j ∨ i₁) (r i₁)) i)
+       (transp (λ _ → A) (~ j) (q i))
+
+module ua-fill-EquivJ {ℓ} (A : Type ℓ) (x : A)  where
+
+
+ hnt : ∀ (x : A) → refl ≡ cong (transport refl) (sym (transportRefl _)) ∙ transportRefl _
+ hnt x = sym (rCancel _) ∙ homotopyNatural transportRefl (sym (transportRefl x))
+
+ hnt' : refl ≡ cong₂ _∘_ (λ i x₁ → transp (λ j → A) (~ i) x₁) (transport-fillerExt⁻ (refl {x = A}))
+ hnt' = cong funExt (funExt λ x → cong sym (hnt x) ∙ sym (leftright _ _))
+   ∙ sym (cong₂Funct (λ f g → f ∘ g)
+       (λ i x₁ → transp (λ j → A) (~ i) x₁) (transport-fillerExt⁻ (refl {x = A}))) 
+
+
+
+
+ tft :  refl ≡ (cong transport (uaIdEquiv {A = A}))
+ tft = cong funExt (funExt λ x₁ →
+            ((cong (cong (transport refl)) (lUnit _)) ∙
+              cong-∙∙ (transport refl) refl refl refl) ∙∙
+               congS (refl ∙∙_∙∙ refl) (lUnit _ ∙
+               cong (refl ∙_) λ i j → hnt' i (~ j) x₁)
+              ∙∙ fixComp refl _ refl
+              )
+
+ tff : SquareP (λ j i → uaIdEquiv {A = A} (~ i) j)
+          (λ _ → transport refl x)
+          (λ i → transp (λ _ → A) i x)
+          (λ _ → transport refl x)
+          λ j → transport-filler (ua (idEquiv A)) x (~ j)
+
+          
+ tff =  ((λ i j → tft i (~ j) x)) ◁
+         λ j i → transp
+                   (λ k → Glue A {φ = ~ k ∨ j ∨ ~ i ∨ (k ∧ ~ j)}
+                       λ _ → A , idEquiv A) (i ∧ j) x 
+
+
+
+ tffSq : SquareP (λ j i → ua (idEquiv A) i)
+             (λ i → transport-filler (ua (idEquiv A)) x (~ i))
+             (λ i → ua-glue ( (idEquiv A)) i (λ _ → x) (inS x))
+             (transportRefl _)
+             refl
+           
+ tffSq j i = comp (λ k → uaIdEquiv {A = A} (~ k) i)
+   (λ k →
+         λ { (i = i0) → transp (λ _ → A) j x
+           ; (i = i1) → transp (λ _ → A) (k ∨  j) x
+           ; (j = i0) → tff i k
+           ; (j = i1) →  (glue (λ {(i = i0) → x 
+                                ;(i = i1) → x
+                                ;(k = i0) → x })
+                                 x)
+           }) (transp (λ _ → A) j x)
+
+
+ tffSq' : SquareP (λ j i → ua (idEquiv A) i)
+             (λ i → transport-filler (ua (idEquiv A)) x i)
+             (ua-gluePath (idEquiv A) (sym (transportRefl _)))
+             refl
+             refl
+           
+ tffSq' j i = let x' = (transp (λ _ → A) (~ i ∧ j) x) in
+  comp (λ k → uaIdEquiv {A = A} (~ k) i) (λ k → 
+    λ { (i = i0) → transp (λ _ → A) (k ∨ j) x
+      ; (i = i1) → tft (~ j) (~ k) x
+      ; (j = i0) → transp
+                   (λ k' → Glue A {φ = ~ k' ∨ ~ i ∨ ~ k ∨ (k' ∧ i)}
+                       λ _ → A , idEquiv A) (k ∧ (~ i)) x
+      ; (j = i1) → glue {φ = i ∨ ~ i ∨ ~ k} (λ _ → x') x'
+      }) x'
+
+
+
+
+module _ {ℓ} {A B : Type ℓ} (e : A ≃ B) (x : A) where
+ -- transport-filler-ua :  Square
+ --                            (λ i → ua-unglue e i (transport-filler (ua e) x i))
+ --                            (sym (transportRefl (fst e x)))
+ --                            refl
+ --                            refl
+ -- transport-filler-ua = {!!}
+
+ -- transport-filler-ua-fill : Path
+ --                                (PathP (λ i → ua e i) x (transport (ua e) x))
+ --                              (transport-filler (ua e) x)
+ --                              (ua-gluePath e (sym (transportRefl (fst e x))))
+ -- transport-filler-ua-fill = {!!}
+
+ -- transport-filler-ua-fill' : Path
+ --                                (PathP (λ i → ua e i) x (transport (ua e) x))
+ --                              (transport-filler (ua e) x)
+ --                              (ua-gluePath e (sym (transportRefl (fst e x))))
+ -- transport-filler-ua-fill' = {!!}
+
+ transport-filler-ua' :
+    SquareP (λ _ i → ua e i)
+                              (transport-filler (ua e) x)
+                              (ua-gluePath e refl)
+                              refl
+                              (transportRefl (fst e x))
+ transport-filler-ua' =
+    EquivJ (λ A e → ∀ x → SquareP (λ _ i → ua e i)
+                              (transport-filler (ua e) x)
+                              (ua-gluePath e refl)
+                              refl
+                              (transportRefl (fst e x)))
+     (λ x i j → ua-fill-EquivJ.tffSq B x i (~ j)) e x
+
+ transport-filler-ua-∙ : (transport-filler (ua e) x)
+                              ≡ 
+                              ((ua-gluePath e refl) ▷ sym (transportRefl _))
+
+ transport-filler-ua-∙ i j =
+   hcomp (λ k → λ {(i = i0) → transport-filler-ua' i j
+                   ;(j = i0) → transport-filler-ua' i j
+                   ;(j = i1) → transp (λ _ → B) (i ∧ ~ k) (fst e x)
+                   })
+         (transport-filler-ua' i j)
+
+ transport-filler-ua : (transport-filler (ua e) x)
+                              ≡
+                              ua-gluePath e (sym (transportRefl _)) 
+ transport-filler-ua =
+   EquivJ (λ A e → ∀ x → (transport-filler (ua e) x)
+                              ≡
+                              ua-gluePath e (sym (transportRefl _)))
+   (ua-fill-EquivJ.tffSq' _) _ _

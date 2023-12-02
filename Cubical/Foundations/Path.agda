@@ -437,3 +437,9 @@ Square→compPathΩ² {a = a} sq k i j =
                  ; (j = i1) → a
                  ; (k = i1) → cong (λ x → rUnit x r) (flipSquare sq) i j})
         (sq j i)
+
+PathPrefl : {a b : A} → {P : A ≡ A} → (refl ≡ P) → (p : a ≡ b) →
+            PathP (λ i → P i) a b
+PathPrefl reflP p i =
+   comp (λ j → reflP j i)
+     (λ _ → λ {(i = i0) → p i ; (i = i1) → p i}) (p i)

@@ -14,6 +14,8 @@ open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Function using (_∘_)
 
+import Agda.Builtin.Cubical.HCompU as HCompU
+
 -- Direct definition of transport filler, note that we have to
 -- explicitly tell Agda that the type is constant (like in CHM)
 transpFill : ∀ {ℓ} {A : Type ℓ}
@@ -49,7 +51,6 @@ transport-fillerExt⁻ p = symP (transport⁻-fillerExt (sym p))
 transport⁻-fillerExt⁻ : ∀ {ℓ} {A B : Type ℓ} (p : A ≡ B)
                      → PathP (λ i → B → p i) (transport⁻ p) (λ x → x)
 transport⁻-fillerExt⁻ p = symP (transport-fillerExt (sym p))
-
 
 transport⁻-filler : ∀ {ℓ} {A B : Type ℓ} (p : A ≡ B) (x : B)
                    → PathP (λ i → p (~ i)) x (transport⁻ p x)
@@ -159,6 +160,7 @@ funTypeTransp : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ} (B : A → Type ℓ') (C : A
 funTypeTransp B C {x = x} p f i b =
   transp (λ j → C (p (j ∧ i))) (~ i) (f (transp (λ j → B (p (i ∧ ~ j))) (~ i) b))
 
+
 -- transports between loop spaces preserve path composition
 overPathFunct : ∀ {ℓ} {A : Type ℓ} {x y : A} (p q : x ≡ x) (P : x ≡ y)
            → transport (λ i → P i ≡ P i) (p ∙ q)
@@ -166,6 +168,7 @@ overPathFunct : ∀ {ℓ} {A : Type ℓ} {x y : A} (p q : x ≡ x) (P : x ≡ y)
 overPathFunct p q =
   J (λ y P → transport (λ i → P i ≡ P i) (p ∙ q) ≡ transport (λ i → P i ≡ P i) p ∙ transport (λ i → P i ≡ P i) q)
     (transportRefl (p ∙ q) ∙ cong₂ _∙_ (sym (transportRefl p)) (sym (transportRefl q)))
+
 
 -- substition over families of paths
 -- theorem 2.11.3 in The Book
@@ -205,3 +208,162 @@ module _ {ℓ : Level} {A : Type ℓ} {a x1 x2 : A} (p : x1 ≡ x2) where
     ≡⟨ assoc (sym p) q refl ⟩
       (sym p ∙ q) ∙ refl
     ≡⟨ sym (rUnit (sym p ∙ q))⟩ sym p ∙ q ∎
+
+
+
+
+private
+  variable
+    ℓ ℓ' ℓ'' : Level
+    A : Type ℓ
+    B : A → Type ℓ
+    x y z w : A
+
+
+doubleCompPathP' : {B : A → Type ℓ'} {w' : B w} {x' : B x} {y' : B y} {z' : B z} {p : w ≡ x} {q : x ≡ y} {r : y ≡ z}
+             (P : PathP (λ i → B (p i)) w' x') (Q : PathP (λ i → B (q i)) x' y') (R : PathP (λ i → B (r i)) y' z')
+          → PathP (λ i → B ((p ∙∙ q ∙∙ r) i)) w' z'
+doubleCompPathP' {B = B} {x' = x'} {p = p} {q = q} {r = r} P Q R i =
+  comp (λ j → B (doubleCompPath-filler p q r j i))
+       (λ j → λ { (i = i0) → P (~ j)  ;
+                  (i = i1) → R j })
+  (Q i)
+
+
+doubleCompPathP'-filler : {B : A → Type ℓ'} {w' : B w} {x' : B x} {y' : B y} {z' : B z} {p : w ≡ x} {q : x ≡ y} {r : y ≡ z}
+             (P : PathP (λ i → B (p i)) w' x') (Q : PathP (λ i → B (q i)) x' y') (R : PathP (λ i → B (r i)) y' z')
+  → PathP (λ j → PathP (λ i → B (doubleCompPath-filler p q r j i)) (P (~ j)) (R j)) Q (doubleCompPathP' {B = B} P Q R)
+doubleCompPathP'-filler {B = B} {x' = x'} {p = p} {q = q} {r = r} P Q R j i =
+  fill (λ j → B (doubleCompPath-filler p q r j i))
+       (λ j → λ { (i = i0) → P (~ j)  ;
+                  (i = i1) → R j })
+       (inS (Q i))
+       j
+
+
+
+module _ {ℓ} {A B C D : Type ℓ} (A≡B : A ≡ B) (B≡C : B ≡ C) (C≡D : C ≡ D) where
+
+
+
+
+    prim^unglueU-Sq0 : SquareP (λ i j → doubleCompPath-filler A≡B B≡C C≡D i j → B≡C j)
+                            (λ j → transp (λ i → B≡C j) i0)
+                            (λ j → HCompU.prim^unglueU
+                                                 {φ = j ∨ ~ j}
+                                                 {T = doubleComp-faces A≡B C≡D j}
+                                                 {A = inS (B≡C j)})
+                            (λ i → transp (λ i₁ → A≡B (i₁ ∨ ~ i)) i0)
+                            (λ i → transp (λ i₁ → C≡D (~ i₁ ∧ i)) i0)
+    prim^unglueU-Sq0 i j = HCompU.prim^unglueU
+                                                 {φ = j ∨ ~ j ∨ ~ i}
+                                                 {T = λ k →
+                                                     λ { (j = i0) → A≡B (~ k ∨ (~ i))
+                                                        ; (j = i1) → C≡D (~ (~ k ∨ (~ i))) 
+                                                        ; (i = i0) → B≡C j
+                                                         }}
+                                                 {A = inS (B≡C j)}
+
+
+    transport-fillerExt⁻-∙∙ : (transport-fillerExt⁻ (A≡B ∙∙ B≡C ∙∙ C≡D)) 
+                                 ≡
+                                 (doubleCompPathP' {B = λ X → X → D} 
+                               (congP (λ _ → (transport C≡D ∘ transport B≡C) ∘_) (transport-fillerExt⁻ A≡B))
+                               (congP (λ _ → transport C≡D ∘_)                   (transport-fillerExt⁻ B≡C))
+                                                                                 (transport-fillerExt⁻ C≡D))
+    transport-fillerExt⁻-∙∙ i j =  
+       hcomp 
+         (λ k →
+           λ { (j = i0) → sqJ0 k
+             ; (j = i1) → sqJ1 k
+             ; (i = i1) → fill2 i1 j
+          }) (fill3 j i1)
+                                    
+       where
+
+         fill2 :  ∀ i j → doubleCompPath-filler A≡B B≡C C≡D i j → D
+         fill2 i j = doubleCompPathP'-filler {B = λ X → X → D}
+               (λ i₁ → transport C≡D ∘ transport B≡C ∘ (transport-fillerExt⁻ A≡B i₁))
+               (λ i₁ → transport C≡D ∘ (transport-fillerExt⁻ B≡C i₁))
+               (transport-fillerExt⁻ C≡D)
+               i j
+
+         fill4 : ∀ j → I → doubleCompPath-filler A≡B B≡C C≡D (~ i) j → C≡D i
+         fill4 j =
+            hfill
+             (λ l → λ { (i = i0) → transp (λ i' → B≡C (j ∨ i')) (j ∧ ~ l) ∘ prim^unglueU-Sq0 i1 j                                                 
+                      ; (i = i1) → transport C≡D ∘ transport-fillerExt⁻ B≡C j ∘ (transp (λ _ → B≡C j) l)})
+             (inS (transport-fillerExt C≡D i ∘ transport-fillerExt⁻ B≡C j ∘ prim^unglueU-Sq0 (~ i) j))
+
+         fill3 : ∀ j l  → _
+         fill3 j = fill (λ l → doubleCompPath-filler A≡B B≡C C≡D (~ i ∨  l) j → C≡D (l ∨ i))
+                       (λ l → λ { (i = i0) → transp (λ i' → C≡D (i' ∧ l)) (~ l) ∘
+                                               hfill (λ k → λ { (j = i0) → transport B≡C ∘ transport A≡B
+                                                              ; (j = i1) → transp (λ _ → C) k ∘ transport λ i' → C≡D (~ i') })
+                                                                   (inS (transport (λ i' → B≡C (j ∨ i')) ∘ prim^unglueU-Sq0 i1 j)) l
+                                ; (i = i1) → fill2 l j })
+                                   (inS (fill4 j i1))
+
+         sqJ0 : I → A → D
+         sqJ0 k =
+           comp (λ l → A≡B (~ l ∧ (i ∧ ~ k)) → C≡D ((k ∨ i) ∨ l))
+             (λ l →
+               λ { (i = i0) → transp (λ i' → C≡D ((i' ∧ l) ∨ k)) (k ∨ (~ l))
+                             ∘ transp (λ i' → C≡D (i' ∧ k)) (~ k) ∘ transport B≡C ∘ transport A≡B
+                 ; (i = i1) → transport C≡D ∘ transport B≡C ∘ transport-fillerExt⁻ A≡B (~ l ∧ ~ k)
+                 ; (k = i0) → fill3 i0 l
+                 ; (k = i1) → transport C≡D ∘ transport B≡C ∘ transport A≡B
+                  })
+                  (hcomp
+                      (λ l →
+                       λ { (i = i0) → transport-fillerExt C≡D k ∘ transport B≡C ∘  transport A≡B 
+                         ; (i = i1) → transport C≡D ∘ transport B≡C ∘ transp (λ i' → A≡B (i' ∨ ~ k)) (l ∧ ~ k)
+                         ; (k = i0) → fill4 i0 l
+                         ; (k = i1) → transport C≡D ∘ transport B≡C ∘ transport A≡B
+                          }) ( transp (λ i' → C≡D ((k ∨ i) ∧ i')) (~ (i ∨ k))
+                             ∘ transport B≡C ∘ transport (λ i' → A≡B (i' ∨ (i ∧ ~ k)))))
+
+         sqJ1 : I → D → D
+         sqJ1 k =
+           comp (λ l → C≡D (l ∨ (~ i ∨ k)) → C≡D (l ∨ (k ∨ i)))
+             (λ l →  
+               λ { (i = i0) → transp (λ i' → C≡D ((i' ∧ l) ∨ k)) (k ∨ (~ l)) ∘ transp (λ _ → C≡D k) l ∘ transport⁻-fillerExt⁻ C≡D k                                
+                 ; (i = i1) → transport-fillerExt⁻ C≡D (l ∨ k)
+                 ; (k = i0) → fill3 i1 l
+                 ; (k = i1) → transp (λ _ → D) (i ∨ l) 
+                  }) (hcomp
+                      (λ l →
+                       λ { (i = i0) → transp (λ _ → C≡D k) (~ l) ∘ transport⁻-fillerExt⁻ C≡D k 
+                         ; (i = i1) → transport-fillerExt⁻ C≡D k ∘ transp (λ _ → C≡D k) l
+                         ; (k = i0) → fill4 i1 l
+                         ; (k = i1) → transp (λ _ → C≡D k) (~ l ∨ i) ∘  transp (λ _ → C≡D k) (l ∨ (~ i))
+                          }) (transp (λ i' → C≡D ((i' ∧ i) ∨ k)) (k ∨ ~ i)
+                            ∘ transp (λ i' → C≡D ((~ i' ∧ ~ i) ∨ k)) (k ∧ ~ i)))
+
+
+
+-- transport-filler-ua'' : ∀ {ℓ} (A : Type ℓ) →
+--                      ∀ x →
+--                         Square
+--                (λ i → ua-unglue (_ , isEquivTransport (refl {x = A})) i
+--                  (transport-filler (ua ((_ , isEquivTransport (refl {x = A})))) x i))
+--                (sym (transportRefl _))
+--                refl
+--                refl
+                                
+-- transport-filler-ua'' A x i j  =
+--           {!!}
+
+
+-- transport-filler-ua' : ∀ {ℓ} (A B : Type ℓ) (p : A ≡ B) →
+--                      ∀ x →
+--                         Square
+--                (λ i → ua-unglue (_ , isEquivTransport p) i
+--                  (transport-filler (ua ((_ , isEquivTransport p))) x i))
+--                (sym (transportRefl _))
+--                refl
+--                refl
+                                
+-- transport-filler-ua' A B e x =
+--           {!!}
+

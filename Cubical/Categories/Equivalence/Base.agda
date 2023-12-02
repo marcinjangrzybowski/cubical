@@ -8,6 +8,9 @@ open import Cubical.HITs.PropositionalTruncation
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.NaturalTransformation
+open import Cubical.Foundations.Equiv
+  renaming (isEquiv to isEquivMap)
+open import Cubical.Foundations.Isomorphism
 
 open Category
 open Functor
@@ -36,3 +39,5 @@ record _≃ᶜ_ (C : Category ℓC ℓC') (D : Category ℓD ℓD') :
   field
     func : Functor C D
     isEquiv : isEquivalence func
+
+

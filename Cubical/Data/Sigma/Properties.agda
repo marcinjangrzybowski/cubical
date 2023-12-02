@@ -55,6 +55,9 @@ map-× f g (a , b) = (f a , g b)
 ≡-× : {A : Type ℓ} {B : Type ℓ'} {x y : A × B} → fst x ≡ fst y → snd x ≡ snd y → x ≡ y
 ≡-× p q i = (p i) , (q i)
 
+≡-×⁻ : {A : Type ℓ} {B : Type ℓ'} {x y : A × B} → x ≡ y → (fst x ≡ fst y) × (snd x ≡ snd y)
+≡-×⁻ p = cong fst p , cong snd p 
+
 
 -- Characterization of paths in Σ using dependent paths
 
@@ -88,6 +91,12 @@ module _ {A : I → Type ℓ} {B : (i : I) → A i → Type ℓ'}
               ≡ (PathP (λ i → Σ (A i) (B i)) x y)
   ΣPath≡PathΣ = ua ΣPath≃PathΣ
 
+module _ {A : I → Type ℓ} {B : (i : I) → A i → Type ℓ'}
+  {x : Σ (A i0) (B i0)} where
+  
+ invEqΣPath≃PathΣrefl : invEq (ΣPath≃PathΣ {x = x}) refl ≡ (refl , refl)
+ invEqΣPath≃PathΣrefl = refl
+ 
 ×≡Prop : isProp A' → {u v : A × A'} → u .fst ≡ v .fst → u ≡ v
 ×≡Prop pB {u} {v} p i = (p i) , (pB (u .snd) (v .snd) i)
 
@@ -180,6 +189,24 @@ module _ {A : Type ℓ} {B : A → Type ℓ'} {C : ∀ a → B a → Type ℓ''}
 
   unquoteDecl Σ-Π-≃ = declStrictIsoToEquiv Σ-Π-≃ Σ-Π-Iso
 
+  Σ-Π-Iso' : Iso ((a : A) → Σ[ b ∈ B a ] C a b) (Σ[ f ∈ ((a : A) → B a) ] ∀ {a} → C a (f a))
+  fun Σ-Π-Iso' f         = (fst ∘ f , λ {a} → snd (f a))
+  inv Σ-Π-Iso' (f , g) x = (f x , g {x})
+  rightInv Σ-Π-Iso' _    = refl
+  leftInv Σ-Π-Iso' _     = refl
+
+  unquoteDecl Σ-Π-≃' = declStrictIsoToEquiv Σ-Π-≃' Σ-Π-Iso'
+
+
+module _ {A : Type ℓ} {B : A → Type ℓ'} {B' : ∀ a → Type ℓ''} where
+  Σ-assoc-swap-Iso : Iso (Σ[ a ∈ Σ A B ] B' (fst a)) (Σ[ a ∈ Σ A B' ] B (fst a))
+  fun Σ-assoc-swap-Iso ((x , y) , z) = ((x , z) , y)
+  inv Σ-assoc-swap-Iso ((x , z) , y) = ((x , y) , z)
+  rightInv Σ-assoc-swap-Iso _ = refl
+  leftInv Σ-assoc-swap-Iso _  = refl
+
+  unquoteDecl Σ-assoc-swap-≃ = declStrictIsoToEquiv Σ-assoc-swap-≃ Σ-assoc-swap-Iso
+
 Σ-cong-iso-fst : (isom : Iso A A') → Iso (Σ A (B ∘ fun isom)) (Σ A' B)
 fun (Σ-cong-iso-fst isom) x = fun isom (x .fst) , x .snd
 inv (Σ-cong-iso-fst {B = B} isom) x = inv isom (x .fst) , subst B (sym (ε (x .fst))) (x .snd)
@@ -268,6 +295,17 @@ leftInv (Σ-cong-iso-snd isom) (x , y') = ΣPathP (refl , leftInv (isom x) y')
              → ((x : A) → B x ≃ B' (equivFun e x))
              → Σ A B ≃ Σ A' B'
 Σ-cong-equiv e e' = isoToEquiv (Σ-cong-iso (equivToIso e) (equivToIso ∘ e'))
+
+
+-- Σ-cong-equiv' : (e : A ≡ A') {B : A → Type ℓ'} {B' : A' → Type ℓ''}
+--              → {!!}
+--              → Σ A B ≡ Σ A' B'
+-- Σ-cong-equiv' {A = A} {A' = A'} =
+--   J (λ A' e → ∀ {B : A → Type _} {B' : A' → Type _}
+--              → {!!}
+--              → Σ A B ≡ Σ A' B')
+--                 λ {B} {B'} → {!!} 
+
 
 Σ-cong' : (p : A ≡ A') → PathP (λ i → p i → Type ℓ') B B' → Σ A B ≡ Σ A' B'
 Σ-cong' p p' = cong₂ (λ (A : Type _) (B : A → Type _) → Σ A B) p p'
@@ -421,6 +459,15 @@ module _ {A : Type ℓ} {B : A → Type ℓ'} {C : ∀ a → B a → Type ℓ''}
 
   unquoteDecl curryEquiv = declStrictIsoToEquiv curryEquiv curryIso
 
+  implicitCurryIso : Iso ({(a , b) : Σ A B} → C a b) ({a : A} → {b : B a} → C a b)
+  fun implicitCurryIso f {a} {b} = f {a , b}
+  inv implicitCurryIso f {a} = f {fst a} {snd a}
+  rightInv implicitCurryIso _ = refl
+  leftInv implicitCurryIso _ = refl
+
+  unquoteDecl implicitCurryEquiv = declStrictIsoToEquiv implicitCurryEquiv implicitCurryIso
+
+
 -- Sigma type with empty base
 
 module _ (A : ⊥ → Type ℓ) where
@@ -475,3 +522,16 @@ separatedΣ {B = B} sepA sepB (a , b) (a' , b') p = ΣPathTransport→PathΣ _ _
     pB : subst B pA b ≡ b'
     pB = sepB _ _ _ (λ q → p (λ r → q (cong (λ r' → subst B r' b)
                                 (Separated→isSet sepA _ _ pA (cong fst r)) ∙ snd (PathΣ→ΣPathTransport _ _ r))))
+
+-- module _
+--   {ℓ'''}
+--   {A : Type ℓ}
+--   -- (B : A → Type ℓ')
+--   (B' : (B : A → Type ℓ') → Type ℓ''')
+--   (BB : (B : A → Type ℓ') → Iso (∀ a → B a) (B' B))
+--   (B : A → Type ℓ')
+--   (C : Type ℓ'') where
+
+--  -- helperΣ≡ : (x₀ x₁ : ∀ a → B a) →  Iso (x₀ ≡ x₁) {!!}
+--  -- helperΣ≡ = {!!}
+ 

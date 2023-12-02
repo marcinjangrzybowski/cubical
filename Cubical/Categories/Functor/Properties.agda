@@ -8,7 +8,10 @@ open import Cubical.Foundations.Equiv.Properties
 open import Cubical.Foundations.Function hiding (_∘_)
 open import Cubical.Foundations.GroupoidLaws using (lUnit; rUnit; assoc; cong-∙)
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Path
+open import Cubical.Foundations.Transport hiding (pathToIso)
 open import Cubical.Functions.Surjection
+open import Cubical.Functions.FunExtEquiv
 open import Cubical.Functions.Embedding
 open import Cubical.HITs.PropositionalTruncation as Prop
 open import Cubical.Data.Sigma
@@ -232,3 +235,95 @@ module _
       (subst isEquiv (F-pathToIso-∘ {F = F})
       (compEquiv (_ , isUnivC .univ _ _)
         (_ , isFullyFaithful→isEquivF-Iso {F = F} fullfaith x y) .snd))
+
+
+-- Transport* : (C ≡ D) → Functor C D
+-- F-ob (Transport* p) = subst ob p
+-- F-hom (Transport* p) {x} {y} f =
+--   let z = fromPathP (cong Category.Hom[_,_] p)
+--       zz = transport (z ≡$ F-ob (Transport* p) x ≡$ F-ob (Transport* p) y)
+--   in zz (subst2 (Category.Hom[_,_] (p i0))
+--         {!!} {!!} f)
+-- F-id (Transport* p) = {!!}
+-- F-seq (Transport* p) = {!!}
+
+Transport : (C ≡ D) → Functor C D
+F-ob (Transport p) = subst ob p
+F-hom (Transport p) {x} {y} = 
+ transport λ i → cong Hom[_,_] p i
+   (transport-filler (cong ob p) x i)
+   (transport-filler (cong ob p) y i)
+F-id (Transport p) {x} i = 
+  transp (λ jj → Hom[ p (i ∨ jj) , transport-filler (λ i₁ → ob (p i₁)) x (i ∨ jj) ]
+          (transport-filler (λ i₁ → ob (p i₁)) x (i ∨ jj))) i
+    (id (p i) {(transport-filler (cong ob p) x i)})
+  
+F-seq (Transport p) {x} {y} {z} f g i =
+  let q : ∀ {x y} → _ ≡ _
+      q = λ {x y} → (λ i₁ →
+             Hom[ p i₁ , transport-filler (λ i₂ → ob (p i₂)) x i₁ ]
+             (transport-filler (λ i₂ → ob (p i₂)) y i₁))
+  in transp (λ jj → Hom[ p (i ∨ jj)
+    , transport-filler (λ i₁ → ob (p i₁)) x (i ∨ jj) ]
+          (transport-filler (λ i₁ → ob (p i₁)) z (i ∨ jj))) i
+            (_⋆_ (p i)
+              (transport-filler q f i)
+              (transport-filler q g i)
+              )
+
+-- TransportRefl : Transport {C = C} refl ≡ Id
+-- TransportRefl {C = C} = Functor≡ transportRefl
+--   λ _ → symP-fromGoal (subst2-filler (C .Hom[_,_]) _ _ _)
+
+-- -- Transport' : (C ≡ D) → Functor C D
+-- -- Transport' {C = C} = J (λ D _ → Functor C D) Id
+
+-- -- -- Transport≡Transport' : ∀ p → Transport {C = C} {D = D} p ≡ Transport' p 
+-- -- -- Transport≡Transport' {C = C} = J
+-- -- --   (λ _  p → Transport p ≡ Transport' p)
+-- -- --   (Functor≡ (λ _ → cong (transport refl) (sym (transportRefl _)))
+-- -- --      λ {c c'} f → toPathP λ i →
+-- -- --         transport (sq c c' i) (transp
+-- -- --           (λ j →
+-- -- --              Hom[ C , transp (λ j₁ → ob C) (~ j) c ]
+-- -- --              (transp (λ j₁ → ob C) (~ j) c'))
+-- -- --           i0 f))
+
+-- -- --  where
+-- -- --   sq' : ∀ (c : C .ob) 
+-- -- --       →  Square
+-- -- --            (λ _ → transp (λ i₁ → ob C) i0 c)
+-- -- --            (λ _ → transp (λ i₁ → ob C) i0 (transp (λ _ → ob C) i0 c))
+-- -- --            (λ j → transp (λ i₁ → ob C) i0 (transp (λ _ → ob C) (~ j) c))
+-- -- --            λ j → transp (λ i₁ → ob C) (~ j)
+-- -- --                    (transp (λ j₁ → ob C) (~ j) (transp (λ j₁ → ob C) j c))
+-- -- --   sq' c i j = hcomp
+-- -- --      (λ k → λ { (i = i0) → transp (λ i₁ → ob C) (j ∨ k)
+-- -- --                   (transp (λ j₁ → ob C) ((~ j ∧ ~ k)) c)
+-- -- --               ; (i = i1) → transp (λ i₁ → ob C) (j ∨ k)
+-- -- --          (transp (λ _ → ob C) i0 (transp (λ j₁ → ob C) (~ j ∧ ~ k) c))
+-- -- --               ; (j = i0) →
+-- -- --                 {!transp (λ i₁ → ob C) k
+-- -- --          (transp (λ _ → ob C) (~ i) (transp (λ j₁ → ob C) (~ k ∨ ~ i) c))!} -- transp (λ i₁ → ob C) i0 (transp (λ _ → ob C) (~ i) c)
+-- -- --               ; (j = i1) → {!!} --transp (λ _ → ob C) (~ i)
+-- -- --                    -- (transp (λ j₁ → ob C) (~ i) (transp (λ j₁ → ob C) i c))
+-- -- --               })
+
+-- -- --       (transp (λ i₁ → ob C) j
+-- -- --             (transp (λ _ → ob C) (~ i)
+-- -- --               ((transp (λ j₁ → ob C) (~ i ∨ (~ j)) (transp (λ j₁ → ob C) (i ∨ (~ j)) c)))))
+
+
+-- -- --   sq : ∀ (c c' : C .ob) 
+-- -- --       → Path (_ ≡ _) (λ i →
+-- -- --          Hom[ C , transp (λ i₁ → ob C) i0 (transp (λ _ → ob C) (~ i) c) ]
+-- -- --          (transp (λ i₁ → ob C) i0 (transp (λ _ → ob C) (~ i) c')))
+      
+-- -- --       (λ i →
+-- -- --          Hom[ C ,
+-- -- --          transp (λ i₁ → ob C) (~ i)
+-- -- --          (transp (λ j → ob C) (~ i) (transp (λ j → ob C) i c))
+-- -- --          ]
+-- -- --          (transp (λ i₁ → ob C) (~ i)
+-- -- --           (transp (λ j → ob C) (~ i) (transp (λ j → ob C) i c'))))
+-- -- --   sq = λ c c' i j → Hom[ C , sq' c j i ] (sq' c' j i)

@@ -194,6 +194,8 @@ pathToEquivRefl {A = A} = equivEq (λ i x → transp (λ _ → A) i x)
 uaβ : {A B : Type ℓ} (e : A ≃ B) (x : A) → transport (ua e) x ≡ equivFun e x
 uaβ e x = transportRefl (equivFun e x)
 
+
+
 uaη : ∀ {A B : Type ℓ} → (P : A ≡ B) → ua (pathToEquiv P) ≡ P
 uaη {A = A} {B = B} P i j = Glue B {φ = φ} sides where
   -- Adapted from a proof by @dolio, cf. commit e42a6fa1
@@ -260,6 +262,10 @@ univalenceUAH = ( _ , univalenceStatement )
 
 univalencePath : {A B : Type ℓ} → (A ≡ B) ≡ Lift (A ≃ B)
 univalencePath = ua (compEquiv univalence LiftEquiv)
+
+univalencePath' : {A B : Type ℓ} → Lift (A ≃ B) ≡ (A ≡ B) 
+univalencePath' = ua (invEquiv (compEquiv univalence LiftEquiv))
+
 
 -- Lemmas for constructing and destructing dependent paths in a function type where the domain is ua.
 ua→ : ∀ {ℓ ℓ'} {A₀ A₁ : Type ℓ} {e : A₀ ≃ A₁} {B : (i : I) → Type ℓ'}

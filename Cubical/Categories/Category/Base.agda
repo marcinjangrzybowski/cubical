@@ -4,7 +4,9 @@ module Cubical.Categories.Category.Base where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Equiv
+import Cubical.Foundations.Isomorphism as Iso
 open import Cubical.Foundations.Powerset
+open import Cubical.Foundations.Function renaming (_∘_ to _∘f_ ; uncurry to uc)
 open import Cubical.Data.Sigma
 
 private
@@ -14,6 +16,7 @@ private
 -- Categories with hom-sets
 record Category ℓ ℓ' : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
   -- no-eta-equality ; NOTE: need eta equality for `opop`
+  constructor cat
   field
     ob : Type ℓ
     Hom[_,_] : ob → ob → Type ℓ'
@@ -124,7 +127,55 @@ record isUnivalent (C : Category ℓ ℓ') : Type (ℓ-max ℓ ℓ') where
   isGroupoid-ob : isGroupoid (C .ob)
   isGroupoid-ob = isOfHLevelPath'⁻ 2 (λ _ _ → isOfHLevelRespectEquiv 2 (invEquiv (univEquiv _ _)) (isSet-CatIso _ _))
 
+isPropIsUnivalent : {C : Category ℓ ℓ'} → isProp (isUnivalent C) 
+isPropIsUnivalent =
+ isPropRetract isUnivalent.univ _ (λ _ → refl)
+  (isPropΠ2 λ _ _ → isPropIsEquiv _ ) 
 
+ΣUnivalentCategory : ∀ ℓ ℓ' → Type (ℓ-suc (ℓ-max ℓ ℓ'))
+ΣUnivalentCategory ℓ ℓ' =
+  Σ (hGroupoid ℓ) λ (ob , _) →
+  Σ (Σ (ob → ob → Type ℓ') (λ h → ∀ {x y} → isSet (h x y))) λ (h , hS) →
+  Σ _ λ ops →
+  Σ _ (flip ((isUnivalent ∘f_) ∘f (uc $ uc $ uc (cat _ h) ops)) hS)
+
+UnivalentCategoryΣiso :
+  Iso.Iso (Σ _ (isUnivalent {ℓ} {ℓ'}))
+          (ΣUnivalentCategory ℓ ℓ')
+Iso.Iso.fun UnivalentCategoryΣiso (_ , u) =
+ (_ , isUnivalent.isGroupoid-ob u) , _
+Iso.Iso.inv UnivalentCategoryΣiso (_ , _ , (_ , (_ , u))) = _ , u
+Iso.Iso.rightInv UnivalentCategoryΣiso _ =
+  ΣPathP (Σ≡Prop (λ _ → isPropIsGroupoid) refl , refl)
+Iso.Iso.leftInv UnivalentCategoryΣiso _ = refl
+
+is2GroupoidΣUnivalentCategory : is2Groupoid (ΣUnivalentCategory ℓ ℓ')
+is2GroupoidΣUnivalentCategory =
+   (is2GroupoidΣ (isOfHLevelTypeOfHLevel 3)
+
+    (isGroupoid→is2Groupoid ∘f λ _ →
+     isGroupoidΣ (isOfHLevelRespectEquiv 3
+       (equivΠ (idEquiv _) (λ _ → Σ-Π-≃') ∙ₑ Σ-Π-≃')
+         (isGroupoidΠ2 λ _ _ → isGroupoidHSet)) 
+
+    (isSet→isGroupoid ∘f
+         λ (_ , hS) → isSetΣ (isSet× (isSetImplicitΠ λ _ → hS)
+            λ _ _ x y i i₁ f g →
+            hS _ _ (λ i₁ → x i₁ f g) (λ i₁ → y i₁ f g) i i₁)
+
+    (isProp→isSet ∘f λ _ → isPropΣ
+             (λ ((x , x') , x'') ((y , y') , y'') i →
+               ((λ _ →  hS _ _ (x _) (y _) i) ,
+                 λ _ →  hS _ _ (x' _) (y' _) i) ,
+                 λ _ _ _ → hS _ _ (x'' _ _ _ ) (y'' _ _ _) i)
+            λ _ → isPropIsUnivalent ))))
+  
+is2GroupoidUnivalentCategory : is2Groupoid (Σ _ (isUnivalent {ℓ} {ℓ'}))
+is2GroupoidUnivalentCategory =
+   isOfHLevelRetractFromIso 4
+   UnivalentCategoryΣiso
+   is2GroupoidΣUnivalentCategory
+     
 -- Opposite category
 _^op : Category ℓ ℓ' → Category ℓ ℓ'
 ob (C ^op)           = ob C
@@ -135,7 +186,6 @@ _⋆_ (C ^op) f g      = g ⋆⟨ C ⟩ f
 ⋆IdR (C ^op)         = C .⋆IdL
 ⋆Assoc (C ^op) f g h = sym (C .⋆Assoc _ _ _)
 isSetHom (C ^op)     = C .isSetHom
-
 
 ΣPropCat : (C : Category ℓ ℓ') (P : ℙ (ob C)) → Category ℓ ℓ'
 ob (ΣPropCat C P) = Σ[ x ∈ ob C ] x ∈ P
@@ -154,3 +204,85 @@ isIsoΣPropCat : {C : Category ℓ ℓ'} {P : ℙ (ob C)}
 inv (isIsoΣPropCat p q f isIsoF) = isIsoF .inv
 sec (isIsoΣPropCat p q f isIsoF) = isIsoF .sec
 ret (isIsoΣPropCat p q f isIsoF) = isIsoF .ret
+
+isIsoΣPropCat⁻ : {C : Category ℓ ℓ'} {P : ℙ (ob C)}
+                {x y : ob C} (p : x ∈ P) (q : y ∈ P)
+                (f : C [ x , y ])
+              → isIso (ΣPropCat C P) {x , p} {y , q} f → isIso C f
+inv (isIsoΣPropCat⁻ p q f isIsoF) = isIsoF .inv
+sec (isIsoΣPropCat⁻ p q f isIsoF) = isIsoF .sec
+ret (isIsoΣPropCat⁻ p q f isIsoF) = isIsoF .ret
+
+isIsoΣPropCat≃ : {C : Category ℓ ℓ'} {P : ℙ (ob C)}
+                {x y : ob C} (p : x ∈ P) (q : y ∈ P)
+               → (CatIso C x y) ≃ (CatIso (ΣPropCat C P) (x , p) (y , q))
+isIsoΣPropCat≃ {P = P} p q =
+ Σ-cong-equiv-prop (idEquiv _) isPropIsIso isPropIsIso
+  (isIsoΣPropCat {P = P} p q)
+  (λ f → isIsoΣPropCat⁻ {P = P} p q f)
+
+isUnivalentΣPropCat : {C : Category ℓ ℓ'} {P : ℙ (ob C)}
+                → isUnivalent C
+                → isUnivalent (ΣPropCat C P)
+isUnivalent.univ (isUnivalentΣPropCat {P = P} record { univ = univ }) _ _ =
+  snd (invEquiv (Σ≡PropEquiv (λ x → snd (P x)))
+    ∙ₑ (_ , univ _ _) ∙ₑ
+       (isIsoΣPropCat≃ {P = P} _ _))
+
+
+open import Cubical.Data.Unit
+open import Cubical.Data.Bool
+open import Cubical.Data.Maybe
+
+-- nonUnivC : Category ℓ-zero ℓ-zero
+-- ob nonUnivC = Unit
+-- Hom[ nonUnivC , _ ] _ = Bool
+-- id nonUnivC {x} = false
+-- (nonUnivC ⋆ f) g = f or g 
+-- ⋆IdL nonUnivC _ = refl
+-- ⋆IdR nonUnivC _ = or-identityʳ _
+-- ⋆Assoc nonUnivC f g h = sym (or-assoc f g h)
+-- isSetHom nonUnivC = isSetBool
+
+
+nonUnivC : Category ℓ-zero ℓ-zero
+ob nonUnivC = Unit
+Hom[ nonUnivC , _ ] _ = Maybe Bool
+id nonUnivC {x} = nothing
+(nonUnivC ⋆ nothing) g = g
+(nonUnivC ⋆ just x) nothing = just x
+(nonUnivC ⋆ just x) (just x₁) =
+  if x ⊕ x₁ then nothing else just (not x) 
+⋆IdL nonUnivC _ = refl
+⋆IdR nonUnivC nothing = refl
+⋆IdR nonUnivC (just x) = refl
+⋆Assoc nonUnivC nothing g h = refl
+⋆Assoc nonUnivC (just x) nothing h = refl
+⋆Assoc nonUnivC (just false) (just false) nothing = refl
+⋆Assoc nonUnivC (just false) (just true) nothing = refl
+⋆Assoc nonUnivC (just true) (just false) nothing = refl
+⋆Assoc nonUnivC (just true) (just true) nothing = refl
+⋆Assoc nonUnivC (just false) (just false) (just false) = refl
+⋆Assoc nonUnivC (just false) (just false) (just true) = refl
+⋆Assoc nonUnivC (just false) (just true) (just false) = refl
+⋆Assoc nonUnivC (just false) (just true) (just true) = refl
+⋆Assoc nonUnivC (just true) (just false) (just false) = refl
+⋆Assoc nonUnivC (just true) (just false) (just true) = refl
+⋆Assoc nonUnivC (just true) (just true) (just false) = refl
+⋆Assoc nonUnivC (just true) (just true) (just true) = refl
+ -- cong just (sym (and-assoc x x₁ x₂))
+isSetHom nonUnivC = isOfHLevelMaybe 0 isSetBool
+
+
+
+
+open import Cubical.Data.Empty
+
+¬isUnivNonUnivC : isUnivalent nonUnivC → ⊥
+¬isUnivNonUnivC record { univ = univ } = 
+  false≢true (just-inj _ _ (cong fst u'))
+ where
+ u' : (just false , isiso (just true) _ _) ≡ (_ , isiso _ _ _)
+ u' = isOfHLevelRespectEquiv 1 (_ , univ _ _) (isSetUnit _ _)
+        (just false , isiso (just true) refl refl)
+        (just true , isiso (just false) refl refl) 

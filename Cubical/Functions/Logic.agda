@@ -156,6 +156,13 @@ A ⇔ B = (A ⇒ B) ⊓ (B ⇒ A)
 ⇔-id : (P : hProp ℓ) → ⟨ P ⇔ P ⟩
 ⇔-id P = (idfun ⟨ P ⟩) , (idfun ⟨ P ⟩)
 
+
+iso⇔≡ : Iso ⟨ P ⇔ Q ⟩ (P ≡ Q) 
+Iso.fun iso⇔≡ = uncurry ⇔toPath
+Iso.inv iso⇔≡ p = transport (cong fst p) , transport (cong fst (sym p))
+Iso.rightInv iso⇔≡ _ = isSetHProp _ _ _ _
+Iso.leftInv (iso⇔≡ {P = P} {Q = Q}) _ = snd (P ⇔ Q) _ _
+ 
 --------------------------------------------------------------------------------
 -- Universal Quantifier
 

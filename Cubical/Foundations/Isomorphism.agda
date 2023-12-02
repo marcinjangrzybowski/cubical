@@ -196,6 +196,21 @@ inv (codomainIsoDep is) f a = inv (is a) (f a)
 rightInv (codomainIsoDep is) f = funExt λ a → rightInv (is a) (f a)
 leftInv (codomainIsoDep is) f = funExt λ a → leftInv (is a) (f a)
 
+codomainIsoDep₂ : ∀ {ℓ ℓ' ℓ'' ℓ'''} {A : Type ℓ} {A' : Type ℓ'}
+   {B : A → A' → Type ℓ''} {C : A → A' → Type ℓ'''}
+                 → ((a : A) (a' : A') → Iso (B a a') (C a a'))
+                 → Iso ((a : A)(a' : A') → B a a') ((a : A)(a' : A') → C a a')
+codomainIsoDep₂ is = codomainIsoDep λ _ → codomainIsoDep (is _) 
+
+codomainImplicitIsoDep : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ} {B : A → Type ℓ'} {C : A → Type ℓ''}
+                 → ({a : A} → Iso (B a) (C a))
+                 → Iso ({a : A} → B a) ({a : A} → C a)
+fun (codomainImplicitIsoDep is) f = fun is f
+inv (codomainImplicitIsoDep is) f = inv is f
+rightInv (codomainImplicitIsoDep is) f = implicitFunExt (rightInv is f)
+leftInv (codomainImplicitIsoDep is) f = implicitFunExt (leftInv is f)
+
+
 codomainIso : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''}
            → Iso B C
            → Iso (A → B) (A → C)

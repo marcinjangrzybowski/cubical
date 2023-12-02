@@ -9,9 +9,9 @@ open import Cubical.Foundations.Prelude
 private
   variable
     ℓ ℓ' ℓ'' : Level
-    A : Type ℓ
-    B : A → Type ℓ
-    C : (a : A) → B a → Type ℓ
+    A A' : Type ℓ
+    B : A → Type ℓ'
+    C : (a : A) → B a → Type ℓ''
     D : (a : A) (b : B a) → C a b → Type ℓ
     E : (x : A) → (y : B x) → (z : C x y) → (w : D x y z) → Type ℓ
     F : (x : A) → (y : B x) → (z : C x y) → (w : D x y z) → (u : E x y z w) → Type ℓ
@@ -20,10 +20,14 @@ private
 idfun : (A : Type ℓ) → A → A
 idfun _ x = x
 
-infixr -1 _$_
+infixr -1 _$_ _$'_
 
 _$_ : ∀ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} → ((a : A) → B a) → (a : A) → B a
 f $ a = f a
+{-# INLINE _$_ #-}
+
+_$'_ : ∀ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} → ({a : A} → B a) → (a : A) → B a
+f $' a = f {a}
 {-# INLINE _$_ #-}
 
 infixr 9 _∘_
@@ -31,6 +35,14 @@ infixr 9 _∘_
 _∘_ : (g : {a : A} → (b : B a) → C a b) → (f : (a : A) → B a) → (a : A) → C a (f a)
 g ∘ f = λ x → g (f x)
 {-# INLINE _∘_ #-}
+
+infixr 12  _∘₂ₒₚ_
+
+
+_∘₂ₒₚ_ : {B  : A → A → Type ℓ'} → (∀ x y → B x y) → (f : A' → A) →  ∀ x' y' → B (f x')  (f y')
+g ∘₂ₒₚ f = λ x' y' → g (f x') (f y')
+{-# INLINE _∘₂ₒₚ_ #-}
+
 
 ∘-assoc : (h : {a : A} {b : B a} → (c : C a b) → D a b c)
           (g : {a : A} → (b : B a) → C a b)

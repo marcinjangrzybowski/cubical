@@ -335,6 +335,7 @@ implicitFunExt⁻ eq {x} i = eq i {x}
 
 _≡$_ = funExt⁻
 
+
 {- `S` stands for simply typed. Using `funExtS⁻` instead of `funExt⁻`
    can help Agda to solve metavariables that may otherwise remain unsolved.
 -}
