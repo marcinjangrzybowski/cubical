@@ -334,14 +334,15 @@ module TestGeneric (G : Group ℓ) (A : Type ℓ) (f : A → ⟨ G ⟩)
 
  open GroupStr (snd G)
 
- -- zzz : inv (g1 · (g2 · (f a1 · f a2))) ≡
- --         ((inv (f a2) · (inv (f a1) · (inv g2 · inv g1))))
- -- zzz = GR.infGT G --GR.infGT G
+ zzz : inv (g1 · (g2 · (f a1 · f a2))) ≡
+         ((inv (f a2) · (inv (f a1) · (inv g2 · inv g1))))
+ zzz = GR.infGT G 1g inv _·_ --GR.infGT G
 
 
  zzz' : inv (g1 · (g2 · (f a1 · f a2))) ≡
          ((inv (f a2) · (inv (f a1) · (inv g2 · inv g1))))
- zzz' = GR.infGT G 1g inv _·_ --GR.infGT G
+ zzz' = GR.infGT G 1g inv _·_
+
 
 
 -- --  -- uuu : inv (g3 · g2 · g2) ≡ inv g3 · inv (g1 · g2)
