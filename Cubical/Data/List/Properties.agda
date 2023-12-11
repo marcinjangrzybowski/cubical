@@ -147,11 +147,11 @@ cons-inj₂ = cong safe-tail
 snoc-inj₂ : xs ∷ʳ x ≡ ys ∷ʳ y → x ≡ y
 snoc-inj₂ {xs = xs} {ys = ys} p =
  cons-inj₁ ((sym (rev-++ xs _)) ∙∙ cong rev p ∙∙ (rev-++ ys _))
- 
+
 snoc-inj₁ : xs ∷ʳ x ≡ ys ∷ʳ y → xs ≡ ys
 snoc-inj₁ {xs = xs} {ys = ys} p =
    sym (rev-rev _) ∙∙ cong rev (cons-inj₂ ((sym (rev-++ xs _)) ∙∙ cong rev p ∙∙ (rev-++ ys _)))
-        ∙∙ rev-rev _ 
+        ∙∙ rev-rev _
 
 ¬cons≡nil : ¬ (x ∷ xs ≡ [])
 ¬cons≡nil {_} {A} p = lower (subst (caseList (Lift ⊥) (List A)) p [])
@@ -217,7 +217,7 @@ drop++ (x ∷ xs) ys k = drop++ xs ys k
 
 dropLength++ : (xs : List A) → drop (length xs) (xs ++ ys) ≡ ys
 dropLength++ {ys = ys} xs =
-  cong (flip drop (xs ++ ys)) (sym (+-zero (length xs))) ∙ drop++ xs ys 0 
+  cong (flip drop (xs ++ ys)) (sym (+-zero (length xs))) ∙ drop++ xs ys 0
 
 
 dropLength : (xs : List A) → drop (length xs) xs ≡ []
@@ -232,7 +232,7 @@ take++ (x ∷ xs) ys k = cong (_ ∷_) (take++ _ _ k)
 
 
 takeLength++ : ∀ ys → take (length xs) (xs ++ ys) ≡ xs
-takeLength++ {xs = xs} ys = 
+takeLength++ {xs = xs} ys =
       cong (flip take (xs ++ ys)) (sym (+-zero (length xs)))
    ∙∙ take++ xs ys 0
    ∙∙ ++-unit-r xs
@@ -244,7 +244,7 @@ map-∘ : ∀ {ℓA ℓB ℓC} {A : Type ℓA} {B : Type ℓB} {C : Type ℓC}
         (g : B → C) (f : A → B) (as : List A)
         → map g (map f as) ≡ map (λ x → g (f x)) as
 map-∘ g f [] = refl
-map-∘ g f (x ∷ as) = cong (_ ∷_) (map-∘ g f as) 
+map-∘ g f (x ∷ as) = cong (_ ∷_) (map-∘ g f as)
 
 map-id : (as : List A) → map (λ x → x) as ≡ as
 map-id [] = refl
@@ -254,7 +254,7 @@ length≡0→≡[] : ∀ (xs : List A) → length xs ≡ 0 → xs ≡ []
 length≡0→≡[] [] x = refl
 length≡0→≡[] (x₁ ∷ xs) x = ⊥.rec (snotz x)
 
-init : List A → List A 
+init : List A → List A
 init [] = []
 init (x ∷ []) = []
 init (x ∷ xs@(_ ∷ _)) = x ∷ init xs
@@ -272,26 +272,26 @@ init∷ʳ {xs = []} = refl
 init∷ʳ {xs = _ ∷ []} = refl
 init∷ʳ {xs = _ ∷ _ ∷ _} = cong (_ ∷_) init∷ʳ
 
-tail∷ʳ : tail (xs ∷ʳ y) ∷ʳ x ≡ tail (xs ∷ʳ y ∷ʳ x) 
+tail∷ʳ : tail (xs ∷ʳ y) ∷ʳ x ≡ tail (xs ∷ʳ y ∷ʳ x)
 tail∷ʳ {xs = []} = refl
 tail∷ʳ {xs = x ∷ xs} = refl
 
-init-rev-tail : rev (init xs) ≡ tail (rev xs) 
+init-rev-tail : rev (init xs) ≡ tail (rev xs)
 init-rev-tail {xs = []} = refl
 init-rev-tail {xs = x ∷ []} = refl
-init-rev-tail {xs = x ∷ y ∷ xs} = 
+init-rev-tail {xs = x ∷ y ∷ xs} =
    cong (_∷ʳ x) (init-rev-tail {xs = y ∷ xs})
  ∙ tail∷ʳ {xs = rev xs}
 
-init++ : ∀ xs → xs ++ init (x ∷ ys) ≡ init (xs ++ x ∷ ys) 
+init++ : ∀ xs → xs ++ init (x ∷ ys) ≡ init (xs ++ x ∷ ys)
 init++ [] = refl
 init++ (_ ∷ []) = refl
 init++ (_ ∷ _ ∷ _) = cong (_ ∷_) (init++ (_ ∷ _))
 
 Split++ : (xs ys xs' ys' zs : List A) → Type _
-Split++ xs ys xs' ys' zs = ((xs ++ zs ≡ xs') × (ys ≡ zs ++ ys')) 
+Split++ xs ys xs' ys' zs = ((xs ++ zs ≡ xs') × (ys ≡ zs ++ ys'))
 
-split++ : ∀ (xs' ys' xs ys : List A) → xs' ++ ys' ≡ xs ++ ys → 
+split++ : ∀ (xs' ys' xs ys : List A) → xs' ++ ys' ≡ xs ++ ys →
               Σ _ λ zs →
                 ((Split++ xs' ys' xs ys zs)
                 ⊎ (Split++ xs ys xs' ys' zs))
@@ -319,27 +319,27 @@ module List₂ where
  open import Cubical.HITs.SetTruncation renaming
    (rec to rec₂ ; map to map₂ ; elim to elim₂ )
 
- ∥List∥₂→List∥∥₂ : ∥ List A ∥₂ → List ∥ A ∥₂ 
+ ∥List∥₂→List∥∥₂ : ∥ List A ∥₂ → List ∥ A ∥₂
  ∥List∥₂→List∥∥₂ = rec₂ (isOfHLevelList 0 squash₂) (map ∣_∣₂)
 
- List∥∥₂→∥List∥₂ : List ∥ A ∥₂ → ∥ List A ∥₂ 
+ List∥∥₂→∥List∥₂ : List ∥ A ∥₂ → ∥ List A ∥₂
  List∥∥₂→∥List∥₂ [] = ∣ [] ∣₂
  List∥∥₂→∥List∥₂ (x ∷ xs) =
    rec2 squash₂ (λ x xs → ∣ x ∷ xs ∣₂) x (List∥∥₂→∥List∥₂ xs)
- 
- Iso∥List∥₂List∥∥₂ : Iso (List ∥ A ∥₂) ∥ List A ∥₂ 
+
+ Iso∥List∥₂List∥∥₂ : Iso (List ∥ A ∥₂) ∥ List A ∥₂
  Iso.fun Iso∥List∥₂List∥∥₂ = List∥∥₂→∥List∥₂
  Iso.inv Iso∥List∥₂List∥∥₂ = ∥List∥₂→List∥∥₂
- Iso.rightInv Iso∥List∥₂List∥∥₂ = 
+ Iso.rightInv Iso∥List∥₂List∥∥₂ =
    elim₂ (isProp→isSet ∘ λ _ → squash₂ _ _)
      (List.elim refl (cong (rec2 squash₂ (λ x₁ xs → ∣ x₁ ∷ xs ∣₂) ∣ _ ∣₂)))
  Iso.leftInv Iso∥List∥₂List∥∥₂ = List.elim refl ((lem _ _ ∙_) ∘S cong (_ ∷_))
   where
-  lem = elim2 {C = λ a l' → ∥List∥₂→List∥∥₂ 
+  lem = elim2 {C = λ a l' → ∥List∥₂→List∥∥₂
       (rec2 squash₂ (λ x₁ xs → ∣ x₁ ∷ xs ∣₂) a l')
       ≡ a ∷ ∥List∥₂→List∥∥₂ l'}
        (λ _ _ → isProp→isSet (isOfHLevelList 0 squash₂ _ _))
         λ _ _ → refl
 
- List-comm-∥∥₂ : ∀ {ℓ} → List {ℓ} ∘ ∥_∥₂ ≡ ∥_∥₂ ∘ List 
+ List-comm-∥∥₂ : ∀ {ℓ} → List {ℓ} ∘ ∥_∥₂ ≡ ∥_∥₂ ∘ List
  List-comm-∥∥₂ = funExt λ A → isoToPath (Iso∥List∥₂List∥∥₂ {A = A})
