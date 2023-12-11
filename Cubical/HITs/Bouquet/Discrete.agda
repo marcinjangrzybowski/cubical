@@ -14,7 +14,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Data.Bool
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sigma
-open import Cubical.Data.List as Li
+open import Cubical.Data.List renaming (rec to recList)
 open import Cubical.Data.Sum
 
 open import Cubical.HITs.Bouquet.Base
@@ -44,13 +44,12 @@ module _ {A : Type ℓ} (_≟_ : Discrete A) where
   co←base-step (b , a) = if b then (idfun _) else sym $ loop a
 
   co←base : [𝟚× A ] → Path (Bouquet A) base base
-  co←base = Li.rec refl (flip _∙_ ∘ co←base-step)
+  co←base = recList refl (flip _∙_ ∘ co←base-step)
 
   co←Sq' : (a : A) → (x : [𝟚× A ]) (y : IsNormalised x) →
       ∀ u → PathP (λ i → base ≡ loop a i)
-      (λ i → Li.rec (λ _ → base) (flip _∙_ ∘ co←base-step) x i)
-      (λ i → Li.rec (λ _ → base) (flip _∙_ ∘ co←base-step) (preη· (true , a) x u )
-       i)
+      (recList (λ _ → base) (flip _∙_ ∘ co←base-step) x)
+      (recList (λ _ → base) (flip _∙_ ∘ co←base-step) (preη· (true , a) x u ))
   co←Sq' a ((false , snd₁) ∷ xs) y (yes p) =
     cong (λ x' → co←base ((false , x') ∷ xs)) (cong snd (sym p))
       ◁ symP (compPath-filler (co←base xs) (sym (loop a)))
@@ -58,9 +57,9 @@ module _ {A : Type ℓ} (_≟_ : Discrete A) where
   co←Sq' a ((true , snd₁) ∷ xs) y (yes p) = ⊥.rec (true≢false (cong fst p))
 
   co←Sq : (a : A) → SquareP (λ i j →  ua (η·≃ (true , a)) i → Bouquet A)
-                       (λ j x → co←base (fst x) j)
-                       (λ j x → co←base (fst x) j)
-                       (λ i _ → base)
+                       (funExt (co←base ∘ fst))
+                       (funExt (co←base ∘ fst))
+                       (λ _ _ → base)
                        (λ i _ → loop a i)
   co←Sq a = congP (λ _ → funExt) (ua→ (uncurry
      (λ xs y → co←Sq' a xs y (HeadIsRedex? ((true , a) ∷ xs)))))
