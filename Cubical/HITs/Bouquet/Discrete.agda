@@ -46,27 +46,28 @@ module _ {A : Type ℓ} (_≟_ : Discrete A) where
   co←base : [𝟚× A ] → Path (Bouquet A) base base
   co←base = recList refl (flip _∙_ ∘ co←base-step)
 
-  co←Sq' : (a : A) → (x : [𝟚× A ]) (y : IsNormalised x) →
-      ∀ u → PathP (λ i → base ≡ loop a i)
-      (recList (λ _ → base) (flip _∙_ ∘ co←base-step) x)
-      (recList (λ _ → base) (flip _∙_ ∘ co←base-step) (preη· (true , a) x u ))
-  co←Sq' a ((false , snd₁) ∷ xs) y (yes p) =
-    cong (λ x' → co←base ((false , x') ∷ xs)) (cong snd (sym p))
-      ◁ symP (compPath-filler (co←base xs) (sym (loop a)))
-  co←Sq' a xs y (no ¬p) = compPath-filler _ _
-  co←Sq' a ((true , snd₁) ∷ xs) y (yes p) = ⊥.rec (true≢false (cong fst p))
-
-  co←Sq : (a : A) → SquareP (λ i j →  ua (η·≃ (true , a)) i → Bouquet A)
-                       (funExt (co←base ∘ fst))
-                       (funExt (co←base ∘ fst))
-                       (λ _ _ → base)
-                       (λ i _ → loop a i)
-  co←Sq a = congP (λ _ → funExt) (ua→ (uncurry
-     (λ xs y → co←Sq' a xs y (HeadIsRedex? ((true , a) ∷ xs)))))
-
   co← : ∀ x → CodeBouquet x → base ≡ x
   co← base = co←base ∘ fst
   co← (loop a i) x j = co←Sq a i j x
+   where
+
+   co←Sq : (a : A) → SquareP (λ i j →  ua (η·≃ (true , a)) i → Bouquet A)
+                        (funExt (co←base ∘ fst))
+                        (funExt (co←base ∘ fst))
+                        (λ _ _ → base)
+                        (λ i _ → loop a i)
+   co←Sq a = congP (λ _ → funExt) (ua→ (uncurry
+      (λ xs y → co←Sq' a xs y (HeadIsRedex? ((true , a) ∷ xs)))))
+    where
+    co←Sq' : (a : A) → (x : [𝟚× A ]) (y : IsNormalised x) →
+       ∀ u → PathP (λ i → base ≡ loop a i)
+       (recList (λ _ → base) (flip _∙_ ∘ co←base-step) x)
+       (recList (λ _ → base) (flip _∙_ ∘ co←base-step) (preη· (true , a) x u ))
+    co←Sq' a ((false , snd₁) ∷ xs) y (yes p) =
+      cong (λ x' → co←base ((false , x') ∷ xs)) (cong snd (sym p))
+        ◁ symP (compPath-filler (co←base xs) (sym (loop a)))
+    co←Sq' a xs y (no ¬p) = compPath-filler _ _
+    co←Sq' a ((true , snd₁) ∷ xs) y (yes p) = ⊥.rec (true≢false (cong fst p))
 
   coSec : ∀ x → section (co← x) (co→ x)
   coSec _ = J (λ x b → co← x (co→ x b) ≡ b) refl
