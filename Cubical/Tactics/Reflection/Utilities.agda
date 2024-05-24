@@ -244,3 +244,6 @@ module dropVars (k : ℕ) where
 
  rpts n [] = []
  rpts n ((arg i x) ∷ xs) = arg i (rpt n x) ∷ rpts n xs
+
+dropVar : ℕ → Term → Term
+dropVar = dropVars.rv 1 

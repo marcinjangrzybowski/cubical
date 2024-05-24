@@ -1,5 +1,5 @@
-{-# OPTIONS --safe -v 3  #-} 
-
+{-# OPTIONS --safe  #-} 
+-- -v 3 
 module Cubical.Tactics.PathSolver.Coherence where
 
 
@@ -74,44 +74,31 @@ mb~ b k = if b then (vlam "𝓲~" $ R.var (suc k) v[ 𝒗 0 ]) else
 -- [𝟚×ℕ]→PathTerm : [𝟚× ℕ ] → Maybe R.Term
 -- [𝟚×ℕ]→PathTerm = map-Maybe (vlam "i") ∘ [𝟚×ℕ]→PathTerm'
 
-[𝟚×ℕ]→PathTerm : [𝟚× ℕ ] → R.Term
-[𝟚×ℕ]→PathTerm [] = Rrefl
-[𝟚×ℕ]→PathTerm ((b , k) ∷ []) = R∙ (vlam "ri" (R.var (suc k) v[ endTerm (not b) ]))
-          (if b then 𝒗 k else Rsym (𝒗 k))
-[𝟚×ℕ]→PathTerm ((b , k) ∷ xs) = R∙ ([𝟚×ℕ]→PathTerm xs) (if b then 𝒗 k else Rsym (𝒗 k))
-
-[𝟚×ℕ]→FillTerm : (Bool × ℕ) → [𝟚× ℕ ] → R.Term
-[𝟚×ℕ]→FillTerm (b , k) [] =
-    R.def (quote compPath-filler) ((vlam "ri" (R.var (suc k) v[ endTerm (not b) ]))
-         v∷ v[ if b then 𝒗 k else Rsym (𝒗 k) ])
-[𝟚×ℕ]→FillTerm (b , k) xs =
-  R.def (quote compPath-filler) ([𝟚×ℕ]→PathTerm xs v∷ v[ if b then 𝒗 k else Rsym (𝒗 k) ])
-
 
 --    -- map-Maybe (λ t → ∙tm t b k) ([𝟚×ℕ]→PathTerm xs)
 
 
 
-module [𝟚×ℕ]→PathTerm-test where
+-- module [𝟚×ℕ]→PathTerm-test where
 
- module _ (l : [𝟚× ℕ ]) where
-  macro
-   [𝟚×ℕ]→PathTerm-test : R.Term → R.TC Unit
-   [𝟚×ℕ]→PathTerm-test h = do
-     let tm = [𝟚×ℕ]→PathTerm l
-     -- R.typeError [ tm ]ₑ
-     R.unify tm h
+--  module _ (l : [𝟚× ℕ ]) where
+--   macro
+--    [𝟚×ℕ]→PathTerm-test : R.Term → R.TC Unit
+--    [𝟚×ℕ]→PathTerm-test h = do
+--      let tm = [𝟚×ℕ]→PathTerm l
+--      -- R.typeError [ tm ]ₑ
+--      R.unify tm h
 
 
- module T1 {x : A} (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) (s : w ≡ v) where
+--  module T1 {x : A} (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) (s : w ≡ v) where
 
-  t1[] : [𝟚× ℕ ]
-  t1[] = (false , 3) ∷ (false , 2) ∷
-         (false , 1) ∷
-         [ false , 0 ]   
+--   t1[] : [𝟚× ℕ ]
+--   t1[] = (false , 3) ∷ (false , 2) ∷
+--          (false , 1) ∷
+--          [ false , 0 ]   
   
-  t1 : v ≡ x
-  t1 = [𝟚×ℕ]→PathTerm-test t1[]
+--   t1 : v ≡ x
+--   t1 = [𝟚×ℕ]→PathTerm-test t1[]
 
 tryCastAsNoCongS :  (List (SubFace × CuTerm)) → R.TC (List (SubFace × CuTerm' ⊥ Unit))
 
@@ -173,15 +160,14 @@ cellVert _ _ =  R.typeError $ [ "cellVert failed " ]ₑ
 
 matchAtomPa : R.Term → R.TC (Maybe (Bool × ℕ))
 matchAtomPa (R.var x []) = ⦇ nothing ⦈
-matchAtomPa (R.var x v[ R.var zero [] ]) = ⦇ just (⦇ (true , x) ⦈) ⦈
-matchAtomPa (R.var x v[ R.def (quote ~_) v[ R.var zero [] ] ]) =
+matchAtomPa (R.var (suc x) v[ R.var zero [] ]) = ⦇ just (⦇ (true , x) ⦈) ⦈
+matchAtomPa (R.var (suc x) v[ R.def (quote ~_) v[ R.var zero [] ] ]) =
    ⦇ just (⦇ (false , x) ⦈) ⦈
 matchAtomPa t = R.typeError $ "unexpected in matchAtomPA : " ∷ₑ [ t ]ₑ
 
 getAtomPa : R.Term → R.TC [𝟚× ℕ ]
-getAtomPa t = addNDimsToCtx 1 $ do
-  let t' = liftVars t
-  tn ← R.normalise (appNDimsI 1 t')
+getAtomPa t = addNDimsToCtx 1 do 
+  tn ← R.normalise t --<|> (addNDimsToCtx dim $ R.typeError ([ "here :" ]ₑ ++ₑ [ t ]ₑ))
   Mb.rec [] [_] <$> matchAtomPa tn
 
 print[𝟚×] :  [𝟚× ℕ ] → List R.ErrorPart
@@ -287,7 +273,7 @@ getVert _ x (cell' (_ , x₁) _) = cellVert x₁ x
 
 getIArg : ℕ → R.Term → R.TC (Maybe IExpr)
 getIArg dim t = addNDimsToCtx dim $ do
-  (R.normalise $ appNDimsI dim (liftVars.rv dim 0 t)) >>= h
+  (R.normalise $ t) >>= h
 
  where
  h : R.Term → R.TC (Maybe IExpr)
@@ -317,11 +303,12 @@ markVert (suc m) dim w (hco x cu) = do
                  vv ← (getVert m (L.map (Mb.fromMaybe false) sf) markedCu)
                  ⦇ ⦇ sf ⦈ , markVert m (suc (sfDim sf)) vv x ⦈) x
   pure $ hco fixedVerts markedCu
-markVert _ dim w (cell x) =
+markVert _ dim w (cell x) = do
+ 
   ⦇ cell'
      ⦇ (getIArg dim x) , mapCellVerts (_[·] w) <$> getTermVerts dim x ⦈
      (⦇ x ⦈)
-     ⦈
+     ⦈ 
 
 
 getMaxWordLen : CuTerm' ⊥ ((Maybe IExpr) × CellVerts) → ℕ
@@ -330,7 +317,25 @@ getMaxWordLen x = foldCells (flip (foldl max)  ∘ L.map (length ∘ snd) ∘ Ce
 flipOnFalse : Bool → R.Term → R.Term
 flipOnFalse b t = if b then t else R.def (quote ~_) v[ t ] 
 
+
+
+[𝟚×ℕ]→PathTerm : [𝟚× ℕ ] → R.Term
+[𝟚×ℕ]→PathTerm [] = Rrefl
+[𝟚×ℕ]→PathTerm ((b , k) ∷ []) = R∙ (vlam "ri" (R.var (suc k) v[ endTerm (not b) ]))
+          (if b then 𝒗 k else Rsym (𝒗 k))
+[𝟚×ℕ]→PathTerm ((b , k) ∷ xs) = R∙ ([𝟚×ℕ]→PathTerm xs) (if b then 𝒗 k else Rsym (𝒗 k))
+
+[𝟚×ℕ]→FillTerm : (Bool × ℕ) → [𝟚× ℕ ] → R.Term
+[𝟚×ℕ]→FillTerm (b , k) [] =
+    R.def (quote compPath-filler) ((vlam "ri" (R.var (suc k) v[ endTerm (not b) ]))
+         v∷ v[ if b then 𝒗 k else Rsym (𝒗 k) ])
+[𝟚×ℕ]→FillTerm (b , k) xs =
+  R.def (quote compPath-filler) ([𝟚×ℕ]→PathTerm xs v∷ v[ if b then 𝒗 k else Rsym (𝒗 k) ])
+
 module MakeFoldTerm (t0 : R.Term) where
+
+
+
 
  -- ilSF : ℕ → SubFace → SubFace
 
@@ -339,16 +344,16 @@ module MakeFoldTerm (t0 : R.Term) where
  -- ilSF (suc n) (x ∷ xs) = x ∷ ilSF n xs
 
  cellTerm : ℕ → (Maybe IExpr) × (Maybe (Bool × ℕ) × [𝟚× ℕ ]) → R.Term → R.Term 
- cellTerm dim (mbi , nothing , []) t = vlam "ii" (liftVars t)
+ cellTerm dim (mbi , nothing , []) t = (liftVars t)
  cellTerm dim (mbi , nothing , tl@(_ ∷ _)) t = --R.unknown
-    vlam "ii" (vlamⁿ dim (R.def (quote $≡) (liftVars.rv dim 0 ([𝟚×ℕ]→PathTerm tl) v∷
-       v[ R.def (quote ~_) v[ 𝒗 dim ] ])))
+    R.def (quote $≡) (liftVars.rv (suc dim) 0 ([𝟚×ℕ]→PathTerm tl) v∷
+       v[ R.def (quote ~_) v[ 𝒗 dim ] ])
  cellTerm dim (just ie , just x , tl) t = --vlamⁿ 1 (liftVars.rv 1 0 t)
    
-    vlam "ii" (vlamⁿ (dim) (R.def (quote $≡)
-         (R.def (quote $≡) (liftVars.rv dim 0 ([𝟚×ℕ]→FillTerm x tl) v∷
+    R.def (quote $≡)
+         ((R.def (quote $≡) (liftVars.rv (suc dim) 0 ([𝟚×ℕ]→FillTerm x tl) v∷
             v[ flipOnFalse (fst x) (IExpr→Term ie) ]) v∷
-       v[ R.def (quote ~_) v[ 𝒗 dim ] ])))
+       v[ R.def (quote ~_) v[ 𝒗 dim ] ]))
  cellTerm _ _ _ = R.lit (R.string ("unexpected in MakeFoldTerm.cellTerm"))
    -- let (zz , yy) = cellVertsHead cv
    -- in Mb.rec (vlam "ii" (liftVars $ [𝟚×ℕ]→PathTerm yy)) {!!} zz
@@ -358,8 +363,9 @@ module MakeFoldTerm (t0 : R.Term) where
  
  ctil : ℕ → (CuTerm' ⊥ ((Maybe IExpr) × CellVerts)) → CuTerm
  ctil dim (hco x c) =
-   hco ((repeat dim nothing ++ [ just true ] , cell (vlamⁿ (suc dim) (liftVars.rv (suc dim) 0 t0)))
-            ∷ ctils x)
+   hco ( (repeat dim nothing ++ [ just true ] , cell ((liftVars.rv (suc dim) 0 t0)))
+            ∷
+            ctils x)
           (ctil dim c)
  ctil dim (cell' cv x) = cell' tt $ cellTerm dim (map-snd cellVertsHead cv) x
  -- cell $
@@ -385,7 +391,7 @@ module TestMarkVert where
   macro
    testMarkVert : R.Term → R.Term → R.TC Unit
    testMarkVert t h = do
-     cu ← extractCuTerm' 100 dim t
+     cu ← extractCuTerm dim t
      cu' ← tryCastAsNoCong cu <|> R.typeError [ "failed to cast to no cong" ]ₑ
      mv ← markVert 100 dim [] cu'     
      visitCellsM (λ (mbIx , cv) → do
@@ -397,24 +403,30 @@ module TestMarkVert where
      R.typeError $ [ "ok" ]ₑ
 
   macro
-   mkEqTerm : R.Term → R.Term → R.Term → R.TC Unit
-   mkEqTerm t0 t h = do
-     cu ← extractCuTerm' 100 dim t
+   mkEqTerm : R.Term → R.Term → R.TC Unit
+   mkEqTerm t h = do
+     t0 ← R.normalise
+            (subfaceCell (repeat dim (just false)) (appNDimsI dim (liftVars.rv dim 0 t)))  
+     cu ← extractCuTerm dim t
      cu' ← tryCastAsNoCong cu <|> R.typeError [ "failed to cast to no cong" ]ₑ
-     mv ← markVert 100 dim [] cu'     
-     -- visitCellsM (λ (mbIx , cv) → do
-     --   Mb.rec (pure _) (R.debugPrint "testMarkVert" 3 ∘ [_]ₑ ∘ vlamⁿ dim ∘  IExpr→Term) mbIx
-     --   ((R.debugPrint "testMarkVert" 3 ∘ ("cellMarks : \n" ∷ₑ_) ∘ printCellVerts) cv)  ) mv
-     -- R.debugPrint "testMarkVert" 3 $ "max word: " ∷ₑ [ (getMaxWordLen mv ) ]ₑ
+     
+     mv ← markVert 100 dim [] cu'
+     -- R.typeError $ [ "ok" ]ₑ
+     -- -- visitCellsM (λ (mbIx , cv) → do
+     -- --   Mb.rec (pure _) (R.debugPrint "testMarkVert" 3 ∘ [_]ₑ ∘ vlamⁿ dim ∘  IExpr→Term) mbIx
+     -- --   ((R.debugPrint "testMarkVert" 3 ∘ ("cellMarks : \n" ∷ₑ_) ∘ printCellVerts) cv)  ) mv
+     -- -- R.debugPrint "testMarkVert" 3 $ "max word: " ∷ₑ [ (getMaxWordLen mv ) ]ₑ
      
      -- R.typeError $ [ "ok" ]ₑ
      let cu = makeFoldTerm t0 dim mv
      -- te ← ppCTn false dim 100 cu
     
-     -- R.typeError $ [ toTerm (suc dim) (cu) ]ₑ
-
-
      R.unify (toTerm (suc dim) (cu)) h
+       <|>
+      (R.typeError $ "check :" ∷ₑ [ toTerm (suc dim) (cu) ]ₑ)
+
+
+     
 
    simplifyPaⁿ : R.Term → R.Term → R.TC Unit
    simplifyPaⁿ t0 hole = do
@@ -517,119 +529,126 @@ module TestMarkVert where
 
  module PentaJJ1 {x : A} (p : x ≡ y) (q : y ≡ z) (r' r : z ≡ w) (s : w ≡ v) where
 
-   P Q : x ≡ v
-   P = refl ∙ (p ∙' q ∙ r' ∙ (sym r' ∙ (r ∙ s)))
-   Q = p ∙ (q ∙ refl ∙ r ∙ s ∙ sym s) ∙ s
+  _ : I → I → A
+  _ =  mkEqTerm (suc zero) (λ (i : I) → (p ∙ sym p) i)
+
+  P Q : x ≡ v
+  P = refl ∙ (p ∙' q ∙ r' ∙ (sym r' ∙ (r ∙ s)))
+  Q = p ∙ (q ∙ refl ∙ r ∙ s ∙ sym s) ∙ s
 
 
---    PC RC : I → I → A
---    PC = mkEqTerm (suc zero) x (λ (i : I) → P i)
---    RC = mkEqTerm (suc zero) x (λ (i : I) → Q i)
+  -- _ : Unit
+  -- _ = {!testMarkVert (suc zero) (λ (i : I) → P i)!}
+
+  PC RC : I → I → A
+  PC = mkEqTerm (suc zero) (λ (i : I) → P i)
+  RC = mkEqTerm (suc zero) (λ (i : I) → Q i)
 
 
---    P≡Q : P ≡ Q
---    P≡Q i j =
---        hcomp (λ z → primPOr (~ i) (i ∨ j ∨ ~ j )
---       (λ _ → PC (~ z) j)
---         (λ _ → RC (~ z) j))
---         x
+  P≡Q : P ≡ Q
+  P≡Q i j =
+      hcomp (λ z → primPOr (~ i) (i ∨ j ∨ ~ j )
+     (λ _ → PC (~ z) j)
+       (λ _ → RC (~ z) j))
+       x
 
 
--- --   -- ppj : PentaJ1.pentagonComp p q r s ≡ refl
--- --   -- ppj = mkEqTerm (suc (suc zero))
--- --   --            v (λ (i j : I) → PentaJ1.pentagonComp p q r s i j) 
+-- -- --   -- ppj : PentaJ1.pentagonComp p q r s ≡ refl
+-- -- --   -- ppj = mkEqTerm (suc (suc zero))
+-- -- --   --            v (λ (i j : I) → PentaJ1.pentagonComp p q r s i j) 
 
--- --   open PentaJ1 p q r s
+ module PentaJJ1' {x : A} (p : x ≡ y) (q : y ≡ z) (r' r : z ≡ w) (s : w ≡ v) where
+  open PentaJ1 p q r s
 
--- --   PC RC : I → I → I → A
--- --   PC = mkEqTerm (suc (suc zero)) x (λ (i j : I) → pLHS i j)
--- --   RC = mkEqTerm (suc (suc zero)) x (λ (i j : I) → rLHS i j)
+  PC RC : I → I → I → A
+  PC = mkEqTerm (suc (suc zero)) (λ (i j : I) → pLHS i j)
+  RC = mkEqTerm (suc (suc zero)) (λ (i j : I) → rLHS i j)
 
 
--- --   pent : assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s
+  pent : assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s
+           ≡
+          cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
+  pent i j k =
+    hcomp (λ z → primPOr (~ i) (i ∨ j ∨ ~ j ∨ k ∨ ~ k)
+      (λ _ → PC (~ z) j k)
+      (λ _ → RC (~ z) j k))
+      x
+
+   -- PC' RC' : I → I → I → I → A
+   -- PC' = mkEqTerm (suc (suc (suc zero))) x (λ (i j k : I) → pent i j k)
+   -- RC' = mkEqTerm (suc (suc (suc zero))) x (λ (i j k : I) → pentagonIdentity p q r s i j k)
+
+
+  -- pent≡pentagonIdentity : {!pent ≡!}
+  -- pent≡pentagonIdentity = {!!}
+
+--   -- pent : assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s
+--   --          ≡
+--   --         cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
+--   -- pent i j k =
+--   --   -- hcomp (λ z →
+--   --   --         λ { (i = i0) → mkEqTerm (suc (suc zero))
+--   --   --                          x (λ (i j : I) → pLHS i j) j k z
+--   --   --           ; (i = i1) → mkEqTerm (suc (suc zero))
+--   --   --                          x (λ (i j : I) → rLHS i j) j k z
+--   --   --           ; (j = i0) → {!!}
+--   --   --           ; (j = i1) → {!!}
+--   --   --           ; (k = i0) → {!!}
+--   --   --           ; (k = i1) → {!!}
+--   --   --           })
+--   --   --      ?
+
+
+-- -- (congP (λ _ → flipSquare)
+-- --            (flipSquareP (CompSquares.compSquaresPath→Cube _ _ _ _ _ _
+-- --            (mkEqTerm (suc (suc zero)) v (λ (i j : I) → PentaJ1.pentagonComp p q r s i j))
+-- --           -- (simplifyPaⁿ (suc (suc zero)) (λ (i j : I) → PentaJ1.pentagonComp p q r s i j)
+-- --           --    v --(λ (i j : I) → PentaJ1.pentagonComp p q r s i j)
+-- --           --    )
+-- --              )))
+
+-- --   pent' : assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s
 -- --            ≡
 -- --           cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
--- --   pent i j k =
--- --     hcomp (λ z → primPOr (~ i) (i ∨ j ∨ ~ j ∨ k ∨ ~ k)
--- --       (λ _ → PC (~ z) j k)
--- --       (λ _ → RC (~ z) j k))
--- --       x
+-- --   pent' = cancel→pathsEq ww
 
--- --   -- PC' RC' : I → I → I → I → A
--- --   -- PC' = mkEqTerm (suc (suc (suc zero))) x (λ (i j k : I) → pent i j k)
--- --   -- RC' = mkEqTerm (suc (suc (suc zero))) x (λ (i j k : I) → pentagonIdentity p q r s i j k)
+-- --    where
+-- --    ww : Cube {!!} (refl {x = {!!}}) refl refl refl refl
+-- --    ww = {!!}
 
 
--- --   -- pent≡pentagonIdentity : {!pent ≡!}
--- --   -- pent≡pentagonIdentity = {!!}
-
--- -- --   -- pent : assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s
--- -- --   --          ≡
--- -- --   --         cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
--- -- --   -- pent i j k =
--- -- --   --   -- hcomp (λ z →
--- -- --   --   --         λ { (i = i0) → mkEqTerm (suc (suc zero))
--- -- --   --   --                          x (λ (i j : I) → pLHS i j) j k z
--- -- --   --   --           ; (i = i1) → mkEqTerm (suc (suc zero))
--- -- --   --   --                          x (λ (i j : I) → rLHS i j) j k z
--- -- --   --   --           ; (j = i0) → {!!}
--- -- --   --   --           ; (j = i1) → {!!}
--- -- --   --   --           ; (k = i0) → {!!}
--- -- --   --   --           ; (k = i1) → {!!}
--- -- --   --   --           })
--- -- --   --   --      ?
-
-
--- -- -- -- (congP (λ _ → flipSquare)
--- -- -- --            (flipSquareP (CompSquares.compSquaresPath→Cube _ _ _ _ _ _
--- -- -- --            (mkEqTerm (suc (suc zero)) v (λ (i j : I) → PentaJ1.pentagonComp p q r s i j))
--- -- -- --           -- (simplifyPaⁿ (suc (suc zero)) (λ (i j : I) → PentaJ1.pentagonComp p q r s i j)
--- -- -- --           --    v --(λ (i j : I) → PentaJ1.pentagonComp p q r s i j)
--- -- -- --           --    )
--- -- -- --              )))
-
--- -- -- --   pent' : assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s
--- -- -- --            ≡
--- -- -- --           cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
--- -- -- --   pent' = cancel→pathsEq ww
-
--- -- -- --    where
--- -- -- --    ww : Cube {!!} (refl {x = {!!}}) refl refl refl refl
--- -- -- --    ww = {!!}
-
-
--- -- --   --      (mkEqTerm (suc (suc zero)) x
--- -- --   --     λ (i j : I) →
--- -- --   --      ((assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s)
--- -- --   --         ∙
--- -- --   --         sym (cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)))
--- -- --   --         i j
--- -- --   --         )
--- -- --   -- -- -- (congP (λ _ → flipSquare)
--- -- --   -- -- --          (flipSquareP (CompSquares.compSquaresPath→Cube _ _ _ _ _ _
--- -- --   -- -- --          (mkEqTerm (suc (suc zero)) v (λ (i j : I) → PentaJ1.pentagonComp p q r s i j))
--- -- --   -- -- --         -- (simplifyPaⁿ (suc (suc zero)) (λ (i j : I) → PentaJ1.pentagonComp p q r s i j)
--- -- --   -- -- --         --    v --(λ (i j : I) → PentaJ1.pentagonComp p q r s i j)
--- -- --   -- -- --         --    )
--- -- --   -- -- --            )))
+--   --      (mkEqTerm (suc (suc zero)) x
+--   --     λ (i j : I) →
+--   --      ((assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s)
+--   --         ∙
+--   --         sym (cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)))
+--   --         i j
+--   --         )
+--   -- -- -- (congP (λ _ → flipSquare)
+--   -- -- --          (flipSquareP (CompSquares.compSquaresPath→Cube _ _ _ _ _ _
+--   -- -- --          (mkEqTerm (suc (suc zero)) v (λ (i j : I) → PentaJ1.pentagonComp p q r s i j))
+--   -- -- --         -- (simplifyPaⁿ (suc (suc zero)) (λ (i j : I) → PentaJ1.pentagonComp p q r s i j)
+--   -- -- --         --    v --(λ (i j : I) → PentaJ1.pentagonComp p q r s i j)
+--   -- -- --         --    )
+--   -- -- --            )))
 
 
 
--- -- --   -- -- -- pent≡pentagonIdentity : pent ≡ pentagonIdentity p q r s
--- -- --   -- -- -- pent≡pentagonIdentity = {!!}
+--   -- -- -- pent≡pentagonIdentity : pent ≡ pentagonIdentity p q r s
+--   -- -- -- pent≡pentagonIdentity = {!!}
 
--- -- --   -- -- -- -- ppj' : (PentaJ1.pentagonComp (refl {x = v}) refl refl refl) ≡ refl
--- -- --   -- -- -- -- ppj' = simplifyReflⁿ (suc (suc zero))
+--   -- -- -- -- ppj' : (PentaJ1.pentagonComp (refl {x = v}) refl refl refl) ≡ refl
+--   -- -- -- -- ppj' = simplifyReflⁿ (suc (suc zero))
 
--- -- --   -- -- -- -- inferTestPenta : Unit
--- -- --   -- -- -- -- inferTestPenta = {!extractCuTermTest (suc (suc zero))
--- -- --   -- -- -- --      (λ (i j : I) → pentagonComp i j) !}
+--   -- -- -- -- inferTestPenta : Unit
+--   -- -- -- -- inferTestPenta = {!extractCuTermTest (suc (suc zero))
+--   -- -- -- --      (λ (i j : I) → pentagonComp i j) !}
 
--- -- --   -- -- -- -- testMarkVertPenta : Unit
--- -- --   -- -- -- -- testMarkVertPenta = {!testMarkVert (suc (suc zero))
--- -- --   -- -- -- --      (λ (i j : I) → pentagonComp i j) !}
+--   -- -- -- -- testMarkVertPenta : Unit
+--   -- -- -- -- testMarkVertPenta = {!testMarkVert (suc (suc zero))
+--   -- -- -- --      (λ (i j : I) → pentagonComp i j) !}
 
 
--- -- --   -- -- -- -- -- tyHlp : {!!}
--- -- --   -- -- -- -- -- tyHlp = CompSquares.compSquaresPath→Cube
--- -- --   -- -- -- -- --   {!!} {!!} pLHS {!pRHS!} {!!} {!!} {!!}
+--   -- -- -- -- -- tyHlp : {!!}
+--   -- -- -- -- -- tyHlp = CompSquares.compSquaresPath→Cube
+--   -- -- -- -- --   {!!} {!!} pLHS {!pRHS!} {!!} {!!} {!!}

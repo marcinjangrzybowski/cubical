@@ -21,6 +21,11 @@ open import Cubical.Tactics.Reflection
 
 infixr 40 _<>_
 
+toℕTerm : ℕ → R.Term
+toℕTerm zero = R.con (quote zero) []
+toℕTerm (suc x) = R.con (quote suc) v[ toℕTerm x ]
+
+
 _≟ℕ_ : ℕ → ℕ → Bool
 x ≟ℕ x₁ = Dec→Bool (discreteℕ x x₁)
 

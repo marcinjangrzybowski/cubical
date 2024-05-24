@@ -151,6 +151,13 @@ fromCu zero {bd} x = λ i → x i
 fromCu n@(suc zero) {bd} x = λ i i₁ → x i i₁
 fromCu n@(suc (suc _)) {bd} x = (Iso.fun (IsoCuI^→ (suc n))) (bd , x)
 
+fromCuTmWithApp : ℕ → R.Term → R.Term
+fromCuTmWithApp zero t = t
+fromCuTmWithApp (suc n) t = R.def (quote fromCu)
+ (toℕTerm n v∷ (liftVars.rv (suc n) 0 t) v∷ L.map (λ k → varg (𝒗 k)) (range (suc n)))
+
+
+
 data SubFaceω : SSet where 
  [] : SubFaceω
  _∷_ : I → SubFaceω → SubFaceω
@@ -410,9 +417,9 @@ pattern
 CuTerm = CuTerm' Unit Unit 
 CuArg = CuArg' Unit Unit
 
-mapTermUnderDims : ℕ → (R.Term → R.Term) → R.Term → R.Term
-mapTermUnderDims dim f x =
-  vlamⁿ dim $ f (appNDimsI dim (liftVars.rv dim 0 x))
+-- mapTermUnderDims : ℕ → (R.Term → R.Term) → R.Term → R.Term
+-- mapTermUnderDims dim f x =
+--   vlamⁿ dim $ f (appNDimsI dim (liftVars.rv dim 0 x))
 
 module MapCuTerm (f : ℕ → R.Term → R.Term) where
 
@@ -421,7 +428,7 @@ module MapCuTerm (f : ℕ → R.Term → R.Term) where
 
  mapCuTerm : ℕ → CuTerm → CuTerm
  mapCuTerm dim (hco x x₁) = hco (mapCuTermS x) (mapCuTerm dim x₁)
- mapCuTerm dim (cell x) = cell (vlamⁿ dim $ (f dim) (appNDimsI dim (liftVars.rv dim 0 x)))
+ mapCuTerm dim (cell x) = cell (f dim x)
  mapCuTerm dim (𝒄ong x x₁) = 𝒄ong x (mapCuTermT dim x₁)
 
 
@@ -519,6 +526,13 @@ applyFaceConstraints (mbC ∷ sf) ((v , nothing) ∷ ctx) =
 freeVars : CuCtx → List String
 freeVars = L.map fst ∘S filter (λ { (_ , (nothing)) → true ; _ → false} )
 
+catMaybes : List (Maybe A) → List A
+catMaybes [] = []
+catMaybes (nothing ∷ xs) = catMaybes xs
+catMaybes (just x ∷ xs) = x ∷ catMaybes xs
+
+boundedDims : CuCtx → List (String × Bool)
+boundedDims = catMaybes ∘S L.map (uncurry λ s → map-Maybe (s ,_)) 
 
 liftTermHead : ℕ → TermHead → TermHead
 liftTermHead k (var x) = var (x + k)
@@ -616,54 +630,33 @@ constPartial : A → ∀ φ → Partial φ A
 constPartial a φ 1=1 = a
 
 
-subfaceCell : SubFace → R.Term → R.Term
-subfaceCell sf = sfc (L.rev sf)
- where
- sfc : SubFace → R.Term → R.Term
- sfc [] t = t
- sfc (nothing ∷ sf) t = vlam "𝓲" $ sfc sf $  (R.def (quote $i) (liftVars t v∷ v[ 𝒗 0 ]))
- sfc (just x ∷ sf) t = sfc sf $ (R.def (quote $i) (t v∷ v[ endTerm x ]))
-
-subfaceApp' : ℕ → SubFace → R.Term → R.Term
-subfaceApp' _ [] t = t
-subfaceApp' k (x ∷ sf) t =
- let (k' , a) = Mb.rec {B = ℕ × R.Term} ((suc k) , R.var (length sf + k) [])
-             ((k ,_) ∘S (if_then R.con (quote i1) [] else R.con (quote i0) [])) x
-     t' = R.def (quote $I) (vlam "sfa" t v∷ v[ a  ])
-     
- in subfaceApp' k' sf t'
-
-subfaceApp : SubFace → R.Term → R.Term
-subfaceApp sf = subfaceApp' 0 sf ∘ (liftVars.rv (sfDim sf) (length sf)) 
-
-
-subfaceApp'i : ℕ → SubFace → R.Term → R.Term
-subfaceApp'i _ [] t = t
-subfaceApp'i k (x ∷ sf) t =
- let (k' , a) = Mb.rec {B = ℕ × R.Term} ((suc k) , R.var (length sf + k) [])
-             ((k ,_) ∘S (if_then R.con (quote i1) [] else R.con (quote i0) [])) x
-     t' = R.def (quote $i) (vlam "sfa" t v∷ v[ a  ])
-     
- in subfaceApp'i k' sf t'
-
-subfaceAppi : SubFace → R.Term → R.Term
-subfaceAppi sf = subfaceApp'i 0 sf ∘ (liftVars.rv (sfDim sf) (length sf)) 
-
-
-subfaceRepl' : ℕ → SubFace → R.Term → R.Term
-subfaceRepl' _ [] t = t
-subfaceRepl' k (nothing ∷ sf) t = subfaceRepl' (suc k) sf t 
-subfaceRepl' k (just x ∷ sf) t = 
+-- replaceVarWithEnd : ℕ → Bool → R.Term → R.Term
+-- replaceVarWithEnd k b =
+--   replaceVarWithCon
+--   (λ { zero → just (quote i0) ; _ → nothing })
   
-    dropVars.rv 1 k (replaceVarWithCon f (subfaceRepl' (suc k) sf t))
-  where
-  f : ℕ → Maybe R.Name
-  f l with discreteℕ l k
-  ... | yes p = just (if x then quote i1 else quote i0)
-  ... | no ¬p = nothing
 
-subfaceRepl : SubFace → R.Term → R.Term
-subfaceRepl = subfaceRepl' zero
+dropWhere : List Bool → R.Term → R.Term
+dropWhere = dw ∘S rev
+ where
+ dw : List Bool → R.Term → R.Term
+ dw [] t = t
+ dw (b ∷ xs) t = dw xs (if b then dropVar (length xs) t else t)
+
+liftWhere : List Bool → R.Term → R.Term
+liftWhere = lw ∘S rev
+ where
+ lw : List Bool → R.Term → R.Term
+ lw [] t = t
+ lw (b ∷ xs) t =
+  let t' = lw xs t
+  in (if b then (liftVars.rv 1 (length xs) t') else t')
+ 
+subfaceCell : SubFace → R.Term → R.Term
+subfaceCell sf = dropWhere (L.map (λ {(just _) → true ; _ → false }) sf) ∘S replaceVarWithCon (r sf)
+ where
+ r : SubFace → ℕ → Maybe R.Name
+ r sf = map-Maybe (if_then quote i1 else quote i0) ∘S lookupAlways nothing sf
 
 
 pick : List Bool → List A → List A
@@ -723,24 +716,20 @@ appNDims≡ (suc n) t =
  appNDims≡ n $ R.def (quote $≡) ( t v∷ v[ R.var n [] ])
 
 
-appFreeDimsI : CuCtx → R.Term → R.Term
-appFreeDimsI = h 0
- where
- h : ℕ → CuCtx → R.Term → R.Term
- h n [] t = t
- h n ((_ , just _) ∷ xs) t = h (suc n) xs t
- h n ((s , nothing) ∷ xs) t = (R.def (quote $i) ((h (suc n) xs  t) v∷ v[ R.var n [] ]))
+inGlobalCtx : CuCtx → R.Term → R.Term
+inGlobalCtx ctx = liftWhere (L.map ((λ { (just _) → true ; _ → false }) ∘S snd ) ctx) 
 
-global2local : CuCtx → R.Term → R.Term
-global2local ctx t = (h 0 ctx (vlamⁿ (length ctx) (liftVars.rv (length (freeVars ctx)) (length ctx) t)))
 
- where
- h : ℕ → CuCtx → R.Term → R.Term
- h n [] t = t
- h n ((_ , just b) ∷ xs) t =
-   (R.def (quote $i) ((h n xs  t) v∷ v[ if b then R.con (quote i1) [] else R.con (quote i0) [] ]))
+-- global2local : CuCtx → R.Term → R.Term
+-- global2local ctx t = (h 0 ctx (vlamⁿ (length ctx) (liftVars.rv (length (freeVars ctx)) (length ctx) t)))
+
+--  where
+--  h : ℕ → CuCtx → R.Term → R.Term
+--  h n [] t = t
+--  h n ((_ , just b) ∷ xs) t =
+--    (R.def (quote $i) ((h n xs  t) v∷ v[ if b then R.con (quote i1) [] else R.con (quote i0) [] ]))
   
- h n ((s , nothing) ∷ xs) t = (R.def (quote $i) ((h (suc n) xs  t) v∷ v[ R.var n [] ]))
+--  h n ((s , nothing) ∷ xs) t = (R.def (quote $i) ((h (suc n) xs  t) v∷ v[ R.var n [] ]))
 
 
 module ToTerm where
@@ -776,8 +765,9 @@ module ToTerm where
  toTerm ctx (hco x x₁) =
    R.def (quote hcomp)
      (vlam "𝒛" (toSides ctx x) v∷ v[ toTerm ctx x₁ ])
- toTerm ctx (cell x) =
-    appFreeDimsI ctx (liftVars.rv (length ctx) 0 x)
+ toTerm ctx (cell x) = 
+   liftWhere (L.map ((λ { (just _) → true ; _ → false }) ∘S snd ) ctx) x
+    -- appFreeDimsI ctx (liftVars.rv (length ctx) 0 x)
     -- let d = length $ freeVars ctx
     -- in appNDimsI dim (liftVars.rv d 0 x)
  toTerm ctx (𝒄ong h t) =
@@ -785,7 +775,7 @@ module ToTerm where
 
   where
   appTH : TermHead → List (R.Arg R.Term) → R.Term
-  appTH (var x) = R.var (length ctx + x )
+  appTH (var x) = R.var (length (ctx)  + x )
   appTH (con c) = R.con c
   appTH (def f) = R.def f
 
@@ -797,10 +787,8 @@ toTerm dim = vlamⁿ dim ∘ (ToTerm.toTerm (defaultCtx dim))
 ppCTn : Bool →  ℕ → ℕ → CuTerm → R.TC (List R.ErrorPart)
 ppCTn b =
   ppCT' (λ ctx x →
-        do let x' = liftVars.rv (length ctx) 0 x
-           inCuCtx' ctx $ do
-            nt ← (if b then R.normalise else R.reduce) (appFreeDimsI ctx x')
-                    -- <|> R.normalise (appNDims≡ (length ctx') x')
+        do inCuCtx ctx $ do
+            nt ← (if b then R.normalise else R.reduce) x
             x'' ← R.formatErrorParts [ nt ]ₑ
             pure [ R.strErr x'' ]) 
 
@@ -814,37 +802,37 @@ ppCTs = ppCT' (λ _ x → pure [ R.strErr "■" ])
 
 module cuTermInsLift (k : ℕ) where
 
- ctila : List (R.Arg CuArg) → List (R.Arg CuArg)
+ ctila : ℕ →  List (R.Arg CuArg) → List (R.Arg CuArg)
 
  ctils : List (SubFace × CuTerm) → List (SubFace × CuTerm)
  
- ctil : CuTerm → CuTerm
- ctil (hco x c) =
-   hco (ctils x) (ctil c)
- ctil (cell x) = cell $ vlamⁿ k (liftVars.rv k 0 x)
- ctil (𝒄ong h l) = 𝒄ong h (ctila l)
+ ctil : ℕ → CuTerm → CuTerm
+ ctil dim (hco x c) =
+   hco (ctils x) (ctil dim c)
+ ctil dim (cell x) = cell $ (liftVars.rv k dim x)
+ ctil dim (𝒄ong h l) = 𝒄ong h (ctila dim l)
 
  ctils [] = []
  ctils ((sf , x) ∷ xs) =
-   (sf ++ repeat k nothing , ctil x) ∷ ctils xs
+   (sf ++ repeat k nothing , ctil (suc (sfDim sf)) x) ∷ ctils xs
 
- ctila [] = []
- ctila (R.arg i (iArg x) ∷ xs) = R.arg i (iArg x) ∷ ctila xs
- ctila (R.arg i (tArg x) ∷ xs) = R.arg i (tArg (ctil x)) ∷ ctila xs
+ ctila _ [] = []
+ ctila dim (R.arg i (iArg x) ∷ xs) = R.arg i (iArg x) ∷ ctila dim xs
+ ctila dim (R.arg i (tArg x) ∷ xs) = R.arg i (tArg (ctil dim x)) ∷ ctila dim xs
 
-cuTermInsLift :  ℕ → CuTerm → CuTerm
+cuTermInsLift :  ℕ → ℕ → CuTerm → CuTerm
 cuTermInsLift = cuTermInsLift.ctil
 
 
-evCellInCtx : CuCtx → List IExpr → R.Term → R.Term 
-evCellInCtx ctx [] t = t
-evCellInCtx ctx (x ∷ es) t = 
-  R.def (quote $i) ( evCellInCtx ctx es t v∷ v[ IExpr→TermInCtx ctx x ])
+-- evCellInCtx : CuCtx → List IExpr → R.Term → R.Term 
+-- evCellInCtx ctx [] t = t
+-- evCellInCtx ctx (x ∷ es) t = 
+--   R.def (quote $i) ( evCellInCtx ctx es t v∷ v[ IExpr→TermInCtx ctx x ])
 
-evCell :  List IExpr → R.Term → R.Term 
-evCell [] t = t
-evCell (x ∷ es) t = 
-  R.def (quote $i) ( evCell es t v∷ v[ IExpr→Term x ])
+-- evCell :  List IExpr → R.Term → R.Term 
+-- evCell [] t = t
+-- evCell (x ∷ es) t = 
+--   R.def (quote $i) ( evCell es t v∷ v[ IExpr→Term x ])
 
 
 -- remapCell : ℕ → List IExpr → R.Term → R.Term 

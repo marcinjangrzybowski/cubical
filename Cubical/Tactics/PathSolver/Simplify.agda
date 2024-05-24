@@ -1,5 +1,5 @@
-{-# OPTIONS --safe  #-} 
--- -v extractCuTermTest:4  -v checkHcomp:5 -v getCuCaseφ:5
+{-# OPTIONS --safe -v checkHcomp:5 -v getCuCaseφ:5 #-} 
+-- -v extractCuTermTest:4  -v checkHcomp:5 
 module Cubical.Tactics.PathSolver.Simplify where
 
 
@@ -150,31 +150,29 @@ defsToReduce =
 
 
 
-toℕTerm : ℕ → R.Term
-toℕTerm zero = R.con (quote zero) []
-toℕTerm (suc x) = R.con (quote suc) v[ toℕTerm x ]
 
 
 -- data EvalPoint : Type where
 --  cuCase checkHcomp :  
 
-
-module _ where
-
-
+module ECT where
+ 
  evalOp : R.Term → R.TC R.Term
  evalOp = R.reduce
 
 
  getCuCase' : R.Term → R.TC (Maybe ((R.Term × R.Term × R.Term × R.Term) × IExpr))
  getCuCase' (R.def (quote hcomp) ( _ h∷ A h∷ φTm h∷ fcs v∷ v[ cap ])) = do
-   -- R.debugPrint "getCuCaseφ" 4 $ "getCuCase' φ :" ∷ₑ [ φTm ]ₑ  
+   R.debugPrint "getCuCaseφ" 5 $ "getCuCase' φ :" ∷ₑ [ φTm ]ₑ  
    (just ∘ ((A , φTm , fcs , cap) ,_))  <$> extractIExpr φTm
  getCuCase' _ = pure nothing
 
 
  getCuCase : R.Term → R.TC (Maybe ((R.Term × R.Term × R.Term × R.Term) × IExpr))
- getCuCase x = evalOp x >>= ( getCuCase')
+ getCuCase x = getCuCase' x
+  -- evalOp x >>= (λ x →
+  --   (R.debugPrint "getCuCaseφ" 5 $ "getCuCase  :" ∷ₑ [ x ]ₑ)
+  -- >> getCuCase' x)
 
  module _ (dim : ℕ) where
   macro
@@ -218,12 +216,12 @@ module _ where
    --         (φ))
    ⦇ hco
       (mapM (λ sf → do
-           let tmA = subfaceRepl sf fcs
-               Atm = subfaceRepl sf A
+           let tmA = subfaceCell sf fcs
+               Atm = subfaceCell sf A
                -- tmA' = replaceVarWithCon (λ { zero → just (quote i0) ; _ → nothing }) fcs 
                tmB = (R.def (quote $PI) ((liftVars Atm) v∷ ((liftVars tmA))
                        v∷ v[ R.var zero [] ] )) 
-               sfbo = vlamⁿ (suc (sfDim sf)) tmB
+               sfbo = tmB
            -- R.debugPrint "checkHcomp" 4 $ "tmA = " ∷ₑ [  vlamⁿ (sfDim sf) tmA ]ₑ --[ chckedHcomp ]ₑ
            -- -- R.debugPrint "checkHcomp" 4 $ "tmA' = " ∷ₑ [  vlamⁿ 1 tmA' ]ₑ --[ chckedHcomp ]ₑ
            -- R.debugPrint "checkHcomp" 4 $ "tmB = " ∷ₑ [  vlamⁿ (suc (sfDim sf)) tmB ]ₑ --[ chckedHcomp ]ₑ
@@ -236,7 +234,7 @@ module _ where
            ⦇ ⦇ sf ⦈ , (extractCuTerm' m (suc (sfDim sf)) sfbo) ⦈
            ) --extractSubFace d sf A (subfaceApp sf sides)
            (φ))
-      (pure (vlamⁿ dim lid) >>= evalOp >>= extractCuTerm' m dim) ⦈ 
+      ((addNDimsToCtx dim (evalOp lid)) >>= extractCuTerm' m dim) ⦈ 
 
 
 
@@ -278,13 +276,13 @@ module _ where
 
  extractCuTerm' zero _ _ = R.typeError [ "extractCuTerm FAIL : max depth" ]ₑ
  extractCuTerm' (suc m) dim t = do
+   t ← addNDimsToCtx dim $ evalOp t
    -- t ← R.normalise t'
-   -- R.debugPrint "checkHcomp" 0 $ "extractCuTerm : \n" ∷ₑ  [ t ]ₑ
-   addNDimsToCtx dim (getCuCase (appNDimsI dim (liftVars.rv dim 0 t))) >>=
+   -- addNDimsToCtx dim $ R.debugPrint "checkHcomp" 5 $ "extractCuTerm : \n" ∷ₑ  [ t ]ₑ
+   addNDimsToCtx dim (getCuCase t) >>=
     Mb.rec ( (pure t )
-             >>= λ tt → --R.debugPrint "checkHcomp" 4 ("cell: \n " ∷ₑ [ tt ]ₑ) >>
-               ( (addNDimsToCtx dim $ evalOp (appNDimsI dim (liftVars.rv dim 0 tt)))
-                 >>= try𝒄ong m dim ) >>= pure ∘S Mb.rec (cell tt) (uncurry 𝒄ong) 
+             >>= λ t' → --R.debugPrint "checkHcomp" 4 ("cell: \n " ∷ₑ [ tt ]ₑ) >>
+               (  try𝒄ong m dim t' ) >>= pure ∘S Mb.rec (cell t') (uncurry 𝒄ong) 
                )
            λ ((A , φTm , fcs , cap) , φ) → (checkHcomp m dim A φTm fcs cap (L.map (offsetR nothing dim) (I→F φ)))
               -- <|> R.typeError [ "some checkHcomp fail: " ]ₑ ++  [ t ]ₑ)
@@ -293,25 +291,26 @@ module _ where
  extractCuArg (suc m) dim t =
    (iArg <$> (addNDimsToCtx dim $ extractIExpr t))
    <|>
-   (tArg <$> (extractCuTerm' m dim (vlamⁿ dim t)))
+   (tArg <$> (extractCuTerm' m dim t))
 
 
    
-   
+extractCuTerm : ℕ → R.Term → R.TC CuTerm
+extractCuTerm dim = ECT.extractCuTerm' 100 dim ∘S appNDimsI dim ∘S liftVars.rv dim 0
+   --fromCuTmWithApp dim
   
 
 module _ (dim : ℕ) where
  macro
   extractCuTermTest : R.Term → R.Term → R.TC Unit
   extractCuTermTest t _ = do
-   cu ← (extractCuTerm' 100 dim t)
+   cu ← (extractCuTerm dim t)
    te ← ppCT dim 100 cu
-   R.typeError $  te ++ₑ []
-   --[ toTerm dim cu ]ₑ
+   R.typeError $  te ++ₑ [ "\n \n" ]ₑ ++ₑ [ toTerm dim cu ]ₑ
 
   getCuTerm : R.Term → R.Term → R.TC Unit
   getCuTerm t hole = do
-   cu ← (extractCuTerm' 100 dim t)
+   cu ← (extractCuTerm dim t)
    R.unify (toTerm dim cu) hole
 
 
@@ -361,7 +360,7 @@ module _ (dim : ℕ) where
  macro
    extractCuTermTestCong : R.Term → R.Term → R.TC Unit
    extractCuTermTestCong t _ = do
-    cu ← (extractCuTerm' 100 dim t)
+    cu ← (extractCuTerm dim t)
     te ← ppCTn false dim 100 cu
     te' ← ppCTn true dim 100 (App𝑪ongs.app𝑪ongs dim cu)
     
@@ -371,49 +370,59 @@ module _ (dim : ℕ) where
        ++ "\n\n-------\nappCong:\n" ∷ₑ [ toTerm dim (App𝑪ongs.app𝑪ongs dim cu) ]ₑ
 
 
--- module ExtractTesting where
+module ExtractTesting where
 
---  module cong-test {x : A}
---             {B C : Type ℓ}
---             (f f' : A → B)
---           (g : B → B → C)
---           (p p' : Path A x y) (q q' : y ≡ z)   (r : z ≡ w) where
+ module cong-test {x : A}
+            {B C : Type ℓ}
+            (f f' : A → B)
+          (g : B → B → C)
+          (p p' : Path A x y) (q q' : y ≡ z)   (r : z ≡ w) where
 
---   cong1 : I → I → B
---   cong1 i j = cong-∙ f p q i j
+  cong1 : I → I → B
+  cong1 i j = cong-∙ f p q i j
 
---   cong1-test : Unit
---   cong1-test = {!extractCuTermTestCong (suc (suc zero))
---          (λ (i j : I) → cong-∙ f p q i j) !}
+  -- cong1-test : Unit
+  -- cong1-test = {!extractCuTermTestCong (suc (suc zero))
+  --        (λ (i j : I) → cong-∙ f p q i j) !}
 
---   cong2-test : Unit
---   cong2-test = {!extractCuTermTestCong (suc zero)
---          (λ (i : I) → cong₂ g (cong f (p ∙' q)) (cong f' (p' ∙ q')) i) !}
-
-
---   cong1-test' : cong-∙ f p q ≡
---                     getCuTerm (suc (suc zero))
---                       (λ (i j : I) → cong-∙ f p q i j)
---   cong1-test' = refl
+  -- cong2-test : Unit
+  -- cong2-test = {!extractCuTermTestCong (suc zero)
+  --        (λ (i : I) → cong₂ g (cong f (p ∙' q)) (cong f' (p' ∙ q')) i) !}
 
 
+  cong1-test' : cong-∙ f p q ≡
+                    getCuTerm (suc (suc zero))
+                      (λ (i j : I) → cong-∙ f p q i j)
+  cong1-test' = refl
 
- -- module dcpf-test {x : A} (q : y ≡ z) (p : Path A x y)  (r : z ≡ w) where
 
- --  dcpf-cuCaseTest : Unit
- --  dcpf-cuCaseTest = {!extractCuTermTest (suc (suc zero)) (λ (i j : I) → doubleCompPath-filler p q r i j)!}
+  cong2-test' : cong f (p ∙∙ q ∙∙ r) ≡
+                  getCuTerm (suc zero)
+                      (λ (i : I) → cong f (p ∙∙ q ∙∙ r) i)
+  cong2-test' = refl
+  
+ module dcpf-test {B : Type ℓ} {x : A} (q : y ≡ z) (p : Path A x y)  (r : z ≡ w) (f : A → B) where
+
+  -- dcpf-cuCaseTest : Unit
+  -- dcpf-cuCaseTest = {!extractCuTermTest (suc (suc zero)) (λ (i j : I) → doubleCompPath-filler p q r i j)!}
 
 
- --  codim1 : I → I → A 
- --  codim1 i j = hcomp
- --        h
- --       (q (i ∧ j))
- --    where
- --    h : _
- --    h = (λ k → λ { (i = i0) → p (~ k)
- --                ; (j = i0) → p (~ k)
- --                ; (i = i1)(j = i1) → r k
- --          })
+  codim1 : I → I → B 
+  codim1 i j = f (hcomp
+        h
+       (q (i ∧ j)))
+    where
+    h : _
+    h = (λ k → λ { (i = i0) → p (~ k)
+                ; (j = i0) → p (~ k)
+                ; (i = i1)(j = i1) → r k
+          })
+
+
+  cong2-test' : codim1 ≡
+                  getCuTerm (suc (suc zero))
+                      (λ (i j : I) → codim1 i j)
+  cong2-test' = refl
 
 
 -- --   codim1-test : Unit
@@ -445,403 +454,437 @@ module _ (dim : ℕ) where
 
 
 
- -- module penta-test {x : A}  (p : Path A x y) (q : y ≡ z)  (r r' : z ≡ w) (s : w ≡ v)  where
+ module penta-test {x : A}  (p : Path A x y) (q : y ≡ z)  (r r' : z ≡ w) (s : w ≡ v)  where
 
   -- P Q : x ≡ v
   -- P = {!p ∙ q ∙ r' ∙ sym!}
   -- Q = {!!}
 
 
-  -- 5LHSi  : _
-  -- 5LHSi = cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
-  
-  
+
+
+
+  5LHSi  : _
+  5LHSi = cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
+
+
+
   -- 5LHS : Unit
-  -- 5LHS = {!extractCuTermTest (suc (suc zero)) (λ (i j : I) → 5LHSi i j)  !}
-
-  -- DCPFi : _
-  -- DCPFi = doubleCompPath-filler p q r
-
-  -- DCPF : Unit
-  -- DCPF = {!extractCuTermTest (suc (suc zero)) (λ (i j : I) → DCPFi i j)  !}
+  -- 5LHS = {!extractCuTermTest (suc (suc zero)) λ (i j : I) → (assoc q r s) i j   !}
 
 
+  -- _ : I → I → A
+  -- _ = {!getCuTerm (suc (suc zero))
+  --                     (λ (i j : I) → 5LHSi i j)!}
 
--- --   -- reflX = refl {x = x}
+  5LHStm : 5LHSi ≡
+                    getCuTerm (suc (suc zero))
+                      (λ (i j : I) → 5LHSi i j)
+  5LHStm = refl
+
+--   -- DCPFi : _
+--   -- DCPFi = doubleCompPath-filler p q r
+
+--   -- DCPF : Unit
+--   -- DCPF = {!extractCuTermTest (suc (suc zero)) (λ (i j : I) → DCPFi i j)  !}
 
 
--- --   -- 5RHS : Unit
--- --   -- 5RHS = {!extractCuTermTest (suc (suc zero))
--- --   --       (λ (i j : I) →
--- --   --        (cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)) i j) !} 
+
+-- -- --   -- reflX = refl {x = x}
 
 
--- --   -- simpleTest : I → I → A
--- --   -- simpleTest i j =
--- --   --   hcomp h 
+-- -- --   -- 5RHS : Unit
+-- -- --   -- 5RHS = {!extractCuTermTest (suc (suc zero))
+-- -- --   --       (λ (i j : I) →
+-- -- --   --        (cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)) i j) !} 
+
+
+-- -- --   -- simpleTest : I → I → A
+-- -- --   -- simpleTest i j =
+-- -- --   --   hcomp h 
       
--- --   --     (q (i ∨ j))
--- --   --   where
--- --   --   h = (λ z → λ
--- --   --        { (i = i0) (j = i0) → p (~ z)
--- --   --        ; (i = i1) → r z
--- --   --        ; (i = i0) (j = i1) → r' z
--- --   --        })
+-- -- --   --     (q (i ∨ j))
+-- -- --   --   where
+-- -- --   --   h = (λ z → λ
+-- -- --   --        { (i = i0) (j = i0) → p (~ z)
+-- -- --   --        ; (i = i1) → r z
+-- -- --   --        ; (i = i0) (j = i1) → r' z
+-- -- --   --        })
          
--- --   -- fromCuTest fromCuTest' : I → I → A
--- --   -- fromCuTest = {!extractCuTermTest  (suc (suc zero))
--- --   --       (λ (i j : I) → simpleTest i j )!}
+-- -- --   -- fromCuTest fromCuTest' : I → I → A
+-- -- --   -- fromCuTest = {!extractCuTermTest  (suc (suc zero))
+-- -- --   --       (λ (i j : I) → simpleTest i j )!}
 
--- --   -- fromCuTest' = {!!}
+-- -- --   -- fromCuTest' = {!!}
 
--- --   -- 5RHSfromCuRefl : I → I → A
--- --   -- 5RHSfromCuRefl = {!getCuTerm (suc (suc zero))
--- --   --       (λ (i j : I) →
--- --   --        (cong (reflX ∙_) (assoc reflX reflX reflX) ∙∙ assoc reflX (reflX ∙ reflX) reflX ∙∙ cong (_∙ reflX) (assoc reflX reflX reflX)) i j)!}
+-- -- --   -- 5RHSfromCuRefl : I → I → A
+-- -- --   -- 5RHSfromCuRefl = {!getCuTerm (suc (suc zero))
+-- -- --   --       (λ (i j : I) →
+-- -- --   --        (cong (reflX ∙_) (assoc reflX reflX reflX) ∙∙ assoc reflX (reflX ∙ reflX) reflX ∙∙ cong (_∙ reflX) (assoc reflX reflX reflX)) i j)!}
 
 
 
--- --   -- 5RHSfromCu : I → I → A
--- --   -- 5RHSfromCu = {!getCuTerm (suc (suc zero))
--- --   --       (λ (i j : I) →
--- --   --        (cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)) i j)!}
+-- -- --   -- 5RHSfromCu : I → I → A
+-- -- --   -- 5RHSfromCu = {!getCuTerm (suc (suc zero))
+-- -- --   --       (λ (i j : I) →
+-- -- --   --        (cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)) i j)!}
   
--- --   -- 5RHSrefl : (cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r))
--- --   --              ≡
--- --   --             (getCuTerm (suc (suc zero))
--- --   --              (λ (i j : I) →
--- --   --              (cong (p ∙_) (assoc q r s)
--- --   --                ∙∙ assoc p (q ∙ r) s
--- --   --                  ∙∙ cong (_∙ s) (assoc p q r)) i j))
--- --   -- 5RHSrefl = refl  
-
-module FoldCongⁿ where
+-- -- --   -- 5RHSrefl : (cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r))
+-- -- --   --              ≡
+-- -- --   --             (getCuTerm (suc (suc zero))
+-- -- --   --              (λ (i j : I) →
+-- -- --   --              (cong (p ∙_) (assoc q r s)
+-- -- --   --                ∙∙ assoc p (q ∙ r) s
+-- -- --   --                  ∙∙ cong (_∙ s) (assoc p q r)) i j))
+-- -- --   -- 5RHSrefl = refl  
 
 
 
-  foldCong : ℕ → List TermHead → CuCtx → CuTerm → CuTerm
-  foldCongFill : ℕ → List TermHead → CuCtx 
-       → List (SubFace × CuTerm) → CuTerm → List (SubFace × CuTerm)
+-- module FoldCongⁿ where
 
-  foldCongFill zero ths ctx _ _ =
-    [ ([] , cell (R.lit (R.string "FoldCongⁿ fail - run out of magic number"))) ]
-  foldCongFill (suc m) [] ctx xs cu = []
-  foldCongFill (suc m) ths@(_ ∷ _) ctx xs cu = 
-    let sfI0 = repeat (length (freeVars ctx) ∸ 1) nothing ∷ʳ just false
-        ctx' = take (length ctx ∸ 1) ctx ∷ʳ ("" , just false) 
-        fl =
-             global2local ctx' $
-            R.def (quote hcomp-congI')
-                   (R.unknown
-                    v∷ 
-                       (vlam "a"
-                           (foldl (λ x th → TermHead→Term
-                              (liftTermHead (1 + length ( ctx)) th)
-                              v[ x ]) (𝒗 0) ths)
-                           )
-                    v∷ ( (vlam "𝒛F" ((ToTerm.toSides ctx xs))))
-                    v∷ (( R.def (quote inS)
-                          v[(ToTerm.toTerm ctx cu) ] ))
-                    v∷ [] )
-    in  [(sfI0 , cell (vlamⁿ (length (freeVars ctx')) fl))]
 
-  foldCong zero _ _ _ = cell (R.lit (R.string "FoldCongⁿ fail - run out of magic number")) 
-  foldCong (suc m) ths ctx (hco x cu) = 
-     hco (foldCongFill m ths ctx x cu ++
-        L.map (λ (sf , ct) → 
-             sf , (foldCong m ths (("𝒛" , nothing) ∷ applyFaceConstraints sf ctx) ct))
-               x)
-      (foldCong (suc m) ths ctx cu)
-  foldCong (suc m) ths ctx (𝒄ong th v[ tArg x ]) =
-    foldCong (suc m) (th ∷ ths) ctx x
-  foldCong (suc m) ths ctx (𝒄ong x _) =
-    cell (R.lit (R.string "FoldCongⁿ fail - not implemented"))
+
+--   foldCong : ℕ → List TermHead → CuCtx → CuTerm → CuTerm
+--   foldCongFill : ℕ → List TermHead → CuCtx 
+--        → List (SubFace × CuTerm) → CuTerm → List (SubFace × CuTerm)
+
+--   foldCongFill zero ths ctx _ _ =
+--     [ ([] , cell (R.lit (R.string "FoldCongⁿ fail - run out of magic number"))) ]
+--   foldCongFill (suc m) [] ctx xs cu = []
+--   foldCongFill (suc m) ths@(_ ∷ _) ctx xs cu = 
+--     let sfI0 = repeat (length (freeVars ctx) ∸ 1) nothing ∷ʳ just false
+--         ctx' = take (length ctx ∸ 1) ctx ∷ʳ ("" , just false) 
+--         fl = R.unknown 
+--            -- R.def (quote hcomp-congI')
+--            --         (R.unknown
+--            --          v∷
+--            --            (vlam "a"
+--            --                 (foldl (λ x th → TermHead→Term
+--            --                    (liftTermHead (1 + length ( (ctx'))) th)
+--            --                    v[ x ]) (𝒗 0) ths))
+--            --          v∷ ( (vlam "𝒛F" (ToTerm.toSides ctx' xs)))
+--            --          v∷ 
+--            --             (( R.def (quote inS)
+--            --                v[(ToTerm.toTerm ctx' cu) ] ))
+--            --          v∷ v[ 𝒗 zero ] )
+        
+--              -- inGlobalCtx ctx' $
+--             -- R.def (quote hcomp-congI')
+--             --        (R.unknown
+--             --         v∷ 
+--             --            (vlam "a"
+--             --                (foldl (λ x th → TermHead→Term
+--             --                   (liftTermHead (1 + length (freeVars (ctx)) th)
+--             --                   v[ x ]) (𝒗 0) ths)
+--             --                )
+--             --         v∷ ( (vlam "𝒛F" ((ToTerm.toSides ctx xs))))
+--             --         v∷ (( R.def (quote inS)
+--             --               v[(ToTerm.toTerm ctx cu) ] ))
+--             --         v∷ [] )
+--     in  [(sfI0 , cell (fl))]
+
+--   foldCong zero _ _ _ = cell (R.lit (R.string "FoldCongⁿ fail - run out of magic number")) 
+--   foldCong (suc m) ths ctx (hco x cu) = 
+--      hco (foldCongFill m ths ctx x cu ++
+--         L.map (λ (sf , ct) → 
+--              sf , (foldCong m ths (("𝒛" , nothing) ∷ applyFaceConstraints sf ctx) ct))
+--                x)
+--       (foldCong (suc m) ths ctx cu)
+--   foldCong (suc m) ths ctx (𝒄ong th v[ tArg x ]) =
+--     foldCong (suc m) (th ∷ ths) ctx x
+--   foldCong (suc m) ths ctx (𝒄ong x _) =
+--     cell (R.lit (R.string "FoldCongⁿ fail - not implemented"))
     
-  foldCong (suc m) ths ctx (cell x) = cell $
-     (mapTermUnderDims (length (freeVars ctx))
-       (λ x → foldl (λ x th → TermHead→Term
-            (liftTermHead (length $ freeVars ctx) th)
-            v[ x ]) x ths)) x
+--   foldCong (suc m) ths ctx (cell x) = cell $
+--      (
+--        (foldl (λ x th → TermHead→Term
+--             (liftTermHead 
+--                (length $ freeVars ctx)
+--                th)
+--             v[ x ]) x ths))
 
 
 
 
-  module _ (dim : ℕ) where
-   macro
-    congHcompⁿ : R.Term → R.Term → R.TC Unit
-    congHcompⁿ t hole = do
+--   module _ (dim : ℕ) where
+--    macro
+--     congHcompⁿ : R.Term → R.Term → R.TC Unit
+--     congHcompⁿ t hole = do
 
-      cu ← extractCuTerm' 100 dim t
-      let cuLifted = cuTermInsLift 1 cu
-          ctx = (defaultCtx dim ++ [ ( "𝑖" , nothing) ])
-          pCu = foldCong 100 [] ctx cuLifted
-          pTerm = vlamⁿ ((length ctx)) (ToTerm.toTerm ctx pCu) 
-      R.unify pTerm hole
-      -- R.typeError [ pTerm ]ₑ
+--       cu ← extractCuTerm dim t
+--       let cuLifted = cuTermInsLift 1 dim cu
+--           ctx = (defaultCtx dim ++ [ ( "𝑖" , nothing) ])
+--           pCu = foldCong 100 [] ctx cuLifted
+--           pTerm = vlamⁿ ((length ctx)) (ToTerm.toTerm ctx pCu)
+--       -- pp ← ppCTn false (suc dim) 100 pCu
+--       -- R.typeError $ pp  ++ₑ [ pTerm ]ₑ
+--       R.unify pTerm hole
+--       -- R.typeError [ pTerm ]ₑ
 
-open FoldCongⁿ using (congHcompⁿ)
+-- open FoldCongⁿ using (congHcompⁿ)
 
-module CongSolveTest where
+-- module CongSolveTest where
 
- module T0 {x : A} {B : Type ℓ} (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) --(s : w ≡ v)
-            (f : A → B) where
+--  module T0 {x : A} {B : Type ℓ} (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) --(s : w ≡ v)
+--             (f : A → B) where
 
-  lhs rhs : f x ≡ f w
-  lhs = cong f (p ∙∙ q ∙∙ r)
-  rhs = cong f p ∙∙ cong f q ∙∙ cong f r
+--   lhs rhs : f x ≡ f w
+--   lhs = cong f (p ∙∙ q ∙∙ r)
+--   rhs = cong f p ∙∙ cong f q ∙∙ cong f r
 
-  eq1 : Square {A = B}
-          lhs
-          rhs
-          refl
-          refl
-
-
-  eq1 = congHcompⁿ (suc zero) (λ (i : I) → lhs i) 
-
-
- module T1 {x : A} {B C : Type ℓ} (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) (s : w ≡ v)
-            (f : A → B) (g : B → C) where
-
-  lhs rhs mid : g (f x) ≡ g (f v)
-  lhs = cong g (cong f p) ∙∙ cong (g ∘ f) (q ∙ r) ∙∙ cong g (cong f s)
-  rhs = cong g (cong f p ∙∙ cong f q ∙ cong f r ∙∙ cong f s)
-
-  mid = cong (g ∘ f) p ∙∙ cong (g ∘ f) q ∙ cong (g ∘ f) r ∙∙ cong (g ∘ f) s
-
-  lhs≡rhs : lhs ≡ rhs  
-  lhs≡rhs = (congHcompⁿ (suc zero) λ (i : I) → lhs i) ∙
-     (sym (congHcompⁿ (suc zero) λ (i : I) → rhs i))
+--   eq1 : I → I → B
+--       -- Square {A = B}
+--       --     lhs
+--       --     rhs
+--       --     refl
+--       --     refl
 
 
-  testCu1 : Cube
-             (λ i j → f (doubleCompPath-filler p q r i j))
-             (λ i j → doubleCompPath-filler (cong f p) (cong f q) (cong f r) i j)
-             refl (congHcompⁿ (suc zero) (λ (i : I) → f ((p ∙∙ q ∙∙ r) i)))
-             refl refl
-  testCu1 =
-     congHcompⁿ (suc (suc zero))
-       (λ (i j : I) → f (doubleCompPath-filler p q r i j))
-
-  CU2 : Square
-          (cong g (cong f q))
-          (cong g (cong f p ∙∙ cong f q ∙∙ cong f (r ∙ s)  ))
-          (cong g (cong f (sym p)))
-          (cong g (cong f (r ∙ s)))
-  CU2 i j =
-    g (doubleCompPath-filler (cong f p) (cong f q)
-        (cong f (r ∙ s)) i j)
+--   eq1 = congHcompⁿ (suc zero) (λ (i : I) → lhs i) 
 
 
+-- --  module T1 {x : A} {B C : Type ℓ} (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) (s : w ≡ v)
+-- --             (f : A → B) (g : B → C) where
 
-  testCu2 : Path (I → I → C)
-             (λ i j → CU2 i j)
-             _ 
+-- --   lhs rhs mid : g (f x) ≡ g (f v)
+-- --   lhs = cong g (cong f p) ∙∙ cong (g ∘ f) (q ∙ r) ∙∙ cong g (cong f s)
+-- --   rhs = cong g (cong f p ∙∙ cong f q ∙ cong f r ∙∙ cong f s)
 
-  testCu2 =
+-- --   mid = cong (g ∘ f) p ∙∙ cong (g ∘ f) q ∙ cong (g ∘ f) r ∙∙ cong (g ∘ f) s
 
-     congHcompⁿ (suc (suc zero))
-       (λ (i j : I) → CU2 i j)
+-- --   lhs≡rhs : lhs ≡ rhs  
+-- --   lhs≡rhs = (congHcompⁿ (suc zero) λ (i : I) → lhs i) ∙
+-- --      (sym (congHcompⁿ (suc zero) λ (i : I) → rhs i))
 
-  testCu2cu : Cube
-       CU2
-       (doubleCompPath-filler
-         (cong (g ∘ f) p)
-         (cong (g ∘ f) q)
-         ((cong (g ∘ f) r) ∙ (cong (g ∘ f) s)))
-       refl ((congHcompⁿ (suc zero)
-         (λ (i : I) → CU2 i1 i)))
-       refl ((congHcompⁿ (suc zero)
-         (λ (i : I) → CU2 i i1)))
+
+-- -- --   testCu1 : Cube
+-- -- --              (λ i j → f (doubleCompPath-filler p q r i j))
+-- -- --              (λ i j → doubleCompPath-filler (cong f p) (cong f q) (cong f r) i j)
+-- -- --              refl (congHcompⁿ (suc zero) (λ (i : I) → f ((p ∙∙ q ∙∙ r) i)))
+-- -- --              refl refl
+-- -- --   testCu1 =
+-- -- --      congHcompⁿ (suc (suc zero))
+-- -- --        (λ (i j : I) → f (doubleCompPath-filler p q r i j))
+
+-- -- --   CU2 : Square
+-- -- --           (cong g (cong f q))
+-- -- --           (cong g (cong f p ∙∙ cong f q ∙∙ cong f (r ∙ s)  ))
+-- -- --           (cong g (cong f (sym p)))
+-- -- --           (cong g (cong f (r ∙ s)))
+-- -- --   CU2 i j =
+-- -- --     g (doubleCompPath-filler (cong f p) (cong f q)
+-- -- --         (cong f (r ∙ s)) i j)
+
+
+
+-- -- --   testCu2 : Path (I → I → C)
+-- -- --              (λ i j → CU2 i j)
+-- -- --              _ 
+
+-- -- --   testCu2 =
+
+-- -- --      congHcompⁿ (suc (suc zero))
+-- -- --        (λ (i j : I) → CU2 i j)
+
+-- -- --   testCu2cu : Cube
+-- -- --        CU2
+-- -- --        (doubleCompPath-filler
+-- -- --          (cong (g ∘ f) p)
+-- -- --          (cong (g ∘ f) q)
+-- -- --          ((cong (g ∘ f) r) ∙ (cong (g ∘ f) s)))
+-- -- --        refl ((congHcompⁿ (suc zero)
+-- -- --          (λ (i : I) → CU2 i1 i)))
+-- -- --        refl ((congHcompⁿ (suc zero)
+-- -- --          (λ (i : I) → CU2 i i1)))
        
-  testCu2cu =
+-- -- --   testCu2cu =
 
-     congHcompⁿ (suc (suc zero))
-       (λ (i j : I) → CU2 i j)
-
-
-module CongAssoc {B : Type ℓ} {x : A} (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) (f : A → B) where
-
- assocCuTest : Cube  (cong (cong f) (assoc p q r))
-                     (assoc (cong f p) (cong f q) (cong f r))
-                     _ _
-                     refl refl
- assocCuTest = 
-     congHcompⁿ (suc (suc zero))
-       (λ (i j : I) → (cong (cong f) (assoc p q r)) i j)
+-- -- --      congHcompⁿ (suc (suc zero))
+-- -- --        (λ (i j : I) → CU2 i j)
 
 
+-- -- -- module CongAssoc {B : Type ℓ} {x : A} (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) (f : A → B) where
 
-module FoldConstⁿ where
-
- module _ (endTerm : Bool) where
-  foldStep : ℕ → CuTerm → CuTerm
-  foldStepL : List (SubFace × CuTerm) → List (SubFace × CuTerm)
-  foldStepL [] = []
-  foldStepL ((sf , x) ∷ xs) =
-    (sf , foldStep (suc (sfDim sf)) x) ∷ foldStepL xs
-
-
-  foldStep k h@(hco x cu) =
-    if (almostLeafQ h)
-    then
-       (if endTerm
-        then cu
-        else (hco ((repeat (k ∸ 1) nothing ++ [ just true ] ,
-                cu) ∷ x) cu))
-    else hco (foldStepL x)
-           (foldStep k cu)
-  foldStep k (cell x) = cell x
-  foldStep k (𝒄ong h l) = 𝒄ong h l -- this shoudl be imposible for refl!,
-      -- it should threw some error ideallly
+-- -- --  assocCuTest : Cube  (cong (cong f) (assoc p q r))
+-- -- --                      (assoc (cong f p) (cong f q) (cong f r))
+-- -- --                      _ _
+-- -- --                      refl refl
+-- -- --  assocCuTest = 
+-- -- --      congHcompⁿ (suc (suc zero))
+-- -- --        (λ (i j : I) → (cong (cong f) (assoc p q r)) i j)
 
 
 
+-- -- -- module FoldConstⁿ where
 
- module _ n where
-
-
-  redStepTerm : CuTerm → (R.Term × (CuTerm × CuTerm))
-  redStepTerm cu =
-    let cuLifted = cuTermInsLift 1 cu
-        pTerm = foldStep false (suc n) cuLifted
-    in (toTerm (suc n) pTerm , (pTerm , foldStep true n cu))
-
+-- -- --  module _ (endTerm : Bool) where
+-- -- --   foldStep : ℕ → CuTerm → CuTerm
+-- -- --   foldStepL : List (SubFace × CuTerm) → List (SubFace × CuTerm)
+-- -- --   foldStepL [] = []
+-- -- --   foldStepL ((sf , x) ∷ xs) =
+-- -- --     (sf , foldStep (suc (sfDim sf)) x) ∷ foldStepL xs
 
 
-  pathCus : ℕ → CuTerm → List (R.Term × (CuTerm × CuTerm))
-  pathCus zero cu = []
-  pathCus (suc k) cu =
-   if cellQ cu
-   then []
-   else 
-    let (tm , (cu* , cu')) = redStepTerm cu
-    in (tm , (cu* , cu')) ∷ pathCus k cu' 
+-- -- --   foldStep k h@(hco x cu) =
+-- -- --     if (almostLeafQ h)
+-- -- --     then
+-- -- --        (if endTerm
+-- -- --         then cu
+-- -- --         else (hco ((repeat (k ∸ 1) nothing ++ [ just true ] ,
+-- -- --                 cu) ∷ x) cu))
+-- -- --     else hco (foldStepL x)
+-- -- --            (foldStep k cu)
+-- -- --   foldStep k (cell x) = cell x
+-- -- --   foldStep k (𝒄ong h l) = 𝒄ong h l -- this shoudl be imposible for refl!,
+-- -- --       -- it should threw some error ideallly
 
 
-  pathTerms' : ℕ → CuTerm → List R.Term
-  pathTerms' k = L.map (fst) ∘S pathCus k
-  -- pathTerms' zero cu = []
-  -- pathTerms' (suc k) cu =
-  --  if cellQ cu
-  --  then []
-  --  else 
-  --   let (tm , cu') = redStepTerm cu
-  --   in vlamⁿ (suc n) tm ∷ pathTerms' k cu' 
 
 
-  macro
-   foldConstⁿ : R.Term → R.Term → R.TC Unit
-   foldConstⁿ t' hole = do
-     t ← wait-for-term t'
-     cu ← extractCuTerm' 100 n t
+-- -- --  module _ n where
 
-     -- addNDimsToCtx n $ ((ppCT 100 cu) >>= R.typeError)
-     let pTrm = (foldR∙ (pathTerms' 100 cu))
 
-     -- -- print consecutive CuTerms
-     -- addNDimsToCtx' "𝒋" 1 $ addNDimsToCtx n $ concatMapM ((ppCT 100 >=& (_++ [ "\n------\n " ]ₑ)))
-     --   (map (fst ∘ snd) (pathCus 100 cu)) >>= R.typeError
+-- -- --   redStepTerm : CuTerm → (R.Term × (CuTerm × CuTerm))
+-- -- --   redStepTerm cu =
+-- -- --     let cuLifted = cuTermInsLift 1 cu
+-- -- --         pTerm = foldStep false (suc n) cuLifted
+-- -- --     in (toTerm (suc n) pTerm , (pTerm , foldStep true n cu))
 
-     -- R.typeError [ pTrm ]ₑ
-     R.unify pTrm hole
 
-   simplifyReflⁿ : R.Term → R.TC Unit
-   simplifyReflⁿ hole = do
+
+-- -- --   pathCus : ℕ → CuTerm → List (R.Term × (CuTerm × CuTerm))
+-- -- --   pathCus zero cu = []
+-- -- --   pathCus (suc k) cu =
+-- -- --    if cellQ cu
+-- -- --    then []
+-- -- --    else 
+-- -- --     let (tm , (cu* , cu')) = redStepTerm cu
+-- -- --     in (tm , (cu* , cu')) ∷ pathCus k cu' 
+
+
+-- -- --   pathTerms' : ℕ → CuTerm → List R.Term
+-- -- --   pathTerms' k = L.map (fst) ∘S pathCus k
+-- -- --   -- pathTerms' zero cu = []
+-- -- --   -- pathTerms' (suc k) cu =
+-- -- --   --  if cellQ cu
+-- -- --   --  then []
+-- -- --   --  else 
+-- -- --   --   let (tm , cu') = redStepTerm cu
+-- -- --   --   in vlamⁿ (suc n) tm ∷ pathTerms' k cu' 
+
+
+-- -- --   macro
+-- -- --    foldConstⁿ : R.Term → R.Term → R.TC Unit
+-- -- --    foldConstⁿ t' hole = do
+-- -- --      t ← wait-for-term t'
+-- -- --      cu ← extractCuTerm n t
+
+-- -- --      -- addNDimsToCtx n $ ((ppCT 100 cu) >>= R.typeError)
+-- -- --      let pTrm = (foldR∙ (pathTerms' 100 cu))
+
+-- -- --      -- -- print consecutive CuTerms
+-- -- --      -- addNDimsToCtx' "𝒋" 1 $ addNDimsToCtx n $ concatMapM ((ppCT 100 >=& (_++ [ "\n------\n " ]ₑ)))
+-- -- --      --   (map (fst ∘ snd) (pathCus 100 cu)) >>= R.typeError
+
+-- -- --      -- R.typeError [ pTrm ]ₑ
+-- -- --      R.unify pTrm hole
+
+-- -- --    simplifyReflⁿ : R.Term → R.TC Unit
+-- -- --    simplifyReflⁿ hole = do
     
-    (A' , (t0' , t1')) ← R.inferType hole >>= wait-for-term >>= (get-boundaryWithDom ) >>= Mb.rec
-     (R.typeError [ R.strErr "unable to get boundary" ])
-     pure
+-- -- --     (A' , (t0' , t1')) ← R.inferType hole >>= wait-for-term >>= (get-boundaryWithDom ) >>= Mb.rec
+-- -- --      (R.typeError [ R.strErr "unable to get boundary" ])
+-- -- --      pure
 
-    let t = vlamⁿ n $ appNDims≡ n (liftVars.rv n 0 t0')
-    t ← wait-for-term t
-    cu ← extractCuTerm' 100 n t
-    let pTrm = (foldR∙ (pathTerms' 100 cu))
-    -- R.typeError [ pTrm ]ₑ
-    R.unify pTrm hole
-    -- foldConstⁿ {!!} hole 
+-- -- --     let t = vlamⁿ n $ appNDims≡ n (liftVars.rv n 0 t0')
+-- -- --     t ← wait-for-term t
+-- -- --     cu ← extractCuTerm  n t
+-- -- --     let pTrm = (foldR∙ (pathTerms' 100 cu))
+-- -- --     -- R.typeError [ pTrm ]ₑ
+-- -- --     R.unify pTrm hole
+-- -- --     -- foldConstⁿ {!!} hole 
 
-open FoldConstⁿ using (foldConstⁿ ; simplifyReflⁿ) public
-
-
-module SimpleTest (x : A) where
-
- sqId : (x : A) → Square (λ _ → x) (λ _ → x) (λ _ → x) (λ _ → x)
- sqId x i j = hcomp {φ = i ∨ ~ i ∨ j ∨ ~ j} (λ _ _ → x) x
-
- U : Square (λ _ → x) (λ _ → x) (λ _ → x) (λ _ → x)
- U = (λ i i₁ → sqId (sqId x i i₁) i i₁)
+-- -- -- open FoldConstⁿ using (foldConstⁿ ; simplifyReflⁿ) public
 
 
- testSimplify : Cube
-    U (λ _ _ → x)
-    (λ _ _ → x) (λ _ _ → x) (λ _ _ → x) (λ _ _ → x)
+-- -- -- module SimpleTest (x : A) where
+
+-- -- --  sqId : (x : A) → Square (λ _ → x) (λ _ → x) (λ _ → x) (λ _ → x)
+-- -- --  sqId x i j = hcomp {φ = i ∨ ~ i ∨ j ∨ ~ j} (λ _ _ → x) x
+
+-- -- --  U : Square (λ _ → x) (λ _ → x) (λ _ → x) (λ _ → x)
+-- -- --  U = (λ i i₁ → sqId (sqId x i i₁) i i₁)
+
+
+-- -- --  testSimplify : Cube
+-- -- --     U (λ _ _ → x)
+-- -- --     (λ _ _ → x) (λ _ _ → x) (λ _ _ → x) (λ _ _ → x)
 
  
- testSimplify = simplifyReflⁿ (suc (suc zero))
+-- -- --  testSimplify = simplifyReflⁿ (suc (suc zero))
 
-module SimpleTest2D (x : A) where
-
-
- U : Square (λ _ → x) (refl ∙∙ (refl ∙ refl) ∙∙ refl)  (λ _ → x) (λ _ → x)
- U = rUnit refl ∙ rUnit (refl ∙ refl)
+-- -- -- module SimpleTest2D (x : A) where
 
 
- testSimplify' : Path (I → I → A) (λ i j → U i j) λ _ _ → x
- testSimplify' = foldConstⁿ (suc (suc zero)) λ (i j : I) → U i j
+-- -- --  U : Square (λ _ → x) (refl ∙∙ (refl ∙ refl) ∙∙ refl)  (λ _ → x) (λ _ → x)
+-- -- --  U = rUnit refl ∙ rUnit (refl ∙ refl)
 
- ttSide : Square (refl ∙∙ refl ∙ refl ∙∙ refl) (λ _ → x)
-      refl refl --(refl ∙∙ refl ∙∙ refl) (refl ∙∙ refl ∙∙ refl)
- ttSide = foldConstⁿ (suc zero) (λ (i : I) → U i1 i)
 
- testSimplify : Cube
-    U  (λ _ _ → x)
-     {refl ∙∙ refl ∙∙ refl}
-     {refl ∙∙ refl ∙∙ refl} 
-    (flipSquare (refl {x = refl ∙∙ refl ∙∙ refl})) --(λ i i₁ → testSimplify' i i0 i₁)
-    {refl ∙∙ refl ∙∙ refl}
-    {refl ∙∙ refl ∙∙ refl}
+-- -- --  testSimplify' : Path (I → I → A) (λ i j → U i j) λ _ _ → x
+-- -- --  testSimplify' = foldConstⁿ (suc (suc zero)) λ (i j : I) → U i j
+
+-- -- --  ttSide : Square (refl ∙∙ refl ∙ refl ∙∙ refl) (λ _ → x)
+-- -- --       refl refl --(refl ∙∙ refl ∙∙ refl) (refl ∙∙ refl ∙∙ refl)
+-- -- --  ttSide = foldConstⁿ (suc zero) (λ (i : I) → U i1 i)
+
+-- -- --  testSimplify : Cube
+-- -- --     U  (λ _ _ → x)
+-- -- --      {refl ∙∙ refl ∙∙ refl}
+-- -- --      {refl ∙∙ refl ∙∙ refl} 
+-- -- --     (flipSquare (refl {x = refl ∙∙ refl ∙∙ refl})) --(λ i i₁ → testSimplify' i i0 i₁)
+-- -- --     {refl ∙∙ refl ∙∙ refl}
+-- -- --     {refl ∙∙ refl ∙∙ refl}
     
-    -- (λ i i₁ → x)
-     --(foldConstⁿ (suc zero) λ (i : I) → U i1 i)
-     (λ i i₁ → testSimplify' i i1 i₁)
-     -- (flipSquare {!!})
-     (flipSquare (refl {x = refl ∙∙ refl ∙∙ refl}))
-     (flipSquare (refl {x = refl ∙∙ refl ∙∙ refl}))
-     -- (λ i i₁ → testSimplify' i i₁ i0)
-     -- (λ i i₁ → testSimplify' i i₁ i1)
-    -- (λ _ → (λ _ → x) ∙∙ (λ _ → x) ∙∙ (λ _ → x))
+-- -- --     -- (λ i i₁ → x)
+-- -- --      --(foldConstⁿ (suc zero) λ (i : I) → U i1 i)
+-- -- --      (λ i i₁ → testSimplify' i i1 i₁)
+-- -- --      -- (flipSquare {!!})
+-- -- --      (flipSquare (refl {x = refl ∙∙ refl ∙∙ refl}))
+-- -- --      (flipSquare (refl {x = refl ∙∙ refl ∙∙ refl}))
+-- -- --      -- (λ i i₁ → testSimplify' i i₁ i0)
+-- -- --      -- (λ i i₁ → testSimplify' i i₁ i1)
+-- -- --     -- (λ _ → (λ _ → x) ∙∙ (λ _ → x) ∙∙ (λ _ → x))
 
  
- testSimplify i j k = testSimplify' i j k
-   -- foldConstⁿ (suc (suc zero)) λ (i j : I) → U i j
+-- -- --  testSimplify i j k = testSimplify' i j k
+-- -- --    -- foldConstⁿ (suc (suc zero)) λ (i j : I) → U i j
 
 
--- module PentaJ {x : A} (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) (s : w ≡ v) where
+-- -- -- -- module PentaJ {x : A} (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) (s : w ≡ v) where
 
 
---  pentagonTy = assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s
---              ≡ cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
+-- -- -- --  pentagonTy = assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s
+-- -- -- --              ≡ cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
 
 
 
--- pJ : ∀ {x : A} (p : x ≡ y) (q : y ≡ z)
---           (r : z ≡ w) (s : w ≡ v) → PentaJ.pentagonTy p q r s
+-- -- -- -- pJ : ∀ {x : A} (p : x ≡ y) (q : y ≡ z)
+-- -- -- --           (r : z ≡ w) (s : w ≡ v) → PentaJ.pentagonTy p q r s
 
--- pJ {x = x} =
---     J (λ y p → ∀ q r s → PentaJ.pentagonTy p q r s)
---    (J (λ z q → ∀ r s → PentaJ.pentagonTy refl q r s)
---    (J (λ w r → ∀ s → PentaJ.pentagonTy refl refl r s)
---    (J (λ v s → PentaJ.pentagonTy refl refl refl s)
---     (cong flipSquare
---          (flipSquareP (CompSquares.compSquaresPath→Cube
---             refl
---             (flipSquare (assoc refl refl (refl ∙ refl) ∙ assoc (refl ∙ refl) refl refl))
---             (flipSquare
---               (cong (refl ∙_) (assoc refl refl refl) ∙∙
---                 assoc refl (refl ∙ refl) refl ∙∙ cong (_∙ refl) (assoc refl refl refl)))
---             (λ i _ → (refl {x = x} ∙ refl ∙ refl ∙ refl) i)
---             (λ i _ → ((((λ _ → x) ∙ (λ _ → x)) ∙ (λ _ → x)) ∙ (λ _ → x)) i)
---             refl
---             (simplifyReflⁿ (suc (suc zero)))
---             ))))))
+-- -- -- -- pJ {x = x} =
+-- -- -- --     J (λ y p → ∀ q r s → PentaJ.pentagonTy p q r s)
+-- -- -- --    (J (λ z q → ∀ r s → PentaJ.pentagonTy refl q r s)
+-- -- -- --    (J (λ w r → ∀ s → PentaJ.pentagonTy refl refl r s)
+-- -- -- --    (J (λ v s → PentaJ.pentagonTy refl refl refl s)
+-- -- -- --     (cong flipSquare
+-- -- -- --          (flipSquareP (CompSquares.compSquaresPath→Cube
+-- -- -- --             refl
+-- -- -- --             (flipSquare (assoc refl refl (refl ∙ refl) ∙ assoc (refl ∙ refl) refl refl))
+-- -- -- --             (flipSquare
+-- -- -- --               (cong (refl ∙_) (assoc refl refl refl) ∙∙
+-- -- -- --                 assoc refl (refl ∙ refl) refl ∙∙ cong (_∙ refl) (assoc refl refl refl)))
+-- -- -- --             (λ i _ → (refl {x = x} ∙ refl ∙ refl ∙ refl) i)
+-- -- -- --             (λ i _ → ((((λ _ → x) ∙ (λ _ → x)) ∙ (λ _ → x)) ∙ (λ _ → x)) i)
+-- -- -- --             refl
+-- -- -- --             (simplifyReflⁿ (suc (suc zero)))
+-- -- -- --             ))))))
