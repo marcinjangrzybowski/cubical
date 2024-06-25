@@ -15,6 +15,8 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.GroupoidLaws
+open import Cubical.Foundations.Function
 
 open import Cubical.Functions.Surjection
 
@@ -25,6 +27,13 @@ open import Cubical.Relation.Binary.Base
 
 open import Cubical.HITs.PropositionalTruncation as PropTrunc using (∥_∥₁; ∣_∣₁; squash₁)
 open import Cubical.HITs.SetTruncation as SetTrunc using (∥_∥₂; ∣_∣₂; squash₂)
+
+open import Cubical.Algebra.Group.Base
+open import Cubical.Algebra.Group.Properties
+
+open import Cubical.Algebra.AbGroup.Base
+
+import Cubical.HITs.EilenbergMacLane1 as EM
 
 -- Type quotients
 
@@ -104,3 +113,40 @@ rec : (Rt : BinaryRelation.isTrans R)
     → (x : A // Rt)
     → B
 rec Rt Bgpd = elim Rt (λ _ → Bgpd)
+
+
+
+module _ {ℓ ℓ'} (A : Type ℓ) (abase : A) (isGroupoidA : isGroupoid A)
+                (C : A → Type ℓ') (isGroupoidC : ∀ a → isGroupoid (C a)) where
+ L : Group ℓ
+ L = makeGroup (refl {_} {A} {abase})
+       _∙_ sym (isGroupoidA _ _)
+         assoc (sym ∘ rUnit) (sym ∘ lUnit)
+         rCancel lCancel
+
+ LR : Rel (C abase) (C abase) (ℓ-max ℓ ℓ')
+ LR x y  = Σ (fst L) λ l → PathP (λ i → C (l i)) x y
+
+ LRT : BinaryRelation.isTrans LR
+ fst (LRT x y z (p , P) (q , Q)) = p ∙ q
+ snd (LRT x y z (p , P) (q , Q)) = compPathP' {B = C} P Q
+
+ /L : Type (ℓ-max ℓ ℓ')
+ /L = (C abase) // LRT
+
+ ΣC : Type (ℓ-max ℓ ℓ')
+ ΣC = Σ _ C
+
+ toΣ : /L → ΣC
+ toΣ = rec
+   LRT
+   (isGroupoidΣ isGroupoidA isGroupoidC)
+   (abase ,_)
+    ΣPathP
+   zz
+  where
+   zz : {a b c : C abase} (r : LR a b) (s : LR b c) →
+      Square (ΣPathP r) (ΣPathP (LRT a b c r s)) refl (ΣPathP s)
+   fst (zz (p , P) (q , Q) i j) = compPath-filler p q i j
+   snd (zz (p , P) (q , Q) i j) = compPathP'-filler {B = C} P Q i j 
+

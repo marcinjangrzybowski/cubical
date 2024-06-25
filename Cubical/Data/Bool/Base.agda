@@ -3,7 +3,7 @@ module Cubical.Data.Bool.Base where
 
 open import Cubical.Foundations.Prelude
 
-open import Cubical.Data.Empty
+open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sum.Base
 open import Cubical.Data.Unit.Base
 
@@ -73,6 +73,10 @@ False Q = Bool→Type (not (Dec→Bool Q))
 
 toWitness : {Q : Dec A} → True Q → A
 toWitness {Q = yes p} _ = p
+
+fromWitness : {Q : Dec A} → A → True Q
+fromWitness {Q = yes p} x = tt
+fromWitness {Q = no ¬p} x = ⊥.rec (¬p x)
 
 toWitnessFalse : {Q : Dec A} → False Q → ¬ A
 toWitnessFalse {Q = no ¬p} _ = ¬p

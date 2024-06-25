@@ -17,6 +17,7 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.Function
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.Empty renaming (rec to ⊥-rec) hiding (elim)
@@ -127,3 +128,7 @@ module _ ((G , str) : Group ℓG) where
       → (x : EM₁ (G , str))
       → B
   rec Bgpd = elim (λ _ → Bgpd)
+
+
+    
+     

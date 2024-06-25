@@ -38,7 +38,7 @@ open Iso
 
 private
   variable
-    ℓ ℓ' ℓ'' : Level
+    ℓ ℓ' ℓ'' ℓ''' : Level
     A A' : Type ℓ
     B B' : (a : A) → Type ℓ
     C : (a : A) (b : B a) → Type ℓ
@@ -150,6 +150,17 @@ module _ {A : Type ℓ} {A' : Type ℓ'} where
   leftInv Σ-swap-Iso _  = refl
 
   unquoteDecl Σ-swap-≃ = declStrictIsoToEquiv Σ-swap-≃ Σ-swap-Iso
+
+module _ {A : Type ℓ} {A' : Type ℓ'} {B : A → Type ℓ''} {B' : A' → Type ℓ'''} where
+  Σ-traspose-Iso : Iso (Σ (A × A') (λ (a , a') → B a × B' a'))
+                       (Σ A B × Σ A' B')
+  fun Σ-traspose-Iso ((a , a') , (b , b')) = ((a , b) , (a' , b'))
+  inv Σ-traspose-Iso _ = _
+  rightInv Σ-traspose-Iso _ = refl
+  leftInv Σ-traspose-Iso _  = refl
+
+  unquoteDecl Σ-transpose-≃ = declStrictIsoToEquiv Σ-transpose-≃ Σ-traspose-Iso
+
 
 module _ {A : Type ℓ} {B : A → Type ℓ'} {C : ∀ a → B a → Type ℓ''} where
   Σ-assoc-Iso : Iso (Σ[ a ∈ Σ A B ] C (fst a) (snd a)) (Σ[ a ∈ A ] Σ[ b ∈ B a ] C a b)
@@ -420,6 +431,17 @@ module _ (A : ⊥ → Type ℓ) where
 
   ΣEmpty : Σ ⊥ A ≃ ⊥
   ΣEmpty = isoToEquiv ΣEmptyIso
+
+module _ (A : Type ℓ) where
+
+  open Iso
+
+  ×⊥-Iso : Iso (A × ⊥) ⊥
+  fun ×⊥-Iso = snd
+
+  ×⊥ : (A × ⊥) ≃ ⊥
+  ×⊥ = isoToEquiv ×⊥-Iso
+
 
 -- fiber of projection map
 
