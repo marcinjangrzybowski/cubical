@@ -79,3 +79,22 @@ indexOf t (t' ∷ l) =
   then just 0
   else map-Maybe (λ k → ℕ.suc k) (indexOf t l)
 indexOf t [] = nothing
+
+infixr 40 _<>_
+
+_<>_ = primStringAppend
+
+
+digitsToSubscripts : Char → Char
+digitsToSubscripts = λ where
+    '0' → '₀' ; '1' → '₁' ; '2' → '₂' ; '3' → '₃' ; '4' → '₄' ; '5' → '₅'
+    '6' → '₆' ; '7' → '₇' ; '8' → '₈' ; '9' → '₉' ; x → x
+
+
+mkNiceVar' : String → ℕ → String
+mkNiceVar' v k = v <>
+ primStringFromList (map digitsToSubscripts (primStringToList (primShowNat k)))
+
+
+mkNiceVar : ℕ → String
+mkNiceVar = mkNiceVar' "𝒙" 

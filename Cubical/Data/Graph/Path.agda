@@ -32,9 +32,8 @@ module _ {G : Graph ℓv ℓe} where
 
   -- Some properties
   pnil++ : ∀ {v w} (P : Path G v w) → pnil ++ P ≡ P
-  pnil++ pnil = refl
-  pnil++ (pcons e P) = cong (λ P → pcons e P) (pnil++ _)
-
+  pnil++ _ = refl
+  
   ++pnil : ∀ {v w} (P : Path G v w) → P ++ pnil ≡ P
   ++pnil pnil = refl
   ++pnil (pcons e P) = cong (λ P → pcons e P) (++pnil P)

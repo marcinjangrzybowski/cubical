@@ -2,7 +2,6 @@
 module Cubical.Data.List.Properties where
 
 
-open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
@@ -10,6 +9,7 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat
 open import Cubical.Data.Maybe
+open import Cubical.Data.Bool
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum as ⊎ hiding (map)
 open import Cubical.Data.Unit
@@ -43,7 +43,7 @@ module _ {ℓ} {A : Type ℓ} where
 
   rev-rev-snoc : (xs : List A) (y : A) →
     Square (rev-rev (xs ++ [ y ])) (cong (_++ [ y ]) (rev-rev xs)) (cong rev (rev-snoc xs y)) refl
-  rev-rev-snoc [] y = sym (lUnit refl)
+  rev-rev-snoc [] y = sym (compPath-filler refl refl)
   rev-rev-snoc (x ∷ xs) y i j =
     hcomp
       (λ k → λ
@@ -340,6 +340,9 @@ lookupAlways a [] _ = a
 lookupAlways _ (x ∷ _) zero = x
 lookupAlways a (x ∷ xs) (suc k) = lookupAlways a xs k
 
+lookup : List A → ℕ → Maybe A
+lookup = lookupAlways nothing ∘S map just
+
 rot : List A → List A
 rot [] = []
 rot (x ∷ xs) = xs ∷ʳ x
@@ -416,3 +419,49 @@ alwaysZipWith f (x ∷ xs) (y ∷ ys) = f (just x) (just y) ∷ alwaysZipWith f 
 range : ℕ → List ℕ
 range zero = []
 range (suc x) = x ∷ range x
+
+insertAt : ℕ → A → List A → List A
+insertAt k a xs = take k xs ++ a ∷ drop k xs
+
+replaceAt : ℕ → A → List A → List A
+replaceAt k a xs = take k xs ++ a ∷ drop (suc k) xs
+
+
+findBy : (A → Bool) → List A → Maybe A
+findBy t [] = nothing
+findBy t (x ∷ xs) = if t x then just x else findBy t xs
+
+
+catMaybes : List (Maybe A) → List A
+catMaybes [] = []
+catMaybes (nothing ∷ xs) = catMaybes xs
+catMaybes (just x ∷ xs) = x ∷ catMaybes xs
+
+fromAllMaybes : List (Maybe A) → Maybe (List A)
+fromAllMaybes [] = just []
+fromAllMaybes (nothing ∷ xs) = nothing
+fromAllMaybes (just x ∷ xs) = map-Maybe (x ∷_) (fromAllMaybes xs)
+
+maybeToList : Maybe A → List A 
+maybeToList nothing = []
+maybeToList (just x) = [ x ]
+
+listToMaybe : List A → Maybe A
+listToMaybe [] = nothing
+listToMaybe (x ∷ _) = just x
+
+
+injectiveZipWith, : (xs ys : List (A × B)) →
+  map fst xs ≡ map fst ys →
+  map snd xs ≡ map snd ys →  
+  xs ≡ ys
+injectiveZipWith, [] [] x x₁ = refl
+injectiveZipWith, [] (x₂ ∷ ys) x x₁ = ⊥.rec (¬nil≡cons x)
+injectiveZipWith, (x₂ ∷ xs) [] x x₁ = ⊥.rec (¬nil≡cons (sym x))
+injectiveZipWith, (x₂ ∷ xs) (x₃ ∷ ys) x x₁ =
+  cong₂ _∷_ (cong₂ _,_ (cons-inj₁ x) (cons-inj₁ x₁))
+   (injectiveZipWith, xs ys (cons-inj₂ x) (cons-inj₂ x₁))
+
+
+cart : List  A → List B → List (A × B) 
+cart la lb = join (map (λ b → map (_, b) la) lb)
