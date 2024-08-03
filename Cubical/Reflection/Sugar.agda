@@ -77,7 +77,6 @@ _>=>_ :  ∀ {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} →
   (A → M B) → (B → M C) → A → M C
 (x >=> x₁) x₂ = x x₂ >>= x₁
 
-
 instance
  RawApplicativeIdentityF : RawApplicative IdentityF
  runIdentity ((RawApplicativeIdentityF RawApplicative.<$> f) x) = f (runIdentity x)

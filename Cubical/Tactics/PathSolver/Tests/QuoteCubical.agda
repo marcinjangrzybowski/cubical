@@ -35,6 +35,17 @@ macro
    R.unify t (IExpr→Term t')
    R.unify R.unknown h
 
+ normIExprTest : R.Term → R.Term → R.TC Unit 
+ normIExprTest t h = do
+   t' ← R.normalise t >>= extractIExprM 
+   R.unify t (IExpr→Term t')
+   R.unify t (IExpr→Term (normIExpr t'))
+   wrapError h ("t    : " ∷ₑ IExpr→Term t' ∷nl
+                 "norm : " ∷ₑ (IExpr→Term (normIExpr t')) ∷ₑ [])
+
+   
+   -- R.unify R.unknown h
+
  -- degenTest : R.Term → R.Term → R.TC Unit 
  -- degenTest t h = do
  --   t' ← extractIExprM t
@@ -65,8 +76,19 @@ module _ (i j k l : I) where
  _ : Unit
  _ = extractIExprTest (~ (i ∨ ~ i ∨ j ∨ ~ j ∨ k ∨ ~ k))
 
- -- _ : Unit
- -- _ = {!degenTest (k ∧ l ∧ ~ l)!}
+ _ : ResultIs
+        ("t    : i ∨ i ∨ (i ∧ i ∧ j) ∨ i ∧ i ∧ k       " ∷
+         "norm : i                                     " ∷ [])
+ _ = normIExprTest (i ∨ i ∨ (i ∧ i ∧ (j ∨ k)))
+
+ _ : ResultIs
+        ("t    : (i ∧ k) ∨ j ∧ k                       " ∷
+         "norm : (j ∧ k) ∨ i ∧ k                       " ∷ [])
+ _ = normIExprTest ((i ∧ k) ∨ (j ∧ k))
+
+
+--  -- _ : Unit
+--  -- _ = {!degenTest (k ∧ l ∧ ~ l)!}
 
 
 

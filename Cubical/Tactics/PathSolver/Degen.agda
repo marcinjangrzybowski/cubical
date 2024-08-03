@@ -4,6 +4,7 @@ module Cubical.Tactics.PathSolver.Degen where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
+open import Cubical.Foundations.GroupoidLaws
 
 open import Cubical.Data.Bool
 open import Cubical.Data.Empty
@@ -107,27 +108,6 @@ constPartialR : R.Term → R.Term → R.Term
 constPartialR tI tA = R.def (quote constPartial) (tA v∷ v[ tI ])
 
 module UndegenCell (dim : ℕ) where
-
- extractAllIExprs : R.Term → List IExpr
- extractAllIExprs tm =
-   snd $ runIdentity $ unwrap (atVarOrDefM.rv {M = [ State₀T (List IExpr) RMT IdentityF ]_ }
-         (λ _ v _ argM → R.var v <$> argM)
-         gg zero tm) []
-   where
- 
-   g :  R.Name → List (R.Arg R.Term) → Bool
-   g (quote _∨_) a@(_ v∷ v[ _ ]) = true
-   g (quote _∧_) a@(_ v∷ v[ _ ]) = true
-   g (quote ~_) a@(v[ _ ]) = true
-   g _ _  = false
-
-
-   gg : _
-   gg n nm arg argM = let t = R.def nm arg in
-     if (g nm arg)
-     then (Mb.rec (liftM (identity tt))
-       (λ ie → modify ((mapVarsInIExpr (_∸ n) ie) ∷_)) (extractIExpr t) ) >> pure t
-     else R.def nm <$> argM
      
  undegenCell : (R.Term × R.Term) → R.Term → R.TC R.Term
  undegenCell (t0 , tI) t = do
@@ -232,4 +212,273 @@ module T1 {x : A} (p' p'' : x ≡ y) (xr xr' : x ≡ x) (q : y ≡ z) (~r : w �
   
  P≡Q : P ≡ Q
  P≡Q = testUndegenCub (suc zero) (λ (i : I) → P i)
+
+
+
+-- really just refl ∙_  
+reComp : ∀ {ℓ} {A : Type ℓ} {x y : A} (p : x ≡ y) → x ≡ y
+reComp p i =
+  hcomp {φ = i ∨ ~ i} (λ k _ → (p (i ∧ k))) (p i0)
+
+
+--  really just lUnit
+reFill : ∀ {ℓ} {A : Type ℓ} {x y : A} (p : x ≡ y) → p ≡ reComp p
+reFill p j i =
+  hcomp {φ = i ∨ ~ i ∨ ~ j} (λ k _ → (p (i ∧ k))) (p i0)
+
+module unConnect (do-fill : Bool) where
+
+ unConnCell : ℕ → R.Term → R.Term → R.TC CuTerm
+ unConnCell dim jT (R.var k (z₀ v∷ v[ z₁ ])) =
+   (if do-fill then (pure ∘S cell) else (quoteCuTerm nothing dim))
+     (R.def (quote reFill)
+       (vlam "𝒾"
+       ((R.def (quote reFill) (R.var (suc k) v[ 𝒗 zero ] v∷ (liftVars jT) v∷ v[ liftVars z₁ ])))
+        v∷ jT v∷  v[ z₀ ]))
+
+ unConnCell dim jT (R.var k v[ z ]) =
+   (if do-fill then (pure ∘S cell) else (quoteCuTerm nothing dim))
+     (R.def (quote reFill) ((R.var k []) v∷ jT v∷ v[ z ]))
+ unConnCell _ _ t = pure $ cell' _ t
+
+
+ unConnS : List (SubFace × CuTerm) → R.TC (List (SubFace × CuTerm))
+
+ unConnA : ℕ → List (CuTerm) → R.TC (List (CuTerm))
+
+
+ unConn : ℕ → CuTerm → R.TC (CuTerm)
+ unConn dim (hco x x₁) = ⦇ hco (unConnS x) (unConn dim x₁) ⦈
+ unConn dim (cell' x x₁) =
+   if do-fill
+   then unConnCell (suc dim) (𝒗 dim) (liftVarsFrom (suc zero) dim x₁) 
+   else unConnCell dim (endTerm true) x₁ 
+ unConn dim (𝒄ong' {cg = cg} x x₁) = 𝒄ong' {cg = cg} x <$> unConnA dim x₁ 
+
+ unConnS [] = ⦇ [] ⦈
+ unConnS ((sf , x) ∷ xs) = ⦇ ⦇ ⦇ (sf ++ (if do-fill then [ nothing ] else [])) ⦈
+  , unConn (suc (sfDim sf)) x ⦈ ∷ unConnS xs ⦈
+
+ unConnA _ [] = ⦇ [] ⦈
+ unConnA dim (x ∷ xs) = ⦇ (unConn dim x) ∷ (unConnA dim xs) ⦈
+
+
+
+unConn = unConnect.unConn false
+unConnFill = unConnect.unConn true
+
+
+module _ (dim : ℕ) where
+ macro
+  unConnTest : R.Term → R.Term → R.TC Unit
+  unConnTest t h = do
+   cu ← (extractCuTerm nothing dim t)
+   cu' ← unConn dim cu
+   te0 ← ppCT dim 100 cu
+   te0' ← ppCT dim 100 cu'
+   wrapError h $
+          "input:" ∷nl (indentₑ 4 te0)
+     ++nl "\n∨,∧,~ - removed :" ∷nl (indentₑ 4 te0')
+
+  unConnM : R.Term → R.Term → R.TC Unit
+  unConnM t h = do
+   cu ← (extractCuTerm nothing dim t)
+   cu' ← unConn dim cu
+   R.unify (toTerm dim cu') h
+
+  unConnM≡ : R.Term → R.Term → R.TC Unit
+  unConnM≡ t h = do
+   cu ← (extractCuTerm nothing dim t)
+   cu' ← unConnFill dim cu
+   let cu'T = toTerm (suc dim) cu'
+   -- cu'' ← R.checkType cu'T (R.def (quote PathP) (R.unknown v∷ R.unknown v∷ v[ R.unknown ]))
+   R.unify cu'T h
+
+
+
+module _ (A : Type ℓ) (x y z w : A) (p : x ≡ y)(q : y ≡ z)(r : z ≡ w) where
+
+ _ : ResultIs
+        ("input:                                       " ∷
+         "                                             " ∷
+         "     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₀                              " ∷
+         "     ║  (𝓲₀=0) → q 𝓲₁                        " ∷
+         "     ║  (𝓲₁=0) → p (~ 𝓲₀ ∨ ~ 𝒛₀)             " ∷
+         "     ║  (𝓲₁=1) → r (𝓲₀ ∧ 𝒛₀)                 " ∷
+         "     ║                                       " ∷
+         "     ├───────────                            " ∷
+         "     │ q 𝓲₁                                  " ∷
+         "     └───────────                            " ∷
+         "∨,∧,~ - removed :                            " ∷
+         "                                             " ∷
+         "     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₀                              " ∷
+         "     ║  (𝓲₀=0) →                             " ∷
+         "     ║     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₁                        " ∷
+         "     ║     ║  (𝓲₁=0) → y                     " ∷
+         "     ║     ║  (𝓲₁=1) → q 𝒛₁                  " ∷
+         "     ║     ║                                 " ∷
+         "     ║     ├───────────                      " ∷
+         "     ║     │ y                               " ∷
+         "     ║     └───────────                      " ∷
+         "     ║  (𝓲₁=0) →                             " ∷
+         "     ║     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₁                        " ∷
+         "     ║     ║  (𝒛₀=1)(𝓲₀=1) → x               " ∷
+         "     ║     ║  (𝒛₀=0)       → p 𝒛₁            " ∷
+         "     ║     ║  (𝓲₀=0)       → p 𝒛₁            " ∷
+         "     ║     ║                                 " ∷
+         "     ║     ├───────────                      " ∷
+         "     ║     │ x                               " ∷
+         "     ║     └───────────                      " ∷
+         "     ║  (𝓲₁=1) →                             " ∷
+         "     ║     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₁                        " ∷
+         "     ║     ║  (𝒛₀=0)       → z               " ∷
+         "     ║     ║  (𝓲₀=0)       → z               " ∷
+         "     ║     ║  (𝒛₀=1)(𝓲₀=1) → r 𝒛₁            " ∷
+         "     ║     ║                                 " ∷
+         "     ║     ├───────────                      " ∷
+         "     ║     │ z                               " ∷
+         "     ║     └───────────                      " ∷
+         "     ║                                       " ∷
+         "     ├───────────                            " ∷
+         "     │                                       " ∷
+         "     │ 𝒉𝒄𝒐𝒎𝒑 λ 𝒛₀                            " ∷
+         "     │ ║  (𝓲₁=0) → y                         " ∷
+         "     │ ║  (𝓲₁=1) → q 𝒛₀                      " ∷
+         "     │ ║                                     " ∷
+         "     │ ├───────────                          " ∷
+         "     │ │ y                                   " ∷
+         "     │ └───────────                          " ∷
+         "     └───────────                            " ∷ [])
+ _ = unConnTest (suc (suc zero)) λ (i j : I) → doubleCompPath-filler p q r i j 
+
+
+module _ (dim : ℕ) where
+ macro
+  unConnTest' : R.Term → R.Term → R.TC Unit
+  unConnTest' t h = do
+   cu ← (extractCuTerm nothing dim t)
+   -- cu' ← unConn dim cu
+   te0 ← ppCT dim 100 cu
+   -- te0' ← ppCT dim 100 cu'
+   wrapError h $
+          "input:" ∷nl (indentₑ 4 te0)
+     -- ++nl "\n∨,∧,~ - removed :" ∷nl (indentₑ 4 te0')
+
+
+module _ {A : Type ℓ}
+  {a₀₀ a₀₁ : A} (a₀₋ : a₀₀ ≡ a₀₁)
+  {a₁₀ a₁₁ : A} (a₁₋ : a₁₀ ≡ a₁₁)
+  (a₋₀ : a₀₀ ≡ a₁₀) (a₋₁ : a₀₁ ≡ a₁₁)
+  (s : Square a₀₋ a₁₋ a₋₀ a₋₁) where
+
+
+
+ s' : Square
+        ((λ i → a₁₋ (~ i)) ∙' refl)
+        ((λ i → a₀₋ (~ i)) ∙' refl)
+        ((λ i → a₋₁ (~ i)) ∙' refl)
+        ((λ i → a₋₀ (~ i)) ∙' refl)
+ s' i j = reComp (λ i → reComp (λ j → s i j) (~ j)) (~ i)
+
+
+ s'' : Square
+        ((λ i → a₁₋ (~ i)) ∙' refl)
+        ((λ i → a₀₋ (~ i)) ∙' refl)
+        ((λ i → a₋₁ (~ i)) ∙' refl)
+        ((λ i → a₋₀ (~ i)) ∙' refl)
+ s'' i j = reComp (λ j → reComp (λ i → s i j) (~ i)) (~ j)
+
+
+ interpI : I → I → I → I
+ interpI z i₀ i₁ = ((~ z) ∧ i₀) ∨ (z ∧ i₁) ∨ (i₀ ∧ i₁) 
+
+ s-rot : Cube
+        s (λ i j → s j (~ i))
+        _ _
+        _ _
+ s-rot z i j = s (interpI z i j) (interpI z j (~ i))
+
+ s-rot-cc : ResultIs
+              ("input:                                       " ∷
+                "                                             " ∷
+                "     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₀                              " ∷
+                "     ║  (𝓲₂=0)(𝓲₁=1) →                       " ∷
+                "     ║     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₁                        " ∷
+                "     ║     ║  (𝓲₀=1) → a₀₀                   " ∷
+                "     ║     ║  (𝓲₀=0) → a₀₋ 𝒛₁                " ∷
+                "     ║     ║                                 " ∷
+                "     ║     ├───────────                      " ∷
+                "     ║     │ a₀₀                             " ∷
+                "     ║     └───────────                      " ∷
+                "     ║  (𝓲₁=1)(𝓲₀=1) →                       " ∷
+                "     ║     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₁                        " ∷
+                "     ║     ║  (𝓲₂=0) → a₀₀                   " ∷
+                "     ║     ║  (𝓲₂=1) → a₀₋ 𝒛₁                " ∷
+                "     ║     ║                                 " ∷
+                "     ║     ├───────────                      " ∷
+                "     ║     │ a₀₀                             " ∷
+                "     ║     └───────────                      " ∷
+                "     ║  (𝓲₂=0)(𝓲₀=0) →                       " ∷
+                "     ║     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₁                        " ∷
+                "     ║     ║  (𝓲₁=0) → a₀₀                   " ∷
+                "     ║     ║  (𝓲₁=1) → a₀₋ 𝒛₁                " ∷
+                "     ║     ║                                 " ∷
+                "     ║     ├───────────                      " ∷
+                "     ║     │ a₀₀                             " ∷
+                "     ║     └───────────                      " ∷
+                "     ║  (𝓲₂=1)(𝓲₁=0) →                       " ∷
+                "     ║     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₁                        " ∷
+                "     ║     ║  (𝓲₀=0) → a₋₀ 𝒛₀                " ∷
+                "     ║     ║  (𝓲₀=1) → s 𝒛₀ 𝒛₁               " ∷
+                "     ║     ║                                 " ∷
+                "     ║     ├───────────                      " ∷
+                "     ║     │ a₋₀ 𝒛₀                          " ∷
+                "     ║     └───────────                      " ∷
+                "     ║  (𝓲₁=0)(𝓲₀=1) →                       " ∷
+                "     ║     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₁                        " ∷
+                "     ║     ║  (𝓲₂=0) → a₋₀ 𝒛₀                " ∷
+                "     ║     ║  (𝓲₂=1) → s 𝒛₀ 𝒛₁               " ∷
+                "     ║     ║                                 " ∷
+                "     ║     ├───────────                      " ∷
+                "     ║     │ a₋₀ 𝒛₀                          " ∷
+                "     ║     └───────────                      " ∷
+                "     ║  (𝓲₂=1)(𝓲₀=0) →                       " ∷
+                "     ║     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₁                        " ∷
+                "     ║     ║  (𝓲₁=0) → a₋₀ 𝒛₀                " ∷
+                "     ║     ║  (𝓲₁=1) → s 𝒛₀ 𝒛₁               " ∷
+                "     ║     ║                                 " ∷
+                "     ║     ├───────────                      " ∷
+                "     ║     │ a₋₀ 𝒛₀                          " ∷
+                "     ║     └───────────                      " ∷
+                "     ║                                       " ∷
+                "     ├───────────                            " ∷
+                "     │                                       " ∷
+                "     │ 𝒉𝒄𝒐𝒎𝒑 λ 𝒛₀                            " ∷
+                "     │ ║  (𝓲₂=0)(𝓲₁=0) → a₀₀                 " ∷
+                "     │ ║  (𝓲₂=0)(𝓲₀=1) → a₀₀                 " ∷
+                "     │ ║  (𝓲₁=0)(𝓲₀=0) → a₀₀                 " ∷
+                "     │ ║  (𝓲₂=1)(𝓲₁=1) → a₀₋ 𝒛₀              " ∷
+                "     │ ║  (𝓲₂=1)(𝓲₀=1) → a₀₋ 𝒛₀              " ∷
+                "     │ ║  (𝓲₁=1)(𝓲₀=0) → a₀₋ 𝒛₀              " ∷
+                "     │ ║                                     " ∷
+                "     │ ├───────────                          " ∷
+                "     │ │ a₀₀                                 " ∷
+                "     │ └───────────                          " ∷
+                "     └───────────                            " ∷ [])
+ s-rot-cc = unConnTest' (suc (suc (suc zero))) λ (z i j : I) →
+    
+    reComp (λ i₀ → reComp (s i₀) (interpI z i j)) (interpI z j (~ i))
+
  
+
+ s-rot' : Cube _ _ _ _ _ _
+ s-rot' = unConnM (suc (suc (suc zero))) λ (z i j : I) →
+            s-rot z i j
+
+
+ s-rot≡ : Path (I → I → I → A) 
+     (λ i j k → s-rot  i j k)
+     (λ i j k → s-rot' i j k)
+ s-rot≡ = 
+    unConnM≡ (suc (suc (suc zero))) λ (z i j : I) →
+            s-rot z i j

@@ -465,3 +465,20 @@ injectiveZipWith, (x₂ ∷ xs) (x₃ ∷ ys) x x₁ =
 
 cart : List  A → List B → List (A × B) 
 cart la lb = join (map (λ b → map (_, b) la) lb)
+
+filter : (A → Bool) → List A → List A
+filter f [] = []
+filter f (x ∷ xs) = if f x then (x ∷ filter f xs) else (filter f xs)
+
+
+module _ (_≟_ : Discrete A) where
+ nub : List A → List A
+ nub [] = []
+ nub (x ∷ xs) = x ∷ filter (not ∘ Dec→Bool ∘ _≟ x) (nub xs)
+
+ elem? : A → List A → Bool
+ elem? x [] = false
+ elem? x (x₁ ∷ x₂) = Dec→Bool (x ≟ x₁) or elem? x x₂  
+
+ subs? : List A → List A → Bool
+ subs? xs xs' = foldr (_and_ ∘ flip elem? xs') true xs

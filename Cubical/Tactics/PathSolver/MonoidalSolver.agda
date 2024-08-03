@@ -32,7 +32,7 @@ open import Cubical.Tactics.Reflection.Utilities
 -- open import Cubical.Tactics.PathSolver.Base
 open import Cubical.Tactics.PathSolver.CongComp
 
-open import Cubical.Tactics.PathSolver.QuoteCubical renaming (normaliseWithType to normaliseWithType')
+open import Cubical.Tactics.PathSolver.QuoteCubical 
 
 open import Cubical.Tactics.PathSolver.Error
 open import Cubical.Tactics.PathSolver.Dimensions
@@ -41,7 +41,7 @@ open import Cubical.Tactics.PathSolver.Reflection
 open import Cubical.Tactics.Reflection.Variables
 open import Cubical.Tactics.PathSolver.Degen
 open import Cubical.Tactics.PathSolver.PathEval
-open import Cubical.Tactics.PathSolver.PathTerm
+import Cubical.Tactics.PathSolver.PathEval as PT
 
 import Cubical.Tactics.PathSolver.ViaPrimPOr as ViaPrimPOr
 
@@ -50,10 +50,69 @@ private
     ℓ : Level
     A B : Type ℓ
 
-normaliseWithType : String → R.Type → R.Term → R.TC R.Term
-normaliseWithType s ty tm = do
-  -- R.debugPrint "" 3 $ s <> " nwt: " ∷ₑ [ ty ]ₑ 
-  normaliseWithType' ty tm
+
+
+
+
+PathTerm = R.Term ⊎ R.Term
+
+record SquareTerm : Type where
+ constructor squareTerm
+ field
+  term : R.Term
+
+
+pattern 𝒓efl x = inl x
+pattern 𝒑λ x = inr x
+
+asPathTerm : R.Term → PathTerm
+asPathTerm tm = 
+  if (hasVar zero tm) then (𝒑λ tm) else (𝒓efl tm)
+
+-- compPath'-filler, but composition is 'simplified' according to groupoid laws
+
+-- (p : x ≡ y) → (q : y ≡ z) → (Σ (p∙q ∈ x ≡ z) (Square q p∙q p refl))
+
+-- assumes that terms are already pre rpocessed : addNDimsToCtx 1 ∘S R.normalise ∘S pathApp
+
+
+bfs' : PT.CTerm → R.TC R.Term
+bfs' xs =  do
+    let q = (PT.foldPath' (tail (PT.fill-flatten' xs)))
+    hd ← Mb.rec (R.typeError [ "imposible tfct≡" ]ₑ )
+           pure (listToMaybe (PT.fill-flatten' xs))
+    -- addNDimsToCtx 2 $  R.typeError [ hd ]ₑ
+    PT.fillHeadTrm hd q
+
+
+
+
+_↙_ : PathTerm → PathTerm → R.TC (PathTerm × SquareTerm)
+𝒓efl x ↙ q = q ,_ <$>  (squareTerm <$> bfs' (⊎.rec (idfun _) (idfun _) q))
+𝒑λ x ↙ 𝒓efl y = 
+  (𝒑λ (PT.wrapPaths x) ,_) <$> (squareTerm <$> (bfs' (PT.wrapFills x)) ) 
+𝒑λ p ↙ 𝒑λ q = do
+  pq-sq ← (PT.absorb 0 (PT.wrapPaths p) q)
+  
+  pq ← (PT.cTermEnd pq-sq) >>= Mb.rec
+     ( 𝒓efl <$> (addNDimsToCtx 1 $ R.normalise
+          (replaceVarWithCon (λ { zero → just (quote i0) ; _ → nothing }) p))) (pure ∘S 𝒑λ)
+  -- addNDimsToCtx 1 $ R.typeError [ pq-sq ]ₑ
+  pq ,_ <$> (squareTerm <$> bfs' pq-sq)
+   
+-- _ ↙ _ = R.typeError [ "testes" ]ₑ
+
+macro
+ ↙-test : R.Term → R.Term → R.Term → R.TC Unit
+ ↙-test p q h = do
+   p' ← asPathTerm <$> (addNDimsToCtx 1 ∘S R.normalise ∘S pathApp) p
+   q' ← asPathTerm ∘S PT.wrapPaths <$> (addNDimsToCtx 1 ∘S R.normalise ∘S pathApp) q
+   pq ← (SquareTerm.term ∘S snd) <$> p' ↙ q'
+   R.unify pq h
+
+
+
+
 
 
 
@@ -148,18 +207,6 @@ quote1D mbty t = do
                (map-Maybe  (mbCongPa ,_) (to1DimView _ cu'))
 
 
--- simplifyFillTerm' : R.Term → R.Term → R.TC R.Term
--- simplifyFillTerm' q t = do
---   cu ← extractCuTermFromPath nothing t
---   te ← ppCT 1 100 cu
---   let cu' = appCongs 1 cu
---   congPa ← pure (ToTerm.toTerm (defaultCtx 2) (fillCongs 100 1 cu))
---   -- R.typeError te
---   1dv ← Mb.rec (R.typeError [ "imposible in simplifyPath" ]ₑ)
---                pure
---                (to1DimView _ cu')
---   s ← fill1DV 1dv
---   pure (fst s)
 
 simplifyFillTerm : Maybe R.Type → R.Term → R.TC R.Term
 simplifyFillTerm mbTy t = do
@@ -181,60 +228,6 @@ macro
  simplifyPath t h = do   
    sq ← simplifyFillTerm nothing t
    R.unify (R.def (quote ◪→≡) v[ sq ]) h
-
-
--- private
---   variable
-    
-    
---     x y z w v : A
-    -- f₂ : A → A → A 
-    -- q : y ≡ z
-    -- r : z ≡ w
-    -- s : w ≡ v
-
-module E0 {x y z w : A}
-  (p : x ≡ y)
-  (q : y ≡ z)
-  (r : z ≡ w) (f : A → A) (f₂ : A → A → A) (f₄ : A → A → A → A → A) where
-
-
- e-refl : refl ≡ refl
- e-refl = simplifyFill (refl {x = x})
-
- e-refl≡refl : e-refl ≡ refl
- e-refl≡refl = refl
- 
- e0 : (((p ∙∙ q ∙∙ sym q ) ∙∙ q  ∙∙ r)) ≡ (p ∙' (q ∙' r))
- e0 = simplifyPath ((p ∙∙ q ∙∙ sym q ) ∙∙ q  ∙∙ r)
-
-
- e1 : (p ∙∙ q ∙∙ r ) ≡ p ∙' (q ∙' r)
- e1 = simplifyPath (p ∙∙ q ∙∙ r )
-
- e1' : (refl ∙∙ q ∙∙ r ) ≡ q ∙' r
- e1' = simplifyPath (refl ∙∙ q ∙∙ r )
-
-
- e2 : (p ∙∙ refl ∙∙ refl ) ≡ p
- e2 = simplifyPath (p ∙∙ refl ∙∙ refl )
-
-
-
- e3 : _ ≡ _
- e3 = simplifyPath (cong f p ∙ cong f q ∙ (refl ∙ cong f r))
-
- e4 : _ ≡ cong₂ f₂ q p
- e4 = simplifyPath (cong (f₂ y) p ∙ cong (flip f₂ y) q )
-
-
-
- e5 : _ ≡ λ 𝓲 → f₄ (p 𝓲) (q 𝓲) (r 𝓲) (q 𝓲)
- e5 = simplifyPath
-       ((λ i → f₄ (p i) y z (p (~ i)))
-     ∙∙ (λ i → f₄ y (q i) z ((p ∙ q) i)) ∙∙
-        (λ i → f₄ ((refl {x = y} ∙' refl {x = y}) i) z (r i) z) )
-
 
 stepSq : R.Type → R.Term → Maybe PathTerm →  R.TC (R.Term × PathTerm)
 stepSq A p mbQ = do

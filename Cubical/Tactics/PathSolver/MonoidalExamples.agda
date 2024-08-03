@@ -51,6 +51,52 @@ private
     A B : Type ℓ
 
 
+module E0 {x y z w : A}
+  (p : x ≡ y)
+  (q : y ≡ z)
+  (r : z ≡ w) (f : A → A) (f₂ : A → A → A) (f₄ : A → A → A → A → A) where
+
+
+
+
+ e-refl : refl ≡ refl
+ e-refl = simplifyFill (refl {x = x})
+
+ e-refl≡refl : e-refl ≡ refl
+ e-refl≡refl = refl
+ 
+ e0 : (((p ∙∙ q ∙∙ sym q ) ∙∙ q  ∙∙ r)) ≡ (p ∙' (q ∙' r))
+ e0 = simplifyPath ((p ∙∙ q ∙∙ sym q ) ∙∙ q  ∙∙ r)
+
+
+ e1 : (p ∙∙ q ∙∙ r ) ≡ p ∙' (q ∙' r)
+ e1 = simplifyPath (p ∙∙ q ∙∙ r )
+
+ e1' : (refl ∙∙ q ∙∙ r ) ≡ q ∙' r
+ e1' = simplifyPath (refl ∙∙ q ∙∙ r )
+
+
+ e2 : (p ∙∙ refl ∙∙ refl ) ≡ p
+ e2 = simplifyPath (p ∙∙ refl ∙∙ refl )
+
+
+
+ e3 : _ ≡ _
+ e3 = simplifyPath (cong f p ∙ cong f q ∙ (refl ∙ cong f r))
+
+ e4 : _ ≡ cong₂ f₂ q p
+ e4 = simplifyPath (cong (f₂ y) p ∙ cong (flip f₂ y) q )
+
+
+
+ e5 : _ ≡ λ 𝓲 → f₄ (p 𝓲) (q 𝓲) (r 𝓲) (q 𝓲)
+ e5 = simplifyPath
+       ((λ i → f₄ (p i) y z (p (~ i)))
+     ∙∙ (λ i → f₄ y (q i) z ((p ∙ q) i)) ∙∙
+        (λ i → f₄ ((refl {x = y} ∙' refl {x = y}) i) z (r i) z) )
+
+
+
 module E2 {x y z w : A}
   (p : x ≡ y)
   (q : y ≡ z)

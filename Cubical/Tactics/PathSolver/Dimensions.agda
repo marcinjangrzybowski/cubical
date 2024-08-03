@@ -51,27 +51,7 @@ ie[_] : ℕ → IExpr
 ie[ x ] = [ [ true , x ] ]
 
 
-I^n→ItyTm : ℕ → R.Term
-I^n→ItyTm zero = R.def (quote I) []
-I^n→ItyTm (suc x) = R.pi (varg (R.def (quote I) [])) (R.abs "i" (I^n→ItyTm x) )
 
-
-filter : (A → Bool) → List A → List A
-filter f [] = []
-filter f (x ∷ xs) = if f x then (x ∷ filter f xs) else (filter f xs)
-
-
-module _ (_≟_ : Discrete A) where
- nub : List A → List A
- nub [] = []
- nub (x ∷ xs) = x ∷ filter (not ∘ Dec→Bool ∘ _≟ x) (nub xs)
-
- elem? : A → List A → Bool
- elem? x [] = false
- elem? x (x₁ ∷ x₂) = Dec→Bool (x ≟ x₁) or elem? x x₂  
-
- subs? : List A → List A → Bool
- subs? xs xs' = foldr (_and_ ∘ flip elem? xs') true xs
 
 normIExpr : IExpr → IExpr
 normIExpr = norm∨ ∘S L.map norm∧ 
@@ -105,24 +85,21 @@ vlamⁿ (suc n) t = vlam "𝒊" (vlamⁿ n t)
 $i : ∀ {ℓ} {A : Type ℓ} → (I → A) → I → A
 $i = λ f i → f i
 
-$I : ∀ {ℓ} {A : I → SSet ℓ} → (∀ i → A i) → ∀ i → A i
-$I f i = f i
+-- $I : ∀ {ℓ} {A : I → SSet ℓ} → (∀ i → A i) → ∀ i → A i
+-- $I f i = f i
 
 $≡ : ∀ {ℓ} {A : I → Type ℓ} {x : A i0} {y : A i1} → (PathP A x y) → ∀ i → A i
 $≡ f i = f i
-
-$≡' : ∀ {ℓ} {A : Type ℓ} {x : A} {y : A} → (x ≡ y) → I → A
-$≡' f i = f i
 
 
 $PI : ∀ {ℓ} (A : Type ℓ) → (I → (Partial i1 A)) → I → A
 $PI _ f i = f i 1=1
 
 
-appNDims≡ : ℕ → R.Term → R.Term
-appNDims≡ zero t = t
-appNDims≡ (suc n) t =
- appNDims≡ n $ R.def (quote $≡) ( t v∷ v[ R.var n [] ])
+-- appNDims≡ : ℕ → R.Term → R.Term
+-- appNDims≡ zero t = t
+-- appNDims≡ (suc n) t =
+--  appNDims≡ n $ R.def (quote $≡) ( t v∷ v[ R.var n [] ])
 
 
 appNDimsI : ℕ → R.Term → R.Term
@@ -143,6 +120,8 @@ allSubFacesOfDim (suc x) =
 sfDim : SubFace → ℕ
 sfDim sf = length sf ∸ length (filter (λ { (just _) → true ; _ → false} ) sf)
 
+allSubFacesOfSfDim : ℕ → ℕ → List SubFace
+allSubFacesOfSfDim n k = filter ((_=ℕ k) ∘S sfDim) $ allSubFacesOfDim n
 
 subFaceConstraints : SubFace → List (Bool × ℕ)
 subFaceConstraints [] = []
@@ -621,10 +600,6 @@ isNonDegen dim iexpr =
 
 undegenFcs : ℕ → List IExpr → (R.TC (FExpr)) 
 undegenFcs dim l = do 
- -- ifAnyNonDeg ← foldrM
- --            (\ie b →  (b and_)  <$> (isNonDegen dim ie))
- --              true l
- -- if ifAnyNonDeg then (pure nothing) else
   do
      foldrM (λ sf fe → _++fe fe <$> (if ((sfDim sf) =ℕ 0) then pure [ sf ] else do
         isNonDegForEvery ← foldrM
@@ -632,3 +607,135 @@ undegenFcs dim l = do
               true l
         pure $ if isNonDegForEvery then [] else [ sf ]))
       [] (filter ((_<ℕ dim) ∘ sfDim) (allSubFacesOfDim dim))
+
+
+normIExprInTerm : ℕ → R.Term → R.TC R.Term
+normIExprInTerm offset =
+    atVarOrDefM.rv
+      (λ n k _ args → R.var (n + k) <$> args)
+      h
+      zero 
+
+ where
+
+  g :  R.Name → List (R.Arg R.Term) → R.Term → Maybe R.Term
+  g (quote _∨_) a@(_ v∷ v[ _ ]) tm = just tm
+  g (quote _∧_) a@(_ v∷ v[ _ ]) tm = just tm
+  g (quote ~_) a@(v[ _ ]) tm = just tm
+  g _ _ _ = nothing
+
+  h : ℕ →
+        R.Name →
+        List (R.Arg R.Term) → R.TC (List (R.Arg R.Term)) → R.TC R.Term
+  h _ nm arg argM =
+     Mb.rec (R.def nm <$> argM)
+            ((extractIExprM >=&
+              (IExpr→Term
+              ∘ mapVarsInIExpr (_+ offset)
+              ∘ normIExpr
+              ∘ mapVarsInIExpr (_∸ offset) )))
+       (g nm arg (R.def nm arg))
+
+
+macro
+ normIExprInTermM : R.Term → R.Term → R.TC Unit
+ normIExprInTermM t h =
+    normIExprInTerm zero t >>= flip R.unify h  
+
+-- getAllIExprs : ℕ → R.Term → List IExpr
+-- getAllIExprs dim t =
+--   snd $ runIdentity (unwrap {T = State₀T (List IExpr)}
+--    (atVarOrDefM.rv f g zero t) [])
+--  where
+--   f : ℕ → ℕ → List (R.Arg R.Term) → _
+--   f n x [] argsM = do
+--             when ((n <ℕ (suc x)) and (x <ℕ (n + dim)))
+--              (modify (ie[ x ∸ n ] ∷_))
+--             R.var x <$> argsM
+--   f n x args argsM = R.var x <$> argsM
+
+--     -- f n x [] =
+--     --      if (n <ℕ (suc x)) and (x <ℕ (n + dim))
+--     --      then just (var (x ∸ n) [])
+--     --      else nothing
+--     -- f n k (x ∷ args) = nothing
+
+--   g' :  R.Name → List (R.Arg R.Term) → R.Term → Maybe R.Term
+--   g' (quote _∨_) a@(_ v∷ v[ _ ]) tm = just tm
+--   g' (quote _∧_) a@(_ v∷ v[ _ ]) tm = just tm
+--   g' (quote ~_) a@(v[ _ ]) tm = just tm
+--   g' _ _ _ = nothing
+
+
+--   g : ℕ → R.Name → List (R.Arg R.Term) → _
+--   g n nm args argsM =
+--     Mb.rec
+--       (R.def nm <$> argsM)
+--       {!!}
+--       (g' nm args (R.def nm args))
+
+
+extractAllIExprs : R.Term → List IExpr
+extractAllIExprs tm =
+  snd $ runIdentity $ unwrap (atVarOrDefM.rv {M = [ State₀T (List IExpr) RMT IdentityF ]_ }
+        (λ _ v _ argM → R.var v <$> argM)
+        gg zero tm) []
+  where
+
+  g :  R.Name → List (R.Arg R.Term) → Bool
+  g (quote _∨_) a@(_ v∷ v[ _ ]) = true
+  g (quote _∧_) a@(_ v∷ v[ _ ]) = true
+  g (quote ~_) a@(v[ _ ]) = true
+  g _ _  = false
+
+
+  gg : _
+  gg n nm arg argM = let t = R.def nm arg in
+    if (g nm arg)
+    then (Mb.rec (liftM (identity tt))
+      (λ ie → modify ((mapVarsInIExpr (_∸ n) ie) ∷_)) (extractIExpr t) ) >> pure t
+    else R.def nm <$> argM
+
+mapIExprs : ℕ -> ℕ → (IExpr → IExpr) → R.Term → R.TC R.Term
+mapIExprs dim offset fn =
+    atVarOrDefM.rv
+      (λ n k _ args →
+        if (n <ℕ (suc k)) and (k <ℕ (n + dim))
+        then (pure ((IExpr→Term
+              ∘S mapVarsInIExpr (_+ (offset + n))
+              ∘S fn
+              ∘S mapVarsInIExpr (_∸ (offset + n))) (ie[ k ])))
+        else (R.var k <$> args))
+      h
+      zero 
+
+ where
+
+  g :  R.Name → List (R.Arg R.Term) → R.Term → Maybe R.Term
+  g (quote _∨_) a@(_ v∷ v[ _ ]) tm = just tm
+  g (quote _∧_) a@(_ v∷ v[ _ ]) tm = just tm
+  g (quote ~_) a@(v[ _ ]) tm = just tm
+  g _ _ _ = nothing
+
+  h : ℕ →
+        R.Name →
+        List (R.Arg R.Term) → R.TC (List (R.Arg R.Term)) → R.TC R.Term
+  h n nm arg argM =
+     Mb.rec (R.def nm <$> argM)
+            ((extractIExprM >=&
+              (IExpr→Term
+              ∘ mapVarsInIExpr (_+ (offset + n))
+              ∘ fn
+              ∘ mapVarsInIExpr (_∸ (offset + n)) )))
+       (g nm arg (R.def nm arg))
+
+
+icConnFree' : IExpr → Bool
+icConnFree' [] = true
+icConnFree' ([] ∷ []) = true
+icConnFree' ((x ∷ []) ∷ []) = true
+icConnFree' _ = false
+
+icConnFree : IExpr → Bool
+icConnFree = icConnFree' ∘ normIExpr
+

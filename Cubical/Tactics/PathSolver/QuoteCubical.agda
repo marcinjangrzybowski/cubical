@@ -71,31 +71,22 @@ normaliseWithType ty tm = R.withNormalisation true $ R.checkType tm ty
 module ECT where
  
  evalOp : (Maybe R.Type) → ℕ → R.Term → R.TC R.Term
- evalOp mbTy dims = --R.normalise
+ evalOp mbTy dims =
     Mb.rec R.normalise (normaliseWithType ∘S liftVarsFrom dims zero) mbTy
 
 
- getCuCase' : R.Term → R.TC (Maybe ((R.Term × R.Term × R.Term × R.Term) × IExpr))
- getCuCase' (R.def (quote hcomp) ( _ h∷ A h∷ φTm h∷ fcs v∷ v[ cap ])) = do
+ getCuCase : R.Term → R.TC (Maybe ((R.Term × R.Term × R.Term × R.Term) × IExpr))
+ getCuCase (R.def (quote hcomp) ( _ h∷ A h∷ φTm h∷ fcs v∷ v[ cap ])) = do
    R.debugPrint "getCuCaseφ" 5 $ "getCuCase' φ :" ∷ₑ [ φTm ]ₑ  
    (just ∘ ((A , φTm , fcs , cap) ,_))  <$> extractIExprM φTm
- getCuCase' _ = pure nothing
+ getCuCase _ = pure nothing
 
 
- getCuCase : R.Term → R.TC (Maybe ((R.Term × R.Term × R.Term × R.Term) × IExpr))
- getCuCase x = getCuCase' x
-  -- evalOp x >>= (λ x →
-  --   (R.debugPrint "getCuCaseφ" 5 $ "getCuCase  :" ∷ₑ [ x ]ₑ)
-  -- >> getCuCase' x)
 
  module _ (dim : ℕ) where
   macro
    getCuCaseTest : R.Term → R.Term → R.Term → R.TC Unit
    getCuCaseTest A t h = do
-    -- tmDim ← R.quoteTC dim
-    -- t ← R.checkType t (R.def (quote I^_⟶_) (tmDim v∷ v[ A ]))
-    -- t ← R.reduce t >>= wait-for-term
-    -- R.typeError ( [ "input: \n" ]ₑ ++ [ t ]ₑ)
     addNDimsToCtx dim (getCuCase (appNDimsI dim (liftVarsFrom dim 0 t))) >>=
      Mb.rec (R.typeError [ "cell" ]ₑ) (λ e → do
         R.typeError (niceAtomList (L.map SubFace→Term (I→F (snd e)))))
@@ -105,29 +96,16 @@ module ECT where
   
 
 
- -- extractCuArg : ℕ → ℕ → R.Term → R.TC CuArg
 
 
  try𝒄ong : ℕ → ℕ → R.Term → R.TC (Maybe (R.Term × List (CuTerm)))
 
  checkHcomp : Maybe R.Type → ℕ → ℕ → R.Term → R.Term → R.Term → R.Term → FExpr → R.TC CuTerm  
- -- extractSubFace : ℕ → ℕ → SubFace →  R.Type → R.Term → R.TC CuTerm
+
  extractCuTerm' : Maybe R.Type → ℕ → ℕ → R.Term → R.TC CuTerm
 
  checkHcomp mbTy zero _ _ _ _ _ _ = R.typeError [ "checkHcomp FAIL : max depth" ]ₑ
  checkHcomp mbTy (suc m) dim A φTm fcs lid φ = do
-   -- R.debugPrint "checkHcomp" 4 $ "checkHcomp" ∷ₑ [] --[ chckedHcomp ]ₑ
-   -- R.debugPrint "checkHcomp" 4 $ "fcs = " ∷ₑ [  vlamⁿ dim fcs ]ₑ --[ chckedHcomp ]ₑ
-   -- R.debugPrint "checkHcomp" 4 $ "lid = " ∷ₑ [  vlamⁿ dim lid ]ₑ --[ chckedHcomp ]ₑ
-   -- R.typeError [ vlamⁿ dim fcs ]ₑ
-   -- (mapM (λ sf → do
-   --         let tmB = (R.def (quote $PI) (liftVars A v∷ (liftVars fcs) v∷ v[ R.var 0 [] ] )) 
-   --             sfbo = vlamⁿ (suc (sfDim sf)) (subfaceApp (nothing ∷ sf) tmB)
-   --         -- R.debugPrint "checkHcomp" 4 $ (L.map (λ _ → R.strErr "X")  sf)
-   --         R.debugPrint "checkHcomp" 4 $ (L.map (R.strErr ∘S Mb.rec ("_") (if_then "1" else "0"  ))  sf)
-   --         -- ⦇ ⦇ sf ⦈ , (extractCuTerm' m (suc (sfDim sf)) sfbo) ⦈
-   --         ) --extractSubFace d sf A (subfaceApp sf sides)
-   --         (φ))
    ⦇ hco
       (mapM (λ sf → do
            let tmA = subfaceCell sf fcs
@@ -136,18 +114,9 @@ module ECT where
                tmB = (R.def (quote $PI) ((liftVars Atm) v∷ ((liftVars tmA))
                        v∷ v[ R.var zero [] ] )) 
                sfbo = tmB
-           -- R.debugPrint "checkHcomp" 4 $ "tmA = " ∷ₑ [  vlamⁿ (sfDim sf) tmA ]ₑ --[ chckedHcomp ]ₑ
-           -- -- R.debugPrint "checkHcomp" 4 $ "tmA' = " ∷ₑ [  vlamⁿ 1 tmA' ]ₑ --[ chckedHcomp ]ₑ
-           -- R.debugPrint "checkHcomp" 4 $ "tmB = " ∷ₑ [  vlamⁿ (suc (sfDim sf)) tmB ]ₑ --[ chckedHcomp ]ₑ
-           -- R.debugPrint "checkHcomp" 4 $ "fc = " ∷ₑ [  sfbo ]ₑ --[ chckedHcomp ]ₑ
-           -- R.debugPrint "checkHcomp" 4 $ "fcTy = " ∷ₑ [  (tmI^ (suc (sfDim sf)) ⟶ liftVars Atm) ]ₑ
-           -- -- sfboN ← R.withNormalisation true $
-           -- --         R.checkType sfbo (tmI^ (suc (sfDim sf)) ⟶ liftVars Atm)-- >>= wait-for-term
-           -- R.debugPrint "checkHcomp" 4 $ "fcN = " ∷ₑ [  sfboN ]ₑ --[ chckedHcomp ]ₑ
-           -- R.typeError (L.map (λ _ → R.strErr "X")  sf)
+
            ⦇ ⦇ sf ⦈ , (extractCuTerm' mbTy  m (suc (sfDim sf)) sfbo) ⦈
-           ) --extractSubFace d sf A (subfaceApp sf sides)
-           (φ))
+           ) φ)
       ((addNDimsToCtx dim (evalOp mbTy dim lid)) >>= extractCuTerm' mbTy m dim) ⦈ 
 
 
@@ -169,8 +138,7 @@ module ECT where
  extractCuTerm' mbTy zero _ _ = R.typeError [ "extractCuTerm FAIL : max depth" ]ₑ
  extractCuTerm' mbTy (suc m) dim t = do
    t ← addNDimsToCtx dim $ evalOp mbTy dim t
-   -- t ← R.normalise t'
-   -- addNDimsToCtx dim $ R.debugPrint "checkHcomp" 5 $ "extractCuTerm : \n" ∷ₑ  [ t ]ₑ
+
    addNDimsToCtx dim (getCuCase t) >>=
     Mb.rec ( (pure t )
              >>= λ t' → --R.debugPrint "checkHcomp" 4 ("cell: \n " ∷ₑ [ tt ]ₑ) >>

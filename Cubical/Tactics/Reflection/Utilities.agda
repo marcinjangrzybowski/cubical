@@ -138,8 +138,9 @@ instance
  RawMonad._>>_ MonadList xs ys = L.join (map (λ _ → ys) xs)
 
 
-
-
+when : ∀ {M : Functorω} {{_ : RawApplicative M}} → Bool → M Unit → M Unit
+when {M} false x = pure _
+when {M} true x = x
 
 module atVarOrConOrDefMmp {M : Functorω}
               {{RA : RawApplicative M}} {{_ : RawMonad M {{RA}} }} 

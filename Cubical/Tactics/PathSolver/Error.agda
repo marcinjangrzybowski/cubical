@@ -10,6 +10,7 @@ open import Agda.Builtin.Char
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 
+open import Cubical.Reflection.Base
 
 open import Cubical.Data.List
 open import Cubical.Data.Nat
@@ -24,7 +25,7 @@ record ToErrorPart {ℓ} (A : Type ℓ) : Type ℓ where
 
 open ToErrorPart
 
-infixr 5 _∷ₑ_ _∷nl_ _++ₑ_
+infixr 5 _∷ₑ_ _∷nl_ _++ₑ_ _++nl_
 
 _∷ₑ_ :  ∀ {ℓ} {A : Type ℓ} → {{ToErrorPart A}} → A → List R.ErrorPart → List R.ErrorPart
 _∷ₑ_  ⦃ tep ⦄ x = (toErrorPart tep x) ∷_
@@ -63,6 +64,18 @@ instance
 _∷nl_ :  ∀ {ℓ} {A : Type ℓ} → {{ToErrorPart A}} → A → List R.ErrorPart → List R.ErrorPart
 _∷nl_  x y = x ∷ₑ "\n" ∷ₑ y
 
+_++nl_ :  ∀ {ℓ} {A : Type ℓ} → {{ToErrorPart A}} → List A → List R.ErrorPart → List R.ErrorPart
+_++nl_  x y = x ++ₑ "\n" ∷ₑ y
+
+
+<>StrErr :  List R.ErrorPart → List R.ErrorPart
+<>StrErr [] = []
+<>StrErr (x ∷ xs) = h x xs
+ where
+ h : R.ErrorPart → List R.ErrorPart → List R.ErrorPart
+ h x [] = [ x ]
+ h (R.strErr x) (R.strErr y ∷ xs) = h (R.strErr (x <> y)) xs
+ h x (y ∷ xs) = x ∷ h y xs
 
 niceAtomList : List (R.Term) → List R.ErrorPart
 niceAtomList = h 0
@@ -120,8 +133,41 @@ indent' b ch k =
 
 indent = indent' true
 
+
+
+
+
+indentₑ : ℕ → List R.ErrorPart → List R.ErrorPart
+indentₑ k = map (λ { (R.strErr x) → R.strErr (indent ' ' k x) ; x → x }) ∘S <>StrErr
+
 offsetStr : ℕ → String → String
 offsetStr k =   primStringFromList ∘S offset ' ' k ∘S primStringToList
 
 offsetStrR : ℕ → String → String
 offsetStrR k =   primStringFromList ∘S offsetR ' ' k ∘S primStringToList
+
+data ResultIs {ℓ} {A : Type ℓ} : A → Type ℓ where
+ resultIs : ∀ s → ResultIs s
+
+wrapResult : ∀ {ℓ} {A : Type ℓ} → R.Term → A → R.TC Unit 
+wrapResult hole x = do
+   x' ← R.quoteTC x
+   R.unify (R.con (quote resultIs) v[ x' ]) hole
+
+
+lines : String → List String
+lines = map primStringFromList ∘S h [] ∘S primStringToList
+ where
+ h : List (List Char) → List Char →  List (List Char)
+ h xxs [] = xxs
+ h xxs ('\n' ∷ xs) = xxs ++ h [] xs
+ h [] (x ∷ xs) = h [ [ x ] ] xs
+
+ h xxs (x ∷ xs) =  h ((init xxs) ++ map (_∷ʳ x) (drop (predℕ (length xxs)) xxs))  xs 
+
+
+
+wrapError : R.Term → List (R.ErrorPart) → R.TC Unit 
+wrapError hole x = do
+   x' ← ((map (offsetStrR 45) ∘S lines) <$> R.formatErrorParts x) >>= R.quoteTC
+   R.unify (R.con (quote resultIs) v[ x' ]) hole
