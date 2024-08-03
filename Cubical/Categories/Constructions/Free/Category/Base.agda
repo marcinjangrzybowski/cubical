@@ -10,10 +10,8 @@ module Cubical.Categories.Constructions.Free.Category.Base where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Path
-open import Cubical.Foundations.Isomorphism
 
 open import Cubical.Data.Graph.Base
-open import Cubical.Data.Graph.Path
 open import Cubical.Data.Sigma
 
 open import Cubical.Categories.Category.Base
@@ -21,13 +19,6 @@ open import Cubical.Categories.Functor.Base
 open import Cubical.Categories.Morphism
 open import Cubical.Categories.NaturalTransformation hiding (_⟦_⟧)
 open import Cubical.Categories.UnderlyingGraph
-
-open import Cubical.Categories.Equivalence.WeakEquivalence
-
-open import Cubical.Categories.Constructions.Free
-
-open import Cubical.HITs.PropositionalTruncation
-
 
 private
   variable
@@ -175,49 +166,3 @@ module _ {𝓒 : Category ℓc ℓc'} where
             → (𝓕 : Functor 𝓒 𝓓)
             → 𝓕 ∘F ε ≡ Semantics.sem 𝓓 (Functor→GraphHom 𝓕)
   ε-reasoning {𝓓 = 𝓓} 𝓕 = Semantics.sem-uniq 𝓓 (Functor→GraphHom 𝓕) refl
-
-
-
--- module Equiv (G : Graph ℓg ℓg') (isSetNode : isSet (Node G))
---           (isSetEdge : ∀ v w → isSet (Edge G v w)) where
-
---  open FreeCategory G
-
---  F-h : ∀ {x y} → FreeCategory G isSetNode isSetEdge [ x , y ] →
---                  FreeCat [ x , y ]
---  F-h pnil = idₑ
---  F-h (pcons x xs) = (↑ x) ⋆ₑ F-h xs
-
---  F-h⁻¹ : ∀ {x y} → FreeCat [ x , y ]
---                   → FreeCategory G isSetNode isSetEdge [ x , y ] 
---  F-h⁻¹ (↑ x) = pcons x pnil 
---  F-h⁻¹ idₑ = pnil
---  F-h⁻¹ (x ⋆ₑ x₁) = F-h⁻¹ x ++ F-h⁻¹ x₁
---  F-h⁻¹ (⋆ₑIdL x i) = F-h⁻¹ x
---  F-h⁻¹ (⋆ₑIdR x i) = ++pnil (F-h⁻¹ x) i
---  F-h⁻¹ (⋆ₑAssoc x x₁ x₂ i) = ++assoc (F-h⁻¹ x) (F-h⁻¹ x₁) (F-h⁻¹ x₂) i
---  F-h⁻¹ (isSetExp x x₁ x₂ y i i₁) = isSetPath isSetNode isSetEdge
---   _ _ (F-h⁻¹ x) (F-h⁻¹ x₁) (cong  F-h⁻¹ x₂) (cong F-h⁻¹ y) i i₁   
-
---  F-h-seq : ∀ {x y z} → (f : FreeCategory G isSetNode isSetEdge [ x , y ])
---       (g : FreeCategory G isSetNode isSetEdge [ y , z ]) →
---       F-h (seq' (FreeCategory G isSetNode isSetEdge) f g) ≡
---       seq' FreeCat (F-h f) (F-h g)
---  F-h-seq pnil g = sym (⋆ₑIdL _)
---  F-h-seq (pcons x f) g = cong ((↑ x) ⋆ₑ_) (F-h-seq f g) ∙ sym (⋆ₑAssoc _ _ _)
-
---  FC→FC' : Functor 
---                   (FreeCategory G isSetNode isSetEdge)
---                   (FreeCat)
---  F-ob FC→FC' x = x
---  F-hom FC→FC' = F-h
---  F-id FC→FC' = refl
---  F-seq FC→FC' = F-h-seq
-
---  open isWeakEquivalence
-
---  we-f : isWeakEquivalence FC→FC' 
---  fullfaith we-f x y = isoToIsEquiv (iso _ F-h⁻¹ {!!} {!!})
---  esssurj we-f d = ∣ d , idCatIso ∣₁
-
--- -- isWeakEquivalence
