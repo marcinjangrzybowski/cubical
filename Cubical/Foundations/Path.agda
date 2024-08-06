@@ -8,6 +8,7 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.Interpolate
 
 open import Cubical.Reflection.StrictEquiv
 
@@ -491,17 +492,12 @@ pathFiber : {B : Type ℓ} (f : A → B)
 pathFiber {A} {B} f b {a} {a'} {t} {t'} e =
   J (λ X _ → Σ[ e ∈ a ≡ fst X ] (t ≡ cong f e ∙ (snd X))) (refl , lUnit t) e
 
-erp : I → I → I → I
-erp t i j = (~ t ∧ i) ∨ (t ∧ j) ∨ (i ∧ j)
-
 invSides-filler-rot : {x y : A} (p : x ≡ y) →
             invSides-filler p p ≡ symP (invSides-filler (sym p) (sym p))
-invSides-filler-rot {A = A} {x = x} {y} p z i j =
-    
+invSides-filler-rot {A = A} {x = x} {y} p z i j =    
     hcomp (λ k → primPOr (i ∨ ~ i) (j ∨ ~ j)
-                 (λ _ → p (erp (erp i j (~ j)) (~ k ∧ z) (k ∨ z)))
-                 (λ _ → p (erp (erp j i (~ i)) (~ k ∧ z) (k ∨ z))))
-        
+                 (λ _ → p (interpolateI (interpolateI i j (~ j)) (~ k ∧ z) (k ∨ z)))
+                 (λ _ → p (interpolateI (interpolateI j i (~ i)) (~ k ∧ z) (k ∨ z))))
         (p z)
 
 module CompSquares 

@@ -193,7 +193,7 @@ FExpr = List SubFace
 
 
 
-infixr 5 _fe∷_
+infixr 5 _fe∷_ _fe∷×_
 
 _fe∷_ : SubFace → FExpr → FExpr
 x fe∷ [] = x ∷ []
@@ -204,8 +204,20 @@ x fe∷ y@(sf ∷ x₁) with sf <sf> x
 ... | ⊂⊃ = y
 
 
+_fe∷×_ : ∀ {ℓ} {A : Type ℓ} → (SubFace × A) → List (SubFace × A)  → List (SubFace × A)
+(x , a) fe∷× [] = (x , a) ∷ []
+(x , a) fe∷× y@((sf , a') ∷ x₁) with sf <sf> x 
+... | ⊂ = (x , a) fe∷× x₁
+... | ⊃ = y
+... | ⊃⊂ = (sf , a') ∷ ((x , a) fe∷× x₁) 
+... | ⊂⊃ = y
+
+
 _++fe_ : FExpr → FExpr → FExpr
 x ++fe y = foldr _fe∷_ y x
+
+_++fe×_ : List (SubFace × A) → List (SubFace × A)  → List (SubFace × A)
+x ++fe× y = foldr _fe∷×_ y x
 
 
 _⊂?_ : SubFace → FExpr → Bool
@@ -739,3 +751,5 @@ icConnFree' _ = false
 icConnFree : IExpr → Bool
 icConnFree = icConnFree' ∘ normIExpr
 
+missingSubFaces : ℕ → FExpr → List SubFace
+missingSubFaces dim fe = filter (not ∘S _⊂? fe) (allSubFacesOfDim dim)

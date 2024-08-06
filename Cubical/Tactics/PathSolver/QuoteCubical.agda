@@ -207,6 +207,12 @@ matchNCube x = do
  if (hasVarBy (_<ℕ length fcs) A) then R.typeError [ "not a _≡_ " ]ₑ else
   pure ((dropVars.rv (length fcs) zero A , fcs)) 
 
+quoteBd : NBoundaryTerm → R.TC CuBoundary
+quoteBd (A , xs) = do
+ let dim = predℕ (length xs)
+ mapM (λ (t0 , t1) → ⦇ quoteCuTerm (just A) dim t0 , quoteCuTerm (just A) dim t1 ⦈ ) xs
+ 
+ 
 matchSquare : NBoundaryTerm → Maybe (R.Term × ((R.Term × R.Term)×(R.Term × R.Term))) 
 matchSquare (A , ((a₀₋ , a₁₋) ∷ (a₋₀ , a₋₁) ∷ [])) =
   just (A , ((a₀₋ , a₁₋) , (a₋₀ , a₋₁)))
@@ -316,3 +322,4 @@ tryCastAsNoCong (𝒄ong' x x₁) =
 tryCastAsNoCongS [] = ⦇ [] ⦈
 tryCastAsNoCongS ((sf , x) ∷ xs) =
   ⦇ (⦇ ⦇ sf ⦈ , (tryCastAsNoCong x) ⦈) ∷ (tryCastAsNoCongS xs) ⦈
+

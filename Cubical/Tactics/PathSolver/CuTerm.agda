@@ -268,6 +268,7 @@ cuEval : {A : Type} {B : Type ℓ} {b : B} → SubFace → CuTerm' A B → CuTer
 cuEval {b = b} = cuEval.cuEval {b = b} 100 
 
 
+
 pickSFfromPartial' : A → SubFace → List (SubFace × CuTerm' B A) → Maybe (CuTerm' B A)
 pickSFfromPartial' a sf l =
   let sSf = findBy (sf ⊂?_ ∘S [_] ∘S fst) l
@@ -297,8 +298,33 @@ module normaliseCells where
 
 normaliseCells = normaliseCells.nc 100
 
+cuEvalN : SubFace → CuTerm → R.TC CuTerm
+cuEvalN sf = normaliseCells (sfDim sf) ∘S cuEval sf
 
 
+mostWrappedTerm : CuTerm → R.Term 
+mostWrappedTerm (hco x x₁) = mostWrappedTerm x₁
+mostWrappedTerm (cell' x x₁) = x₁
+mostWrappedTerm (𝒄ong' x []) = x
+mostWrappedTerm (𝒄ong' x (x₁ ∷ x₂)) = mostWrappedTerm x₁
+
+
+-- this can be trusted, only if we sure that term already typechecks!
+
+allCellsConstant? : ℕ → CuTerm → Bool
+allCellsConstant? dim x = h dim x 
+ where
+ h : ℕ → CuTerm  → Bool
+ hs : List (SubFace × CuTerm)  → Bool
+
+ h dim (hco x₁ x₂) = h dim x₂ and hs x₁
+  
+ h dim (cell' x₁ x₂) = not (hasVarBy (_<ℕ dim) x₂)
+ h dim (𝒄ong' x₁ x₂) = false
+
+ hs [] = true
+ hs ((sf , x) ∷ xs) = (h (suc (sfDim sf)) x) and hs xs
+ 
 module permuteVars where
 
  permute : (ℕ → ℕ) → SubFace → SubFace
@@ -333,3 +359,9 @@ module permuteVars where
 
 
 permuteVars = permuteVars.nc 100
+
+
+CuBoundary' : ∀ A B → Type ℓ
+CuBoundary' A B = List (CuTerm' A B × CuTerm' A B)
+
+CuBoundary = CuBoundary' Unit Unit
