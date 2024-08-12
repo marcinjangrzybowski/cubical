@@ -5,6 +5,7 @@ import Agda.Builtin.Reflection as R
 
 open import Cubical.Data.Unit
 open import Cubical.Data.Nat
+open import Cubical.Data.Bool
 open import Cubical.Data.Maybe
 open import Cubical.Data.List as L
 
@@ -24,7 +25,7 @@ open import Cubical.Tactics.Reflection.Utilities
 open import Cubical.Tactics.PathSolver.Dimensions
 open import Cubical.Tactics.PathSolver.QuoteCubical
 open import Cubical.Tactics.PathSolver.CuTerm
-open import Cubical.Tactics.PathSolver.Error
+open import Cubical.Tactics.Reflection.Error
 
 
 
@@ -127,23 +128,77 @@ module _ (dim : ℕ) where
    cu ← (extractCuTerm nothing dim t)
    R.unify (toTerm dim cu) hole
 
-module E5 (A B C D : Type)
-  (e₀ : A ≃ B) (e₁ : B ≃ C) (e₂ : C ≃ D) where
+  getCuTerm' : R.Term → R.Term → R.TC Unit
+  getCuTerm' t hole = do
+   cu ← (extractCuTerm nothing dim t)
+   co ← codeGen false dim 100 cu
+   hoty ← R.inferType hole
+   s ← R.checkFromStringTC co hoty
+   R.unify s hole
 
 
- _ : (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂) ≡
-                   getCuTerm (suc zero)
-                     (λ (i : I) → (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂) i)
- _ = refl
+  showCuTermCode : R.Term → R.Term → R.TC Unit
+  showCuTermCode t hole = do
+   cu ← extractCuTerm nothing dim t
+   c ← codeGen false dim 100 cu 
+   R.typeError [ c ]ₑ
 
- -- _ : Unit
- -- _ = extractCuPathTermTest (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂)
+
+module gencode (A : Type) (x y z w : A)
+  (p : x ≡ y)(q : y ≡ z)(r : z ≡ w) where
+
+ _ : Unit
+ _ = {!showCuTermCode (suc (suc zero)) λ (i j : I) → assoc p q r i j!}
+
+ zz : p ∙ q ∙ r ≡ (p ∙ q) ∙ r
+ zz 𝓲₀ 𝓲₁ = 
+    hcomp (λ 𝒛₀ → λ { 
+       (𝓲₁ = i0) → x
+       ;(𝓲₁ = i1) → 
+          hcomp (λ 𝒛₁ → λ { 
+             (𝓲₀ = i1) → r (𝒛₀ ∧ 𝒛₁)
+             ;(𝒛₀ = i1) → r 𝒛₁
+             ;(𝒛₀ = i0) → q 𝓲₀
+              }) 
+          (  q (𝒛₀ ∨ 𝓲₀))
+
+        }) 
+    (  
+      hcomp (λ 𝒛₀ → λ { 
+         (𝓲₀ = i0) → p 𝓲₁
+         ;(𝓲₁ = i0) → x
+         ;(𝓲₁ = i1) → q (𝓲₀ ∧ 𝒛₀)
+          }) 
+      (  p 𝓲₁)
+       )
+
+
+-- module E5 (A B C D : Type)
+--   (e₀ : A ≃ B) (e₁ : B ≃ C) (e₂ : C ≃ D) where
+
+
+--  _ : (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂) ≡
+--                    getCuTerm (suc zero)
+--                      (λ (i : I) → (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂) i)
+--  _ = refl
+
+--  -- _ : Unit
+--  -- _ = extractCuPathTermTest (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂)
 
 private
   variable
     ℓ : Level
     A : Type ℓ
     x y z w v : A
+
+
+module _ {x : A}  (p : x ≡ y) (q : y ≡ z)  (r : z ≡ w) (s : w ≡ v)  where
+
+ _ : assoc p q r ≡
+      getCuTerm' (suc (suc zero))
+                     (λ (i j : I) → assoc p q r i j)
+ _ = refl
+
 
 module _  {x : A}
            {B C : Type ℓ}
@@ -153,29 +208,29 @@ module _  {x : A}
 
 
 
- -- _ : Unit
- -- _ = {!printCu (cong-∙ f p q)!}
+--  -- _ : Unit
+--  -- _ = {!printCu (cong-∙ f p q)!}
 
 
  
- -- _ : Unit
- -- _ = {!printCu zz!}
- --  where
- --    zz : _
- --    zz = (cong₂ g (cong f (p ∙' q)) (cong f' (p' ∙ q')))
+--  -- _ : Unit
+--  -- _ = {!printCu zz!}
+--  --  where
+--  --    zz : _
+--  --    zz = (cong₂ g (cong f (p ∙' q)) (cong f' (p' ∙ q')))
 
 
- -- _ : Unit
- -- _ = extractCuPathTermTest (cong₂ g (cong f (p ∙' q)) (cong f' (p' ∙ q')))
+--  -- _ : Unit
+--  -- _ = extractCuPathTermTest (cong₂ g (cong f (p ∙' q)) (cong f' (p' ∙ q')))
 
  _ : cong-∙ f p q ≡
-                   getCuTerm (suc (suc zero))
+                   getCuTerm' (suc (suc zero))
                      (λ (i j : I) → cong-∙ f p q i j)
  _ = refl
 
 
  _ : (cong₂ g (cong f (p ∙' q)) (cong f' (p' ∙ q')))
-                 ≡ (getCuTerm (suc zero)
+                 ≡ (getCuTerm' (suc zero)
                      (λ (i : I) → cong₂ g (cong f (p ∙' q)) (cong f' (p' ∙ q')) i))
  _ = refl
 
@@ -190,9 +245,9 @@ module _ {x : A}  (p : x ≡ y) (q : y ≡ z)  (r : z ≡ w) (s : w ≡ v)  wher
  _ = refl
 
 
- -- _ : Unit
- -- _ = {!extractCuTermTest (suc (suc (suc zero)))
- --          (λ (i j k : I) → pentagonIdentity p q r s i j k)!}
+-- --  -- _ : Unit
+-- --  -- _ = {!extractCuTermTest (suc (suc (suc zero)))
+-- --  --          (λ (i j k : I) → pentagonIdentity p q r s i j k)!}
   
 
 
@@ -202,59 +257,59 @@ module _ {x : A}  (p : x ≡ y) (q : y ≡ z)  (r : z ≡ w) (s : w ≡ v)  wher
 
 
 
-module NCubeTermTest where
+-- -- module NCubeTermTest where
 
- macro
-  showCuFaces : R.Term → R.TC Unit
-  showCuFaces h = do
-    hTy ← R.inferType h >>= wait-for-term >>= R.normalise
-    R.debugPrint "tactic" 3 $ [ hTy ]ₑ
-    (A , fcs) ← matchNCube hTy -->>= nCubeToEq
+-- --  macro
+-- --   showCuFaces : R.Term → R.TC Unit
+-- --   showCuFaces h = do
+-- --     hTy ← R.inferType h >>= wait-for-term >>= R.normalise
+-- --     R.debugPrint "tactic" 3 $ [ hTy ]ₑ
+-- --     (A , fcs) ← matchNCube hTy -->>= nCubeToEq
     
-    addNDimsToCtx (length fcs) $ R.debugPrint "tactic" 3 $
-      "ok " ∷ₑ length fcs ∷ₑ " : \n\n:" ∷ₑ [ A ]ₑ
+-- --     addNDimsToCtx (length fcs) $ R.debugPrint "tactic" 3 $
+-- --       "ok " ∷ₑ length fcs ∷ₑ " : \n\n:" ∷ₑ [ A ]ₑ
 
-    addNDimsToCtx (length fcs ∸ 1) $ R.debugPrint "tactic" 3 $
-      -- "ok : \n\n:" ∷ₑ A  ∷nl
-      join ( L.map (λ (k , (f0 , f1)) →
-             k ∷nl "i0 : \n" ∷ₑ f0  ∷nl
-                "i1 : \n" ∷ₑ f1  ∷nl []
-         ) $ zipWithIndex fcs)
-    R.typeError [ "ok" ]ₑ
+-- --     addNDimsToCtx (length fcs ∸ 1) $ R.debugPrint "tactic" 3 $
+-- --       -- "ok : \n\n:" ∷ₑ A  ∷nl
+-- --       join ( L.map (λ (k , (f0 , f1)) →
+-- --              k ∷nl "i0 : \n" ∷ₑ f0  ∷nl
+-- --                 "i1 : \n" ∷ₑ f1  ∷nl []
+-- --          ) $ zipWithIndex fcs)
+-- --     R.typeError [ "ok" ]ₑ
 
-  getTermNCube : R.Term → R.Term → R.TC Unit
-  getTermNCube tm h = do
-    hTy ← R.normalise tm
+-- --   getTermNCube : R.Term → R.Term → R.TC Unit
+-- --   getTermNCube tm h = do
+-- --     hTy ← R.normalise tm
 
-    hTy' ← unquoteNCube <$> matchNCube hTy
-    R.unify hTy' h
+-- --     hTy' ← unquoteNCube <$> matchNCube hTy
+-- --     R.unify hTy' h
 
-  getFlattenedTermNCube : R.Term → R.Term → R.TC Unit
-  getFlattenedTermNCube tm h = do
-    hTy ← R.normalise tm
+-- --   getFlattenedTermNCube : R.Term → R.Term → R.TC Unit
+-- --   getFlattenedTermNCube tm h = do
+-- --     hTy ← R.normalise tm
 
-    hTy' ← unquoteNCube <$> (matchNCube hTy >>= nCubeToEq)
-    R.unify hTy' h
+-- --     hTy' ← unquoteNCube <$> (matchNCube hTy >>= nCubeToEq)
+-- --     R.unify hTy' h
 
-  getFlattenedTermNCubePath : R.Term → R.Term → R.TC Unit
-  getFlattenedTermNCubePath tm h = do
-    hTy ← R.normalise tm
+-- --   getFlattenedTermNCubePath : R.Term → R.Term → R.TC Unit
+-- --   getFlattenedTermNCubePath tm h = do
+-- --     hTy ← R.normalise tm
 
-    hTy' ← (nCubeToEqPath <$> matchNCube hTy)
-    R.unify hTy' h
+-- --     hTy' ← (nCubeToEqPath <$> matchNCube hTy)
+-- --     R.unify hTy' h
 
 
 
- module T2'fext' (A B : Type) {x y z : A} (f : A → A → B)
-  (p : _≡_ {A = (A → B)} (λ x' → f x' x) (λ x' → f x' y))
-  (q : _≡_ {A = (A → B)} (λ x' → f x' y) (λ x' → f x' z)) where
+-- --  module T2'fext' (A B : Type) {x y z : A} (f : A → A → B)
+-- --   (p : _≡_ {A = (A → B)} (λ x' → f x' x) (λ x' → f x' y))
+-- --   (q : _≡_ {A = (A → B)} (λ x' → f x' y) (λ x' → f x' z)) where
 
-  X : Type 
-  X = _≡_ {A = (A → B)} (λ x' → f x' x) (λ x' → f x' y) 
+-- --   X : Type 
+-- --   X = _≡_ {A = (A → B)} (λ x' → f x' x) (λ x' → f x' y) 
 
-  P Q : X
-  P = p ∙∙ q ∙∙ sym q
-  Q = refl ∙ p
+-- --   P Q : X
+-- --   P = p ∙∙ q ∙∙ sym q
+-- --   Q = refl ∙ p
 
-  -- _ : P ≡ Q -- _≡_ {A = (A → B)} (flip f x) (flip f y) 
-  -- _ = {!showCuFaces!}
+-- --   -- _ : P ≡ Q -- _≡_ {A = (A → B)} (flip f x) (flip f y) 
+-- --   -- _ = {!showCuFaces!}

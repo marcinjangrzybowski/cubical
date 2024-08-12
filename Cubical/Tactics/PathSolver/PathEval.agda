@@ -28,26 +28,9 @@ open import Cubical.Tactics.PathSolver.Reflection
 open import Agda.Builtin.String
 -- open import Agda.Builtin.Char
 open import Cubical.Tactics.Reflection.Utilities
-open import Cubical.Tactics.PathSolver.Error
+open import Cubical.Tactics.Reflection.Error
 open import Cubical.Tactics.PathSolver.Dimensions
 open import Cubical.Tactics.PathSolver.QuoteCubical
-
-
--- -- absorbStep : R.Term → R.Term →
--- --   R.TC ((Maybe (R.Term × R.Term)) ×
--- --        (R.Term × Maybe R.Term)
--- --        × Maybe R.Term) 
--- -- absorbStep = {!!} 
-
--- -- absorb : R.Term → List R.Term → R.TC ((List (R.Term × Maybe Bool)) × List R.Term)
--- -- absorb y [] = pure $ [ ({!!} , just true) ] , [ y ] 
--- -- absorb y (x ∷ xs) = do
--- --   preT , (atT , atT1) , postT ← absorbStep x y
--- --   (xs' , zs')  ← Mb.rec (pure $ (L.map ((_, nothing) ∘S liftVars) xs) , xs) (λ y' → absorb y' xs) postT
--- --   pure ((maybeToList (map-Maybe ((_, just true) ∘S fst) preT) ++
--- --                (atT , caseMaybe (just false) nothing atT1) ∷ xs' ,
--- --          maybeToList (map-Maybe snd preT) ++ maybeToList atT1 ++ zs') )
--- --   -- pure {!!}
 
 
 data ASTMarkers : Type where
@@ -66,15 +49,8 @@ pattern fw[1,_] x = R.def (quote FillWrap) (R.lit (R.name (quote true)) v∷ v[ 
 pattern fw[0,_] x = R.def (quote FillWrap) (R.lit (R.name (quote false)) v∷ v[ x ])   
 
 
-
--- pattern pw[] = R.def (quote PathWrap) []   
-
 pattern pw[_] x = R.def (quote PathWrap) (x v∷ [])   
 pattern pwd args = R.def (quote PathWrap) args
-
--- pattern pw xs = R.def (quote PathWrap) xs
-
--- pattern _∷pw_ x xs = R.def (quote PathWrap) (x v∷ xs)  
 
 
 pattern cwd args = R.def (quote CompWrap) args
@@ -85,26 +61,6 @@ pattern cw xs = R.def (quote CompWrap) xs
 pattern _∷cw_ x xs = R.def (quote CompWrap) (x v∷ xs)  
 
 
-
-
---                                  -- just - merged
---                                  -- nothing - cons
-
-
-
--- -- module WrapPaths where
-
--- --  wp : ℕ → R.Term → R.Term
--- --  wp = {!!}
-
--- -- record WTerm : Type where
--- --  constructor wterm
--- --  field
--- --   term : R.Term 
-
--- -- open WTerm
-
--- -- _∙■_
 
 _∙f0_ : ∀ {ℓ} {A : Type ℓ} →
          ∀ {x₀ y₀ y₁ z : A}
@@ -130,18 +86,6 @@ _∙f1_ : ∀ {ℓ} {A : Type ℓ} →
     hcomp (λ k → primPOr (~ i) (i ∨ (~ j)) (λ _ → u j (~ k)) λ _ → v j i)
         (v j i)
 
-
-
--- _∙■_ : ∀ {ℓ} {A : Type ℓ} →
---          ∀ {x y z : A}
---          → {p : x ≡ y} {q : y ≡ z} {r : y ≡ z} {s : x ≡ z}
---          → Square s r p (λ _ → z) 
---          → Square r refl q refl
-
---          → Square s (λ _ → z)  (p ∙ q) (λ _ → z)
--- (u ∙■ v) j i = 
---     hcomp (λ k → primPOr j (i ∨ (~ j)) (λ _ → v k i) λ _ → u j i)
---         (u j i)
 
 _∙∙■_∙∙■_ : ∀ {ℓ} {A : Type ℓ} →
          ∀ {x x₀ x₁ x₂ x₃ : A}
@@ -185,16 +129,6 @@ comp₋₀ : ∀ {ℓ} {A : Type ℓ} →
 comp₋₀ s p i j =
   hcomp (λ k → primPOr (~ j) (j ∨ i ∨ ~ i) (λ _ → p (~ k) i) λ _ → s i j)  (s i j)
 
--- comp₋₀' : ∀ {ℓ} {A : Type ℓ} →
---     {a a₀₀ : A} {a₀₋ : a₀₀ ≡ a}
---   {a₁₀ : A} {a₁₋ : a₁₀ ≡ a} 
---   {a₋₀ a₋₀' : a₀₀ ≡ a₁₀} 
---   → Square a₀₋ a₁₋ a₋₀ refl
---   → a₋₀ ≡ a₋₀'
---   → Square a₀₋ a₁₋ a₋₀' refl
--- comp₋₀' s p i j =
---   hcomp (λ k → primPOr (~ j) (j ∨ i ∨ ~ i) (λ _ → p k i) λ _ → s i j)  (s i j)
-
 ◪mkSq : ∀ {ℓ} {A : Type ℓ} →
     {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
   {a₁₀ a₁₁ : A} {a₁₋ p₁₀ : a₁₀ ≡ a₁₁} 
@@ -219,6 +153,7 @@ intervalTest _ (R.def (quote _∧_) _) = true
 intervalTest _ (R.def (quote ~_) _) = true
 intervalTest n (R.var k []) = n =ℕ k
 intervalTest _ _ = false
+
 
 wrapPaths : R.Term → WTerm
 wrapPaths = atVarOrConM' f h g
@@ -375,44 +310,8 @@ cTermEnd = fixMb ∘S
   
   fixMb : R.TC WTerm → R.TC (Maybe WTerm)
   fixMb x = x >>= λ x → pure $ if (hasVar 0 x) then just x else nothing
-  
-
-
-
-
-
--- fillStepCT : R.Term → (Maybe CTerm) → R.TC (Maybe CTerm)
--- fillStepCT x =
---   Mb.rec
---     (if (hasVar zero x) then pure (just (wrapFills x)) else pure nothing)
---     (if (hasVar zero x) then (λ xs' → just <$> (absorb 0 (wrapPaths x) xs')) else pure ∘S just )
-
-
-
-
--- foldCT : List R.Term → R.TC (Maybe CTerm)
--- foldCT [] = pure nothing
--- foldCT (x ∷ xs) = (foldCT xs) >>= 
---   fillStepCT x
---    >>= Mb.rec (pure nothing) (cTermEnd)
-
-
--- fillFoldCT' : Maybe CTerm → List R.Term →  R.TC (Maybe CTerm × List (Maybe CTerm))
--- fillFoldCT' nothing [] = pure (nothing , [] )
--- fillFoldCT' mbct [] = R.typeError [ "iimposible fillFOldCT'" ]ₑ
--- fillFoldCT' mbct (x ∷ xs) = do
---   (mbct' , xs') ← fillFoldCT' mbct xs
-   
---   mbct'' ← fillStepCT x mbct'
---   -- R.debugPrint "testMarkVert" 3 $ Mb.rec [ "nothing" ]ₑ [_]ₑ mbct''
---   ⦇ (Mb.rec (pure nothing) cTermEnd mbct'') , pure (mbct'' ∷ xs') ⦈
-
--- fillFoldCT : List R.Term → R.TC (List (Maybe CTerm))
--- fillFoldCT = (snd <$>_) ∘S fillFoldCT' nothing
-
 
 data FillWrapEval : Type where
- -- offsetFW
  headFW dropFW : FillWrapEval    
 
 dropFillWraps : FillWrapEval -> CTerm → R.Term
@@ -441,82 +340,6 @@ transpose : ∀ {ℓ} {A : Type ℓ} → A → List (List A) → List (List A)
 transpose default [] = [ [] ]
 transpose default xss@(xs ∷ _) =
   L.map (λ (k , ys) → L.map (λ ys → lookupAlways default ys k) xss ) (zipWithIndex xs)
-
--- -- cTermLength : CTerm → ℕ
--- -- cTermLength t = snd $ runIdentity $ (unwrap (atVarOrDefM f g t) zero)
--- --   where
--- --     f : ℕ → ℕ → List (R.Arg R.Term)
--- --       → ([ State₀T ℕ RMT IdentityF ] List (R.Arg R.Term))
--- --       → ([ State₀T ℕ RMT IdentityF ] R.Term)
--- --     f _ v _ argsM = R.var v <$> argsM
-
--- --     g : ℕ → R.Name → List (R.Arg R.Term)
--- --       → ([ State₀T ℕ RMT IdentityF ] List (R.Arg R.Term))
--- --       → ([ State₀T ℕ RMT IdentityF ] R.Term)
--- --     g _ (quote CompWrap) _ argsM = argsM >>=
--- --       (λ args' → (modify (max (length args'))) >>
--- --          pure (R.def (quote CompWrap) args'))
--- --     g _ nm _ argsM = R.def nm <$> argsM
-
-
--- offsetPa : ℕ → List (R.Arg R.Term) → List (R.Arg R.Term) 
--- offsetPa n xs =
---  let lst = fromMaybe (varg (R.lit (R.string "fatal in PathEval - offsetPa")))
---            (lookup xs (predℕ (length xs)))
---      lst' = R.arg (argInfo lst)
---        ((replaceVarWithCon (λ { zero → just (quote i1) ; _ → nothing }) (unArg lst)))
---  in xs ++ repeat (n ∸ length xs ) lst'
-
--- offsetPa' : ℕ → List (R.Arg R.Term) → List (R.Arg R.Term) 
--- offsetPa' n xs =
---  let hd = fromMaybe (varg (R.lit (R.string "fatal in PathEval - offsetPa'")))
---            (lookup xs zero)
---      hd' = R.arg (argInfo hd)
---             ((replaceVarWithCon (λ { zero → just (quote i0) ; _ → nothing }) (unArg hd)))
---  in repeat (n ∸ length xs ) hd' ++ xs 
-
-
--- flatten : CTerm → List R.Term
--- flatten = atVarOrConOrDefMmp
---   (λ _ v _ _ args' → R.var v <$> (h args'))
---   (λ _ c _ _ args' → R.con c <$> (h args'))
---   df ∘S dropPathWraps
-
---  where
---  h : List (List (R.Arg R.Term)) → List (List (R.Arg R.Term))
---  h xs =
---   let maxL = foldr (max ∘S length) 1 xs
---       xs' = L.map (offsetPa maxL) xs
---   in transpose ((varg (R.lit (R.string "fatal in PathEval - flatten")))) xs'
-
---  df : ℕ →
---         R.Name →
---         List (R.Arg R.Term) →
---         List (List (R.Arg R.Term)) →
---         List (List (R.Arg R.Term)) → List R.Term
---  df _ (quote CompWrap) _ _ args' = unArg <$> join args'
---  df _ nm _ _ args' = R.def nm <$> (h args')
-
--- flatten' : CTerm → List R.Term
--- flatten' = atVarOrConOrDefMmp
---   (λ _ v _ _ args' → R.var v <$> (h args'))
---   (λ _ c _ _ args' → R.con c <$> (h args'))
---   df ∘S dropPathWraps
-
---  where
---  h : List (List (R.Arg R.Term)) → List (List (R.Arg R.Term))
---  h xs =
---   let maxL = foldr (max ∘S length) 1 xs
---       xs' = L.map (offsetPa' maxL) xs
---   in transpose ((varg (R.lit (R.string "fatal in PathEval - flatten")))) xs'
-  
---  df : ℕ →
---         R.Name →
---         List (R.Arg R.Term) →
---         List (List (R.Arg R.Term)) →
---         List (List (R.Arg R.Term)) → List R.Term
---  df _ (quote CompWrap) _ _ args' = unArg <$> join args'
---  df _ nm _ _ args' = R.def nm <$> (h args')
 
 fill-flatten' : CTerm → List R.Term
 fill-flatten' = hTop ∘S atVarOrConOrDefMmp
@@ -560,7 +383,7 @@ fill-flatten' = hTop ∘S atVarOrConOrDefMmp
 
 
 foldPath : List R.Term → R.Term
-foldPath [] = RexplicitRefl R.unknown
+foldPath [] = Rrefl -- R.unknown
 foldPath (x ∷ []) = vlam "𝓲" x
 foldPath (x ∷ xs@(_ ∷ _)) = R∙' (vlam "𝓲" x) (foldPath xs)
 
@@ -585,105 +408,3 @@ fillHeadTrm p (just q) = do
   h false true = pure $ R.def (quote _∙f1_) (vlam "𝒋" (vlam "𝒊" p) v∷ v[ vlam "𝒋" q ]) 
   h true false = pure $ R.def (quote _∙f0_) (vlam "𝒋" (vlam "𝒊" p) v∷ v[ vlam "𝒋" q ])
   h true true = pure $ vlam "𝒋" (R∙' (vlam "𝓲" p) q)
-
-
-
-
-
-
--- bfs : CTerm → R.TC R.Term
--- bfs xs =  do
---     let q = (foldPath' (tail (fill-flatten' xs)))
---     hd ← Mb.rec (R.typeError [ "imposible tfct≡" ]ₑ )
---            pure (listToMaybe (fill-flatten' xs)) 
---     fillHeadTrm hd q
-
-
--- -- fillFoldCT' : Maybe CTerm → List R.Term →  R.TC (Maybe CTerm × List (Maybe CTerm))
--- -- fillFoldCT' nothing [] = pure (nothing , [] )
--- -- fillFoldCT' mbct [] = R.typeError [ "iimposible fillFOldCT'" ]ₑ
--- -- fillFoldCT' mbct (x ∷ xs) = do
--- --   (mbct' , xs') ← fillFoldCT' mbct xs
-   
--- --   mbct'' ← fillStepCT x mbct'
--- --   -- R.debugPrint "testMarkVert" 3 $ Mb.rec [ "nothing" ]ₑ [_]ₑ mbct''
--- --   ⦇ (Mb.rec (pure nothing) cTermEnd mbct'') , pure (mbct'' ∷ xs') ⦈
-
--- -- fillFoldCT : List R.Term → R.TC (List (Maybe CTerm))
--- -- fillFoldCT = (snd <$>_) ∘S fillFoldCT' nothing
-
-
-
--- -- fillStepCT2 : R.Term → (Maybe CTerm) → R.TC (Maybe CTerm)
--- -- fillStepCT2 x nothing = {!!}
--- -- fillStepCT2 x (just x₁) = {!!}
--- --   -- Mb.rec
--- --   --   (if (hasVar zero x) then pure (just ( (wrapFills x) )) else pure nothing)
--- --   --   (if (hasVar zero x) then (λ xs' → just <$> (absorb 0 (wrapPaths x) xs')) else pure ∘S just )
-
-
--- -- fillFold1D : Maybe CTerm → List R.Term →  R.TC (CTerm × Maybe R.Term)
--- -- fillFold1D nothing [] = pure (nothing , nothing)
--- -- fillFold1D _ [] = R.typeError [ "iimposible fillFold1D'" ]ₑ
--- -- fillFold1D mbct (x ∷ xs) = do
--- --   (mbct' , xs') ← fillFold1D mbct xs
-   
--- --   mbct'' ← fillStepCT x mbct'
--- --   s ← bfs {!mbct''!}
--- --   -- R.debugPrint "testMarkVert" 3 $ Mb.rec [ "nothing" ]ₑ [_]ₑ mbct''
--- --   ⦇ (Mb.rec (pure nothing) cTermEnd mbct'') , (Mb.rec {!!} {!!} xs') ⦈
-
-
--- -- bigFillStep : Maybe R.Term → R.Term → R.TC (Maybe R.Term × R.Term ) 
--- -- bigFillStep mbT t = do
--- --  {!!}
-
-
--- macro
---  testPathCT : R.Term → R.Term → R.Term → R.Term → R.Term → R.TC Unit
---  testPathCT t0 t1 t2 t3 h = do
---    r ← mapM (addNDimsToCtx 1 ∘S R.normalise ∘S pathApp)
---          (t0 ∷ t1 ∷ t2 ∷ [ t3 ]) >>= foldCT
-   
---    -- Mb.rec (R.typeError [ "nothing" ]ₑ  ) (R.typeError ∘S [_]ₑ ∘S dropPathWraps) r
---    Mb.rec (R.typeError [ "nothing" ]ₑ  )
---      (addNDimsToCtx 1 ∘S R.typeError ∘S ((_>>= λ t → "\n******" ∷nl [ t ]ₑ)) ∘S flatten' ) r
-
-
---  testPathCT≡ : R.Term → R.Term → R.Term → R.Term → R.Term → R.Term → R.TC Unit
---  testPathCT≡ t0 t1 t2 t3 t4 h = do
---    r ← mapM (addNDimsToCtx 1 ∘S R.normalise ∘S pathApp)  (t0 ∷ t1 ∷ t2 ∷ t3 ∷ [ t4 ]) >>= foldCT
---    let r' = Mb.rec (RexplicitRefl R.unknown) (foldPath ∘S flatten') r
---    -- R.typeError [ r' ]ₑ
---    R.unify r' h
-
---  testFoldCT : R.Term → R.Term → R.Term → R.Term → R.Term → R.Term → R.TC Unit
---  testFoldCT t0 t1 t2 t3 t4 h = do
---    r ← mapM (addNDimsToCtx 1 ∘S R.normalise ∘S pathApp)
---          (t0 ∷ t1 ∷ t2 ∷ t3 ∷ [ t4 ]) >>= fillFoldCT
-
---    addNDimsToCtx 2 $ R.typeError $
---      L.join (L.map (λ r →
---             [ "\n\n≣≣≣≣≣≣≣≣≣≣≣≣≣≣≣≣≣≣≣≣≣≣≣≣≣≣≣≣\n\n"]ₑ ++ Mb.rec ([ "nothing" ]ₑ  )
---               ((_>>= λ t → "\n******" ∷nl [ t ]ₑ) ∘S fill-flatten' ) r ) r)
-
-
-
--- module _ (k : ℕ) where
-
-
---  macro
---   testFillCT≡ : R.Term → R.Term → R.Term → R.Term → R.Term → R.Term → R.TC Unit
---   testFillCT≡ t0 t1 t2 t3 t4 h = do
---     r ← mapM (addNDimsToCtx 1 ∘S R.normalise ∘S pathApp)  (t0 ∷ t1 ∷ t2 ∷ t3 ∷ [ t4 ]) >>= fillFoldCT
---     r' ← Mb.rec (pure (RexplicitRefl R.unknown)) bfs (joinM (lookup r k))
---     R.unify r' h 
---     -- R.typeError [ r' ]ₑ
-
-
--- -- bigTestFillCT≡ : R.Term → R.Term → R.Term → R.Term → R.Term → R.Term → R.TC Unit
--- -- bigTestFillCT≡ t0 t1 t2 t3 t4 h = do
--- --   r ← mapM (addNDimsToCtx 1 ∘S R.normalise ∘S pathApp)  (t0 ∷ t1 ∷ t2 ∷ t3 ∷ [ t4 ]) >>= fillFoldCT
--- --   r' ← Mb.rec (pure Rrefl) bfs (joinM (lookup r k))
--- --   R.unify r' h 
--- --   -- R.typeError [ r' ]ₑ

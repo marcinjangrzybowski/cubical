@@ -34,7 +34,7 @@ open import Cubical.Tactics.PathSolver.CongComp
 
 open import Cubical.Tactics.PathSolver.QuoteCubical 
 
-open import Cubical.Tactics.PathSolver.Error
+open import Cubical.Tactics.Reflection.Error
 open import Cubical.Tactics.PathSolver.Dimensions
 open import Cubical.Tactics.PathSolver.CuTerm
 open import Cubical.Tactics.PathSolver.Reflection
@@ -43,7 +43,6 @@ open import Cubical.Tactics.PathSolver.Degen
 open import Cubical.Tactics.PathSolver.PathEval
 import Cubical.Tactics.PathSolver.PathEval as PT
 
-import Cubical.Tactics.PathSolver.ViaPrimPOr as ViaPrimPOr
 
 private
   variable
@@ -197,10 +196,8 @@ fill1DV x =
 quote1D : Maybe R.Type → R.Term → R.TC ((Maybe R.Term) × 1DimView (Maybe (R.Term × R.Term) × R.Term))
 quote1D mbty t = do
   cu ← extractCuTermFromPath mbty t
-  te ← ppCT 1 100 cu
   let cu' = appCongs 1 cu
   congPa ← pure (ToTerm.toTerm (defaultCtx 2) (fillCongs 100 1 cu))
-  -- R.typeError te
   let mbCongPa = if (hasVar 1 congPa) then just congPa else nothing 
   Mb.rec (R.typeError [ "imposible in simplifyPath" ]ₑ)
                (λ (x , y) → x ,_ <$> mapM-1DimView (UndegenCell.mbUndegen' 1 ∘S snd) y)
@@ -243,27 +240,9 @@ stepSq A p mbQ = do
 
 macro
  
+
  solvePaths : R.Term → R.TC Unit
  solvePaths h = R.withReduceDefs (false , [ quote ua ]) do   
-  hTy ← R.inferType h >>= wait-for-term >>= R.normalise
-
-  bdTM@(A , fcs) ← matchNCube hTy
-  let dim = length fcs
-  -- mbEquation' bdTM
-  flip (Mb.rec (R.typeError [ "not equation" ]ₑ)) (mbEquation bdTM)
-    λ (lhs , rhs) → do
-
-       (lhsSq , _) ← stepSq A lhs nothing
-       (rhsSq , _) ← stepSq A rhs nothing
-
-       let solution = R.def (quote ◪→◪→≡) (lhsSq v∷ v[ rhsSq ])
-       
-       R.unify solution h <|> R.typeError [ solution ]ₑ
-
- 
-
- solveSquare : R.Term → R.TC Unit
- solveSquare h = R.withReduceDefs (false , [ quote ua ]) do   
   hTy ← R.inferType h >>= wait-for-term >>= R.normalise
   bdTM@(A , ((a₀₋ , a₁₋) , (a₋₀ , a₋₁))) ← (matchSquare <$> matchNCube hTy) >>=
      Mb.rec (R.typeError [ "not a square" ]ₑ) pure
@@ -276,8 +255,4 @@ macro
         (a₀₋' v∷ a₁₋' v∷ a₋₀' v∷ a₋₁' v∷ [])
 
   R.unify solution h  <|> R.typeError [ solution ]ₑ
-
- 
-open import Cubical.Foundations.Equiv
-open import Cubical.Foundations.Univalence
 

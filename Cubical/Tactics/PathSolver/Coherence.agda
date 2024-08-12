@@ -35,7 +35,7 @@ open import Cubical.Tactics.PathSolver.CongComp
 
 open import Cubical.Tactics.PathSolver.QuoteCubical renaming (normaliseWithType to normaliseWithType')
 
-open import Cubical.Tactics.PathSolver.Error
+open import Cubical.Tactics.Reflection.Error
 open import Cubical.Tactics.PathSolver.Dimensions
 open import Cubical.Tactics.PathSolver.CuTerm
 open import Cubical.Tactics.PathSolver.Reflection
@@ -111,35 +111,6 @@ asPath tm = addNDimsToCtx 1 do
        (pure))) pure
 
  
-
-
-
-foldCells : (A → B → B) → CuTerm' ⊥ A → B → B
-foldCells {A = A} {B = B} f = fc
- where
- fcs : List (SubFace × CuTerm' ⊥ A) → B → B
- 
- fc : CuTerm' ⊥ A → B → B
- fc (hco x x₂) b = fc x₂ (fcs x b)
- fc (cell' x x₂) b = f x b
-
- fcs [] b = b
- fcs ((_ , x) ∷ x₂) b = fcs x₂ (fc x b)
-
-
-visitCellsM : (A → R.TC Unit) → CuTerm' ⊥ A → R.TC Unit
-visitCellsM {A = A} f = vc
- where
-
- vcs : List (SubFace × CuTerm' ⊥ A) → R.TC Unit
-
- vc : CuTerm' ⊥ A → R.TC Unit
- vc (hco x x₁) = vc x₁ >> vcs x >> pure _
- vc (cell' x x₁) = f x
-
- vcs [] = pure _
- vcs ((_ , x) ∷ xs) = vc x >> vcs xs
- 
 data CellVerts : Type where
   cv0 : [𝟚×Term] → [𝟚×Term] → CellVerts
   cvN : CellVerts → CellVerts → CellVerts
@@ -161,22 +132,11 @@ cellVert (cvN x x₂) (false ∷ x₃) = cellVert x x₃
 cellVert (cvN x x₂) (true ∷ x₃) = cellVert x₂ x₃
 cellVert _ _ =  R.typeError $ [ "cellVert failed " ]ₑ
 
-matchAtomPa : R.Term → R.TC (Maybe (Bool × ℕ))
-matchAtomPa (R.var x []) = ⦇ nothing ⦈
-matchAtomPa (R.var (suc x) v[ R.var zero [] ]) = ⦇ just (⦇ (true , x) ⦈) ⦈
-matchAtomPa (R.var (suc x) v[ R.def (quote ~_) v[ R.var zero [] ] ]) =
-   ⦇ just (⦇ (false , x) ⦈) ⦈
-matchAtomPa t = R.typeError $ "unexpected in matchAtomPA : " ∷ₑ [ t ]ₑ
-
 
 
 
 getAtomPa : R.Term → R.TC [𝟚×Term]
 getAtomPa = (maybeToList <$>_) ∘S asPath
-
--- addNDimsToCtx 1 do 
---   tn ← R.normalise t --<|> (addNDimsToCtx dim $ R.typeError ([ "here :" ]ₑ ++ₑ [ t ]ₑ))
---   pure $ Mb.rec [] [_] (if (hasVar zero tn) then  (just tn) else nothing) 
 
 print[𝟚×] :  [𝟚×Term] → List R.ErrorPart
 print[𝟚×] = 
@@ -195,15 +155,6 @@ allEqual? _≟_ (x ∷ (y ∷ xs)) = Dec→Bool (x ≟ y) and allEqual? _≟_ (y
 allEqual? _≟_ _ = true
 
 
-cellVertsHead : CellVerts → Maybe (Bool × R.Term) × [𝟚×Term]  
-cellVertsHead cv = 
- let l = L.map (snd) $ CellVerts→List cv
-     lM = L.map (length) l
-     
-     
- in if (allEqual? discreteℕ lM) then nothing , Mb.fromMaybe [] (listToMaybe l) else
-     let maxL = foldr max 0 lM
-     in Mb.rec (nothing , []) (λ x → listToMaybe x , tail x) (findBy (λ x → Dec→Bool $ discreteℕ (length x) maxL ) l)
           
 printCellVerts : CellVerts → List (R.ErrorPart)
 printCellVerts = (join ∘ L.map
@@ -236,6 +187,18 @@ getVert (suc m) v (hco xs _) = do
                 (zipWith _,_ sf v)))
   getVert m (true ∷ v') x  
 getVert _ x (cell' (_ , (_ , x₁)) _) = cellVert x₁ x
+
+
+foldBdTermWithCuInput' =
+  let T = (CuTerm' ⊥ Unit × Maybe R.Term)
+  in List (T × T)
+
+
+foldBdTermWithCuInput =
+  let T = (CuTerm' ⊥ (Maybe (R.Term × R.Term) × ((Maybe IExpr) × CellVerts)) × Maybe R.Term)
+  in List (T × T)
+
+
 
 module _ (ty : R.Type) where
 
@@ -280,28 +243,29 @@ module _ (ty : R.Type) where
       ⦇ x ⦈
       ⦈ 
 
+ markVertSnd : ℕ → ℕ → [𝟚×Term] → ((CuTerm' ⊥ Unit) × A)
+   → R.TC (CuTerm' ⊥ (Maybe (R.Term × R.Term) × ((Maybe IExpr) × CellVerts)) × A)
+ markVertSnd n m tms (x , y) = ⦇ markVert n m tms x , ⦇ y ⦈ ⦈
 
- markVertBd : CuBoundary' ⊥ Unit
-    → R.TC (CuBoundary' ⊥ (Maybe (R.Term × R.Term) × ((Maybe IExpr) × CellVerts)))
+ markVertBd : foldBdTermWithCuInput'
+    → R.TC foldBdTermWithCuInput
  markVertBd [] = R.typeError [ "markVertBd undefined" ]ₑ
  markVertBd (_ ∷ []) = R.typeError [ "markVertBd undefined" ]ₑ 
  markVertBd xs = do
    let dim = predℕ (length xs)
        v0 = repeat dim false
-   fcs0 ← mapM (markVert 100 dim [] ∘S fst) xs
+   fcs0 ← mapM (markVertSnd 100 dim [] ∘S fst) xs
    fcs0₀ ← Mb.rec (R.typeError [ "imposible" ]ₑ)
-              (λ y → mapM (λ k → (getVert 100 (replaceAt k true v0)) y)  (range dim))
+              (λ y → mapM (λ k → (getVert 100 (replaceAt k true v0)) (fst y))  (range dim))
              (lookup fcs0 0)
    fcs0₁ ← Mb.rec (R.typeError [ "imposible" ]ₑ)
-     (getVert 100 (replaceAt (predℕ dim) true v0)) (lookup fcs0 1)
+     (getVert 100 (replaceAt (predℕ dim) true v0) ∘S fst) (lookup fcs0 1)
    
    fcs1 ← mapM (idfun _)
-           (zipWith (markVert 100 dim) (fcs0₁ ∷ fcs0₀) (snd <$> xs)) 
+           (zipWith (markVertSnd 100 dim) (fcs0₁ ∷ fcs0₀) (snd <$> xs)) 
    pure (zipWith _,_ fcs0 fcs1)
-   
 
-getMaxWordLen : CuTerm' ⊥ ((Maybe IExpr) × CellVerts) → ℕ
-getMaxWordLen x = foldCells (flip (foldl max)  ∘ L.map (length ∘ snd) ∘ CellVerts→List ∘ snd) x zero 
+
 
 flipOnFalse : Bool → R.Term → R.Term
 flipOnFalse b t = if b then t else R.def (quote ~_) v[ t ] 
@@ -351,7 +315,7 @@ module MakeFoldTerm (t0 : R.Term) where
  
  ctil : ℕ → (CuTerm' ⊥ (Maybe (R.Term × R.Term) × ((Maybe IExpr) × CellVerts))) → R.TC CuTerm
  ctil dim (hco x c) =
-   ⦇ hco ⦇ pure (repeat dim nothing ++ [ just true ] , cell ((liftVarsFrom (suc dim) 0 t0)))
+   ⦇ hco ⦇ pure (repeat dim nothing ++ [ just true ] , cell ((t0)))
             ∷
             ctils x ⦈
           (ctil dim c) ⦈
@@ -362,20 +326,32 @@ module MakeFoldTerm (t0 : R.Term) where
          (λ tmUDG →
             UndegenCell.undegenCell dim tmUDG ct) mbt
 
+  where
+  cellVertsHead : CellVerts → Maybe (Bool × R.Term) × [𝟚×Term]  
+  cellVertsHead cv = 
+    let l = L.map (snd) $ CellVerts→List cv
+        lM = L.map (length) l
+
+
+    in if (allEqual? discreteℕ lM) then nothing , Mb.fromMaybe [] (listToMaybe l) else
+        let maxL = foldr max 0 lM
+        in Mb.rec (nothing , []) (λ x → listToMaybe x , tail x) (findBy (λ x → Dec→Bool $ discreteℕ (length x) maxL ) l)
+
+
  ctils [] = ⦇ [] ⦈
  ctils ((sf , x) ∷ xs) = 
    ⦇ ⦇ pure (sf ++ [ nothing ]) , ctil (suc (sfDim sf)) x ⦈ ∷ ctils xs ⦈
 
 
-makeFoldTerm : R.Term → ℕ → (CuTerm' ⊥ (Maybe (R.Term × R.Term) × ((Maybe IExpr) × CellVerts))) → R.TC CuTerm
-makeFoldTerm = MakeFoldTerm.ctil
 
-foldBdTerm : R.Type → R.Term → (CuBoundary' ⊥ (Maybe (R.Term × R.Term) × ((Maybe IExpr) × CellVerts)))
+
+foldBdTerm : R.Type → R.Term → foldBdTermWithCuInput
               → R.TC R.Term
 foldBdTerm _ _ [] = R.typeError [ "foldBdTerm undefined for 0 dim" ]ₑ
 foldBdTerm ty f0 xs = do
   let dim = length xs
-  t0 ← normaliseWithType "mkFoldTerm" ty
+      needsCongFill = any? (L.map (λ { ((_ , nothing) , (_ , nothing) ) → false ; _ → true} ) xs)
+  t0 ← liftVarsFrom dim zero <$> normaliseWithType "mkFoldTerm" ty
             (subfaceCell (repeat (predℕ dim) (just false)) f0) 
   toTerm {A = Unit} dim <$>
    ⦇ hco
@@ -386,242 +362,48 @@ foldBdTerm ty f0 xs = do
            prmV = invVar 0 ∘S remapVars (λ k →
                      if (k <ℕ dim) then (if (k =ℕ (predℕ dim)) then zero else suc k)
                          else k)
-                     ∘S ToTerm.toTerm (defaultCtx dim)
-       in (⦇ ⦇ sf0 ⦈ , ⦇ cell (prmV <$>
-                                makeFoldTerm t0 (predℕ dim) cu0) ⦈ ⦈)
-       ∷ [ ⦇ ⦇ sf1 ⦈ , ⦇ cell (prmV <$>
-                                makeFoldTerm t0 (predℕ dim) cu1) ⦈ ⦈ ])
+                     
+           fc : SubFace →
+                  (CuTerm' ⊥ (Maybe (R.Term × R.Term) × Maybe IExpr × CellVerts) ×
+                    Maybe R.Term) →
+                  List _
+           fc sf cu =
+            let cuTm' = ((prmV ∘S ToTerm.toTerm (defaultCtx dim)) <$>
+                            MakeFoldTerm.ctil t0 (predℕ dim) (fst cu))
+                cuTm = ⦇ cell cuTm' ⦈
+            in [ ((sf ,_)) <$>
+               (if (not needsCongFill)
+                then cuTm
+                else do
+                 cpa ←  cell <$>
+                         (Mb.rec (subfaceCellNoDrop (just true ∷ repeat (predℕ dim) nothing) <$> cuTm')
+                              (λ pa → pure $  (prmV pa)) (snd cu))
+                 ⦇ hco
+                   (pure ( (just true ∷ repeat (predℕ dim) nothing , cpa)
+                       ∷ [ just false ∷ repeat (predℕ dim) nothing ,
+                             cell t0 ]))
+                   cuTm ⦈) ]
+
+       in fc sf0 cu0 ++ fc sf1 cu1)
       (range dim) xs )
-    ⦇ cell --⦇ R.unknown ⦈
-        (pure $ liftVarsFrom dim zero t0)
-       ⦈ ⦈
-  
-mkFoldTerm : R.Type → ℕ → R.Term → R.TC (R.Term)
-mkFoldTerm ty dim t = do
+    ⦇ cell ⦇ t0 ⦈ ⦈ ⦈
 
-  t0 ← normaliseWithType "mkFoldTerm" ty
-            (subfaceCell (repeat dim (just false)) t)
-  cu ← quoteCuTerm (just ty) dim t -- >>= 𝒏[_]
-  cu' ← tryCastAsNoCong cu <|> R.typeError [ "failed to cast to no cong" ]ₑ -- (>>= 𝒏[_])
-
-  mv ← markVert ty 100 dim [] cu'
-  (ToTerm.toTerm (defaultCtx (suc dim)))   <$> makeFoldTerm t0 dim mv
+doNotReduceInPathSolver = [ quote ua ]
 
 
 
-mkAppFillTerm : R.Type → ℕ → R.Term → R.TC (R.Term × R.Term)
-mkAppFillTerm ty dim t = do
-    t0 ← normaliseWithType "mkAppFillTerm" ty
-              (subfaceCell (repeat dim (just false)) t)
-    R.debugPrint "testMarkVert" 0 $ [ "mkAppFillTerm - quoteCuTerm " ]ₑ       
-    cu ← (quoteCuTerm (just ty) dim t)
-    -- R.typeError $ [ "ok**" ]ₑ
-    let cu' = appCongs dim cu
-    -- te' ← ppCT dim 100 cu'
-    -- R.typeError $ te'
-    R.debugPrint "testMarkVert" 0 $ [ "mkAppFillTerm - markVert" ]ₑ       
-    mv ← markVert ty 100 dim [] cu'
-    
-    R.debugPrint "testMarkVert" 0 $ [ "mkAppFillTerm - toTerm grpPa " ]ₑ       
-    grpPa ←
-      -- addNDimsToCtx (suc dim) $ R.normalise $
-       (ToTerm.toTerm (defaultCtx (suc dim))) <$> makeFoldTerm t0 dim mv
-       
-    R.debugPrint "testMarkVert" 0 $ [ "mkAppFillTerm - toTerm congPa " ]ₑ               
-    congPa ← --addNDimsToCtx (suc dim) $ R.normalise
-              pure (ToTerm.toTerm (defaultCtx (suc dim)) (fillCongs 100 dim cu))
-    -- R.typeError $ [ "ok**" ]ₑ
-    pure (congPa , grpPa)  
-
-
-fullFExpr : ℕ → IExpr
-fullFExpr dim =
- join $ L.map (λ k → [ (false , k) ] ∷ [ [ (true , k) ] ]) ((range dim))
-
-
-
-
-mkSolutionTerm' : ℕ → R.Term → R.Term → R.Term → R.Term
-mkSolutionTerm' dim lhsP rhsP lid =
- let 
-     sides = vlam "𝒛" $ R.def (quote primPOr)
-             ( (liftVars $ IExpr→Term [ [ (false , dim) ] ])
-               v∷ (liftVars $ (IExpr→Term (tail $ fullFExpr (suc dim))))
-             v∷ (vlam "o" (liftVars $ invVar zero $ (rotVars dim (liftVarsFrom 1 (suc dim) lhsP))))
-          v∷ v[ (vlam "o" (liftVars $ invVar zero $ (rotVars dim (liftVarsFrom 1 (suc dim) rhsP)))) ])
- in R.def (quote hcomp) (sides v∷ v[ lid ])
-
-
-mkSolutionTerm : ℕ → R.Term → R.Term → R.Term
-mkSolutionTerm dim lhsP rhsP =
-  mkSolutionTerm' dim lhsP rhsP
-   (subfaceCellNoDrop ((repeat dim nothing) ∷ʳ just true) lhsP)
-
-mkSolutionTerm2 : ℕ → (R.Term × R.Term) → (R.Term × R.Term) → R.Term
-mkSolutionTerm2 dim (lhsP , lhsP') (rhsP , rhsP') =
-  mkSolutionTerm' dim lhsP rhsP
-   (mkSolutionTerm dim lhsP' rhsP')
-
-
-
-
-
-module _ (dim : ℕ) where
- -- macro
- --  testMarkVert : R.Term → R.Term → R.TC Unit
- --  testMarkVert t h = do
- --    cu ← extractCuTerm dim t
- --    cu' ← tryCastAsNoCong cu <|> R.typeError [ "failed to cast to no cong" ]ₑ
- --    mv ← markVert 100 dim [] cu'     
- --    addNDimsToCtx 1 $ visitCellsM (λ (mbIx , cv) → do
- --      Mb.rec (R.debugPrint "testMarkVert" 3 [ "noIExpr" ]ₑ)
- --              (R.debugPrint "testMarkVert" 3 ∘ [_]ₑ ∘ vlamⁿ dim ∘  IExpr→Term) mbIx
- --      ((R.debugPrint "testMarkVert" 3 ∘ ("cellMarks : \n" ∷ₑ_) ∘ printCellVerts) cv)  ) mv
- --    R.debugPrint "testMarkVert" 3 $ "max word: " ∷ₑ [ (getMaxWordLen mv ) ]ₑ
-
- --    R.typeError $ [ "ok" ]ₑ
-
-
-  mkEqTerm : R.Type → R.Term → R.Term → R.TC Unit
-  mkEqTerm ty t h = do
-    t0 ← normaliseWithType "mkEqTerm" ty
-           (subfaceCell (repeat dim (just false)) (appNDimsI dim (liftVarsFrom dim 0 t)))  
-    cu ← extractCuTerm (just ty) dim t
-    cu' ← tryCastAsNoCong cu <|> R.typeError [ "failed to cast to no cong" ]ₑ
-
-    mv ← markVert ty 100 dim [] cu'
-    -- R.typeError $ [ "ok" ]ₑ
-    -- -- visitCellsM (λ (mbIx , cv) → do
-    -- --   Mb.rec (pure _) (R.debugPrint "testMarkVert" 3 ∘ [_]ₑ ∘ vlamⁿ dim ∘  IExpr→Term) mbIx
-    -- --   ((R.debugPrint "testMarkVert" 3 ∘ ("cellMarks : \n" ∷ₑ_) ∘ printCellVerts) cv)  ) mv
-    -- -- R.debugPrint "testMarkVert" 3 $ "max word: " ∷ₑ [ (getMaxWordLen mv ) ]ₑ
-
-    -- R.typeError $ [ "ok" ]ₑ
-    cu ← makeFoldTerm t0 dim mv
-    -- te ← ppCTn false dim 100 cu
-    -- R.typeError $ [ toTerm (suc dim) (cu) ]ₑ
-    R.unify (toTerm (suc dim) (cu)) h
-     --  <|>
-     -- (R.typeError $ "check :" ∷ₑ [ toTerm (suc dim) (cu) ]ₑ)
-
+toNoCons : ℕ → CuTerm → R.TC (CuTerm' ⊥ Unit × Maybe R.Term)
+toNoCons dim cu =
+ Mb.rec
+  (do ptm ← addNDimsToCtx (suc dim) $ R.normalise $ (ToTerm.toTerm (defaultCtx (suc dim)) (fillCongs 100 dim cu))
+      pure $ appCongs dim cu , just ptm)
+  (λ x → ⦇ ⦇ x ⦈ , ⦇ nothing ⦈ ⦈)
+  (tryCastAsNoCong cu)
 
 macro
- -- solvePathsUD : R.Term → R.TC Unit
- -- solvePathsUD h = do
- --  hTy ← R.inferType h >>= wait-for-term >>= R.normalise
 
- --  bdTM@(A , fcs) ← matchNCube hTy
- --  let dim = length fcs
- --  -- mbEquation' bdTM
- --  flip (Mb.rec (R.typeError [ "not equation" ]ₑ)) (mbEquation bdTM)
- --    λ (lhs , rhs) → do
- --       (udLHS , lhsFold) ← mkFoldTermUD (predℕ dim) lhs
-       
- --       (udRHS , rhsFold) ← mkFoldTermUD (predℕ dim) rhs
-       
- --       let solutionMid = vlamⁿ dim $ (mkSolutionTerm (predℕ dim) lhsFold rhsFold)
- --       let solution = R.def (quote _∙∙_∙∙_)
- --            (udLHS v∷ solutionMid v∷ v[ R.def (quote sym) (v[ udRHS ]) ])
- --       R.unify solution h --<|> R.typeError [ solution ]ₑ
-
-
- -- solvePaths : R.Term → R.TC Unit
- -- solvePaths h = R.withReduceDefs (false , [ quote ua ]) do
- --  hTy ← R.inferType h >>= wait-for-term >>= R.normalise
-
- --  bdTM@(A , fcs) ← matchNCube hTy
- --  let dim = length fcs
- --  -- mbEquation' bdTM
- --  flip (Mb.rec (R.typeError [ "not equation" ]ₑ)) (mbEquation bdTM)
- --    λ (lhs , rhs) → do
- --       (lhsFold) ← mkFoldTerm A (predℕ dim) lhs
-       
- --       (rhsFold) ← mkFoldTerm A (predℕ dim) rhs
-       
- --       solution ← (normaliseWithType "" hTy $ vlamⁿ dim $ (mkSolutionTerm (predℕ dim) lhsFold rhsFold))
- --                     -- >>= makeAuxiliaryDef "solvePathsSolution" hTy
-       
- --       R.unify solution h <|> R.typeError [ solution ]ₑ
-
-
- -- solvePaths' : R.Term → R.TC Unit
- -- solvePaths' h = do
- --  hTy ← R.inferType h >>= wait-for-term >>= R.normalise
- --  R.debugPrint "solvePaths'" 0 $ [ "solvePaths' - start" ]ₑ
- --  bd' ← matchNCube hTy
- --  R.debugPrint "solvePaths'" 0 $ [ "solvePaths' - matchNCube done" ]ₑ
- --  bdTM@(A , fcs) ← nCubeToEq bd'
- --  R.debugPrint "solvePaths'" 0 $ [ "solvePaths' - nCubeToEq done" ]ₑ
- --  let dim = length fcs
- --  -- mbEquation' bdTM
- --  flip (Mb.rec (R.typeError [ "not equation" ]ₑ)) (mbEquation bdTM)
- --    λ (lhs , rhs) → do
- --       (lhsFold) ← mkFoldTerm A (predℕ dim) lhs
- --       R.debugPrint "solvePaths'" 0 $ [ "solvePaths' - lhsFold done" ]ₑ
- --       (rhsFold) ← mkFoldTerm A (predℕ dim) rhs
- --       R.debugPrint "solvePaths'" 0 $ [ "solvePaths' - rhsFold done" ]ₑ
- --       let solution' = vlamⁿ dim $ (mkSolutionTerm (predℕ dim) lhsFold rhsFold)
- --           solution = R.def (quote _▷_) (nCubeToEqPath bd' v∷ v[ solution' ])
- --       R.debugPrint "solvePaths'" 0 $ [ "solvePaths' - nCubeToEqPath done" ]ₑ
- --       R.unify solution h --<|> R.typeError [ solution ]ₑ
-
-
- solvePathsC : R.Term → R.TC Unit
- solvePathsC h = do
-  hTy ← R.inferType h >>= wait-for-term >>= R.normalise
-  R.debugPrint "testMarkVert" 0 $ [ "solvePathsC - start" ]ₑ
-  bdTM@(A , fcs) ← matchNCube hTy
-  let dim = length fcs
-  R.debugPrint "testMarkVert" 0 $ [ "solvePathsC - dim : " ]ₑ ++ [ dim ]ₑ
-  flip (Mb.rec (R.typeError [ "not equation" ]ₑ)) (mbEquation bdTM)
-    λ (lhs , rhs) → do
-       R.debugPrint "testMarkVert" 0 $ [ "solvePathsC - mkAppFillTerm LHS start " ]ₑ       
-       lhsP ← mkAppFillTerm A (predℕ dim) lhs
-       R.debugPrint "testMarkVert" 0 $ [ "solvePathsC - mkAppFillTerm RHS start " ]ₑ       
-       rhsP ← mkAppFillTerm A (predℕ dim) rhs
-
-       let solution = --mkSolutionTerm (predℕ dim) (snd lhsP) (snd rhsP)
-              (mkSolutionTerm2 (predℕ dim) lhsP rhsP)
-       R.debugPrint "testMarkVert" 0 $ [ "solvePathsC - unify " ]ₑ               
-       -- R.typeError [ solution ]ₑ
-       R.unify (vlamⁿ dim $ solution) h <|>
-          (addNDimsToCtx dim $ do
-             solN ← R.normalise solution
-             R.typeError [ solN ]ₑ)
-
- solvePathsCfromTy : R.Term → R.Term → R.TC Unit
- solvePathsCfromTy ty h = do
-  hTy ← R.normalise ty
-
-  bdTM@(A , fcs) ← matchNCube hTy
-  let dim = length fcs
-  flip (Mb.rec (R.typeError [ "not equation" ]ₑ)) (mbEquation bdTM)
-    λ (lhs , rhs) → do
-
-       lhsP ← mkAppFillTerm A (predℕ dim) lhs
-       rhsP ← mkAppFillTerm A (predℕ dim) rhs
-       -- R.typeError [ "ok" ]ₑ
-       let solution = --mkSolutionTerm (predℕ dim) (snd lhsP) (snd rhsP)
-              (mkSolutionTerm2 (predℕ dim) lhsP rhsP)
-
-       -- R.typeError [ solution ]ₑ
-       R.unify (vlamⁿ dim $ solution) h <|>
-          (addNDimsToCtx dim $ do
-             solN ← R.reduce solution
-             R.typeError [ vlamⁿ dim $ solN ]ₑ)
-
---  ≡! : R.Term → R.Term → R.TC Unit
---  ≡! = do
--- do
---   hTy ← R.inferType h >>= wait-for-term >>= R.normalise
---   R.debugPrint "testMarkVert" 0 $ [ "solvePathsC - start" ]ₑ
---   bdTM@(A , fcs) ← matchNCube hTy
---   let dim = length fcs
---   R.debugPrint "testMarkVert" 0 $ [ "solvePathsC - dim : " ]ₑ ++ [ dim ]ₑ
---   flip (Mb.rec (R.typeError [ "not equation" ]ₑ)) (mbEquation bdTM)
-
- solvePaths'' : R.Term → R.TC Unit
- solvePaths'' h = do
+ solvePaths : R.Term → R.TC Unit
+ solvePaths h = R.withReduceDefs (false , doNotReduceInPathSolver) do
   hTy ← R.inferType h >>= wait-for-term >>= R.normalise
   R.debugPrint "solvePaths'" 0 $ [ "solvePaths' - start" ]ₑ
   bdTM@(A , fcs) ← matchNCube hTy
@@ -629,14 +411,11 @@ macro
   let dim = length fcs
 
   (t0 , _) ← Mb.rec (R.typeError [ "imposible in solvePaths''" ]ₑ) pure (lookup fcs zero)
-  -- R.typeError [ "xxx" ]ₑ
+
   cuFcs ← (quoteBd bdTM >>= mapM
-    (λ (cu0 , cu1) → ⦇ tryCastAsNoCong cu0 , tryCastAsNoCong cu1 ⦈)) <|>
+    (λ (cu0 , cu1) → ⦇ toNoCons (predℕ dim) cu0 , toNoCons (predℕ dim) cu1 ⦈)) <|>
       R.typeError [ "quoteBd - failed" ]ₑ
   
-  solution ←
-    (markVertBd A cuFcs <|> R.typeError [ "markVertBD - failed" ]ₑ) >>=
-      (λ x → foldBdTerm A t0 x <|> R.typeError [ "foldBdTerm - failed" ]ₑ) 
-  -- R.typeError [ solution ]ₑ
-  R.unify solution h <|> R.typeError [ "unify - failed" ]ₑ
+  solution ← markVertBd A cuFcs >>= foldBdTerm A t0
+  R.unify solution h --<|> R.typeError ("unify - failed:" ∷nl [ solution ]ₑ )
   

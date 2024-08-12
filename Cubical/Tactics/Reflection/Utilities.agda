@@ -431,3 +431,7 @@ replaceAtTrm k t =
  z zero (suc y) = nothing
  z (suc x) zero = nothing
  z (suc x) (suc y) = z x y
+
+
+fromJust : ∀ {ℓ} {A : Type ℓ} → List ErrorPart → Maybe A → TC A
+fromJust e = Mb.rec (typeError e) pure

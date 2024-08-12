@@ -205,6 +205,7 @@ length-map f (a ∷ as) = cong suc (length-map f as)
 
 intersperse : A → List A → List A
 intersperse _ [] = []
+intersperse a (x ∷ []) = x ∷ []
 intersperse a (x ∷ xs) = x ∷ a ∷ intersperse a xs
 
 join : List (List A) → List A
@@ -425,6 +426,9 @@ insertAt k a xs = take k xs ++ a ∷ drop k xs
 
 replaceAt : ℕ → A → List A → List A
 replaceAt k a xs = take k xs ++ a ∷ drop (suc k) xs
+
+dropAt : ℕ → List A → List A
+dropAt k xs = take k xs ++ drop (suc k) xs
 
 
 findBy : (A → Bool) → List A → Maybe A

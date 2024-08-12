@@ -1,7 +1,5 @@
 {-# OPTIONS --safe #-} 
--- -v 3
 
--- -v testMarkVert:3
 module Cubical.Tactics.PathSolver.MonoidalExamples where
 
 
@@ -40,9 +38,6 @@ open import Cubical.Tactics.PathSolver.CuTerm
 open import Cubical.Tactics.PathSolver.QuoteCubical
 open import Cubical.Tactics.PathSolver.Dimensions
 open import Cubical.Tactics.PathSolver.MonoidalSolver
--- open import Cubical.Tactics.PathSolver.Export
-
-import Cubical.Tactics.PathSolver.ViaPrimPOr as ViaPrimPOr
 
 
 private
@@ -54,7 +49,7 @@ private
 module E0 {x y z w : A}
   (p : x ≡ y)
   (q : y ≡ z)
-  (r : z ≡ w) (f : A → A) (f₂ : A → A → A) (f₄ : A → A → A → A → A) where
+  (r : z ≡ w) (f : A → A) (f₂ : A → A → A) (f₄ : A → {A} → A → A → A) where
 
 
 
@@ -89,11 +84,11 @@ module E0 {x y z w : A}
 
 
 
- e5 : _ ≡ λ 𝓲 → f₄ (p 𝓲) (q 𝓲) (r 𝓲) (q 𝓲)
+ e5 : _ ≡ λ 𝓲 → f₄ (p 𝓲) {q 𝓲} (r 𝓲) (q 𝓲)
  e5 = simplifyPath
-       ((λ i → f₄ (p i) y z (p (~ i)))
-     ∙∙ (λ i → f₄ y (q i) z ((p ∙ q) i)) ∙∙
-        (λ i → f₄ ((refl {x = y} ∙' refl {x = y}) i) z (r i) z) )
+       ((λ i → f₄ (p i) {y} z (p (~ i)))
+     ∙∙ (λ i → f₄ y {q i} z ((p ∙ q) i)) ∙∙
+        (λ i → f₄ ((refl {x = y} ∙' refl {x = y}) i) {z} (r i) z) )
 
 
 
@@ -107,13 +102,12 @@ module E2 {x y z w : A}
  e0 = solvePaths
 
 
-
  e1 : Square
         (cong f p) 
         (cong f q)
         (cong f p) 
         (cong f q)
- e1 = solveSquare
+ e1 = solvePaths
 
 
  e2 : Square
@@ -121,7 +115,7 @@ module E2 {x y z w : A}
         (cong f (sym r))
         (cong f (p ∙ q ∙ r))
         (cong f ((λ i → p (i ∨ ~ i)) ∙ q))
- e2 = solveSquare
+ e2 = solvePaths
 
 
 module E3 {ℓ} where
@@ -182,3 +176,27 @@ module E5 (A B C D : Type ℓ)
 
  e0 : ua e₀ ∙ ua e₁ ∙ ua e₂ ≡ ua e₀ ∙∙ ua e₁ ∙∙ ua e₂
  e0 = solvePaths
+
+
+ e0L : Square (cong List (ua e₀) ∙ cong List (ua e₁))
+              (cong List (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂))
+              refl (cong List (ua e₂))
+ e0L = solvePaths
+
+
+module E6 {ℓ ℓ' ℓ''} {A : Type ℓ } {B : Type ℓ'} {C : Type ℓ''}
+  {x y z w : A}
+  {x' y' z' w' : B}
+  (f : A → B → C)
+  (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) 
+  (p' : x' ≡ y') (q' : y' ≡ z') (r' : z' ≡ w') 
+  
+   where
+ 
+ e0 : Square
+        (cong₂ f p q')
+        (cong₂ f (sym r) (p' ∙ q' ∙ r'))
+        (cong₂ f p (sym p') ∙ cong₂ f q p' ∙ cong₂ f r (sym p'))
+        (cong₂ f q r')
+ e0 = solvePaths
+

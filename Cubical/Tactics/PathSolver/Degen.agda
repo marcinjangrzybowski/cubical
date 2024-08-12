@@ -22,7 +22,7 @@ open import Cubical.Tactics.Reflection.Utilities
 open import Cubical.Tactics.PathSolver.Dimensions
 open import Cubical.Tactics.PathSolver.QuoteCubical
 open import Cubical.Tactics.PathSolver.CuTerm
-open import Cubical.Tactics.PathSolver.Error
+open import Cubical.Tactics.Reflection.Error
 
 
 undegenTerm : Bool → ℕ → ℕ → R.Term → R.TC R.Term
@@ -80,20 +80,6 @@ undegenTerm2 onEnd offset dim =
        (g nm arg (R.def nm arg))
 
 
-module _ (dim : ℕ) where
- macro
-  undegenTermTest : R.Term → R.Term → R.TC Unit
-  undegenTermTest t h = do
-    -- let t' = liftVarsFrom 1 dim t 
-    t' ← undegenTerm false zero dim t
-    R.unify t' h
-
--- module _ (A B : Type) (a : ℕ → A) (P : I → B → A) (Q : I → I → B) where
-
---  utt1 : Path (I → I → A)
---          (λ 𝓲₁ 𝓲₀ → P (𝓲₁ ∧ 𝓲₀ ∧ ~ 𝓲₀) (Q (𝓲₁ ∨ ~ 𝓲₁) (𝓲₁ ∧ 𝓲₀)))
---          λ z z₁ → P i0 (Q i1 ((z₁ ∧ z)))
---  utt1 𝓲₂ 𝓲₁ 𝓲₀ = undegenTermTest 2 (P (𝓲₁ ∧ 𝓲₀ ∧ ~ 𝓲₀) (Q (𝓲₁ ∨ ~ 𝓲₁) (𝓲₁ ∧ 𝓲₀)))
 
 private
   variable
@@ -101,12 +87,6 @@ private
     A : Type ℓ
     CongGuard : Type
 
-
--- constAbs : R.Term → R.Term
--- constAbs = vlam "_" ∘S liftVars
-
-constPartialR : R.Term → R.Term → R.Term
-constPartialR tI tA = R.def (quote constPartial) (tA v∷ v[ tI ])
 
 module UndegenCell (dim : ℕ) where
      
@@ -125,7 +105,10 @@ module UndegenCell (dim : ℕ) where
                (constPartialR (R.def (quote ~_) v[ 𝒗 (suc dim) ]) (liftVarsFrom 1 (suc dim) tI))
                  v∷ v[ constPartialR ((R.def (quote _∨_) ((𝒗 (suc dim)) v∷
                 v[ (liftVars ie) ]))) (liftVars t) ])) v∷ v[ t ])) 
-     -- fex
+   where
+    constPartialR : R.Term → R.Term → R.Term
+    constPartialR tI tA = R.def (quote constPartial) (tA v∷ v[ tI ])
+
 
  mbUndegen : R.Term → R.TC (Maybe (R.Term × R.Term) × R.Term)
  mbUndegen tm = do
@@ -136,7 +119,6 @@ module UndegenCell (dim : ℕ) where
   if allNonDeg then (pure (nothing , tm)) else
     do idt0 ← undegenTerm2 true zero dim tm
        idt1 ← undegenTerm2 false zero dim tm
-       -- addNDimsToCtx (1 + dim) $ R.typeError (liftVars idt0 ∷nl liftVars tm ∷nl [ idt1 ]ₑ)
        pure ( just (tm , idt1) , idt0)
 
  mbUndegen' : R.Term → R.TC (Maybe (R.Term × R.Term) × R.Term)
@@ -148,291 +130,7 @@ module UndegenCell (dim : ℕ) where
   if allNonDeg then (pure (nothing , tm)) else
     do idt0 ← undegenTerm true zero dim tm
        idt1 ← undegenTerm false zero dim tm
-       -- addNDimsToCtx (1 + dim) $ R.typeError (liftVars idt0 ∷nl liftVars tm ∷nl [ idt1 ]ₑ)
        pure ( just (tm , idt1) , idt0)
 
 
-module _ (onEnd : Bool) where
- undegenCubS :
-   (List (SubFace × CuTerm' CongGuard A)) → R.TC (List (SubFace × CuTerm' CongGuard A))
 
- undegenCubA : ℕ → List (CuTerm' CongGuard A) → R.TC (List (CuTerm' CongGuard A))
-
-
- undegenCub : ℕ → CuTerm' CongGuard A → R.TC (CuTerm' CongGuard A)
- undegenCub dim (hco x y) =
-        ⦇ hco (undegenCubS x) (undegenCub dim y) ⦈
- undegenCub dim (cell' a x) = cell' a <$> undegenTerm onEnd zero dim x  
- undegenCub dim (𝒄ong' {cg = cg} h t) =
-          𝒄ong' {cg = cg}
-      <$> undegenTerm onEnd (length t) dim h
-      <*> undegenCubA dim t 
-
- undegenCubA dim [] = ⦇ [] ⦈
- undegenCubA dim (x ∷ l) = ⦇ undegenCub dim x ∷ undegenCubA dim l ⦈
-
- undegenCubS [] = ⦇ [] ⦈
- undegenCubS ((sf , x) ∷ xs) =
-   ⦇ ( (sf ++ (if onEnd then [] else [ nothing ])) ,_ <$>
-       undegenCub  (suc (sfDim sf)) x )
-     ∷ undegenCubS xs ⦈
-
-
-
-
-
-module _ (dim : ℕ) where
-
-  macro
-   testUndegenCub : R.Term → R.Term → R.TC Unit
-   testUndegenCub t hole = do
-    cu ← extractCuTerm nothing dim t
-    udgn ← undegenCub false dim cu
-    let p = toTerm (suc dim) udgn
-    R.unify p hole
-
-
-private
-  variable
-    x y z w v : A
-
-
-module T1 {x : A} (p' p'' : x ≡ y) (xr xr' : x ≡ x) (q : y ≡ z) (~r : w ≡ z) (r' r : z ≡ w) (s : w ≡ v)
-           (sq : Square xr (sym p'') p'' xr') where
-
- test0 : Path (x ≡ x) (λ i → p' (i ∧ ~ i)) refl
- test0 = testUndegenCub (suc zero) (λ (i : I) → p' (i ∧ ~ i))
-
-
- p : x ≡ y
- p i = sq i (~ i)
-
- P Q : x ≡ v 
- P = refl ∙ (p ∙' q ∙ sym (~r) ∙ (~r  ∙ (λ i → r (i ∧ ~ i)) ∙  (r ∙ ((λ i → r (i ∨  ~ i))) ∙  s )))
- Q = refl ∙ (p ∙' q ∙ sym (~r) ∙ (~r  ∙ refl ∙  (r ∙ refl ∙  s )))
-  
- P≡Q : P ≡ Q
- P≡Q = testUndegenCub (suc zero) (λ (i : I) → P i)
-
-
-
--- really just refl ∙_  
-reComp : ∀ {ℓ} {A : Type ℓ} {x y : A} (p : x ≡ y) → x ≡ y
-reComp p i =
-  hcomp {φ = i ∨ ~ i} (λ k _ → (p (i ∧ k))) (p i0)
-
-
---  really just lUnit
-reFill : ∀ {ℓ} {A : Type ℓ} {x y : A} (p : x ≡ y) → p ≡ reComp p
-reFill p j i =
-  hcomp {φ = i ∨ ~ i ∨ ~ j} (λ k _ → (p (i ∧ k))) (p i0)
-
-
-addConstSubfaces : ℕ → CuTerm → R.TC CuTerm
-addConstSubfaces = h
- where
-
- addMiss : ℕ → List (SubFace × CuTerm) → CuTerm → R.TC (List (SubFace × CuTerm)) 
- addMiss dim xs xb = do
-   newSfs ← catMaybes <$> mapM mbTermForFace msf
-   pure (newSfs ++fe× xs)
-  where
-   msf = missingSubFaces dim (L.map fst xs)
-   
-   mbTermForFace : SubFace → R.TC (Maybe (SubFace × CuTerm)) 
-   mbTermForFace sf =  do
-     cOnSF ← cuEvalN sf (hco xs xb)
-     if (allCellsConstant? (suc (sfDim sf)) cOnSF)
-      then pure $ just (sf , cell (liftVars (mostWrappedTerm cOnSF)))
-      else ⦇ nothing ⦈
-   
- h : ℕ → CuTerm → R.TC CuTerm
- hh : List (SubFace × CuTerm) → R.TC (List (SubFace × CuTerm))
- 
- h dim (hco x x₁) = do
-  x' ← hh x
-  xb ← (h dim x₁)
-  ⦇ hco (addMiss dim x' xb) ⦇ xb ⦈ ⦈
- h dim (cell' x x₁) = pure $ cell' x x₁
- h dim (𝒄ong' x x₁) = R.typeError [ "notImplemented" ]ₑ
-
- hh [] = ⦇ [] ⦈
- hh ((sf , x) ∷ xs) =
-   ⦇ ⦇ ⦇ sf ⦈ , h (suc (sfDim sf)) x ⦈ ∷ (hh xs) ⦈
- 
-
-module unConnect (do-fill : Bool) where
-
- unConnCell : ℕ → R.Term → R.Term → R.TC CuTerm
- unConnCell dim jT (R.var k (z₀ v∷ v[ z₁ ])) =
-   (if do-fill then (pure ∘S cell) else (quoteCuTerm nothing dim >=> addConstSubfaces dim))
-     (R.def (quote reFill)
-       (vlam "𝒾"
-       ((R.def (quote reFill) (R.var (suc k) v[ 𝒗 zero ] v∷ (liftVars jT) v∷ v[ liftVars z₁ ])))
-        v∷ jT v∷  v[ z₀ ]))
-
- unConnCell dim jT (R.var k v[ z ]) =
-   (if do-fill then (pure ∘S cell) else (quoteCuTerm nothing dim))
-     (R.def (quote reFill) ((R.var k []) v∷ jT v∷ v[ z ]))
- unConnCell _ _ t = pure $ cell' _ t
-
-
- unConnS : List (SubFace × CuTerm) → R.TC (List (SubFace × CuTerm))
-
- unConnA : ℕ → List (CuTerm) → R.TC (List (CuTerm))
-
-
- unConn : ℕ → CuTerm → R.TC (CuTerm)
- unConn dim (hco x x₁) = ⦇ hco (unConnS x) (unConn dim x₁) ⦈
- unConn dim (cell' x x₁) =
-   if do-fill
-   then unConnCell (suc dim) (𝒗 dim) (liftVarsFrom (suc zero) dim x₁) 
-   else unConnCell dim (endTerm true) x₁ 
- unConn dim (𝒄ong' {cg = cg} x x₁) = 𝒄ong' {cg = cg} x <$> unConnA dim x₁ 
-
- unConnS [] = ⦇ [] ⦈
- unConnS ((sf , x) ∷ xs) = ⦇ ⦇ ⦇ (sf ++ (if do-fill then [ nothing ] else [])) ⦈
-  , unConn (suc (sfDim sf)) x ⦈ ∷ unConnS xs ⦈
-
- unConnA _ [] = ⦇ [] ⦈
- unConnA dim (x ∷ xs) = ⦇ (unConn dim x) ∷ (unConnA dim xs) ⦈
-
-
-
-unConn = unConnect.unConn false
-unConnFill = unConnect.unConn true
-
-
-module _ (dim : ℕ) where
- macro
-  unConnTest : R.Term → R.Term → R.TC Unit
-  unConnTest t h = do
-   cu ← (extractCuTerm nothing dim t)
-   cu' ← unConn dim cu
-   te0 ← ppCT dim 100 cu
-   te0' ← ppCT dim 100 cu'
-   wrapError h $
-          "input:" ∷nl (indentₑ 4 te0)
-     ++nl "\n∨,∧,~ - removed :" ∷nl (indentₑ 4 te0')
-
-  unConnTest'' : R.Term → R.Term → R.TC Unit
-  unConnTest'' t h = do
-   cu ← (extractCuTerm nothing dim t)
-   cu' ← unConn dim cu
-   te0 ← ppCT dim 100 cu
-   te0' ← ppCT dim 100 cu'
-   R.typeError te0'
-
-  unConnM : R.Term → R.Term → R.TC Unit
-  unConnM t h = do
-   cu ← (extractCuTerm nothing dim t)
-   cu' ← unConn dim cu
-   R.unify (toTerm dim cu') h
-
-  unConnM≡ : R.Term → R.Term → R.TC Unit
-  unConnM≡ t h = do
-   cu ← (extractCuTerm nothing dim t)
-   cu' ← unConnFill dim cu
-   let cu'T = toTerm (suc dim) cu'
-   -- cu'' ← R.checkType cu'T (R.def (quote PathP) (R.unknown v∷ R.unknown v∷ v[ R.unknown ]))
-   R.unify cu'T h
-
-
-
-module _ {A : Type ℓ} {x y z w : A} (p : x ≡ y)(q : y ≡ z)(r : z ≡ w) where
-
- _ : ResultIs
-        ("input:                                       " ∷
-         "                                             " ∷
-         "     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₀                              " ∷
-         "     ║  (𝓲₀=0) → q 𝓲₁                        " ∷
-         "     ║  (𝓲₁=0) → p (~ 𝓲₀ ∨ ~ 𝒛₀)             " ∷
-         "     ║  (𝓲₁=1) → r (𝓲₀ ∧ 𝒛₀)                 " ∷
-         "     ║                                       " ∷
-         "     ├───────────                            " ∷
-         "     │ q 𝓲₁                                  " ∷
-         "     └───────────                            " ∷
-         "∨,∧,~ - removed :                            " ∷
-         "                                             " ∷
-         "     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₀                              " ∷
-         "     ║  (𝓲₀=0) →                             " ∷
-         "     ║     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₁                        " ∷
-         "     ║     ║  (𝓲₁=0) → y                     " ∷
-         "     ║     ║  (𝓲₁=1) → q 𝒛₁                  " ∷
-         "     ║     ║                                 " ∷
-         "     ║     ├───────────                      " ∷
-         "     ║     │ y                               " ∷
-         "     ║     └───────────                      " ∷
-         "     ║  (𝓲₁=0) →                             " ∷
-         "     ║     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₁                        " ∷
-         "     ║     ║  (𝒛₀=1)(𝓲₀=1) → x               " ∷
-         "     ║     ║  (𝒛₀=0)       → p 𝒛₁            " ∷
-         "     ║     ║  (𝓲₀=0)       → p 𝒛₁            " ∷
-         "     ║     ║                                 " ∷
-         "     ║     ├───────────                      " ∷
-         "     ║     │ x                               " ∷
-         "     ║     └───────────                      " ∷
-         "     ║  (𝓲₁=1) →                             " ∷
-         "     ║     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₁                        " ∷
-         "     ║     ║  (𝒛₀=0)       → z               " ∷
-         "     ║     ║  (𝓲₀=0)       → z               " ∷
-         "     ║     ║  (𝒛₀=1)(𝓲₀=1) → r 𝒛₁            " ∷
-         "     ║     ║                                 " ∷
-         "     ║     ├───────────                      " ∷
-         "     ║     │ z                               " ∷
-         "     ║     └───────────                      " ∷
-         "     ║                                       " ∷
-         "     ├───────────                            " ∷
-         "     │                                       " ∷
-         "     │ 𝒉𝒄𝒐𝒎𝒑 λ 𝒛₀                            " ∷
-         "     │ ║  (𝓲₁=0) → y                         " ∷
-         "     │ ║  (𝓲₁=1) → q 𝒛₀                      " ∷
-         "     │ ║                                     " ∷
-         "     │ ├───────────                          " ∷
-         "     │ │ y                                   " ∷
-         "     │ └───────────                          " ∷
-         "     └───────────                            " ∷ [])
- _ = unConnTest (suc (suc zero)) λ (i j : I) → doubleCompPath-filler p q r i j 
-
- assocCC : Square _ _ _ _ 
- assocCC = unConnM (suc (suc zero)) λ (i j : I) → assoc p q r i j
-
- 
-
-module Sq-rot-refl {A : Type ℓ}
-  {a : A} 
-  (s : Square {a₀₀ = a} refl refl refl refl) where
-
-  rot-refl : Cube
-         s (λ i j → s j (~ i))
-         refl refl
-         refl refl
-  rot-refl k i j =
-    hcomp (λ l → λ { (i = i0) → s (~ l) (j ∨ k)
-                   ; (i = i1) → a
-                   ; (j = i0) → s (~ l) (~ i ∧ k)
-                   ; (j = i1) → a
-                   ; (k = i0) → s (i ∨ ~ l) j
-                   ; (k = i1) → s (j ∨ ~ l) (~ i)
-                   })
-          a
-
-
-
-  rot-refl' : s ≡ λ i j → s j (~ i)
-  rot-refl' t i j = 
-    hcomp (λ l → λ { (t = i0) → s i j
-                   ; (t = i1) → s j (~ i)
-                   ; (i = i0) → s (~ l ∧ t ∧ j) ((~ t ∧ j) ∨ t ∨ j)
-                   ; (i = i1) → s ((~ l ∧ ~ t ∨ (t ∧ j) ∨ j) ∨ l ∨ ~ t ∨ (t ∧ j) ∨ j) (~ t ∧ j)
-                   ; (j = i0) → s (~ l ∧ ~ t ∧ i) (t ∧ ~ i)
-                   ; (j = i1) → s ((~ l ∧ (~ t ∧ i) ∨ t ∨ i) ∨ l ∨ (~ t ∧ i) ∨ t ∨ i)
-                                  (~ t ∨ (t ∧ ~ i) ∨ ~ i)
-                   })
-          (s ((~ t ∧ i) ∨ (t ∧ j) ∨ i ∧ j) ((~ t ∧ j) ∨ (t ∧ ~ i) ∨ j ∧ ~ i))
-
-
-  rot-refl'CC : Cube _ _ _ _ _ _
-  rot-refl'CC = unConnM (suc (suc (suc zero))) λ (z i j : I) → rot-refl' z i j
-
-  

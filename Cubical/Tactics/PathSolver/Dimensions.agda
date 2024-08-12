@@ -24,7 +24,7 @@ open import Cubical.Relation.Nullary
 
 open import Cubical.Tactics.Reflection.Variables
 open import Cubical.Tactics.Reflection.Utilities
-open import Cubical.Tactics.PathSolver.Error
+open import Cubical.Tactics.Reflection.Error
 
 IExpr : Type
 IExpr = List (List (Bool × ℕ))

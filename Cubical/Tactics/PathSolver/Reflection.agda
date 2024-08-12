@@ -20,23 +20,12 @@ import Agda.Builtin.Reflection as R
 open import Cubical.Tactics.Reflection
 
 
-any? : List Bool → Bool
-any? [] = false
-any? (false ∷ x₁) = any? x₁
-any? (true ∷ x₁) = true
 
 R∙ : R.Term → R.Term → R.Term
 R∙ x y = R.def (quote _∙_) (x v∷ y v∷ [] )
 
 R∙' : R.Term → R.Term → R.Term
 R∙' x y = R.def (quote _∙'_) (x v∷ y v∷ [] )
-
-
-explicitRefl : ∀ {ℓ} {A : Type ℓ} (x : A) → x ≡ x
-explicitRefl x i = x
-
-explicitReflSq : ∀ {ℓ} {A : Type ℓ} {x y : A} (p : x ≡ y)  → p ≡ p
-explicitReflSq p i = p
 
 
 Rrefl : R.Term

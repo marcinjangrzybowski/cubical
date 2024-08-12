@@ -1,6 +1,6 @@
 {-# OPTIONS --safe  #-} 
 
-module Cubical.Tactics.PathSolver.Error where
+module Cubical.Tactics.Reflection.Error where
 
 
 import Agda.Builtin.Reflection as R
@@ -89,20 +89,6 @@ niceAtomList = h 0
 unArgs : List (R.Arg (R.Term)) → List R.ErrorPart
 unArgs [] = []
 unArgs (R.arg i x ∷ x₁) = x ∷ₑ unArgs x₁
-
-
-getConTail : R.Term → List R.ErrorPart
-getConTail (R.var x args) = "𝒗𝒂𝒓 " ∷ₑ x ∷ₑ " " ∷ₑ unArgs args
-getConTail (R.con c args) = "𝒄𝒐𝒏 " ∷ₑ c ∷ₑ " " ∷ₑ unArgs args
-getConTail (R.def f args) = "𝒅𝒆𝒇 " ∷ₑ f ∷ₑ " " ∷ₑ unArgs args
-getConTail (R.lam v₁ t) = [ "𝒍𝒂𝒎" ]ₑ
-getConTail (R.pat-lam cs args) = [ "𝒑𝒂𝒕" ]ₑ
-getConTail (R.pi a b) = [ "𝒑𝒊" ]ₑ
-getConTail (R.agda-sort s) = [ "𝒔𝒐𝒓𝒕" ]ₑ
-getConTail (R.lit l) = [ "𝒍𝒊𝒕" ]ₑ
-getConTail (R.meta x x₁) = [ "𝒎𝒆𝒕𝒂" ]ₑ
-getConTail R.unknown = [ "𝒖𝒏𝒌𝒏𝒐𝒘𝒏" ]ₑ
--- getConTail _ = "other..." ∷ₑ []
 
 renderTerm : R.Term → R.TC String
 renderTerm = R.formatErrorParts ∘ [_]ₑ

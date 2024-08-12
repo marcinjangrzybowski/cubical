@@ -19,7 +19,7 @@ open import Agda.Builtin.String
 
 open import Cubical.Tactics.PathSolver.Reflection
 open import Cubical.Tactics.PathSolver.Dimensions
-open import Cubical.Tactics.PathSolver.Error
+open import Cubical.Tactics.Reflection.Error
 
 open import Cubical.Tactics.Reflection.Variables
 open import Cubical.Tactics.Reflection.Utilities
@@ -84,7 +84,7 @@ almostLeafQ _ = false
 
 
 
-module _ {A B : Type} (cellTermRender : CuCtx → R.Term →  R.TC (List R.ErrorPart)) (dim : ℕ) where
+module prettyPrinter {A B : Type} (cellTermRender : CuCtx → R.Term →  R.TC (List R.ErrorPart)) (dim : ℕ) where
 
  renderSubFaceExp : SubFace → R.TC String 
  renderSubFaceExp sf = R.normalise (SubFace→Term sf) >>= renderTerm
@@ -155,7 +155,7 @@ module _ {A B : Type} (cellTermRender : CuCtx → R.Term →  R.TC (List R.Error
 
 ppCTn : {A B : Type} → Bool →  ℕ → ℕ → CuTerm' A B → R.TC (List R.ErrorPart)
 ppCTn b =
-  ppCT' (λ ctx x →
+  prettyPrinter.ppCT' (λ ctx x →
         do inCuCtx ctx $ do
             nt ← (if b then R.normalise else R.reduce) x
             x'' ← R.formatErrorParts [ nt ]ₑ
@@ -167,7 +167,7 @@ ppCT = ppCTn true
 
 
 ppCTs : {A B : Type} → ℕ → ℕ → CuTerm' A B  → R.TC (List R.ErrorPart)
-ppCTs = ppCT' (λ _ x → pure [ R.strErr "■" ]) 
+ppCTs = prettyPrinter.ppCT' (λ _ x → pure [ R.strErr "■" ]) 
 
 
 
@@ -284,38 +284,36 @@ pickSFfromPartial = pickSFfromPartial' _
 module normaliseCells where
 
  
- nc : ℕ → ℕ → CuTerm → R.TC CuTerm
+ nc : ℕ → ℕ → (CuTerm' A B) → R.TC (CuTerm' A B)
  nc zero _ _ = R.typeError [ "out of fuel in normaliceCells" ]ₑ
  nc (suc fuel) dim (hco x x₁) =
    ⦇ hco
        (mapM (λ (sf , x) → ⦇ ⦇ sf ⦈ , ( nc fuel (suc (sfDim sf)) x) ⦈ ) x)
        (nc (suc fuel) dim x₁) ⦈
- nc (suc fuel) dim (cell x₁) =
-   cell <$> (addNDimsToCtx dim $ R.normalise x₁)
- nc (suc fuel) dim (𝒄ong' x x₁) =
-   𝒄ong' x <$> mapM (nc fuel dim) x₁
+ nc (suc fuel) dim (cell' x x₁) =
+   cell' x <$> (addNDimsToCtx dim $ R.normalise x₁)
+ nc (suc fuel) dim (𝒄ong' {cg = cg} x x₁) =
+   𝒄ong' {cg = cg} x <$> mapM (nc fuel dim) x₁
 
-
+normaliseCells : ℕ → CuTerm' A B → R.TC (CuTerm' _ _)
 normaliseCells = normaliseCells.nc 100
 
-cuEvalN : SubFace → CuTerm → R.TC CuTerm
+cuEvalN : SubFace → (CuTerm' A Unit) → R.TC (CuTerm' A Unit)
 cuEvalN sf = normaliseCells (sfDim sf) ∘S cuEval sf
 
 
-mostWrappedTerm : CuTerm → R.Term 
-mostWrappedTerm (hco x x₁) = mostWrappedTerm x₁
-mostWrappedTerm (cell' x x₁) = x₁
-mostWrappedTerm (𝒄ong' x []) = x
-mostWrappedTerm (𝒄ong' x (x₁ ∷ x₂)) = mostWrappedTerm x₁
+mostNestedCap : CuTermNC → R.Term 
+mostNestedCap (hco x x₁) = mostNestedCap x₁
+mostNestedCap (cell' x x₁) = x₁
 
 
 -- this can be trusted, only if we sure that term already typechecks!
 
-allCellsConstant? : ℕ → CuTerm → Bool
+allCellsConstant? : ℕ → CuTerm' A B → Bool
 allCellsConstant? dim x = h dim x 
  where
- h : ℕ → CuTerm  → Bool
- hs : List (SubFace × CuTerm)  → Bool
+ h : ℕ → CuTerm' _ _  → Bool
+ hs : List (SubFace × CuTerm' _ _)  → Bool
 
  h dim (hco x₁ x₂) = h dim x₂ and hs x₁
   
@@ -365,3 +363,130 @@ CuBoundary' : ∀ A B → Type ℓ
 CuBoundary' A B = List (CuTerm' A B × CuTerm' A B)
 
 CuBoundary = CuBoundary' Unit Unit
+
+
+tryCastAsNoCongS :  (List (SubFace × CuTerm)) → Maybe (List (SubFace × CuTerm' ⊥ Unit))
+
+
+tryCastAsNoCong : CuTerm → Maybe (CuTerm' ⊥ Unit)
+tryCastAsNoCong (hco x x₁) = 
+    ⦇ hco (tryCastAsNoCongS x) (tryCastAsNoCong x₁) ⦈
+tryCastAsNoCong (cell x) = pure $ cell' _ x
+tryCastAsNoCong (𝒄ong' x x₁) = nothing
+
+
+tryCastAsNoCongS [] = ⦇ [] ⦈
+tryCastAsNoCongS ((sf , x) ∷ xs) =
+  ⦇ (⦇ ⦇ sf ⦈ , (tryCastAsNoCong x) ⦈) ∷ (tryCastAsNoCongS xs) ⦈
+
+
+foldCells : (A → B → B) → CuTerm' ⊥ A → B → B
+foldCells {A = A} {B = B} f = fc
+ where
+ fcs : List (SubFace × CuTerm' ⊥ A) → B → B
+ 
+ fc : CuTerm' ⊥ A → B → B
+ fc (hco x x₂) b = fc x₂ (fcs x b)
+ fc (cell' x x₂) b = f x b
+
+ fcs [] b = b
+ fcs ((_ , x) ∷ x₂) b = fcs x₂ (fc x b)
+
+
+visitCellsM : (A → R.TC Unit) → CuTerm' ⊥ A → R.TC Unit
+visitCellsM {A = A} f = vc
+ where
+
+ vcs : List (SubFace × CuTerm' ⊥ A) → R.TC Unit
+
+ vc : CuTerm' ⊥ A → R.TC Unit
+ vc (hco x x₁) = vc x₁ >> vcs x >> pure _
+ vc (cell' x x₁) = f x
+
+ vcs [] = pure _
+ vcs ((_ , x) ∷ xs) = vc x >> vcs xs
+
+
+
+module codeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
+
+ renderSubFaceExp : SubFace → R.TC String 
+ renderSubFaceExp sf = R.normalise (SubFace→Term sf) >>= renderTerm
+
+  
+ renderSubFacePattern : CuCtx → SubFace → String 
+ renderSubFacePattern ctx sf =
+   foldl _<>_ "" (L.map
+       ((λ (b , k) → let k' = L.lookupAlways "‼"
+                                   (freeVars ctx) k
+                     in "(" <> k' <> " = " <> (if b then "i1" else "i0") <> ")"))
+      (subFaceConstraints sf))
+
+ ppCT'' : CuCtx → ℕ → CuTerm' A B → R.TC (List R.ErrorPart)
+ -- ppCArg : CuCtx → ℕ → CuArg → R.TC (List R.ErrorPart)
+  
+ ppCT'' _ zero _ = R.typeError [ "pPCT FAIL" ]ₑ
+ ppCT'' ctx (suc d) (hco x x₁) = do
+   let l = length ctx ∸ dim
+   indN ← foldr max zero <$> (
+              (mapM ((((pure ∘ (renderSubFacePattern ctx)) >=& stringLength)) ∘S fst ) x))
+
+   let newDimVar = (mkNiceVar' "𝒛" l)
+   rest ← (L.intersperse (R.strErr "\n;") ∘S L.join)  <$> mapM
+         (λ (sf , cu) → do
+
+
+
+            -- R.extendContext "zz" (varg (R.def (quote I) [])) $
+            ( do
+               let sfTm = renderSubFacePattern ctx sf 
+               -- R.extendContext newDimVar (varg (R.def (quote I) [])) $         
+               (do sfTm' ← inCuCtx' (("z" , nothing) ∷ ctx) $ R.formatErrorParts [ liftVars (SubFace→TermInCtx ctx sf) ]ₑ
+                   cu' ← (ppCT'' ((newDimVar , nothing) ∷ applyFaceConstraints sf ctx) d cu)
+                   cu'' ← R.formatErrorParts cu'
+                   let cu''' = indent' false ' ' 2 cu''
+                   pure (offsetStrR indN sfTm  ∷ₑ
+                             -- "/" ∷ₑ sfTm' ∷ₑ
+                             " → " ∷ₑ [ cu''' ]ₑ))) >>=
+                      (R.formatErrorParts >=& [_]ₑ)) x
+   lid ← indent ' ' 1 <$> (ppCT'' ctx d x₁ >>= R.formatErrorParts)
+   rest' ← indent ' ' 2 <$> R.formatErrorParts rest
+   pure $ (R.strErr ("\nhcomp (λ " <> newDimVar <> " → λ { \n")) ∷
+                   (rest' ∷ₑ "\n    }) \n" ∷ₑ
+                   "(" ∷ₑ lid ∷ₑ ")" ∷ₑ [ "\n "]ₑ)
+  
+ ppCT'' ctx _ (cell' _ x) = do
+  ctr ← inCuCtx ctx $ do
+            nt ← (if normaliseCells then R.normalise else pure) x
+            x'' ← R.formatErrorParts [ nt ]ₑ
+            pure [ R.strErr (x'') ]
+     -- cellTermRender ctx x >>=
+     --         --inCuCtx ctx ∘
+     --         R.formatErrorParts
+  pure ctr 
+ ppCT'' ctx (suc d) (𝒄ong' h t) = do
+  rT ← (L.map (λ (k , s) → R.strErr ("\n    " <> mkNiceVar' "𝒙" k <> " = " <> s ))
+            ∘S zipWithIndex) <$> (mapM (argRndr >=> (R.formatErrorParts >=& indent' false ' ' 6)) t)
+  rHead ← inCuCtx ctx $ addNDimsToCtx' "𝒙" (length t) $ renderTerm h
+  pure  $ "\nlet " ∷ₑ rT ++ "\nin " ∷ₑ [ rHead ]ₑ 
+
+ -- <> indent ' ' 2 (foldr (_<>_  ∘S ("\n" <>_)) "" rT)
+
+  where
+  argRndr :  CuTerm' A B → R.TC _
+  argRndr x = (((λ s → [ "(" ]ₑ ++ s ++ [ ")" ]ₑ) <$> (ppCT'' ctx d x)))
+  
+ ppCT' :  ℕ → CuTerm' A B → R.TC (List R.ErrorPart)
+ ppCT' = ppCT'' (defaultCtx dim)
+
+
+
+genAbstr : ℕ → String
+genAbstr dim = "λ" <> 
+ (L.foldl _<>_ "" $ L.map (λ k →  (" " <> mkNiceVar' "𝓲" k)) (rev (range dim))) <> " → "
+ 
+codeGen : {A B : Type} (normaliseCells₁ : Bool) (dim : ℕ) →
+            ℕ → CuTerm' A B → R.TC String
+codeGen nc dim fuel cu = ((genAbstr dim <>_) ∘S (indent' false ' ' 6)) <$>
+  (codeGen.ppCT' nc dim fuel cu >>= R.formatErrorParts)
+

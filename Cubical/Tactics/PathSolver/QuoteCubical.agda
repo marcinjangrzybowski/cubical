@@ -1,5 +1,4 @@
 {-# OPTIONS --safe #-} 
--- -v extractCuTermTest:4  -v checkHcomp:5 
 module Cubical.Tactics.PathSolver.QuoteCubical where
 
 open import Cubical.Foundations.Function
@@ -22,7 +21,7 @@ open import Cubical.Tactics.Reflection
 open import Cubical.Tactics.Reflection.Utilities
 
 open import Cubical.Tactics.PathSolver.Reflection
-open import Cubical.Tactics.PathSolver.Error
+open import Cubical.Tactics.Reflection.Error
 
 open import Cubical.Tactics.PathSolver.Dimensions
 open import Cubical.Tactics.PathSolver.CuTerm
@@ -80,22 +79,6 @@ module ECT where
    R.debugPrint "getCuCaseφ" 5 $ "getCuCase' φ :" ∷ₑ [ φTm ]ₑ  
    (just ∘ ((A , φTm , fcs , cap) ,_))  <$> extractIExprM φTm
  getCuCase _ = pure nothing
-
-
-
- module _ (dim : ℕ) where
-  macro
-   getCuCaseTest : R.Term → R.Term → R.Term → R.TC Unit
-   getCuCaseTest A t h = do
-    addNDimsToCtx dim (getCuCase (appNDimsI dim (liftVarsFrom dim 0 t))) >>=
-     Mb.rec (R.typeError [ "cell" ]ₑ) (λ e → do
-        R.typeError (niceAtomList (L.map SubFace→Term (I→F (snd e)))))
-
-
-
-  
-
-
 
 
  try𝒄ong : ℕ → ℕ → R.Term → R.TC (Maybe (R.Term × List (CuTerm)))
@@ -211,7 +194,7 @@ quoteBd : NBoundaryTerm → R.TC CuBoundary
 quoteBd (A , xs) = do
  let dim = predℕ (length xs)
  mapM (λ (t0 , t1) → ⦇ quoteCuTerm (just A) dim t0 , quoteCuTerm (just A) dim t1 ⦈ ) xs
- 
+
  
 matchSquare : NBoundaryTerm → Maybe (R.Term × ((R.Term × R.Term)×(R.Term × R.Term))) 
 matchSquare (A , ((a₀₋ , a₁₋) ∷ (a₋₀ , a₋₁) ∷ [])) =
@@ -236,6 +219,11 @@ rotVars k = replaceVarWithTerm (map-Maybe 𝒗 ∘S rotK k)
 
 allTrue : List Bool → Bool
 allTrue = foldl _and_ true
+
+any? : List Bool → Bool
+any? [] = false
+any? (false ∷ x₁) = any? x₁
+any? (true ∷ x₁) = true
 
 mbEquation : NBoundaryTerm → Maybe (R.Term × R.Term)
 mbEquation (A , []) = nothing
@@ -285,10 +273,6 @@ faceSubFace dim (b , k) =
   drop k (repeat (predℕ dim) nothing)
 
 
-
-
-
-
 macro
  printCu : R.Term → R.Term → R.TC Unit
  printCu t _ = do
@@ -308,18 +292,21 @@ macro
    let dim = length fcs
    R.typeError $ [ dim ]ₑ 
 
-tryCastAsNoCongS :  (List (SubFace × CuTerm)) → R.TC (List (SubFace × CuTerm' ⊥ Unit))
+
+tryCastAsNoCongM : CuTerm → R.TC (CuTerm' ⊥ Unit)
+tryCastAsNoCongM = fromJust [ "failed to cast as no cong" ]ₑ ∘S tryCastAsNoCong
 
 
-tryCastAsNoCong : CuTerm → R.TC (CuTerm' ⊥ Unit)
-tryCastAsNoCong (hco x x₁) = 
-    ⦇ hco (tryCastAsNoCongS x) (tryCastAsNoCong x₁) ⦈
-tryCastAsNoCong (cell x) = pure $ cell' _ x
-tryCastAsNoCong (𝒄ong' x x₁) =
- R.typeError $ [ "tryCastAsNoCong failed " ]ₑ
+quoteCuTermNC : Maybe R.Type → ℕ →  R.Term → R.TC CuTermNC
+quoteCuTermNC mbty dim = quoteCuTerm mbty dim >=> tryCastAsNoCongM
+
+extractCuTermNC : Maybe R.Type → ℕ → R.Term → R.TC CuTermNC
+extractCuTermNC mbTy dim =
+   (ECT.extractCuTerm' mbTy  100 dim ∘S appNDimsI dim ∘S liftVarsFrom dim 0)
+     >=> tryCastAsNoCongM
 
 
-tryCastAsNoCongS [] = ⦇ [] ⦈
-tryCastAsNoCongS ((sf , x) ∷ xs) =
-  ⦇ (⦇ ⦇ sf ⦈ , (tryCastAsNoCong x) ⦈) ∷ (tryCastAsNoCongS xs) ⦈
-
+quoteBdNC : NBoundaryTerm → R.TC (CuBoundary' ⊥ Unit)
+quoteBdNC (A , xs) = do
+ let dim = predℕ (length xs)
+ mapM (λ (t0 , t1) → ⦇ quoteCuTermNC (just A) dim t0 , quoteCuTermNC (just A) dim t1 ⦈ ) xs
