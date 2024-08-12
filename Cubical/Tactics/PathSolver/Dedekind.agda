@@ -123,7 +123,7 @@ asDedekindBd : CuBoundary' ⊥ Unit → R.TC String
 asDedekindBd xs = do
   fcs ← strConcat ∘S intersperse " | " <$> (mapM h $ (zipWithIndex xs >>=
           λ (k , (cu0 , cu1)) → ((k , false) , cu0) ∷ [ (k , true) , cu1 ]))
-  pure $ "(" <> ( strConcat $ intersperse " "  (fst <$> cc))
+  pure $ "(" <> ( strConcat $ intersperse " "  (fst <$> (cc)))
    <> ")[" <>
      fcs
      <> "]"
@@ -133,12 +133,12 @@ asDedekindBd xs = do
   vr = mkNiceVar' "𝓲"
 
   cc : CuCtx
-  cc = (_, nothing) ∘S vr ∘S fst <$> zipWithIndex xs
+  cc = (_, nothing) ∘S vr ∘S fst <$>  (zipWithIndex xs)
 
   h : Σ (ℕ × Bool) (λ v → CuTerm' ⊥ Unit) → R.TC String
   h ((k , b) , cu) = 
    ((mkNiceVar' "𝓲" k <> " = " <> (if b then "1" else "0") <> " -> ") <>_) <$>
-      (asDedekindExpr (dropAt k cc) cu)
+      (asDedekindExpr (rev (dropAt k cc)) cu)
 
 
 asDedekindCtx : R.Telescope → R.TC String
@@ -191,10 +191,13 @@ module gencode {ℓ} (A : Type ℓ)
  _ : PathP (λ j → x ≡ q j) p (p ∙ q)
  _ = ded!
 
+ _ : p ≡ refl ∙ p
+ _ = ded!
+
 
 module eckhil {ℓ} (A : Type ℓ)
   (x : A)
   (p q : Path (x ≡ x) refl refl) where
 
- _ : Unit
- _ = tt
+ _ : Square p p q q       
+ _ = ded!
