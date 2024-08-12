@@ -162,38 +162,3 @@ module _ {T} {{rmt : RawMonadTransformer T}} where
    MonadLiftT : {{_ : RawApplicative M}} → {{_ : RawMonad M}} → RawMonad ([ T RMT M ]_)
    unwrap ((MonadLiftT RawMonad.>>= x) x₁) = unwrap x >>= λ v → unwrap (x₁ v)
    unwrap ((MonadLiftT RawMonad.>> x) x₁) = unwrap x >> unwrap x₁
-
-
-
--- module _  {T} {{RMT : RawMonadTransformer T}} {F : Functorω}
---                 {{_ : RawApplicative F}} where
-
---  open RawMonadTransformer RMT
-
- -- private
- --  instance
- --   localApplicative : RawApplicative (T F)
- --   localApplicative = {!!}
-  
- -- instance 
- --  ApplicativeLiftT : RawApplicative ([ T RMT F ]_)
- --  ApplicativeLiftT = {!!}
- --  -- [_RMT_]_.unwrap ((ApplicativeLiftT RawApplicative.<$> f) rmt< unwrap >) =
- --  --   {!!}
- --  --   -- f <$> unwrap
- --  -- [_RMT_]_.unwrap (RawApplicative.pure (ApplicativeLiftT) x) = {!!}
- --  --   -- pure x
- --  -- [_RMT_]_.unwrap ((ApplicativeLiftT  RawApplicative.<*> rmt< x >) rmt< y >) =
- --  --    {!!}
- --  --   -- x <*> y
-
-
--- -- instance
---  MonadLiftT : ∀ {T} → {{RMT : RawMonadTransformer T}} → {F : Functorω} →
---                {{RA : RawApplicative F}} → {{RM : RawMonad F {{RA}}}} 
-                
---                  → {!!} 
---  MonadLiftT {{RMT = RMT}} {{RA}} {{RM = RM}} = {!!}
---  -- RawMonadTransformer.monadLiftT RMT {{RA}} {{RM}}
-
-
