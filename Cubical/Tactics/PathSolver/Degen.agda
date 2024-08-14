@@ -17,11 +17,12 @@ open import Cubical.Data.Sigma
 
 import Agda.Builtin.Reflection as R
 open import Cubical.Reflection.Base renaming (v to 𝒗)
+open import Cubical.Reflection.Sugar
 
 open import Cubical.Tactics.Reflection.Utilities
-open import Cubical.Tactics.PathSolver.Dimensions
-open import Cubical.Tactics.PathSolver.QuoteCubical
-open import Cubical.Tactics.PathSolver.CuTerm
+open import Cubical.Tactics.Reflection.Dimensions
+open import Cubical.Tactics.Reflection.QuoteCubical
+open import Cubical.Tactics.Reflection.CuTerm
 open import Cubical.Tactics.Reflection.Error
 
 

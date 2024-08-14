@@ -9,6 +9,7 @@ open import Agda.Builtin.String
 open import Agda.Builtin.Nat using () renaming (_==_ to _=ℕ_ ; _<_ to _<ℕ_)
 
 open import Cubical.Reflection.Base
+open import Cubical.Reflection.Sugar
 open import Cubical.Data.List as L
 import Cubical.Data.Sum as ⊎
 open import Cubical.Data.Maybe as Mb
@@ -38,109 +39,6 @@ errorOut' something = typeError (strErr "Don't know what to do with " ∷ termEr
 _==_ = primQNameEquality
 {-# INLINE _==_ #-}
 
-module _ {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} where 
-
- mapM : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'}
-            → (A → M B) → List A → M (List B)
- mapM f [] = ⦇ [] ⦈
- mapM f (x ∷ xs) = ⦇ f x ∷ mapM f xs ⦈
-
- concatMapM : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'}
-            → (A → M (List B)) → List A → M (List B)
- concatMapM f [] = ⦇ [] ⦈
- concatMapM f (x ∷ xs) = ⦇ f x ++ concatMapM f xs ⦈
-
-
- foldlM : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'}
-            → (B → A → M B) → B → List A → M B
- foldlM f b [] = pure b
- foldlM f b (x ∷ xs) = f b x >>= (flip (foldlM f)) xs
-
-
- foldrM : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'}
-            → (A → B → M B) → B → List A → M B
- foldrM f b [] = pure b
- foldrM f b (x ∷ xs) = foldrM f b xs >>= f x
-
-
-State₀T : Type → Functorω → Functorω 
-State₀T S F T = S → F (T × S)
-
-
-get : {F : Functorω} {{FA : RawApplicative F }} {{FM : RawMonad F }} {S : Type}  → [ State₀T S RMT F ] S
-unwrap get s = pure (s , s)
-
-modify : {F : Functorω} {{FA : RawApplicative F }} {{FM : RawMonad F }} {S : Type}  →
-  (S → S) → [ State₀T S RMT F ] Unit
-unwrap (modify f) s = pure (_ , f s)
-
-
-Plus₀T : Type → Functorω → Functorω 
-Plus₀T E F T = F (E ⊎.⊎ T) 
-
-module _ where
- open RawMonadTransformer
-
- instance
-  rawMonadTransformerState₀ : ∀ {S} → RawMonadTransformer (State₀T S)
-  (applicativeLiftT rawMonadTransformerState₀ RawApplicative.<$> x) = (map-fst x <$>_) ∘S_
-  RawApplicative.pure (applicativeLiftT rawMonadTransformerState₀) x = pure ∘S (x ,_)
-  (applicativeLiftT rawMonadTransformerState₀ RawApplicative.<*> f) x s = 
-    f s >>= uncurry (_<$>_ ∘S map-fst) ∘S map-snd x
-    
-  (monadLiftT rawMonadTransformerState₀ RawMonad.>>= x) y s = x s >>= uncurry y
-      
-  (monadLiftT rawMonadTransformerState₀ RawMonad.>> x) y s = x s >>= y ∘S snd
-  lifting rawMonadTransformerState₀ x s = (_, s) <$> x
-
-  rawMonadTransformerPlus₀ : ∀ {S} → RawMonadTransformer (Plus₀T S)
-  (applicativeLiftT rawMonadTransformerPlus₀ RawApplicative.<$> x) =
-    (⊎.map (idfun _) x) <$>_
-  RawApplicative.pure (applicativeLiftT rawMonadTransformerPlus₀) x = pure (⊎.inr x)
-  (applicativeLiftT rawMonadTransformerPlus₀ RawApplicative.<*> f) x =
-    f >>= ⊎.rec (pure ∘S ⊎.inl) λ f → ⊎.map (idfun _) f <$> x
-  (monadLiftT rawMonadTransformerPlus₀ RawMonad.>>= x) y =
-    x >>= ⊎.rec (pure ∘S ⊎.inl) y
-  (monadLiftT rawMonadTransformerPlus₀ RawMonad.>> x) y =
-    x >>= ⊎.rec (pure ∘S ⊎.inl) (const y)
-  lifting rawMonadTransformerPlus₀ x = ⊎.inr <$> x
-
-  
-  ApplicativeSum : {E : Type} → RawApplicative (E ⊎.⊎_) 
-  ApplicativeSum = applicativeLiftT rawMonadTransformerPlus₀ {{_}} {{RawMonadIdentityM}} 
-
-  MonadSum : {E : Type} → RawMonad (E ⊎.⊎_) 
-  MonadSum = monadLiftT rawMonadTransformerPlus₀ {{_}} {{RawMonadIdentityM}} 
-
-
-
-instance
- ApplicativeMaybe : RawApplicative Maybe
- RawApplicative._<$>_ ApplicativeMaybe = map-Maybe
- RawApplicative.pure ApplicativeMaybe = just
- (ApplicativeMaybe RawApplicative.<*> nothing) x₁ = nothing
- (ApplicativeMaybe RawApplicative.<*> just x) nothing = nothing
- (ApplicativeMaybe RawApplicative.<*> just x) (just x₁) = just (x x₁)
-
-
- MonadMaybe : RawMonad Maybe
- RawMonad._>>=_ MonadMaybe = flip (Mb.rec nothing)
- RawMonad._>>_ MonadMaybe = flip (Mb.rec nothing ∘ const)
-
- ApplicativeList : RawApplicative List
- RawApplicative._<$>_ ApplicativeList = L.map
- RawApplicative.pure ApplicativeList = [_]
- (ApplicativeList RawApplicative.<*> fs) xs = L.map (uncurry _$_) (cart fs xs)
- 
-
- MonadList : RawMonad List
- RawMonad._>>=_ MonadList xs f = L.join (map f xs)
- RawMonad._>>_ MonadList xs ys = L.join (map (λ _ → ys) xs)
-
-
-when : ∀ {M : Functorω} {{_ : RawApplicative M}} → Bool → M Unit → M Unit
-when {M} false x = pure _
-when {M} true x = x
 
 module atVarOrConOrDefMmp {M : Functorω}
               {{RA : RawApplicative M}} {{_ : RawMonad M {{RA}} }} 
@@ -253,11 +151,11 @@ atVarOrM f g = rv zero
  open atVarOrDefM {{_}} {{RawMonadIdentityM}}
     (λ n k _ args →  
           let t = var k args
-              t' = (Mb.fromMaybe t (f n (k ∸ n) args))
+              t' = (Mb.fromJust-def t (f n (k ∸ n) args))
           in (if (k <ℕ n) then t else t'))
    (λ n nm _ args →  
           let t = def nm args
-          in  Mb.fromMaybe t (g n nm args))
+          in  Mb.fromJust-def t (g n nm args))
 
 atVarOrM' : (ℕ → ℕ → List (Arg Term) → Maybe Term) → (ℕ → Name → List (Arg Term) → Maybe Term) → Term → Term
 atVarOrM' f g = rv zero
@@ -265,10 +163,10 @@ atVarOrM' f g = rv zero
  open atVarOrDefM {{_}} {{RawMonadIdentityM}}
     (λ n k args0 args →  
           let t = var k args
-              t' = (Mb.fromMaybe t (f n (k ∸ n) args0))
+              t' = (Mb.fromJust-def t (f n (k ∸ n) args0))
           in (if (k <ℕ n) then t else t'))
    (λ n nm args0 args →  
-          Mb.fromMaybe (def nm args) (g n nm args0))
+          Mb.fromJust-def (def nm args) (g n nm args0))
 
 atVarOrConM' : (ℕ → ℕ → List (Arg Term) → Maybe Term) →
  (ℕ → Name → List (Arg Term) → Maybe Term)
@@ -278,12 +176,12 @@ atVarOrConM' f h g = rv zero
  open atVarOrConOrDefMmp {{_}} {{RawMonadIdentityM}}
     (λ n k args0 args _ →  
           let t = var k args
-              t' = (Mb.fromMaybe t (f n (k ∸ n) args0))
+              t' = (Mb.fromJust-def t (f n (k ∸ n) args0))
           in (if (k <ℕ n) then t else t'))
    (λ n nm args0 args _ →  
-          Mb.fromMaybe (con nm args) (h n nm args0))
+          Mb.fromJust-def (con nm args) (h n nm args0))
    (λ n nm args0 args _ →  
-          Mb.fromMaybe (def nm args) (g n nm args0))
+          Mb.fromJust-def (def nm args) (g n nm args0))
 
 
 
@@ -295,7 +193,7 @@ module atVarM {M : Functorω}
  open atVarOrDefM
       (λ n k _ args → RawMonad._>>=_ RM args λ args → 
           let t = var k args
-          in (Mb.fromMaybe (RawApplicative.pure RA t) (if (k <ℕ n) then nothing else (f n (k ∸ n) args))))
+          in (Mb.fromJust-def (RawApplicative.pure RA t) (if (k <ℕ n) then nothing else (f n (k ∸ n) args))))
       (λ n nm _ args → RawMonad._>>=_ RM args λ args → RawApplicative.pure RA (def nm args))
       public
 

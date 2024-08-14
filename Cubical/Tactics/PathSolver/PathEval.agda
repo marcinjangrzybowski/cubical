@@ -19,18 +19,20 @@ open import Cubical.Data.Sigma.Base
 
 
 open import Cubical.Reflection.Base renaming (v to 𝒗)
+open import Cubical.Reflection.Sugar
 open import Agda.Builtin.Nat using () renaming (_==_ to _=ℕ_ ; _<_ to _<ℕ_)
 
 import Agda.Builtin.Reflection as R
 
 open import Cubical.Tactics.PathSolver.Reflection
--- open import Cubical.Tactics.Reflection 
+open import Cubical.Tactics.PathSolver.Path
+
 open import Agda.Builtin.String
--- open import Agda.Builtin.Char
+
 open import Cubical.Tactics.Reflection.Utilities
 open import Cubical.Tactics.Reflection.Error
-open import Cubical.Tactics.PathSolver.Dimensions
-open import Cubical.Tactics.PathSolver.QuoteCubical
+open import Cubical.Tactics.Reflection.Dimensions
+open import Cubical.Tactics.Reflection.QuoteCubical
 
 
 data ASTMarkers : Type where
@@ -60,92 +62,6 @@ pattern cw[_] x = R.def (quote CompWrap) (x v∷ [])
 pattern cw xs = R.def (quote CompWrap) xs
 pattern _∷cw_ x xs = R.def (quote CompWrap) (x v∷ xs)  
 
-
-
-_∙f0_ : ∀ {ℓ} {A : Type ℓ} →
-         ∀ {x₀ y₀ y₁ z : A}
-         → {p₀ : x₀ ≡ y₀} {q₀ : y₀ ≡ z} {q₁ : y₁ ≡ z}
-         → {r : x₀ ≡ y₁} {y≡ : y₀ ≡ y₁}
-         → Square p₀ (λ _ → y₁)  r y≡
-         → Square q₀ q₁ y≡ (λ _ → z)
-
-         → Square (p₀ ∙' q₀) q₁ r λ _ → z
-(u ∙f0 v) j i =
-  hcomp (λ k → primPOr (~ i) (i ∨ j) (λ _ → u j (~ k)) λ _ → v j i)
-        (v j i)
-
-_∙f1_ : ∀ {ℓ} {A : Type ℓ} →
-         ∀ {x₁ y₀ y₁ z : A}
-         → {p₁ : x₁ ≡ y₁} {q₀ : y₀ ≡ z} {q₁ : y₁ ≡ z}
-         → {r : y₀ ≡ x₁} {y≡ : y₀ ≡ y₁}
-         → Square (λ _ → y₀) p₁ r y≡
-         → Square q₀ q₁ y≡ (λ _ → z)
-
-         → Square q₀ (p₁ ∙' q₁) r λ _ → z
-(u ∙f1 v) j i =
-    hcomp (λ k → primPOr (~ i) (i ∨ (~ j)) (λ _ → u j (~ k)) λ _ → v j i)
-        (v j i)
-
-
-_∙∙■_∙∙■_ : ∀ {ℓ} {A : Type ℓ} →
-         ∀ {x x₀ x₁ x₂ x₃ : A}
-         → {p₀ : x₀ ≡ x₁} {p₁ : x₁ ≡ x₂} {p₂ : x₂ ≡ x₃}
-           {q₀ : x₀ ≡ x} {q₁ : x₁ ≡ x} {q₂ : x₂ ≡ x} {q₃ : x₃ ≡ x}
-         → Square q₀ q₁ p₀ refl  
-         → Square q₁ q₂ p₁ refl
-         → Square q₂ q₃ p₂ refl
-         → Square q₀ q₃ (p₀ ∙∙ p₁ ∙∙ p₂) refl 
-_∙∙■_∙∙■_ {x = x} s₀ s₁ s₂ j i = 
-  hcomp (λ k → λ where
-     (j = i0) → s₀ (~ k) i 
-     (j = i1) → s₂ k i 
-     (i = i1) → x 
-             ) (s₁ j i)
-
-◪→≡ : ∀ {ℓ} {A : Type ℓ} {x y : A} {p p' : x ≡ y} →
-           Square p' refl p refl → p ≡ p' 
-◪→≡ s i j = 
-   hcomp (λ k → λ where
-     (j = i0) → s i0 (i ∧ ~ k)
-     (i = i1) → s i0 (j ∨ ~ k)
-     (i = i0) → s j i ; (j = i1) → s j i) (s j i)
-
-◪→◪→≡ : ∀ {ℓ} {A : Type ℓ} {x y : A} {p₀ p₁ p : x ≡ y}
-         → Square p refl p₀ refl
-         → Square p refl p₁ refl
-         → p₀ ≡ p₁ 
-◪→◪→≡ {y = y} {p = p} s₀ s₁ i j =
-   hcomp
-    (λ k → primPOr (~ i ∨ ~ j ∨ j) i (λ _ →  s₀ j (~ k))
-         λ _ → s₁ j (~ k)) y
-
-comp₋₀ : ∀ {ℓ} {A : Type ℓ} →
-    {a a₀₀ : A} {a₀₋ : a₀₀ ≡ a}
-  {a₁₀ : A} {a₁₋ : a₁₀ ≡ a} 
-  {a₋₀ a₋₀' : a₀₀ ≡ a₁₀} 
-  → Square a₀₋ a₁₋ a₋₀ refl
-  → a₋₀' ≡ a₋₀
-  → Square a₀₋ a₁₋ a₋₀' refl
-comp₋₀ s p i j =
-  hcomp (λ k → primPOr (~ j) (j ∨ i ∨ ~ i) (λ _ → p (~ k) i) λ _ → s i j)  (s i j)
-
-◪mkSq : ∀ {ℓ} {A : Type ℓ} →
-    {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
-  {a₁₀ a₁₁ : A} {a₁₋ p₁₀ : a₁₀ ≡ a₁₁} 
-  {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ p₀₁ : a₀₁ ≡ a₁₁}
-  → {p : a₀₀ ≡ a₁₁}
-  → Square p p₀₁ a₀₋ refl
-  → Square p₁₀ refl a₁₋ refl
-  → Square p p₁₀ a₋₀ refl
-  → Square  p₀₁ refl a₋₁ refl
-  → Square a₀₋ a₁₋ a₋₀ a₋₁  
-◪mkSq {a₁₁ = a₁₁} s₀₋ s₁₋ s₋₀ s₋₁ i j =
-  hcomp (λ k → λ where
-     (i = i0) → s₀₋ j (~ k)
-     (i = i1) → s₁₋ j (~ k)
-     (j = i0) → s₋₀ i (~ k)
-     (j = i1) → s₋₁ i (~ k))
-    a₁₁
 
 intervalTest : ℕ → R.Term → Bool
 intervalTest _ (R.def (quote _∨_) _) = true
@@ -353,7 +269,7 @@ fill-flatten' = hTop ∘S atVarOrConOrDefMmp
 
  fill-offsetPa' : ℕ → List (R.Arg R.Term) → List (R.Arg R.Term) 
  fill-offsetPa' n xs =
-  let hd = fromMaybe (varg (R.lit (R.string "fatal in PathEval - offsetPa'")))
+  let hd = fromJust-def (varg (R.lit (R.string "fatal in PathEval - offsetPa'")))
             (lookup xs zero)
       hs* = mapArg (dropFillWraps headFW) hd      
       hd' = mapArg
@@ -369,7 +285,7 @@ fill-flatten' = hTop ∘S atVarOrConOrDefMmp
   in transpose ((varg (R.lit (R.string "fatal in PathEval - flatten")))) xs'
 
  hTop : List R.Term → List R.Term
- hTop = L.map (Mb.fromMaybe ( (R.lit (R.string "imposible in fill-flatten'")) )
+ hTop = L.map (Mb.fromJust-def ( (R.lit (R.string "imposible in fill-flatten'")) )
    ∘S map-Maybe (unArg) ∘S flip lookup zero) ∘S h ∘S [_] ∘S L.map varg
 
  df : ℕ →

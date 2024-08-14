@@ -1,6 +1,6 @@
 {-# OPTIONS --safe -v testMarkVert:3 -v tactic:3 #-} 
 -- -v 3 
-module Cubical.Tactics.PathSolver.Coherence where
+module Cubical.Tactics.PathSolver.NSolver where
 
 
 open import Cubical.Foundations.Prelude
@@ -24,6 +24,7 @@ open import Agda.Builtin.Char
 open import Cubical.Data.Sigma.Base
 
 open import Cubical.Reflection.Base renaming (v to 𝒗)
+open import Cubical.Reflection.Sugar
 import Agda.Builtin.Reflection as R
 open import Cubical.Tactics.PathSolver.Reflection
 open import Cubical.Tactics.Reflection 
@@ -33,11 +34,11 @@ open import Cubical.Tactics.Reflection.Utilities
 -- open import Cubical.Tactics.PathSolver.Base
 open import Cubical.Tactics.PathSolver.CongComp
 
-open import Cubical.Tactics.PathSolver.QuoteCubical renaming (normaliseWithType to normaliseWithType')
+open import Cubical.Tactics.Reflection.QuoteCubical renaming (normaliseWithType to normaliseWithType')
 
 open import Cubical.Tactics.Reflection.Error
-open import Cubical.Tactics.PathSolver.Dimensions
-open import Cubical.Tactics.PathSolver.CuTerm
+open import Cubical.Tactics.Reflection.Dimensions
+open import Cubical.Tactics.Reflection.CuTerm
 open import Cubical.Tactics.PathSolver.Reflection
 open import Cubical.Tactics.Reflection.Variables
 open import Cubical.Tactics.PathSolver.Degen
@@ -223,7 +224,7 @@ module _ (ty : R.Type) where
    paToLid[·]w ← paToLid [·] w
    markedCu ← markVert m dim (paToLid[·]w) cu
    fixedVerts ← mapM (λ (sf , x) → do
-                  vv ← (getVert m (L.map (Mb.fromMaybe false) sf) markedCu)
+                  vv ← (getVert m (L.map (Mb.fromJust-def false) sf) markedCu)
                   ⦇ ⦇ sf ⦈ , markVert m (suc (sfDim sf)) vv x ⦈) x
    pure $ hco fixedVerts markedCu
  markVert m dim w (cell x') = do
@@ -333,7 +334,7 @@ module MakeFoldTerm (t0 : R.Term) where
         lM = L.map (length) l
 
 
-    in if (allEqual? discreteℕ lM) then nothing , Mb.fromMaybe [] (listToMaybe l) else
+    in if (allEqual? discreteℕ lM) then nothing , Mb.fromJust-def [] (listToMaybe l) else
         let maxL = foldr max 0 lM
         in Mb.rec (nothing , []) (λ x → listToMaybe x , tail x) (findBy (λ x → Dec→Bool $ discreteℕ (length x) maxL ) l)
 

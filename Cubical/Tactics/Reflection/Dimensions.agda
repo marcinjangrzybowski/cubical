@@ -1,6 +1,6 @@
 {-# OPTIONS --safe  #-} 
 
-module Cubical.Tactics.PathSolver.Dimensions where
+module Cubical.Tactics.Reflection.Dimensions where
 
 import Agda.Builtin.Reflection as R
 
@@ -11,6 +11,7 @@ open import Agda.Builtin.Nat using () renaming (_==_ to _=ℕ_ ; _<_ to _<ℕ_)
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Reflection.Base
+open import Cubical.Reflection.Sugar
 
 open import Cubical.Data.List as L
 open import Cubical.Data.Bool as 𝟚
@@ -509,7 +510,7 @@ subfaceCellNoDrop sf = replaceVarWithCon (r sf)
 
 feMask : FExpr → List Bool
 feMask = foldr (alwaysZipWith
-      (λ x y → (fromMaybe false x) or (fromMaybe false y)) ∘S L.map (caseMaybe false true)) []
+      (λ x y → (fromJust-def false x) or (fromJust-def false y)) ∘S L.map (caseMaybe false true)) []
 
 
 
@@ -547,7 +548,7 @@ undegen' n ie' =
                      let sfs = allVertsOfSF sf
                      in foldr
                           _and_
-                            true (L.map (λ sf' → Mb.fromMaybe false (IExpr→MaybeEnd (evalIExprOnFace sf' ie))) sfs)
+                            true (L.map (λ sf' → Mb.fromJust-def false (IExpr→MaybeEnd (evalIExprOnFace sf' ie))) sfs)
      
      
  in  L.map h (allSubFacesOfDim n)
@@ -579,7 +580,7 @@ nonDegFExpr n ie' =
          let sfs = allVertsOfSF sf
          in foldr
             _and_
-              true (L.map (λ sf' → Mb.fromMaybe false (IExpr→MaybeEnd (evalIExprOnFace sf' ie))) sfs)  
+              true (L.map (λ sf' → Mb.fromJust-def false (IExpr→MaybeEnd (evalIExprOnFace sf' ie))) sfs)  
    in foldr _fe∷_ [] (filter h (allSubFacesOfDim n))
    
 

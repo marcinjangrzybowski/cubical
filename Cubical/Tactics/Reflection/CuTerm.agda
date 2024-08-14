@@ -1,6 +1,6 @@
 {-# OPTIONS --safe  #-} 
 
-module Cubical.Tactics.PathSolver.CuTerm where
+module Cubical.Tactics.Reflection.CuTerm where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
@@ -17,14 +17,14 @@ open import Agda.Builtin.Nat using () renaming (_==_ to _=ℕ_ ; _<_ to _<ℕ_)
 import Agda.Builtin.Reflection as R
 open import Agda.Builtin.String
 
-open import Cubical.Tactics.PathSolver.Reflection
-open import Cubical.Tactics.PathSolver.Dimensions
+open import Cubical.Tactics.Reflection.Dimensions
 open import Cubical.Tactics.Reflection.Error
 
 open import Cubical.Tactics.Reflection.Variables
 open import Cubical.Tactics.Reflection.Utilities
 
 open import Cubical.Reflection.Base renaming (v to 𝒗)
+open import Cubical.Reflection.Sugar
 
 private
   variable
@@ -470,8 +470,6 @@ module codeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
   rHead ← inCuCtx ctx $ addNDimsToCtx' "𝒙" (length t) $ renderTerm h
   pure  $ "\nlet " ∷ₑ rT ++ "\nin " ∷ₑ [ rHead ]ₑ 
 
- -- <> indent ' ' 2 (foldr (_<>_  ∘S ("\n" <>_)) "" rT)
-
   where
   argRndr :  CuTerm' A B → R.TC _
   argRndr x = (((λ s → [ "(" ]ₑ ++ s ++ [ ")" ]ₑ) <$> (ppCT'' ctx d x)))
@@ -489,4 +487,3 @@ codeGen : {A B : Type} (normaliseCells₁ : Bool) (dim : ℕ) →
             ℕ → CuTerm' A B → R.TC String
 codeGen nc dim fuel cu = ((genAbstr dim <>_) ∘S (indent' false ' ' 6)) <$>
   (codeGen.ppCT' nc dim fuel cu >>= R.formatErrorParts)
-

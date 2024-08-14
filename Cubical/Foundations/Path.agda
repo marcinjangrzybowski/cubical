@@ -221,13 +221,16 @@ sym≡flipSquare {x = x} P = sym (main refl P)
 -- Inverting both interval arguments of a square in Ω²A is the same as doing nothing
 sym-cong-sym≡id : {x : A} (P : Square (refl {x = x}) refl refl refl)
   → P ≡ λ i j → P (~ i) (~ j)
-sym-cong-sym≡id {x = x} P = sym (main refl P)
-  where
-  B : (q : x ≡ x) → I → Type _
-  B q i = Path (x ≡ q i) (λ j → q (i ∨ ~ j)) λ j → q (i ∧ j)
-
-  main : (q : x ≡ x) (p : refl ≡ q) → PathP (λ i → B q i) (λ i j → p (~ i) (~ j)) p
-  main q = J (λ q p → PathP (λ i → B q i) (λ i j → p (~ i) (~ j)) p) refl
+sym-cong-sym≡id {x = x} P z i j =
+    hcomp (λ k → λ {
+          (i = i0) → P (~ k) (j ∨ z)
+         ;(i = i1) → x
+         ;(j = i0) → P (~ k ∧ ~ i) z
+         ;(j = i1) → x
+         ;(z = i0) → P (i ∨ ~ k) j
+         ;(z = i1) → P (~ i) (~ j) 
+        })
+        (P (~ i) (z ∧ ~ j))
 
 -- Applying cong sym is the same as flipping a square in Ω²A
 flipSquare≡cong-sym : ∀ {ℓ} {A : Type ℓ} {x : A} (P : Square (refl {x = x}) refl refl refl)
@@ -237,7 +240,8 @@ flipSquare≡cong-sym P = sym (sym≡flipSquare P) ∙ sym (sym-cong-sym≡id (c
 -- Applying cong sym is the same as inverting a square in Ω²A
 sym≡cong-sym : ∀ {ℓ} {A : Type ℓ} {x : A} (P : Square (refl {x = x}) refl refl refl)
   → sym P ≡ cong sym P
-sym≡cong-sym P = sym-cong-sym≡id (sym P)
+sym≡cong-sym {x = x} P =   
+ sym-cong-sym≡id (sym P)
 
 -- sym induces an equivalence on path types
 symIso : {a b : A} → Iso (a ≡ b) (b ≡ a)

@@ -1,5 +1,5 @@
 {-# OPTIONS --safe #-} 
-module Cubical.Tactics.PathSolver.QuoteCubical where
+module Cubical.Tactics.Reflection.QuoteCubical where
 
 open import Cubical.Foundations.Function
 
@@ -14,6 +14,7 @@ open import Cubical.Data.Nat.Order.Recursive as ℕOR
 open import Cubical.Data.Empty
 
 open import Cubical.Reflection.Base renaming (v to 𝒗)
+open import Cubical.Reflection.Sugar
 import Agda.Builtin.Reflection as R
 open import Agda.Builtin.String
 
@@ -23,8 +24,8 @@ open import Cubical.Tactics.Reflection.Utilities
 open import Cubical.Tactics.PathSolver.Reflection
 open import Cubical.Tactics.Reflection.Error
 
-open import Cubical.Tactics.PathSolver.Dimensions
-open import Cubical.Tactics.PathSolver.CuTerm
+open import Cubical.Tactics.Reflection.Dimensions
+open import Cubical.Tactics.Reflection.CuTerm
 
 open import Agda.Builtin.Nat using () renaming (_==_ to _=ℕ_ ; _<_ to _<ℕ_)
 
@@ -310,3 +311,13 @@ quoteBdNC : NBoundaryTerm → R.TC (CuBoundary' ⊥ Unit)
 quoteBdNC (A , xs) = do
  let dim = predℕ (length xs)
  mapM (λ (t0 , t1) → ⦇ quoteCuTermNC (just A) dim t0 , quoteCuTermNC (just A) dim t1 ⦈ ) xs
+
+
+
+
+extractCuTermFromNPath : R.Type → R.Term → R.TC (ℕ × CuTerm)
+extractCuTermFromNPath ty tm = do
+ (A , dim) ← map-snd length <$> matchNCube ty
+ (dim ,_) <$> ECT.extractCuTerm'
+     (just A)
+     100 dim (pathAppN dim tm)

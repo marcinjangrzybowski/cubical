@@ -1,6 +1,6 @@
 {-# OPTIONS --safe #-} 
 
-module Cubical.Tactics.PathSolver.Examples where
+module Cubical.Tactics.PathSolver.Tests.NSolver where
 
 
 open import Cubical.Foundations.Prelude
@@ -32,11 +32,11 @@ open import Cubical.Tactics.Reflection.Utilities
 
 
 open import Cubical.Tactics.PathSolver.CongComp
-open import Cubical.Tactics.PathSolver.CuTerm
+open import Cubical.Tactics.Reflection.CuTerm
 
-open import Cubical.Tactics.PathSolver.QuoteCubical
-open import Cubical.Tactics.PathSolver.Dimensions
-open import Cubical.Tactics.PathSolver.Coherence
+open import Cubical.Tactics.Reflection.QuoteCubical
+open import Cubical.Tactics.Reflection.Dimensions
+open import Cubical.Tactics.PathSolver.NSolver
 
 
 private

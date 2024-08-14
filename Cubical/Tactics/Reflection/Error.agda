@@ -135,6 +135,7 @@ offsetStrR k =   primStringFromList ∘S offsetR ' ' k ∘S primStringToList
 data ResultIs {ℓ} {A : Type ℓ} : A → Type ℓ where
  resultIs : ∀ s → ResultIs s
 
+
 wrapResult : ∀ {ℓ} {A : Type ℓ} → R.Term → A → R.TC Unit 
 wrapResult hole x = do
    x' ← R.quoteTC x
@@ -157,3 +158,12 @@ wrapError : R.Term → List (R.ErrorPart) → R.TC Unit
 wrapError hole x = do
    x' ← ((map (offsetStrR 45) ∘S lines) <$> R.formatErrorParts x) >>= R.quoteTC
    R.unify (R.con (quote resultIs) v[ x' ]) hole
+
+
+data TestResult : Type where
+ ✓-pass ⊘-fail : TestResult
+
+assertNoErr : R.Term → R.TC Unit → R.TC Unit
+assertNoErr h x = do
+  (x >> wrapResult h ✓-pass) <|> wrapResult h ⊘-fail
+  

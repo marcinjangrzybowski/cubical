@@ -15,9 +15,11 @@ open import Cubical.Data.Nat.Order.Recursive as ℕOR
 open import Cubical.Data.Empty
 
 open import Cubical.Reflection.Base renaming (v to 𝒗)
+open import Cubical.Reflection.Sugar
 import Agda.Builtin.Reflection as R
 open import Agda.Builtin.Reflection.External
 open import Agda.Builtin.String
+open import Agda.Builtin.Char
 
 open import Cubical.Tactics.Reflection
 open import Cubical.Tactics.Reflection.Variables
@@ -26,11 +28,11 @@ open import Cubical.Tactics.Reflection.Utilities
 open import Cubical.Tactics.PathSolver.Reflection
 open import Cubical.Tactics.Reflection.Error
 
-open import Cubical.Tactics.PathSolver.Dimensions
-open import Cubical.Tactics.PathSolver.CuTerm
+open import Cubical.Tactics.Reflection.Dimensions
+open import Cubical.Tactics.Reflection.CuTerm
 
 open import Agda.Builtin.Nat using () renaming (_==_ to _=ℕ_ ; _<_ to _<ℕ_)
-open import Cubical.Tactics.PathSolver.QuoteCubical
+open import Cubical.Tactics.Reflection.QuoteCubical
 
 
 
@@ -92,11 +94,22 @@ module dedekindCodeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
 
   
     where
+     renameConnections : String → String
+     renameConnections =
+           primStringFromList
+        ∘S ( _>>= h )
+        ∘S primStringToList
+       where
+       h : Char → List Char
+       h '∨' = primStringToList "\\/"
+       h '∧' = primStringToList "/\\"
+       h x = [ x ]
+       
      termRndr : R.Term → R.TC (List R.ErrorPart)
      termRndr (R.var x []) = [_]ₑ <$> renderTerm (R.var x [])
      termRndr (R.var x args) = do
         hd ← renderTerm (R.var x [])
-        tl ← mapM (renderTerm ∘S unArg) args
+        tl ← mapM ((renderTerm >=& renameConnections) ∘S unArg) args
         pure [ hd <> "(" <> strConcat (intersperse "," tl) <> ")"]ₑ 
      termRndr _ = R.typeError [ "todo in termRndr in Dedekind.agda" ]ₑ 
  ppCT'' ctx (suc d) (𝒄ong' h t) = pure [ "𝒄ong' - TODO" ]ₑ
@@ -174,30 +187,70 @@ macro
  ded! : R.Term → R.TC Unit
  ded! h = do
    goal' ← R.inferType h >>= wait-for-type >>= R.normalise
-   s ← matchNCube goal' >>= quoteBdNC >>= renderDedekindProblem
-   (_ , (dedOutput , _)) ← execTC "dedekind-std" [] s
-   s ← R.checkFromStringTC dedOutput goal'
+   dedInput ← matchNCube goal' >>= quoteBdNC >>= renderDedekindProblem
+   (_ , (dedOutput , dedError)) ← execTC "dedekind-std" [] dedInput
+   s ← R.checkFromStringTC dedOutput goal' <|>
+      (R.typeError $ "ded! - failed\n\ndedekind output: " ∷nl dedOutput 
+                     ∷nl "dedekind error:" ∷nl dedError 
+                     ∷nl "dedekind input: " ∷nl [ dedInput ]ₑ )
    R.unify s h
 
-
-module gencode {ℓ} (A : Type ℓ)
-  (x y z w : A)
+module _ {ℓ} {A : Type ℓ}
+  {x y z w : A}
   (p : x ≡ y)(q : y ≡ z)(r : z ≡ w)
   where
-
- _ : p ∙ (q ∙ r) ≡ (p ∙ q) ∙ r
- _ = ded!
-
- _ : PathP (λ j → x ≡ q j) p (p ∙ q)
- _ = ded!
-
- _ : p ≡ refl ∙ p
- _ = ded!
+  open import Cubical.Foundations.GroupoidLaws
 
 
-module eckhil {ℓ} (A : Type ℓ)
-  (x : A)
-  (p q : Path (x ≡ x) refl refl) where
 
- _ : Square p p q q       
- _ = ded!
+
+  cpf-ded : PathP (λ j → x ≡ q j) p (p ∙ q)
+  cpf-ded = ded!
+
+  _ : p ≡ refl ∙ p
+  _ = ded!
+
+  _ : p ≡ p ∙ refl
+  _ = ded!
+
+
+  assoc-ded : p ∙ (q ∙ r) ≡ (p ∙ q) ∙ r
+  assoc-ded = ded!
+
+  _ : Cube
+       (λ i i₁ → p (i ∧ i₁)) (λ _ → p)
+       (λ i i₁ → p (i ∧ i₁)) (λ _ → p)
+       refl (λ i i₁ → p (i ∨ i₁))
+  _ = ded!
+
+
+  
+  cpf-≡-cpf-ded : (compPath-filler {x = x} refl refl) ≡ (compPath-filler {x = x} refl refl) 
+  cpf-≡-cpf-ded = {!ded!!}
+
+  assoc-ded-≡-assoc : assoc-ded ≡ assoc p q r
+  assoc-ded-≡-assoc = {!ded!!}
+
+-- -- module gencode2 {ℓ} (A : Type ℓ)
+-- --   (x y z w v : A)
+-- --   (p : x ≡ y)(q : y ≡ z)(r : z ≡ w)(s : w ≡ v)
+-- --   where
+-- --   -- open import Cubical.Foundations.GroupoidLaws
+
+
+
+-- --   -- pentagonIdentityViaDed : (assoc-ded p q (r ∙ s) ∙ assoc-ded (p ∙ q) r s)
+-- --   --                             ≡
+-- --   --        cong (p ∙_) (assoc-ded q r s) ∙ assoc-ded p (q ∙ r) s ∙ cong (_∙ s) (assoc-ded p q r)
+-- --   -- pentagonIdentityViaDed = {!renderDedekindProblemM!}
+
+-- module eckhil {ℓ} (A : Type ℓ)
+--   (x : A)
+--   (p q r : Path (x ≡ x) refl refl) where
+
+--  _ : Square p p q q       
+--  _ = ded!
+
+
+--  -- _ : Cube p p q q r r       
+--  -- _ = ded!

@@ -1,59 +1,51 @@
-{-# OPTIONS --safe -v testMarkVert:3 -v tactic:3 #-} 
--- -v 3 
+{-# OPTIONS --safe #-} 
 module Cubical.Tactics.PathSolver.MonoidalSolver where
 
 
 open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Univalence
-
-open import Cubical.Relation.Nullary
 
 open import Cubical.Data.Bool
 open import Cubical.Data.Empty
 open import Cubical.Data.Sum as ⊎
 open import Cubical.Data.Maybe as Mb
 open import Cubical.Data.List as L
-open import Cubical.Data.Nat as ℕ
+open import Cubical.Data.Nat
 
-open import Agda.Builtin.Nat using () renaming (_==_ to _=ℕ_ ; _<_ to _<ℕ_)
 
 open import Cubical.Data.Sigma
 
 open import Cubical.Reflection.Base renaming (v to 𝒗)
+open import Cubical.Reflection.Sugar
 import Agda.Builtin.Reflection as R
-open import Cubical.Tactics.PathSolver.Reflection
-open import Cubical.Tactics.Reflection 
-open import Agda.Builtin.String
-open import Agda.Builtin.Char
-open import Cubical.Tactics.Reflection.Utilities
 
--- open import Cubical.Tactics.PathSolver.Base
+open import Cubical.Tactics.Reflection 
+
+open import Cubical.Tactics.Reflection.Utilities
+open import Cubical.Tactics.Reflection.Variables
+
 open import Cubical.Tactics.PathSolver.CongComp
 
-open import Cubical.Tactics.PathSolver.QuoteCubical 
-
+open import Cubical.Tactics.Reflection.QuoteCubical 
 open import Cubical.Tactics.Reflection.Error
-open import Cubical.Tactics.PathSolver.Dimensions
-open import Cubical.Tactics.PathSolver.CuTerm
-open import Cubical.Tactics.PathSolver.Reflection
-open import Cubical.Tactics.Reflection.Variables
+open import Cubical.Tactics.Reflection.Dimensions
+open import Cubical.Tactics.Reflection.CuTerm
+
 open import Cubical.Tactics.PathSolver.Degen
 open import Cubical.Tactics.PathSolver.PathEval
-import Cubical.Tactics.PathSolver.PathEval as PT
-
+open import Cubical.Tactics.PathSolver.Path
 
 private
   variable
     ℓ : Level
     A B : Type ℓ
 
-
-
-
-
 PathTerm = R.Term ⊎ R.Term
+
+pattern 𝒓efl x = inl x
+pattern 𝒑λ x = inr x
+
 
 record SquareTerm : Type where
  constructor squareTerm
@@ -61,39 +53,34 @@ record SquareTerm : Type where
   term : R.Term
 
 
-pattern 𝒓efl x = inl x
-pattern 𝒑λ x = inr x
-
 asPathTerm : R.Term → PathTerm
 asPathTerm tm = 
   if (hasVar zero tm) then (𝒑λ tm) else (𝒓efl tm)
 
--- compPath'-filler, but composition is 'simplified' according to groupoid laws
 
--- (p : x ≡ y) → (q : y ≡ z) → (Σ (p∙q ∈ x ≡ z) (Square q p∙q p refl))
-
--- assumes that terms are already pre rpocessed : addNDimsToCtx 1 ∘S R.normalise ∘S pathApp
-
-
-bfs' : PT.CTerm → R.TC R.Term
+bfs' : CTerm → R.TC R.Term
 bfs' xs =  do
-    let q = (PT.foldPath' (tail (PT.fill-flatten' xs)))
+    let q = (foldPath' (tail (fill-flatten' xs)))
     hd ← Mb.rec (R.typeError [ "imposible tfct≡" ]ₑ )
-           pure (listToMaybe (PT.fill-flatten' xs))
+           pure (listToMaybe (fill-flatten' xs))
     -- addNDimsToCtx 2 $  R.typeError [ hd ]ₑ
-    PT.fillHeadTrm hd q
+    fillHeadTrm hd q
 
 
 
+
+-- compPath'-filler, but composition is 'simplified' according to groupoid laws
+-- (p : x ≡ y) → (q : y ≡ z) → (Σ (p∙q ∈ x ≡ z) (Square q p∙q p refl))
+-- assumes that terms are already pre rpocessed : addNDimsToCtx 1 ∘S R.normalise ∘S pathApp
 
 _↙_ : PathTerm → PathTerm → R.TC (PathTerm × SquareTerm)
 𝒓efl x ↙ q = q ,_ <$>  (squareTerm <$> bfs' (⊎.rec (idfun _) (idfun _) q))
 𝒑λ x ↙ 𝒓efl y = 
-  (𝒑λ (PT.wrapPaths x) ,_) <$> (squareTerm <$> (bfs' (PT.wrapFills x)) ) 
+  (𝒑λ (wrapPaths x) ,_) <$> (squareTerm <$> (bfs' (wrapFills x)) ) 
 𝒑λ p ↙ 𝒑λ q = do
-  pq-sq ← (PT.absorb 0 (PT.wrapPaths p) q)
+  pq-sq ← (absorb 0 (wrapPaths p) q)
   
-  pq ← (PT.cTermEnd pq-sq) >>= Mb.rec
+  pq ← (cTermEnd pq-sq) >>= Mb.rec
      ( 𝒓efl <$> (addNDimsToCtx 1 $ R.normalise
           (replaceVarWithCon (λ { zero → just (quote i0) ; _ → nothing }) p))) (pure ∘S 𝒑λ)
   -- addNDimsToCtx 1 $ R.typeError [ pq-sq ]ₑ
@@ -105,7 +92,7 @@ macro
  ↙-test : R.Term → R.Term → R.Term → R.TC Unit
  ↙-test p q h = do
    p' ← asPathTerm <$> (addNDimsToCtx 1 ∘S R.normalise ∘S pathApp) p
-   q' ← asPathTerm ∘S PT.wrapPaths <$> (addNDimsToCtx 1 ∘S R.normalise ∘S pathApp) q
+   q' ← asPathTerm ∘S wrapPaths <$> (addNDimsToCtx 1 ∘S R.normalise ∘S pathApp) q
    pq ← (SquareTerm.term ∘S snd) <$> p' ↙ q'
    R.unify pq h
 
@@ -219,7 +206,6 @@ macro
  simplifyFill t h = do
    sq ← simplifyFillTerm nothing t
    R.unify sq h
-     -- <|> (R.typeError $ [ sq ]ₑ)
 
  simplifyPath : R.Term → R.Term → R.TC Unit
  simplifyPath t h = do   

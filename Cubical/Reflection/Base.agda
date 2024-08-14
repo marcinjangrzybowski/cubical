@@ -11,7 +11,7 @@ open import Cubical.Foundations.Function
 open import Cubical.Data.List.Base
 open import Cubical.Data.Nat.Base
 
-open import Cubical.Reflection.Sugar public
+open import Cubical.Reflection.Sugar.Base public
 
 import Agda.Builtin.Reflection as R
 open import Agda.Builtin.String
