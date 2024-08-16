@@ -406,6 +406,10 @@ visitCellsM {A = A} f = vc
  vcs [] = pure _
  vcs ((_ , x) ∷ xs) = vc x >> vcs xs
 
+data MetaTag : Type where
+
+-- metaCell : CuTerm
+pattern metaCell = cell (R.def (quote MetaTag) [])
 
 
 module codeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
@@ -413,6 +417,10 @@ module codeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
  renderSubFaceExp : SubFace → R.TC String 
  renderSubFaceExp sf = R.normalise (SubFace→Term sf) >>= renderTerm
 
+ 
+
+ max-𝒛-idx : CuCtx → ℕ
+ max-𝒛-idx = foldr ((max ∘S (λ { (just ("𝒛" , k )) → (suc k) ; _ → zero }) ∘S getSubscript) ∘S fst ) zero
   
  renderSubFacePattern : CuCtx → SubFace → String 
  renderSubFacePattern ctx sf =
@@ -427,7 +435,7 @@ module codeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
   
  ppCT'' _ zero _ = R.typeError [ "pPCT FAIL" ]ₑ
  ppCT'' ctx (suc d) (hco x x₁) = do
-   let l = length ctx ∸ dim
+   let l = max (length ctx ∸ dim)  (max-𝒛-idx ctx)
    indN ← foldr max zero <$> (
               (mapM ((((pure ∘ (renderSubFacePattern ctx)) >=& stringLength)) ∘S fst ) x))
 
@@ -454,7 +462,8 @@ module codeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
    pure $ (R.strErr ("\nhcomp (λ " <> newDimVar <> " → λ { \n")) ∷
                    (rest' ∷ₑ "\n    }) \n" ∷ₑ
                    "(" ∷ₑ lid ∷ₑ ")" ∷ₑ [ "\n "]ₑ)
-  
+
+ ppCT'' ctx _ (cell' _ (R.def (quote MetaTag) [])) = pure [ R.strErr "?" ] 
  ppCT'' ctx _ (cell' _ x) = do
   ctr ← inCuCtx ctx $ do
             nt ← (if normaliseCells then R.normalise else pure) x
@@ -487,3 +496,13 @@ codeGen : {A B : Type} (normaliseCells₁ : Bool) (dim : ℕ) →
             ℕ → CuTerm' A B → R.TC String
 codeGen nc dim fuel cu = ((genAbstr dim <>_) ∘S (indent' false ' ' 6)) <$>
   (codeGen.ppCT' nc dim fuel cu >>= R.formatErrorParts)
+
+data ⁇ : Type where  
+
+hcoFromIExpr : ℕ → FExpr → R.Term → R.TC CuTerm 
+hcoFromIExpr dim fe (R.def (quote ⁇) []) =
+ pure $ hco ((_, metaCell) <$> fe) metaCell 
+hcoFromIExpr dim fe tm' = do
+  let tm = liftVarsFrom dim zero tm'
+  xs ← mapM (λ sf → (sf ,_) <$> (cell ∘S liftVars <$> pure (subfaceCell sf tm)) ) fe
+  pure $ hco xs (cell tm)

@@ -39,6 +39,16 @@ errorOut' something = typeError (strErr "Don't know what to do with " ∷ termEr
 _==_ = primQNameEquality
 {-# INLINE _==_ #-}
 
+mapArg : ∀ {ℓ ℓ'} → {A : Type ℓ} {B : Type ℓ'}
+  → (f : A → B) → Arg A → Arg B
+mapArg f (arg i x) = arg i (f x)
+
+unArg : ∀ {ℓ} → {A : Type ℓ} → Arg A → A
+unArg (arg i x) = x
+
+argInfo : ∀ {ℓ} → {A : Type ℓ} → Arg A → ArgInfo
+argInfo (arg i x) = i
+
 
 module atVarOrConOrDefMmp {M : Functorω}
               {{RA : RawApplicative M}} {{_ : RawMonad M {{RA}} }} 
@@ -333,3 +343,8 @@ replaceAtTrm k t =
 
 fromJust : ∀ {ℓ} {A : Type ℓ} → List ErrorPart → Maybe A → TC A
 fromJust e = Mb.rec (typeError e) pure
+
+liftedTele : Telescope → Telescope
+liftedTele [] = []
+liftedTele (x ∷ xs) = L.map (map-snd (mapArg liftVars)) (x ∷ liftedTele xs)
+

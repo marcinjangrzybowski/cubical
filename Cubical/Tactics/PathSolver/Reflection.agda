@@ -30,13 +30,3 @@ R∙' x y = R.def (quote _∙'_) (x v∷ y v∷ [] )
 
 Rrefl : R.Term
 Rrefl = R.def (quote refl) []
-
-mapArg : ∀ {ℓ ℓ'} → {A : Type ℓ} {B : Type ℓ'}
-  → (f : A → B) → R.Arg A → R.Arg B
-mapArg f (R.arg i x) = R.arg i (f x)
-
-unArg : ∀ {ℓ} → {A : Type ℓ} → R.Arg A → A
-unArg (R.arg i x) = x
-
-argInfo : ∀ {ℓ} → {A : Type ℓ} → R.Arg A → R.ArgInfo
-argInfo (R.arg i x) = i

@@ -127,11 +127,6 @@ module dedekindCodeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
 asDedekindExpr : CuCtx  → CuTerm' ⊥ Unit → R.TC String
 asDedekindExpr ctx cu = dedekindCodeGen.ppCT'' true (length ctx) ctx 100 cu >>= R.formatErrorParts
 
-
-liftedTele : R.Telescope → R.Telescope
-liftedTele [] = []
-liftedTele (x ∷ xs) = L.map (map-snd (mapArg liftVars)) (x ∷ liftedTele xs)
-
 asDedekindBd : CuBoundary' ⊥ Unit → R.TC String
 asDedekindBd xs = do
   fcs ← strConcat ∘S intersperse " | " <$> (mapM h $ (zipWithIndex xs >>=

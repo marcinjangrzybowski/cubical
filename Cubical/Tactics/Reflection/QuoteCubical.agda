@@ -2,6 +2,7 @@
 module Cubical.Tactics.Reflection.QuoteCubical where
 
 open import Cubical.Foundations.Function
+open import Cubical.Foundations.Prelude
 
 
 open import Cubical.Data.Bool
@@ -321,3 +322,4 @@ extractCuTermFromNPath ty tm = do
  (dim ,_) <$> ECT.extractCuTerm'
      (just A)
      100 dim (pathAppN dim tm)
+

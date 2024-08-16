@@ -10,6 +10,7 @@ module Cubical.Tactics.Reflection where
 open import Cubical.Foundations.Prelude
 
 open import Agda.Builtin.Reflection hiding (Type)
+open import Agda.Builtin.String
 
 open import Cubical.Data.Bool
 open import Cubical.Data.List
@@ -152,3 +153,9 @@ equation-solver don't-Reduce mk-call debug hole =
         unify-with-goal <|>
         typeError ((strErr "Could not equate the following expressions:\n  "
                   ∷ termErr elhs ∷ strErr "\nAnd\n  " ∷ termErr erhs ∷ []))))))
+
+unifyFromString : String → Term → TC Unit
+unifyFromString s h = do
+ ty ← inferType h
+ t ← checkFromStringTC s ty
+ unify t h

@@ -1,6 +1,6 @@
 {-# OPTIONS --safe -v testMarkVert:3 -v tactic:3 #-} 
 -- -v 3 
-module Cubical.Tactics.PathSolver.NSolver where
+module Cubical.Tactics.PathSolver.NSolver.NSolver where
 
 
 open import Cubical.Foundations.Prelude
@@ -273,8 +273,14 @@ flipOnFalse b t = if b then t else R.def (quote ~_) v[ t ]
 
 
 
-
-
+cpf : ∀ {ℓ} {A : Type ℓ} {x y z : A} (p : x ≡ y) (q : y ≡ z) → PathP (λ j → _ ≡ q j) p (p ∙ q)
+      
+cpf {x = x} {y} p q i z = hcomp
+                (λ { j (z = i1) → q (i ∧ j)
+                   ; j (z = i0) → x
+                   ; j (i = i0) → p z
+                   })
+                (p z)
 
 [𝟚×ℕ]→PathTerm : [𝟚×Term] → R.Term
 [𝟚×ℕ]→PathTerm [] = Rrefl
@@ -286,10 +292,10 @@ flipOnFalse b t = if b then t else R.def (quote ~_) v[ t ]
 
 [𝟚×ℕ]→FillTerm : Bool × R.Term → [𝟚×Term] → R.Term
 [𝟚×ℕ]→FillTerm (b , tm) [] =
-    R.def (quote compPath-filler) ((vlam "_" (liftVars (subfaceCell [ just (not b) ] tm)))
+    R.def (quote cpf) ((vlam "_" (liftVars (subfaceCell [ just (not b) ] tm)))
          v∷ v[ (vlam "𝕚'" (if b then tm else (invVar zero tm))) ])
 [𝟚×ℕ]→FillTerm (b , tm) xs =
-  R.def (quote compPath-filler) ([𝟚×ℕ]→PathTerm xs v∷
+  R.def (quote cpf) ([𝟚×ℕ]→PathTerm xs v∷
     v[ (vlam "𝕚'" (if b then tm else (invVar zero tm))) ])
 
 module MakeFoldTerm (t0 : R.Term) where
@@ -355,39 +361,41 @@ foldBdTerm ty f0 xs = do
   t0 ← liftVarsFrom dim zero <$> normaliseWithType "mkFoldTerm" ty
             (subfaceCell (repeat (predℕ dim) (just false)) f0) 
   toTerm {A = Unit} dim <$>
-   ⦇ hco
-    (mapM (idfun _) $ join $ zipWith
-      (λ k (cu0 , cu1) →
-       let sf0 = replaceAt k (just false) (repeat dim nothing)
-           sf1 = replaceAt k (just true) (repeat dim nothing)
-           prmV = invVar 0 ∘S remapVars (λ k →
-                     if (k <ℕ dim) then (if (k =ℕ (predℕ dim)) then zero else suc k)
-                         else k)
-                     
-           fc : SubFace →
-                  (CuTerm' ⊥ (Maybe (R.Term × R.Term) × Maybe IExpr × CellVerts) ×
-                    Maybe R.Term) →
-                  List _
-           fc sf cu =
-            let cuTm' = ((prmV ∘S ToTerm.toTerm (defaultCtx dim)) <$>
-                            MakeFoldTerm.ctil t0 (predℕ dim) (fst cu))
-                cuTm = ⦇ cell cuTm' ⦈
-            in [ ((sf ,_)) <$>
-               (if (not needsCongFill)
-                then cuTm
-                else do
-                 cpa ←  cell <$>
-                         (Mb.rec (subfaceCellNoDrop (just true ∷ repeat (predℕ dim) nothing) <$> cuTm')
-                              (λ pa → pure $  (prmV pa)) (snd cu))
-                 ⦇ hco
-                   (pure ( (just true ∷ repeat (predℕ dim) nothing , cpa)
-                       ∷ [ just false ∷ repeat (predℕ dim) nothing ,
-                             cell t0 ]))
-                   cuTm ⦈) ]
+   (⦇ hco
+      (mapM (idfun _) $ join $ zipWith
+        (λ k (cu0 , cu1) →
+         let sf0 = replaceAt k (just false) (repeat dim nothing)
+             sf1 = replaceAt k (just true) (repeat dim nothing)
+             prmV = invVar 0 ∘S remapVars (λ k →
+                       if (k <ℕ dim) then (if (k =ℕ (predℕ dim)) then zero else suc k)
+                           else k)
 
-       in fc sf0 cu0 ++ fc sf1 cu1)
-      (range dim) xs )
-    ⦇ cell ⦇ t0 ⦈ ⦈ ⦈
+             fc : SubFace →
+                    (CuTerm' ⊥ (Maybe (R.Term × R.Term) × Maybe IExpr × CellVerts) ×
+                      Maybe R.Term) →
+                    List _
+             fc sf cu =
+              let cuTm' = ((prmV ∘S ToTerm.toTerm (defaultCtx dim)) <$>
+                              MakeFoldTerm.ctil t0 (predℕ dim) (fst cu))
+                  cuTm = ⦇ cell cuTm' ⦈
+              in [ ((sf ,_)) <$>
+                 (if (not needsCongFill)
+                  then cuTm
+                  else do
+                   cpa ←  cell <$>
+                           (Mb.rec (subfaceCellNoDrop (just true ∷ repeat (predℕ dim) nothing) <$> cuTm')
+                                (λ pa → pure $  (prmV pa)) (snd cu))
+                   ⦇ hco
+                     (pure ( (just true ∷ repeat (predℕ dim) nothing , cpa)
+                         ∷ [ just false ∷ repeat (predℕ dim) nothing ,
+                               cell t0 ]))
+                     cuTm ⦈) ]
+
+         in fc sf0 cu0 ++ fc sf1 cu1)
+        (range dim) xs )
+      ⦇ cell ⦇ t0 ⦈ ⦈ ⦈ ) -- >>= normaliseCells dim)
+
+
 
 doNotReduceInPathSolver = [ quote ua ]
 
@@ -418,5 +426,5 @@ macro
       R.typeError [ "quoteBd - failed" ]ₑ
   
   solution ← markVertBd A cuFcs >>= foldBdTerm A t0
-  R.unify solution h --<|> R.typeError ("unify - failed:" ∷nl [ solution ]ₑ )
-  
+  R.unify solution h <|> R.typeError ("unify - failed:" ∷nl [ solution ]ₑ )
+

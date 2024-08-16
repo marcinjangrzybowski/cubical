@@ -754,3 +754,10 @@ icConnFree = icConnFree' ∘ normIExpr
 
 missingSubFaces : ℕ → FExpr → List SubFace
 missingSubFaces dim fe = filter (not ∘S _⊂? fe) (allSubFacesOfDim dim)
+
+getCuCtx : R.TC CuCtx
+getCuCtx =
+  takeWhile
+   (λ { (s , varg (R.def (quote I) [])) → just (s , nothing)
+       ; _ → nothing })
+    <$> R.getContext

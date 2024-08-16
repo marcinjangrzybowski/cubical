@@ -11,10 +11,12 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 
 open import Cubical.Reflection.Base
+open import Cubical.Reflection.Sugar
 
 open import Cubical.Data.List
 open import Cubical.Data.Nat
 open import Cubical.Data.Bool
+open import Cubical.Data.Sigma
 
 open import Cubical.Tactics.Reflection.Variables
 open import Cubical.Tactics.Reflection.Utilities
@@ -38,27 +40,27 @@ _++ₑ_  ⦃ tep ⦄ x = (map (toErrorPart tep) x) ++_
 
 instance
  ToErrorPartString : ToErrorPart String
- ToErrorPart.toErrorPart ToErrorPartString = R.strErr
+ toErrorPart ToErrorPartString = R.strErr
  
  ToErrorPartChar : ToErrorPart Char
- ToErrorPart.toErrorPart ToErrorPartChar = R.strErr ∘S primStringFromList ∘S [_] 
+ toErrorPart ToErrorPartChar = R.strErr ∘S primStringFromList ∘S [_] 
 
 
  ToErrorPartℕ : ToErrorPart ℕ
- ToErrorPart.toErrorPart ToErrorPartℕ = R.strErr ∘ primShowNat
+ toErrorPart ToErrorPartℕ = R.strErr ∘ primShowNat
 
  ToErrorPartBool : ToErrorPart Bool
- ToErrorPart.toErrorPart ToErrorPartBool = R.strErr ∘ (if_then "𝟙" else "𝟘")
+ toErrorPart ToErrorPartBool = R.strErr ∘ (if_then "𝟙" else "𝟘")
 
 
  ToErrorPartTerm : ToErrorPart R.Term
- ToErrorPart.toErrorPart ToErrorPartTerm = R.termErr
+ toErrorPart ToErrorPartTerm = R.termErr
 
  ToErrorPartName : ToErrorPart R.Name
- ToErrorPart.toErrorPart ToErrorPartName = R.nameErr
+ toErrorPart ToErrorPartName = R.nameErr
 
  ToErrorPartErrorPart : ToErrorPart R.ErrorPart
- ToErrorPart.toErrorPart ToErrorPartErrorPart x = x
+ toErrorPart ToErrorPartErrorPart x = x
 
 
 _∷nl_ :  ∀ {ℓ} {A : Type ℓ} → {{ToErrorPart A}} → A → List R.ErrorPart → List R.ErrorPart
@@ -166,4 +168,21 @@ data TestResult : Type where
 assertNoErr : R.Term → R.TC Unit → R.TC Unit
 assertNoErr h x = do
   (x >> wrapResult h ✓-pass) <|> wrapResult h ⊘-fail
+  
+
+visibillityWrap : R.Visibility → String → String
+visibillityWrap R.visible x = " " <> x <> " "
+visibillityWrap R.hidden x = "{" <> x <> "}"
+visibillityWrap R.instance′ x = "⦃" <> x <> "⦄"
+
+showTeles : R.Telescope → R.TC (List R.ErrorPart)
+showTeles = concatMapM h ∘S liftedTele
+ where
+ h : String × R.Arg R.Type → R.TC (List R.ErrorPart)
+ h (s , R.arg (R.arg-info v m) ty) = do
+   pure $ s ∷ₑ " : " ∷ₑ ty ∷nl []
+   
+macro
+ showCtx : R.Term → R.TC Unit
+ showCtx _ = R.getContext >>= (showTeles >=> R.typeError)
   

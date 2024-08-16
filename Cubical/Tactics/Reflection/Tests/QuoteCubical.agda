@@ -202,4 +202,3 @@ module _ (A B : Type) {x y z : A} (f : A → A → B)
 
  _ : _ 
  _ = extarctCuTermTest (p ∙∙ q ∙∙ sym q)
-

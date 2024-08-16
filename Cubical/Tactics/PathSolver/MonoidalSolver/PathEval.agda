@@ -1,6 +1,6 @@
 {-# OPTIONS --safe -v testMarkVert:3 -v tactic:3 #-} 
 -- -v 3 
-module Cubical.Tactics.PathSolver.PathEval where
+module Cubical.Tactics.PathSolver.MonoidalSolver.PathEval where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure

@@ -1,6 +1,6 @@
 {-# OPTIONS --safe #-} 
 
-module Cubical.Tactics.PathSolver.MonoidalExamples where
+module Cubical.Tactics.PathSolver.MonoidalSolver.Examples where
 
 
 open import Cubical.Foundations.Prelude 
@@ -37,7 +37,7 @@ open import Cubical.Tactics.Reflection.CuTerm
 
 open import Cubical.Tactics.Reflection.QuoteCubical
 open import Cubical.Tactics.Reflection.Dimensions
-open import Cubical.Tactics.PathSolver.MonoidalSolver
+open import Cubical.Tactics.PathSolver.MonoidalSolver.MonoidalSolver
 open import Cubical.Tactics.PathSolver.Path
 
 private
@@ -88,59 +88,54 @@ module E0' (SA : NPath 3 A)
 
 
 
-
-
--- -- module E0 {x y z w : A} {x' y' z' w' : B}
--- --   (p : x ≡ y)
--- --   (q : y ≡ z)
--- --   (r : z ≡ w)
--- --   (p' : x' ≡ y')
--- --   (q' : y' ≡ z')
--- --   (r' : z' ≡ w')
--- --   (f : A → A) (f₂ : A → A → A) (f₄ : A → {A} → A → A → A) where
-
--- -- --  -- generalisation of cong₂Funct
-
--- -- --  congₙFunct : {!!}
--- -- --  congₙFunct = {!!}
+ _ : (f : A → B → C) → Square
+        (cong₂ f A.𝑝₀ B.𝑝₁)
+        (cong₂ f (sym A.𝑝₂) (B.𝑝₀ ∙ B.𝑝₁ ∙ B.𝑝₂))
+        (cong₂ f A.𝑝₀ (sym B.𝑝₀) ∙ cong₂ f A.𝑝₁ B.𝑝₀ ∙ cong₂ f A.𝑝₂ (sym B.𝑝₀))
+        (cong₂ f A.𝑝₁ B.𝑝₂)
+ _ = λ f → solvePaths
 
 
 
--- -- -- --  e-refl : refl ≡ refl
--- -- -- --  e-refl = simplifyFill (refl {x = x})
-
--- -- -- --  e-refl≡refl : e-refl ≡ refl
--- -- -- --  e-refl≡refl = refl
- 
--- -- -- --  e0 : (((p ∙∙ q ∙∙ sym q ) ∙∙ q  ∙∙ r)) ≡ (p ∙' (q ∙' r))
--- -- -- --  e0 = simplifyPath ((p ∙∙ q ∙∙ sym q ) ∙∙ q  ∙∙ r)
-
-
--- -- -- --  e1 : (p ∙∙ q ∙∙ r ) ≡ p ∙' (q ∙' r)
--- -- -- --  e1 = simplifyPath (p ∙∙ q ∙∙ r )
-
--- -- -- --  e1' : (refl ∙∙ q ∙∙ r ) ≡ q ∙' r
--- -- -- --  e1' = simplifyPath (refl ∙∙ q ∙∙ r )
+module simplify-examples {x y z w : A} {x' y' z' w' : B}
+  (p : x ≡ y)
+  (q : y ≡ z)
+  (r : z ≡ w)
+  (p' : x' ≡ y')
+  (q' : y' ≡ z')
+  (r' : z' ≡ w')
+  (f : A → A) (f₂ : A → A → A) (f₄ : A → {A} → A → A → A) where
 
 
--- -- -- --  e2 : (p ∙∙ refl ∙∙ refl ) ≡ p
--- -- -- --  e2 = simplifyPath (p ∙∙ refl ∙∙ refl )
+ e0 : _ ≡ (p ∙' (q ∙' r))
+ e0 = simplifyPath ((p ∙∙ q ∙∙ sym q ) ∙∙ q  ∙∙ r)
 
 
+ e1 : _ ≡ p ∙' (q ∙' r)
+ e1 = simplifyPath (p ∙∙ q ∙∙ r )
 
--- -- -- --  e3 : _ ≡ _
--- -- -- --  e3 = simplifyPath (cong f p ∙ cong f q ∙ (refl ∙ cong f r))
+ e1' : _ ≡ q ∙' r
+ e1' = simplifyPath (refl ∙∙ q ∙∙ r )
 
--- -- -- --  e4 : _ ≡ cong₂ f₂ q p
--- -- -- --  e4 = simplifyPath (cong (f₂ y) p ∙ cong (flip f₂ y) q )
+
+ e2 : _ ≡ p
+ e2 = simplifyPath (p ∙∙ refl ∙∙ refl )
 
 
 
--- -- -- --  e5 : _ ≡ λ 𝓲 → f₄ (p 𝓲) {q 𝓲} (r 𝓲) (q 𝓲)
--- -- -- --  e5 = simplifyPath
--- -- -- --        ((λ i → f₄ (p i) {y} z (p (~ i)))
--- -- -- --      ∙∙ (λ i → f₄ y {q i} z ((p ∙ q) i)) ∙∙
--- -- -- --         (λ i → f₄ ((refl {x = y} ∙' refl {x = y}) i) {z} (r i) z) )
+ e3 : _ ≡ ((λ 𝓲 → f (p 𝓲)) ∙' ((λ 𝓲 → f (q 𝓲)) ∙' (λ 𝓲 → f (r 𝓲))))
+ e3 = simplifyPath (cong f p ∙ cong f q ∙ (refl ∙ cong f r))
+
+ e4 : _ ≡ cong₂ f₂ q p
+ e4 = simplifyPath (cong (f₂ y) p ∙ cong (flip f₂ y) q )
+
+
+
+ e5 : _ ≡ λ 𝓲 → f₄ (p 𝓲) {q 𝓲} (r 𝓲) (q 𝓲)
+ e5 = simplifyPath
+       ((λ i → f₄ (p i) {y} z (p (~ i)))
+     ∙∙ (λ i → f₄ y {q i} z ((p ∙ q) i)) ∙∙
+        (λ i → f₄ ((refl {x = y} ∙' refl {x = y}) i) {z} (r i) z) )
 
 
 
@@ -230,25 +225,8 @@ module E0' (SA : NPath 3 A)
 -- -- -- --  e0 = solvePaths
 
 
--- -- -- --  e0L : Square (cong List (ua e₀) ∙ cong List (ua e₁))
--- -- -- --               (cong List (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂))
--- -- -- --               refl (cong List (ua e₂))
--- -- -- --  e0L = solvePaths
-
-
--- -- -- -- module E6 {ℓ ℓ' ℓ''} {A : Type ℓ } {B : Type ℓ'} {C : Type ℓ''}
--- -- -- --   {x y z w : A}
--- -- -- --   {x' y' z' w' : B}
--- -- -- --   (f : A → B → C)
--- -- -- --   (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) 
--- -- -- --   (p' : x' ≡ y') (q' : y' ≡ z') (r' : z' ≡ w') 
-  
--- -- -- --    where
- 
--- -- -- --  e0 : Square
--- -- -- --         (cong₂ f p q')
--- -- -- --         (cong₂ f (sym r) (p' ∙ q' ∙ r'))
--- -- -- --         (cong₂ f p (sym p') ∙ cong₂ f q p' ∙ cong₂ f r (sym p'))
--- -- -- --         (cong₂ f q r')
--- -- -- --  e0 = solvePaths
+-- --  e0L : Square (cong List (ua e₀) ∙ cong List (ua e₁))
+-- --               (cong List (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂))
+-- --               refl (cong List (ua e₂))
+-- --  e0L = solvePaths
 

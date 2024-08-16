@@ -32,6 +32,10 @@ normal𝑪ong* t xs = h 200 0  t xs
  h fuel k t (cell' x x₁ ∷ xs) =
   let t' = replaceAtTrm k (liftVarsFrom (suc (k + length xs)) zero  x₁) t
   in h fuel k t' xs
+ -- h fuel k t (𝒄ong' x x₁ ∷ []) =
+ --   h fuel k ((replaceAtTrm zero x (liftVarsFrom (length x₁) 1 t))) x₁
+   
+ -- h _ k t (𝒄ong' x x₁ ∷ []) = R.lit (R.string "todo in normal𝑪ong*") , [] 
  h _ k t (𝒄ong' x x₁ ∷ xs) = R.lit (R.string "imposible in normal𝑪ong*") , [] 
 
 normal𝑪ong : R.Term → List CuTermNC → (R.Term × List (List (SubFace × CuTermNC) × CuTermNC)) 
@@ -136,16 +140,11 @@ module fillCongs where
                   (liftVarsFrom 1 (length xs)
         (subfaceCell ((repeat (length xs) nothing) ++ sf) t)) ts)) 
 
---ToTerm.toTermFill' {Unit} {Unit} (defaultCtx dim)
-
   f0 : CuTermNC
   f0 = cell' _ (substTms (
         L.map (uncurry (ToTerm.toTermFill {Unit} {Unit} (defaultCtx dim)))
            xs
            ) (liftVarsFrom 1 (length xs) t))
-
--- (L.map ? (ToTerm.toTermFill' {⊥} {Unit} (defaultCtx dim)
---          ? ?))
 
  fillCongsS : ℕ → List (SubFace × CuTerm) → List (SubFace × CuTermNC)
   
@@ -157,11 +156,6 @@ module fillCongs where
       -- uncurry (congFill fuel dim) (normal𝑪ong* t xs)
  fillCongs (suc fuel) dim (𝒄ong' t xs) =
       uncurry (congFill fuel dim) (normal𝑪ong* t xs)
-  
-
--- hco (L.map {!!} y')
---           {!!}
---       -- uncurry (congFill fuel dim) (normal𝑪ong x (L.map (fillCongs fuel dim) x₁))
  
  fillCongsS fuel [] = []
  fillCongsS fuel ((sf , x) ∷ xs) =

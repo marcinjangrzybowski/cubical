@@ -117,3 +117,17 @@ instance
 when : ∀ {M : Functorω} {{_ : RawApplicative M}} → Bool → M Unit → M Unit
 when {M} false x = pure _
 when {M} true x = x
+
+
+
+infixl 4 _<⊎>_ 
+
+
+private
+ variable
+  ℓ : Level  
+  A B E : Type ℓ
+
+_<⊎>_ : {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} {{_ : RawMonadFail M E}} → 
+  (M A) → (M B) → M (A ⊎.⊎ B)
+a <⊎> b = (⊎.inl <$> a) <|> (⊎.inr <$> b) 

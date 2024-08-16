@@ -486,3 +486,9 @@ module _ (_≟_ : Discrete A) where
 
  subs? : List A → List A → Bool
  subs? xs xs' = foldr (_and_ ∘ flip elem? xs') true xs
+
+takeWhile : (A → Maybe B) → List A → List B
+takeWhile f [] = []
+takeWhile f (x ∷ xs) with f x
+... | nothing = []
+... | just y = y ∷ takeWhile f xs

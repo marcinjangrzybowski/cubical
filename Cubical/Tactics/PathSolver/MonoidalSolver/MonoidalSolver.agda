@@ -1,5 +1,5 @@
 {-# OPTIONS --safe #-} 
-module Cubical.Tactics.PathSolver.MonoidalSolver where
+module Cubical.Tactics.PathSolver.MonoidalSolver.MonoidalSolver where
 
 
 open import Cubical.Foundations.Prelude
@@ -33,7 +33,7 @@ open import Cubical.Tactics.Reflection.Dimensions
 open import Cubical.Tactics.Reflection.CuTerm
 
 open import Cubical.Tactics.PathSolver.Degen
-open import Cubical.Tactics.PathSolver.PathEval
+open import Cubical.Tactics.PathSolver.MonoidalSolver.PathEval
 open import Cubical.Tactics.PathSolver.Path
 
 private
