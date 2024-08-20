@@ -26,7 +26,3 @@ R∙ x y = R.def (quote _∙_) (x v∷ y v∷ [] )
 
 R∙' : R.Term → R.Term → R.Term
 R∙' x y = R.def (quote _∙'_) (x v∷ y v∷ [] )
-
-
-Rrefl : R.Term
-Rrefl = R.def (quote refl) []

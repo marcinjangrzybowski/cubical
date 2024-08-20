@@ -348,3 +348,7 @@ liftedTele : Telescope → Telescope
 liftedTele [] = []
 liftedTele (x ∷ xs) = L.map (map-snd (mapArg liftVars)) (x ∷ liftedTele xs)
 
+macro
+ q[_] : Term → Term → TC Unit
+ q[_] tm h =
+   quoteTC tm >>= quoteTC >=> unify h

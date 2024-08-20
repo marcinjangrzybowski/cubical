@@ -1,4 +1,4 @@
-{-# OPTIONS --safe #-} 
+{-# OPTIONS --safe -v 0 #-} 
 
 module Cubical.Tactics.PathSolver.NSolver.Tests where
 
@@ -33,6 +33,7 @@ open import Cubical.Tactics.Reflection.Utilities
 
 open import Cubical.Tactics.PathSolver.CongComp
 open import Cubical.Tactics.Reflection.CuTerm
+open import Cubical.Tactics.Reflection.Error
 
 open import Cubical.Tactics.Reflection.QuoteCubical
 open import Cubical.Tactics.Reflection.Dimensions
@@ -42,265 +43,308 @@ open import Cubical.Tactics.PathSolver.Path
 
 
 
+-- --  aspects :
+-- --  * dimension of goal 
+-- --  * is equation? (goal can be written as path between some n-cubes)
+-- --  * are path terms:
+--     ** variables
+--     ** definitions (abstract)
+--     ** higher construstors
+--     ** edges of some n-cubes
+--     ** diagonals of some n-cubes
+--     * are there 'degenerated' paths? i.e. `λ i → p (i ∨ ~ i)`
+--     * is path is over funcion type?
+--     * is solving requires using functoriality of `cong` ? (generalsed `cong-∙`)
+
+
+
+
+
 private
  variable
-   ℓ : Level
-   A B : Type ℓ
+  ℓ : Level
+
+module ReflTests where
+
+ module Var {A : Type ℓ} (a : A) where
+
+  _ : refl {x = a} ∙ refl ≡ refl
+  _ = solvePaths
+
+  _ : refl ∙ (refl {x = a} ∙ refl) ∙ refl ∙ (refl ∙ refl) ∙ refl ≡ refl
+  _ = solvePaths
+
+  _ : Square
+        (((((refl {x = a} ∙ refl) ∙ refl) ∙ refl) ∙ refl) ∙ refl)
+        refl
+        (refl ∙ refl ∙ refl ∙ refl ∙ refl ∙ refl)
+        ((refl ∙ refl) ∙∙ (refl ∙ refl) ∙∙  (refl ∙ refl ))
+  _ = solvePaths
 
 
-module ReflTests (a' a : A) where
+  _ : Cube
+         refl (assoc (refl {x = a}) refl refl)
+         (cong (refl ∙_) (lUnit refl)) (cong (_∙ refl) (rUnit refl))
+         refl refl
+  _ = solvePaths
 
- _ : refl {x = a} ∙ refl ≡ refl
- _ = solvePaths
+  module Def where
+   abstract
+    a' : A
+    a' = a
+   
+   _ : refl {x = a'} ∙ refl ≡ refl
+   _ = solvePaths
 
- -- _ : refl {x = a} ∙ refl ≡ refl
- -- _ = solvePaths
+   _ : refl ∙ (refl {x = a'} ∙ refl) ∙ refl ∙ (refl ∙ refl) ∙ refl ≡ refl
+   _ = solvePaths
 
-
- zz : Cube
-        refl (assoc (refl {x = a}) refl refl)
-        (cong (refl ∙_) (lUnit refl)) (cong (_∙ refl) (rUnit refl))
-        refl refl
- zz = solvePaths
-
-
- p00 : refl {x = a} ∙ refl ∙ refl ∙ refl ≡ ((refl ∙ refl) ∙ refl) ∙ refl 
- p00 = solvePaths
-
-
-
- penta-refl :    assoc (refl {x = a}) refl (refl ∙ refl) ∙ assoc (refl ∙ refl) refl refl
-                          ≡
-        cong (refl ∙_) (assoc refl refl refl) ∙∙ assoc refl (refl ∙ refl)
-          refl ∙∙ cong (_∙ refl) (assoc refl refl refl)
- penta-refl = solvePaths
+   _ : Square
+         (((((refl {x = a'} ∙ refl) ∙ refl) ∙ refl) ∙ refl) ∙ refl)
+         refl
+         (refl ∙ refl ∙ refl ∙ refl ∙ refl ∙ refl)
+         ((refl ∙ refl) ∙∙ (refl ∙ refl) ∙∙  (refl ∙ refl ))
+   _ = solvePaths
 
 
- -- zzz : Square _ _ _ _
- -- zzz i j = hcomp (λ z → λ { (i = i0) →
- --                    hcomp (λ z' → λ { (z = i0) → a ; (j = i0) → a ; (j = i1)(z = i1) → a })
- --                          a
- --              ; (j = i0) → a ; (j = i1)(i = i1) → a })
- --              a
+   _ : Cube
+          refl (assoc (refl {x = a'}) refl refl)
+          (cong (refl ∙_) (lUnit refl)) (cong (_∙ refl) (rUnit refl))
+          refl refl
+   _ = solvePaths
 
- -- zzzz : zzz ≡ zzz
- -- zzzz = solvePaths
+   
 
- -- zzzzz : zzzz ≡ zzzz
- -- zzzzz = solvePaths
+ module DataType {ℓ} where
 
- _ : penta-refl ≡ pentagonIdentity refl refl refl refl 
- _ = solvePaths
+  data A : Type ℓ where
+   a : A 
 
+  _ : refl {x = a} ∙ refl ≡ refl
+  _ = solvePaths
 
+  _ : refl ∙ (refl {x = a} ∙ refl) ∙ refl ∙ (refl ∙ refl) ∙ refl ≡ refl
+  _ = solvePaths
 
-
--- -- -- {!solvePaths!}
-
--- -- -- module Coherence (SA : NPath 7 A) where
--- -- --   open NPath SA 
-
-
-
- 
+  _ : Square
+        (((((refl {x = a} ∙ refl) ∙ refl) ∙ refl) ∙ refl) ∙ refl)
+        refl
+        (refl ∙ refl ∙ refl ∙ refl ∙ refl ∙ refl)
+        ((refl ∙ refl) ∙∙ (refl ∙ refl) ∙∙  (refl ∙ refl ))
+  _ = solvePaths
 
 
---    -- pLHS = assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s
---    -- rLHS = cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
+  _ : Cube
+         refl (assoc (refl {x = a}) refl refl)
+         (cong (refl ∙_) (lUnit refl)) (cong (_∙ refl) (rUnit refl))
+         refl refl
+  _ = solvePaths
 
 
--- -- -- -- -- -- -- module E5 (A B C D : Type ℓ)
--- -- -- -- -- -- --   (e₀ : A ≃ B) (e₁ : B ≃ C) (e₂ : C ≃ D) where
+module Ω-Tests where
+ module Var (A : Type ℓ) (a : A) (p : a ≡ a) where
+  _ : p ∙ p ∙ p ∙ p ∙ p ≡ ((((p ∙ p) ∙ p) ∙ p) ∙ p)
+  _ = solvePaths
 
--- -- -- -- -- -- --  e0 : Square (ua e₀ ∙ ua e₁) (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂) refl (ua e₂)
--- -- -- -- -- -- --  e0 = solvePaths
+  _ : p ∙ refl ∙ p ∙ refl ∙ p ∙ refl ∙ refl ∙ p ∙ refl ∙ refl ∙ p ∙ refl
+         ≡ p ∙ p ∙ p ∙ p ∙ p
+  _ = solvePaths
 
--- -- -- -- -- -- --  -- e0L : Square (cong List (ua e₀) ∙ cong List (ua e₁))
--- -- -- -- -- -- --  --              (cong List (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂))
--- -- -- -- -- -- --  --              refl (cong List (ua e₂))
--- -- -- -- -- -- --  -- e0L = solvePaths
-
-
--- -- -- -- -- -- -- module _ where
-
--- -- -- -- -- -- --   private
--- -- -- -- -- -- --    variable
--- -- -- -- -- -- --      A B : Type ℓ
--- -- -- -- -- -- --      x y z w v : A
+  _ : p ∙ p ⁻¹ ∙ p ∙' p ∙ p ⁻¹ ∙ p ∙ p ∙ p ⁻¹ ∙ p ⁻¹ ∙ p ⁻¹  ≡ refl
+  _ = solvePaths
 
 
--- -- -- -- -- -- --   module T2'fext' {x y z : A} (f : A → A → B)
--- -- -- -- -- -- --    (p : x ≡ y)
--- -- -- -- -- -- --    (q : y ≡ z) where
+  _ : Cube
+         refl (assoc p refl p)
+         (cong (p ∙_) (lUnit p)) (cong (_∙ p) (rUnit p))
+         refl refl
+  _ = solvePaths
+
+ module HIT where
+  open import Cubical.HITs.S1.Base
+
+  _ : loop ∙ loop ∙ loop ∙ loop ∙ loop ≡ ((((loop ∙ loop) ∙ loop) ∙ loop) ∙ loop)
+  _ = solvePaths
+
+  _ : loop ∙ refl ∙ loop ∙ refl ∙ loop ∙ refl ∙ refl ∙ loop ∙ refl ∙ refl ∙ loop ∙ refl
+         ≡ loop ∙ loop ∙ loop ∙ loop ∙ loop
+  _ = solvePaths
+
+  _ : loop ∙ loop ⁻¹ ∙ loop ∙' loop ∙ loop ⁻¹ ∙ loop ∙ loop ∙ loop ⁻¹ ∙ loop ⁻¹ ∙ loop ⁻¹  ≡ refl
+  _ = solvePaths
+
+  _ : Cube
+         refl (assoc loop refl loop)
+         (cong (loop ∙_) (lUnit loop)) (cong (_∙ loop) (rUnit loop))
+         refl refl
+  _ = solvePaths
 
 
--- -- -- -- -- -- --    P Q : _≡_ {A = (A → B)} (λ x' → f x' x) (λ x' → f x' y)
--- -- -- -- -- -- --    P = (λ i x' → f x' (p i)) ∙∙ (λ i x' → f x' (q i)) ∙∙ (λ i x' → f x' (q (~ i)))
--- -- -- -- -- -- --    Q = refl ∙ (λ i x' → f x' (p i))
+
+module NoCong where
+ module Var (A : Type ℓ) (a₀ a₁ a₂ a₃ a₄ a₅ a₆ a₇ : A)
+             (𝑝₀ : a₀ ≡ a₁)
+             (𝑝₁ : a₁ ≡ a₂)
+             (𝑝₂ : a₂ ≡ a₃)
+             (𝑝₃ : a₃ ≡ a₄)
+             (𝑝₄ : a₄ ≡ a₅)
+             (𝑝₅ : a₅ ≡ a₆)
+             (𝑝₆ : a₆ ≡ a₇) where
+
+  a₀₋₋ : Square (𝑝₀ ∙ 𝑝₁) (𝑝₁ ∙∙ 𝑝₂ ∙∙ 𝑝₃) 𝑝₀ (𝑝₂ ∙ 𝑝₃)
+  a₀₋₋ = solvePaths
+  
+  a₁₋₋ : Square (𝑝₃ ∙ sym 𝑝₃) (𝑝₂ ∙ 𝑝₃ ∙ (𝑝₄ ∙∙ 𝑝₅ ∙∙ 𝑝₆)) (sym 𝑝₂)
+           (((𝑝₃ ∙' 𝑝₄) ∙' 𝑝₅) ∙' 𝑝₆)
+  a₁₋₋ = solvePaths
+
+  a₋₀₋ : Square (𝑝₀ ∙ 𝑝₁) (𝑝₃ ∙ sym 𝑝₃) (𝑝₀ ∙∙ 𝑝₁ ∙∙ 𝑝₂) 𝑝₂
+  a₋₀₋ = solvePaths
+
+  a₋₁₋ : Square (𝑝₁ ∙∙ 𝑝₂ ∙∙ 𝑝₃) (𝑝₂ ∙ 𝑝₃ ∙ (𝑝₄ ∙∙ 𝑝₅ ∙∙ 𝑝₆)) 𝑝₁
+      (𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆)
+  a₋₁₋ = solvePaths
+
+  a₋₋₀ : Square 𝑝₀ (sym 𝑝₂) (𝑝₀ ∙∙ 𝑝₁ ∙∙ 𝑝₂) 𝑝₁
+  a₋₋₀ = solvePaths
+
+  a₋₋₁ : Square (𝑝₂ ∙ 𝑝₃) (((𝑝₃ ∙' 𝑝₄) ∙' 𝑝₅) ∙' 𝑝₆) 𝑝₂ (𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆)
+  a₋₋₁ = solvePaths
+  
+  coh : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
+  coh =  solvePaths
+
+ module HIT {ℓ} where
 
 
+  data A : Type ℓ where
+    a₀ a₁ a₂ a₃ a₄ a₅ a₆ a₇ : A
+    𝑝₀ : a₀ ≡ a₁
+    𝑝₁ : a₁ ≡ a₂
+    𝑝₂ : a₂ ≡ a₃
+    𝑝₃ : a₃ ≡ a₄
+    𝑝₄ : a₄ ≡ a₅
+    𝑝₅ : a₅ ≡ a₆
+    𝑝₆ : a₆ ≡ a₇
 
--- -- -- -- -- -- --   module PentaJJ1 {x : A} (p : x ≡ y) (q : y ≡ z) (~r : w ≡ z) (r' r : z ≡ w) (s : w ≡ v) where
+  a₀₋₋ : Square (𝑝₀ ∙ 𝑝₁) (𝑝₁ ∙∙ 𝑝₂ ∙∙ 𝑝₃) 𝑝₀ (𝑝₂ ∙ 𝑝₃)
+  a₀₋₋ = solvePaths
+  
+  a₁₋₋ : Square (𝑝₃ ∙ sym 𝑝₃) (𝑝₂ ∙ 𝑝₃ ∙ (𝑝₄ ∙∙ 𝑝₅ ∙∙ 𝑝₆)) (sym 𝑝₂)
+           (((𝑝₃ ∙' 𝑝₄) ∙' 𝑝₅) ∙' 𝑝₆)
+  a₁₋₋ = solvePaths
 
--- -- -- -- -- -- --    module _ (f : A → B) where
+  a₋₀₋ : Square (𝑝₀ ∙ 𝑝₁) (𝑝₃ ∙ sym 𝑝₃) (𝑝₀ ∙∙ 𝑝₁ ∙∙ 𝑝₂) 𝑝₂
+  a₋₀₋ = solvePaths
+
+  a₋₁₋ : Square (𝑝₁ ∙∙ 𝑝₂ ∙∙ 𝑝₃) (𝑝₂ ∙ 𝑝₃ ∙ (𝑝₄ ∙∙ 𝑝₅ ∙∙ 𝑝₆)) 𝑝₁
+      (𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆)
+  a₋₁₋ = solvePaths
+
+  a₋₋₀ : Square 𝑝₀ (sym 𝑝₂) (𝑝₀ ∙∙ 𝑝₁ ∙∙ 𝑝₂) 𝑝₁
+  a₋₋₀ = solvePaths
+
+  a₋₋₁ : Square (𝑝₂ ∙ 𝑝₃) (((𝑝₃ ∙' 𝑝₄) ∙' 𝑝₅) ∙' 𝑝₆) 𝑝₂ (𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆)
+  a₋₋₁ = solvePaths
+
+  coh : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
+  coh =  solvePaths
 
 
+ module Edges&Diags {ℓ} (A : Type ℓ)
+         (a⁵ : I → I → I → I → I → A)  where
 
--- -- -- -- -- -- --     P' = refl ∙ cong f (p ∙' q ∙ sym (~r) ∙ (~r ∙ (r ∙ s)))
--- -- -- -- -- -- --     Q' = cong f p ∙ (cong f (q ∙ refl) ∙ cong f (r ∙∙ s ∙∙ sym s)) ∙ cong f s
+  𝑝₀ : _  ≡ _
+  𝑝₀ i = a⁵ i0 i i0 i (~ i)
+  
+  𝑝₁ : _ ≡ _
+  𝑝₁ i = a⁵ i i1 i i1 i0
+  
+  𝑝₂ : _ ≡ _
+  𝑝₂ i = a⁵ i1 (~ i) i1 i1 i0
+  
+  𝑝₃ : _ ≡ _
+  𝑝₃ i =  a⁵ (~ i) i (~ i) (~ i) i
+  
+  𝑝₄ : _ ≡ _
+  𝑝₄ _ = a⁵ i0 i1 i0 i0 i1
+  
+  𝑝₅ : _ ≡ _
+  𝑝₅ i = a⁵ (i ∧ ~ i) i1 i0 i0 (i ∨  ~ i)
+  
+  𝑝₆ : _ ≡ _
+  𝑝₆ i = a⁵ i0 i1 i0 i0 (~ i)
 
--- -- -- -- -- -- --     _ : cong f (p ∙ sym p) ≡ cong f p ∙ cong f (sym p)
--- -- -- -- -- -- --     _ = solvePaths
+  a₀₋₋ : Square (𝑝₀ ∙ 𝑝₁) (𝑝₁ ∙∙ 𝑝₂ ∙∙ 𝑝₃) 𝑝₀ (𝑝₂ ∙ 𝑝₃)
+  a₀₋₋ = solvePaths
+  
+  a₁₋₋ : Square (𝑝₃ ∙ sym 𝑝₃) (𝑝₂ ∙ 𝑝₃ ∙ (𝑝₄ ∙∙ 𝑝₅ ∙∙ 𝑝₆)) (sym 𝑝₂)
+           (((𝑝₃ ∙' 𝑝₄) ∙' 𝑝₅) ∙' 𝑝₆)
+  a₁₋₋ = solvePaths
 
--- -- -- -- -- -- --   module compPathR-PathP∙∙ 
--- -- -- -- -- -- --           {p : x ≡ y} 
--- -- -- -- -- -- --       where
+  a₋₀₋ : Square (𝑝₀ ∙ 𝑝₁) (𝑝₃ ∙ sym 𝑝₃) (𝑝₀ ∙∙ 𝑝₁ ∙∙ 𝑝₂) 𝑝₂
+  a₋₀₋ = solvePaths
 
--- -- -- -- -- -- --    invSides-filler-rot' : (invSides-filler p p) ≡ (symP (invSides-filler (sym p) (sym p)))
+  a₋₁₋ : Square (𝑝₁ ∙∙ 𝑝₂ ∙∙ 𝑝₃) (𝑝₂ ∙ 𝑝₃ ∙ (𝑝₄ ∙∙ 𝑝₅ ∙∙ 𝑝₆)) 𝑝₁
+      (𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆)
+  a₋₁₋ = solvePaths
+
+  a₋₋₀ : Square 𝑝₀ (sym 𝑝₂) (𝑝₀ ∙∙ 𝑝₁ ∙∙ 𝑝₂) 𝑝₁
+  a₋₋₀ = solvePaths
+
+  coh : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
+  coh =  solvePaths
+
+
+ module InSubTerms {ℓ} (A : Type ℓ)
+         (a₀ a₁ a₂ a₃ : A)
+         (p₀₁ : a₀ ≡ a₁)
+         (p₁₂ : a₁ ≡ a₂)
          
--- -- -- -- -- -- --    invSides-filler-rot' = solvePaths
-
--- -- -- -- -- -- --    _ : invSides-filler-rot p ≡ invSides-filler-rot'
--- -- -- -- -- -- --    _ = solvePaths
-
-
-
--- -- -- -- -- -- --    P Q : x ≡ x 
--- -- -- -- -- -- --    P = refl
--- -- -- -- -- -- --    Q = λ i → p (i ∧ ~ i)
+         (f : A → I → A)
+         (g : A → A → A → A)
+         (h : g a₀ a₁ ≡ g (f a₂ i0) a₃)
+         (l : g (f a₂ i1) a₃ (f a₀ i1) ≡ a₀) where
 
 
--- -- -- -- -- -- --    P≡Q : sym P ≡ sym Q 
--- -- -- -- -- -- --    P≡Q = solvePaths
-
--- -- -- -- -- -- --   module T2'I (p : I → A) where
-
-
--- -- -- -- -- -- --    P Q : p i0 ≡ p i0 
--- -- -- -- -- -- --    P = refl
--- -- -- -- -- -- --    Q = λ i → p (i ∧ ~ i)
-
-
--- -- -- -- -- -- --    P≡Q : sym P ≡ sym Q 
--- -- -- -- -- -- --    P≡Q = solvePaths
-
-
-
-
--- -- -- -- -- -- --   module T2'fext {x y : A} (f g : {A} → A) (p : Path ({A} → A) (λ {x} → f {x}) (λ {x} → g {x})) (q : x ≡ y) where
-
-
--- -- -- -- -- -- --    P Q : f {y}  ≡ f {y} 
--- -- -- -- -- -- --    P = refl
--- -- -- -- -- -- --    Q = (λ i → p i {q (~ i )}) ∙ (λ i → p (~ i) {q i})
+  𝑝₀ : _  ≡ _
+  𝑝₀ i = g (p₀₁ i) a₀ (f a₁ i)
+  
+  𝑝₁ : _ ≡ _
+  𝑝₁ i = g (p₀₁ (~ i)) (p₀₁ i) (f (p₀₁ (~ i)) i1)
+  
+  𝑝₂ : _ ≡ _
+  𝑝₂ i = h i (f a₀ i1)
+  
+  𝑝₃ : _ ≡ _
+  𝑝₃ i = g (f a₂ i) a₃ (f a₀ i1)
+  
+  𝑝₄ : _ ≡ _
+  𝑝₄ = l
+  
+  𝑝₅ : _ ≡ _
+  𝑝₅ = p₀₁
+  
+  𝑝₆ : _ ≡ _
+  𝑝₆ = p₁₂
 
 
--- -- -- -- -- -- --    P≡Q : sym P ≡ sym Q 
--- -- -- -- -- -- --    P≡Q = solvePaths
+  a₀₋₋ : Square (𝑝₀ ∙ 𝑝₁) (𝑝₁ ∙∙ 𝑝₂ ∙∙ 𝑝₃) 𝑝₀ (𝑝₂ ∙ 𝑝₃)
+  a₀₋₋ = solvePaths
+  
+  a₁₋₋ : Square (𝑝₃ ∙ sym 𝑝₃) (𝑝₂ ∙ 𝑝₃ ∙ (𝑝₄ ∙∙ 𝑝₅ ∙∙ 𝑝₆)) (sym 𝑝₂)
+           (((𝑝₃ ∙' 𝑝₄) ∙' 𝑝₅) ∙' 𝑝₆)
+  a₁₋₋ = solvePaths
 
+  a₋₀₋ : Square (𝑝₀ ∙ 𝑝₁) (𝑝₃ ∙ sym 𝑝₃) (𝑝₀ ∙∙ 𝑝₁ ∙∙ 𝑝₂) 𝑝₂
+  a₋₀₋ = solvePaths
 
--- -- -- -- -- -- --   module T2 {x : A} (p' p'' : x ≡ y) (xr xr' : x ≡ x) (q : y ≡ z) (~r : w ≡ z) (r' r : z ≡ w) (s : w ≡ v)
--- -- -- -- -- -- --              (sq : Square xr (sym p'') p'' xr') where
+  a₋₁₋ : Square (𝑝₁ ∙∙ 𝑝₂ ∙∙ 𝑝₃) (𝑝₂ ∙ 𝑝₃ ∙ (𝑝₄ ∙∙ 𝑝₅ ∙∙ 𝑝₆)) 𝑝₁
+      (𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆)
+  a₋₁₋ = solvePaths
 
--- -- -- -- -- -- --    p : x ≡ y
--- -- -- -- -- -- --    p i = sq i (~ i)
+  a₋₋₀ : Square 𝑝₀ (sym 𝑝₂) (𝑝₀ ∙∙ 𝑝₁ ∙∙ 𝑝₂) 𝑝₁
+  a₋₋₀ = solvePaths
 
--- -- -- -- -- -- --    P Q : x ≡ v 
--- -- -- -- -- -- --    P = refl ∙ (p ∙' q ∙ sym (~r) ∙ (~r  ∙ (λ i → r (i ∧ ~ i)) ∙  (r ∙ ((λ i → r (i ∨  ~ i))) ∙  s )))
--- -- -- -- -- -- --    Q = p ∙ (q ∙ refl ∙ refl ∙ r ∙ s ∙ sym s) ∙ s
-
-
--- -- -- -- -- -- --    -- P≡Q : sym Q ≡ sym P
--- -- -- -- -- -- --    -- P≡Q = solvePaths
-
-
--- -- -- -- -- -- --   module PentaJ1Cong {x : A} (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) (s : w ≡ v) (f : A → B) where
-
-
--- -- -- -- -- -- --    LHS RHS : (λ i → f (p i)) ∙ (λ i → f (q i)) ∙ (λ i → f (r i)) ≡ λ i → f (((p ∙ q) ∙ r) i)
--- -- -- -- -- -- --    LHS = solvePaths ∙ congP (λ _ → cong f) (assoc p q r) 
-
--- -- -- -- -- -- --    RHS = assoc (cong f p) (cong f q) (cong f r) ∙ solvePaths
-
--- -- -- -- -- -- --    LHS≡RHS : LHS ≡ RHS
--- -- -- -- -- -- --    LHS≡RHS = solvePaths
-
-
-
--- -- -- -- -- -- --    pLHS = assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s
--- -- -- -- -- -- --    rLHS = cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
-
--- -- -- -- -- -- --    pentagonTy = pLHS ≡ rLHS
--- -- -- -- -- -- --    pentagonTy' = Square pLHS (assoc p (q ∙ r) s)
--- -- -- -- -- -- --                 (cong (p ∙_) (assoc q r s))
--- -- -- -- -- -- --                  (sym (cong (_∙ s) (assoc p q r)))
-
-
--- -- -- -- -- -- --    _ : pentagonTy'
--- -- -- -- -- -- --    _ = solvePaths 
-
--- -- -- -- -- -- --    pentagonIdentity' : pentagonTy
--- -- -- -- -- -- --    pentagonIdentity' = solvePaths
-
--- -- -- -- -- -- --    -- this 4-cubes works, but takes lots of time, good oportunity to experiment with performance
--- -- -- -- -- -- --    -- pentagonIdentity'≡pentagonIdentity : pentagonIdentity' ≡ pentagonIdentity p q r s
--- -- -- -- -- -- --    -- pentagonIdentity'≡pentagonIdentity = solvePaths'
-
-
--- -- -- -- -- -- --   module PentaJJ1' {x : A} (p : x ≡ y) (q : y ≡ z) (~r : w ≡ z) (r' r : z ≡ w) (s : w ≡ v) where
-
--- -- -- -- -- -- --    P Q : x ≡ v
--- -- -- -- -- -- --    P = refl ∙ (p ∙' q ∙ sym (~r) ∙ (~r ∙ (r ∙ s)))
--- -- -- -- -- -- --    Q = p ∙ (q ∙ refl ∙ r ∙ s ∙ sym s) ∙ s
-
-
--- -- -- -- -- -- --    P≡Q : sym P ≡ sym Q
--- -- -- -- -- -- --    P≡Q = solvePaths
-
-
-
--- -- -- -- -- -- --    module _ (f : A → B) where
-
-
-
--- -- -- -- -- -- --     P' = refl ∙ cong f (p ∙' q ∙ sym (~r) ∙ (~r ∙ (r ∙ s)))
--- -- -- -- -- -- --     Q' = cong f p ∙ (cong f (q ∙ refl) ∙ cong f (r ∙∙ s ∙∙ sym s)) ∙ cong f s
-
--- -- -- -- -- -- --     _ : cong f (p ∙ sym p) ≡ cong f p ∙ cong f (sym p)
--- -- -- -- -- -- --     _ = solvePaths
-
-
--- -- -- -- -- -- --     _ : cong f (p ∙ sym p ∙ p ∙ q) ≡ cong f p ∙ cong f q
--- -- -- -- -- -- --     _ = solvePaths
-
--- -- -- -- -- -- --     _ : P' ≡ Q'
--- -- -- -- -- -- --     _ = solvePaths
-
-
--- -- -- -- -- -- --    P'' Q'' : y ≡ z
--- -- -- -- -- -- --    P'' = (q ∙∙ sym (~r) ∙∙ (~r))
--- -- -- -- -- -- --    Q'' =  q
-
-
--- -- -- -- -- -- --    P''≡Q'' : P'' ≡ Q''
--- -- -- -- -- -- --    P''≡Q'' = solvePaths
-
-
--- -- -- -- -- -- -- module E3 {ℓ} where
-
--- -- -- -- -- -- --  data D : Type ℓ where
--- -- -- -- -- -- --   x y z w : D
--- -- -- -- -- -- --   p : x ≡ y
--- -- -- -- -- -- --   q : y ≡ z
--- -- -- -- -- -- --   r : z ≡ w
--- -- -- -- -- -- --   f : D → D
--- -- -- -- -- -- --   f₂ : D → D → D
--- -- -- -- -- -- --   f₄ : D → D → D → D → D
- 
-
--- -- -- -- -- -- --  e1 : Cube {a₀₀₀ = x}
--- -- -- -- -- -- --          (invSides-filler refl refl) (invSides-filler refl refl)
--- -- -- -- -- -- --          (invSides-filler refl refl) (invSides-filler refl refl)
--- -- -- -- -- -- --          (invSides-filler refl refl) (invSides-filler refl refl)
--- -- -- -- -- -- --  e1 = solvePaths
-
+  coh : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
+  coh =  solvePaths

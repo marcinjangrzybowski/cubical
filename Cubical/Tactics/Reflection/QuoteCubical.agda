@@ -256,7 +256,7 @@ nCubeToEq (A , (f0 , f1) ∷ xs) = (A ,_) <$> do
          xs) ⦈ 
 
 nCubeToEqPath : NBoundaryTerm → R.Term
-nCubeToEqPath (A , []) = Rrefl
+nCubeToEqPath (A , []) = q[ refl ]
 nCubeToEqPath (A , (f0 , f1) ∷ xs) =
   let dim = (length xs)
   in vlamⁿ (suc dim) (ToTerm.toTermFill' {Unit} {Unit} (defaultCtx dim)  

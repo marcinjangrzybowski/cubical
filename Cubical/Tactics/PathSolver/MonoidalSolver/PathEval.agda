@@ -299,7 +299,7 @@ fill-flatten' = hTop ∘S atVarOrConOrDefMmp
 
 
 foldPath : List R.Term → R.Term
-foldPath [] = Rrefl -- R.unknown
+foldPath [] = q[ refl ]
 foldPath (x ∷ []) = vlam "𝓲" x
 foldPath (x ∷ xs@(_ ∷ _)) = R∙' (vlam "𝓲" x) (foldPath xs)
 

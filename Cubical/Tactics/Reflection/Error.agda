@@ -29,6 +29,8 @@ open ToErrorPart
 
 infixr 5 _∷ₑ_ _∷nl_ _++ₑ_ _++nl_
 
+
+
 _∷ₑ_ :  ∀ {ℓ} {A : Type ℓ} → {{ToErrorPart A}} → A → List R.ErrorPart → List R.ErrorPart
 _∷ₑ_  ⦃ tep ⦄ x = (toErrorPart tep x) ∷_
 
@@ -185,4 +187,5 @@ showTeles = concatMapM h ∘S liftedTele
 macro
  showCtx : R.Term → R.TC Unit
  showCtx _ = R.getContext >>= (showTeles >=> R.typeError)
-  
+
+

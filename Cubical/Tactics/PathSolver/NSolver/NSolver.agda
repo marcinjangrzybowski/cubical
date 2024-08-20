@@ -285,7 +285,7 @@ cpf {x = x} {y} p q i z = hcomp
                 (p z)
 
 [𝟚×ℕ]→PathTerm : [𝟚×Term] → R.Term
-[𝟚×ℕ]→PathTerm [] = Rrefl
+[𝟚×ℕ]→PathTerm [] = q[ refl ]
 [𝟚×ℕ]→PathTerm ((b , tm) ∷ []) =
    R∙ (vlam "_" (liftVars (subfaceCell [ just (not b) ] tm)))
       (vlam "𝕚'" (if b then tm else (invVar zero tm))) --(if b then tm else Rsym tm)
