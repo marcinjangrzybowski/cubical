@@ -100,32 +100,13 @@ module CompCoherence (SA : NPath 7 A) where
   _ : cong₂ _∙_ LHS₀≡RHS₀ LHS₁≡RHS₁ ≡ LHS₀∙LHS₁≡RHS₀∙RHS₁
   _ = solvePaths
 
+  LHS₀⁻¹≡RHS₀⁻¹ : LHS₀ ⁻¹ ≡ RHS₀ ⁻¹
+  LHS₀⁻¹≡RHS₀⁻¹ = solvePaths
 
-  -- a₀₋₋ : Square (𝑝₀ ∙ 𝑝₁) (𝑝₁ ∙∙ 𝑝₂ ∙∙ 𝑝₃) 𝑝₀ (𝑝₂ ∙ 𝑝₃)
-  -- a₀₋₋ = solvePaths
-  
-  -- a₁₋₋ : Square (𝑝₃ ∙ sym 𝑝₃) (𝑝₂ ∙ 𝑝₃ ∙ (𝑝₄ ∙∙ 𝑝₅ ∙∙ 𝑝₆)) (sym 𝑝₂)
-  --          (((𝑝₃ ∙' 𝑝₄) ∙' 𝑝₅) ∙' 𝑝₆)
-  -- a₁₋₋ = solvePaths
+  _ :  cong (_⁻¹) LHS₀≡RHS₀ ≡ LHS₀⁻¹≡RHS₀⁻¹
+  _ = solvePaths
 
-  -- a₋₀₋ : Square (𝑝₀ ∙ 𝑝₁) (𝑝₃ ∙ sym 𝑝₃) (𝑝₀ ∙∙ 𝑝₁ ∙∙ 𝑝₂) 𝑝₂
-  -- a₋₀₋ = solvePaths
 
-  -- a₋₁₋ : Square (𝑝₁ ∙∙ 𝑝₂ ∙∙ 𝑝₃) (𝑝₂ ∙ 𝑝₃ ∙ (𝑝₄ ∙∙ 𝑝₅ ∙∙ 𝑝₆)) 𝑝₁
-  --     (𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆)
-  -- a₋₁₋ = solvePaths
-
-  -- a₋₋₀ : Square 𝑝₀ (sym 𝑝₂) (𝑝₀ ∙∙ 𝑝₁ ∙∙ 𝑝₂) 𝑝₁
-  -- a₋₋₀ = solvePaths
-
-  -- a₋₋₁ : Square (𝑝₂ ∙ 𝑝₃) (((𝑝₃ ∙' 𝑝₄) ∙' 𝑝₅) ∙' 𝑝₆) 𝑝₂ (𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆)
-  -- a₋₋₁ = solvePaths
-
-  -- -- this works but is slow (~2 min)
-  -- -- but resulting term is managable, and can be evaluated end typechecked quickly if imported in other module
-  
-  -- -- coh : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
-  -- -- coh =  solvePaths
 
 
     
