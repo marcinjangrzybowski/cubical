@@ -135,9 +135,11 @@ record NPath {ℓ} n (A : Type ℓ) : Type ℓ where
  𝑣₅ : {5 ≤ n} → A
  𝑣₅ {k≤} = 𝑣 5 {k≤}
 
-
  𝑣₆ : {6 ≤ n} → A
  𝑣₆ {k≤} = 𝑣 6 {k≤}
+
+ 𝑣₇ : {7 ≤ n} → A
+ 𝑣₇ {k≤} = 𝑣 7 {k≤}
 
 
  𝑝₀ : ∀ {k≤n sk≤n} → 𝑣 0 {k≤n} ≡ 𝑣 1 {sk≤n} 
