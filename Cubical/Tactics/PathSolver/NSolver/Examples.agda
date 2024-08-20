@@ -199,59 +199,40 @@ module 2GroupoidLaws where
 -- -- -- -- --    rLHS = cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
 
 
--- -- -- -- -- module E5 (A B C D : Type ℓ)
--- -- -- -- --   (e₀ : A ≃ B) (e₁ : B ≃ C) (e₂ : C ≃ D) where
+module E5 (A B C D E : Type ℓ)
+  (e₀ : A ≃ B) (e₁ : B ≃ C) (e₂ : C ≃ D) (p : D ≡ E) where
 
--- -- -- -- --  e0 : Square (ua e₀ ∙ ua e₁) (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂) refl (ua e₂)
--- -- -- -- --  e0 = solvePaths
+ e0 : Square (ua e₀ ∙ ua e₁) (ua e₀ ∙∙ (ua e₁ ∙ ua e₂) ∙∙ p) refl (ua e₂ ∙ p)
+ e0 = solvePaths
 
--- -- -- -- --  -- e0L : Square (cong List (ua e₀) ∙ cong List (ua e₁))
--- -- -- -- --  --              (cong List (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂))
--- -- -- -- --  --              refl (cong List (ua e₂))
--- -- -- -- --  -- e0L = solvePaths
-
-
--- -- -- -- -- module _ where
-
--- -- -- -- --   private
--- -- -- -- --    variable
--- -- -- -- --      A B : Type ℓ
--- -- -- -- --      x y z w v : A
+ e0L : Square (cong List (cong List (ua e₀) ∙ cong List (ua e₁)))
+              (cong (List ∘S List) (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂))
+              refl (cong (List ∘S List) (ua e₂))
+ e0L = solvePaths
 
 
--- -- -- -- --   module T2'fext' {x y z : A} (f : A → A → B)
--- -- -- -- --    (p : x ≡ y)
--- -- -- -- --    (q : y ≡ z) where
+module T2'fext' {x y z : A} (f : A → A → B)
+ (p : x ≡ y)
+ (q : y ≡ z) where
 
 
--- -- -- -- --    P Q : _≡_ {A = (A → B)} (λ x' → f x' x) (λ x' → f x' y)
--- -- -- -- --    P = (λ i x' → f x' (p i)) ∙∙ (λ i x' → f x' (q i)) ∙∙ (λ i x' → f x' (q (~ i)))
--- -- -- -- --    Q = refl ∙ (λ i x' → f x' (p i))
+ P Q : _≡_ {A = (A → B)} (λ x' → f x' x) (λ x' → f x' y)
+ P = (λ i x' → f x' (p i)) ∙∙ (λ i x' → f x' (q i)) ∙∙ (λ i x' → f x' (q (~ i)))
+ Q = refl ∙ (λ i x' → f x' (p i))
 
 
 
--- -- -- -- --   module PentaJJ1 {x : A} (p : x ≡ y) (q : y ≡ z) (~r : w ≡ z) (r' r : z ≡ w) (s : w ≡ v) where
 
--- -- -- -- --    module _ (f : A → B) where
+module compPathR-PathP∙∙ 
+        {x y : A} {p : x ≡ y} 
+    where
 
+ invSides-filler-rot' : (invSides-filler p p) ≡ (symP (invSides-filler (sym p) (sym p)))
 
+ invSides-filler-rot' = solvePaths
 
--- -- -- -- --     P' = refl ∙ cong f (p ∙' q ∙ sym (~r) ∙ (~r ∙ (r ∙ s)))
--- -- -- -- --     Q' = cong f p ∙ (cong f (q ∙ refl) ∙ cong f (r ∙∙ s ∙∙ sym s)) ∙ cong f s
-
--- -- -- -- --     _ : cong f (p ∙ sym p) ≡ cong f p ∙ cong f (sym p)
--- -- -- -- --     _ = solvePaths
-
--- -- -- -- --   module compPathR-PathP∙∙ 
--- -- -- -- --           {p : x ≡ y} 
--- -- -- -- --       where
-
--- -- -- -- --    invSides-filler-rot' : (invSides-filler p p) ≡ (symP (invSides-filler (sym p) (sym p)))
-         
--- -- -- -- --    invSides-filler-rot' = solvePaths
-
--- -- -- -- --    _ : invSides-filler-rot p ≡ invSides-filler-rot'
--- -- -- -- --    _ = solvePaths
+ _ : invSides-filler-rot p ≡ invSides-filler-rot'
+ _ = solvePaths
 
 
 
