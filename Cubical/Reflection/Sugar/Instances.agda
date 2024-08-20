@@ -21,6 +21,10 @@ module _ {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} where
  mapM f [] = ⦇ [] ⦈
  mapM f (x ∷ xs) = ⦇ f x ∷ mapM f xs ⦈
 
+ mapM-snd : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ} {A' : Type ℓ'} {B : Type ℓ''}
+            → (A → M B) → A' × A → M (A' × B)
+ mapM-snd f (x , y) = ⦇ ⦇ x ⦈ , f y ⦈
+
  concatMapM : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'}
             → (A → M (List B)) → List A → M (List B)
  concatMapM f [] = ⦇ [] ⦈

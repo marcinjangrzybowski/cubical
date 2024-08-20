@@ -192,12 +192,12 @@ getVert _ x (cell' (_ , (_ , x₁)) _) = cellVert x₁ x
 
 foldBdTermWithCuInput' =
   let T = (CuTerm' ⊥ Unit × Maybe R.Term)
-  in List (T × T)
+  in List (ℕ × (T × T))
 
 
 foldBdTermWithCuInput =
   let T = (CuTerm' ⊥ (Maybe (R.Term × R.Term) × ((Maybe IExpr) × CellVerts)) × Maybe R.Term)
-  in List (T × T)
+  in List (ℕ × (T × T))
 
 
 
@@ -255,7 +255,9 @@ module _ (ty : R.Type) where
  markVertBd xs = do
    let dim = predℕ (length xs)
        v0 = repeat dim false
-   fcs0 ← mapM (markVertSnd 100 dim [] ∘S fst) xs
+   fcs0 ← mapM (λ (k , (c0 , _ )) →
+                  do R.debugPrint "solvePaths" 0 $ "solvePaths - markVert dim: " ∷ₑ [ k ]ₑ
+                     markVertSnd 100 dim [] c0) xs
    fcs0₀ ← Mb.rec (R.typeError [ "imposible" ]ₑ)
               (λ y → mapM (λ k → (getVert 100 (replaceAt k true v0)) (fst y))  (range dim))
              (lookup fcs0 0)
@@ -263,8 +265,8 @@ module _ (ty : R.Type) where
      (getVert 100 (replaceAt (predℕ dim) true v0) ∘S fst) (lookup fcs0 1)
    
    fcs1 ← mapM (idfun _)
-           (zipWith (markVertSnd 100 dim) (fcs0₁ ∷ fcs0₀) (snd <$> xs)) 
-   pure (zipWith _,_ fcs0 fcs1)
+           (zipWith (markVertSnd 100 dim) (fcs0₁ ∷ fcs0₀) ((snd ∘S snd) <$> xs)) 
+   pure $ zipWithIndex (zipWith _,_ fcs0 fcs1)
 
 
 
@@ -298,12 +300,16 @@ cpf {x = x} {y} p q i z = hcomp
   R.def (quote cpf) ([𝟚×ℕ]→PathTerm xs v∷
     v[ (vlam "𝕚'" (if b then tm else (invVar zero tm))) ])
 
+dbgId : ∀ {ℓ} {A : Type ℓ} → String → A → A
+dbgId _ x = x
+
 module MakeFoldTerm (t0 : R.Term) where
 
 
  cellTerm : ℕ → (Maybe IExpr) × ((Maybe (Bool × R.Term) × [𝟚×Term])) → R.Term → R.Term
  -- cellTerm = {!!}
- cellTerm dim (mbi , nothing , []) t = (liftVars t)
+ cellTerm dim (mbi , nothing , []) t =
+    (liftVars t)
  cellTerm dim (mbi , nothing , tl@(_ ∷ _)) _ = --R.unknown
     R.def (quote $≡) (liftVarsFrom (suc dim) 0 ([𝟚×ℕ]→PathTerm tl) v∷
        v[ R.def (quote ~_) v[ 𝒗 dim ] ])
@@ -322,16 +328,20 @@ module MakeFoldTerm (t0 : R.Term) where
  
  ctil : ℕ → (CuTerm' ⊥ (Maybe (R.Term × R.Term) × ((Maybe IExpr) × CellVerts))) → R.TC CuTerm
  ctil dim (hco x c) =
-   ⦇ hco ⦇ pure (repeat dim nothing ++ [ just true ] , cell ((t0)))
+   ⦇ hco ⦇ pure (repeat dim nothing ++ [ just true ] , cell
+                    -- (R.def (quote dbgId) (R.lit (R.string "ctill-fill") v∷ v[ t0 ]) )
+                  (liftVarsFrom (suc dim) zero t0)
+                  )
             ∷
             ctils x ⦈
           (ctil dim c) ⦈
  ctil dim (cell' (mbt , cv) x) = cell' tt <$>
     let ct = (cellTerm dim  (fst cv , cellVertsHead (snd cv)) x)
     in Mb.rec
+            -- (pure $ R.def (quote dbgId) (R.lit (R.string "ctil") v∷ v[ ct ]) )
          (pure ct)
-         (λ tmUDG →
-            UndegenCell.undegenCell dim tmUDG ct) mbt
+         (λ tmUDG → UndegenCell.undegenCell dim tmUDG ct
+            ) mbt
 
   where
   cellVertsHead : CellVerts → Maybe (Bool × R.Term) × [𝟚×Term]  
@@ -357,13 +367,14 @@ foldBdTerm : R.Type → R.Term → foldBdTermWithCuInput
 foldBdTerm _ _ [] = R.typeError [ "foldBdTerm undefined for 0 dim" ]ₑ
 foldBdTerm ty f0 xs = do
   let dim = length xs
-      needsCongFill = any? (L.map (λ { ((_ , nothing) , (_ , nothing) ) → false ; _ → true} ) xs)
-  t0 ← liftVarsFrom dim zero <$> normaliseWithType "mkFoldTerm" ty
-            (subfaceCell (repeat (predℕ dim) (just false)) f0) 
+      needsCongFill = any? (L.map (λ { (_ , ((_ , nothing) , (_ , nothing))) → false ; _ → true} ) xs)
+  t0UL ← normaliseWithType "mkFoldTerm" ty
+            (subfaceCell (repeat (predℕ dim) (just false)) f0)
+  let t0 = liftVarsFrom dim zero t0UL
   toTerm {A = Unit} dim <$>
    (⦇ hco
       (mapM (idfun _) $ join $ zipWith
-        (λ k (cu0 , cu1) →
+        (λ k (_ , (cu0 , cu1)) →
          let sf0 = replaceAt k (just false) (repeat dim nothing)
              sf1 = replaceAt k (just true) (repeat dim nothing)
              prmV = invVar 0 ∘S remapVars (λ k →
@@ -376,7 +387,7 @@ foldBdTerm ty f0 xs = do
                     List _
              fc sf cu =
               let cuTm' = ((prmV ∘S ToTerm.toTerm (defaultCtx dim)) <$>
-                              MakeFoldTerm.ctil t0 (predℕ dim) (fst cu))
+                              MakeFoldTerm.ctil t0UL (predℕ dim) (fst cu))
                   cuTm = ⦇ cell cuTm' ⦈
               in [ ((sf ,_)) <$>
                  (if (not needsCongFill)
@@ -414,15 +425,17 @@ macro
  solvePaths : R.Term → R.TC Unit
  solvePaths h = R.withReduceDefs (false , doNotReduceInPathSolver) do
   hTy ← R.inferType h >>= wait-for-term >>= R.normalise
-  R.debugPrint "solvePaths'" 0 $ [ "solvePaths' - start" ]ₑ
+  R.debugPrint "solvePaths" 0 $ [ "solvePaths - start" ]ₑ
   bdTM@(A , fcs) ← matchNCube hTy
-  R.debugPrint "solvePaths'" 0 $ [ "solvePaths' - matchNCube done" ]ₑ
+  R.debugPrint "solvePaths" 0 $ [ "solvePaths - matchNCube done" ]ₑ
   let dim = length fcs
 
   (t0 , _) ← Mb.rec (R.typeError [ "imposible in solvePaths''" ]ₑ) pure (lookup fcs zero)
 
-  cuFcs ← (quoteBd bdTM >>= mapM
-    (λ (cu0 , cu1) → ⦇ toNoCons (predℕ dim) cu0 , toNoCons (predℕ dim) cu1 ⦈)) <|>
+  cuFcs ← ((zipWithIndex <$> quoteBd bdTM)  >>= mapM
+    (λ (k , (cu0 , cu1)) →
+               (R.debugPrint "solvePaths" 0 $ "solvePaths - solve cong dimension : " ∷ₑ [ k ]ₑ)
+          >>  ⦇ ⦇ k ⦈ , ⦇ toNoCons (predℕ dim) cu0 , toNoCons (predℕ dim) cu1 ⦈ ⦈)) <|>
       R.typeError [ "quoteBd - failed" ]ₑ
   
   solution ← markVertBd A cuFcs >>= foldBdTerm A t0

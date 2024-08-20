@@ -148,7 +148,7 @@ module GroupoidLaws (SA : NPath 6 A) where
 
 module 2GroupoidLaws where
 
- module Triangle (SA : NPath 2 A)  where
+ module Triangle (SA : NPath 2 A) (X : A)  where
   open NPath SA
 
 
@@ -166,6 +166,10 @@ module 2GroupoidLaws where
                           ≡
                    cong (𝑝₀ ∙_) (assoc 𝑝₁ 𝑝₂ 𝑝₃) ∙∙ assoc 𝑝₀ (𝑝₁ ∙ 𝑝₂) 𝑝₃ ∙∙ cong (_∙ 𝑝₃) (assoc 𝑝₀ 𝑝₁ 𝑝₂)
   pentagonIdentity' = solvePaths
+
+  -- pentagonIdentity'≡pentagonIdentity : pentagonIdentity' ≡ pentagonIdentity 𝑝₀ 𝑝₁ 𝑝₂ 𝑝₃
+  -- pentagonIdentity'≡pentagonIdentity = solvePaths
+
   module _ (f : A → B) where
 
    cf : ∀ {x y} → (p : x ≡ y) → f x ≡ f y
@@ -191,202 +195,202 @@ module 2GroupoidLaws where
 
 
 
--- -- -- --    pLHS = assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s
--- -- -- --    rLHS = cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
+-- -- -- -- --    pLHS = assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s
+-- -- -- -- --    rLHS = cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
 
 
--- -- -- -- module E5 (A B C D : Type ℓ)
--- -- -- --   (e₀ : A ≃ B) (e₁ : B ≃ C) (e₂ : C ≃ D) where
+-- -- -- -- -- module E5 (A B C D : Type ℓ)
+-- -- -- -- --   (e₀ : A ≃ B) (e₁ : B ≃ C) (e₂ : C ≃ D) where
 
--- -- -- --  e0 : Square (ua e₀ ∙ ua e₁) (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂) refl (ua e₂)
--- -- -- --  e0 = solvePaths
+-- -- -- -- --  e0 : Square (ua e₀ ∙ ua e₁) (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂) refl (ua e₂)
+-- -- -- -- --  e0 = solvePaths
 
--- -- -- --  -- e0L : Square (cong List (ua e₀) ∙ cong List (ua e₁))
--- -- -- --  --              (cong List (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂))
--- -- -- --  --              refl (cong List (ua e₂))
--- -- -- --  -- e0L = solvePaths
-
-
--- -- -- -- module _ where
-
--- -- -- --   private
--- -- -- --    variable
--- -- -- --      A B : Type ℓ
--- -- -- --      x y z w v : A
+-- -- -- -- --  -- e0L : Square (cong List (ua e₀) ∙ cong List (ua e₁))
+-- -- -- -- --  --              (cong List (ua e₀ ∙∙ ua e₁ ∙∙ ua e₂))
+-- -- -- -- --  --              refl (cong List (ua e₂))
+-- -- -- -- --  -- e0L = solvePaths
 
 
--- -- -- --   module T2'fext' {x y z : A} (f : A → A → B)
--- -- -- --    (p : x ≡ y)
--- -- -- --    (q : y ≡ z) where
+-- -- -- -- -- module _ where
+
+-- -- -- -- --   private
+-- -- -- -- --    variable
+-- -- -- -- --      A B : Type ℓ
+-- -- -- -- --      x y z w v : A
 
 
--- -- -- --    P Q : _≡_ {A = (A → B)} (λ x' → f x' x) (λ x' → f x' y)
--- -- -- --    P = (λ i x' → f x' (p i)) ∙∙ (λ i x' → f x' (q i)) ∙∙ (λ i x' → f x' (q (~ i)))
--- -- -- --    Q = refl ∙ (λ i x' → f x' (p i))
+-- -- -- -- --   module T2'fext' {x y z : A} (f : A → A → B)
+-- -- -- -- --    (p : x ≡ y)
+-- -- -- -- --    (q : y ≡ z) where
 
 
-
--- -- -- --   module PentaJJ1 {x : A} (p : x ≡ y) (q : y ≡ z) (~r : w ≡ z) (r' r : z ≡ w) (s : w ≡ v) where
-
--- -- -- --    module _ (f : A → B) where
+-- -- -- -- --    P Q : _≡_ {A = (A → B)} (λ x' → f x' x) (λ x' → f x' y)
+-- -- -- -- --    P = (λ i x' → f x' (p i)) ∙∙ (λ i x' → f x' (q i)) ∙∙ (λ i x' → f x' (q (~ i)))
+-- -- -- -- --    Q = refl ∙ (λ i x' → f x' (p i))
 
 
 
--- -- -- --     P' = refl ∙ cong f (p ∙' q ∙ sym (~r) ∙ (~r ∙ (r ∙ s)))
--- -- -- --     Q' = cong f p ∙ (cong f (q ∙ refl) ∙ cong f (r ∙∙ s ∙∙ sym s)) ∙ cong f s
+-- -- -- -- --   module PentaJJ1 {x : A} (p : x ≡ y) (q : y ≡ z) (~r : w ≡ z) (r' r : z ≡ w) (s : w ≡ v) where
 
--- -- -- --     _ : cong f (p ∙ sym p) ≡ cong f p ∙ cong f (sym p)
--- -- -- --     _ = solvePaths
+-- -- -- -- --    module _ (f : A → B) where
 
--- -- -- --   module compPathR-PathP∙∙ 
--- -- -- --           {p : x ≡ y} 
--- -- -- --       where
 
--- -- -- --    invSides-filler-rot' : (invSides-filler p p) ≡ (symP (invSides-filler (sym p) (sym p)))
+
+-- -- -- -- --     P' = refl ∙ cong f (p ∙' q ∙ sym (~r) ∙ (~r ∙ (r ∙ s)))
+-- -- -- -- --     Q' = cong f p ∙ (cong f (q ∙ refl) ∙ cong f (r ∙∙ s ∙∙ sym s)) ∙ cong f s
+
+-- -- -- -- --     _ : cong f (p ∙ sym p) ≡ cong f p ∙ cong f (sym p)
+-- -- -- -- --     _ = solvePaths
+
+-- -- -- -- --   module compPathR-PathP∙∙ 
+-- -- -- -- --           {p : x ≡ y} 
+-- -- -- -- --       where
+
+-- -- -- -- --    invSides-filler-rot' : (invSides-filler p p) ≡ (symP (invSides-filler (sym p) (sym p)))
          
--- -- -- --    invSides-filler-rot' = solvePaths
+-- -- -- -- --    invSides-filler-rot' = solvePaths
 
--- -- -- --    _ : invSides-filler-rot p ≡ invSides-filler-rot'
--- -- -- --    _ = solvePaths
-
-
-
--- -- -- --    P Q : x ≡ x 
--- -- -- --    P = refl
--- -- -- --    Q = λ i → p (i ∧ ~ i)
-
-
--- -- -- --    P≡Q : sym P ≡ sym Q 
--- -- -- --    P≡Q = solvePaths
-
--- -- -- --   module T2'I (p : I → A) where
-
-
--- -- -- --    P Q : p i0 ≡ p i0 
--- -- -- --    P = refl
--- -- -- --    Q = λ i → p (i ∧ ~ i)
-
-
--- -- -- --    P≡Q : sym P ≡ sym Q 
--- -- -- --    P≡Q = solvePaths
+-- -- -- -- --    _ : invSides-filler-rot p ≡ invSides-filler-rot'
+-- -- -- -- --    _ = solvePaths
 
 
 
-
--- -- -- --   module T2'fext {x y : A} (f g : {A} → A) (p : Path ({A} → A) (λ {x} → f {x}) (λ {x} → g {x})) (q : x ≡ y) where
-
-
--- -- -- --    P Q : f {y}  ≡ f {y} 
--- -- -- --    P = refl
--- -- -- --    Q = (λ i → p i {q (~ i )}) ∙ (λ i → p (~ i) {q i})
+-- -- -- -- --    P Q : x ≡ x 
+-- -- -- -- --    P = refl
+-- -- -- -- --    Q = λ i → p (i ∧ ~ i)
 
 
--- -- -- --    P≡Q : sym P ≡ sym Q 
--- -- -- --    P≡Q = solvePaths
+-- -- -- -- --    P≡Q : sym P ≡ sym Q 
+-- -- -- -- --    P≡Q = solvePaths
+
+-- -- -- -- --   module T2'I (p : I → A) where
 
 
--- -- -- --   module T2 {x : A} (p' p'' : x ≡ y) (xr xr' : x ≡ x) (q : y ≡ z) (~r : w ≡ z) (r' r : z ≡ w) (s : w ≡ v)
--- -- -- --              (sq : Square xr (sym p'') p'' xr') where
-
--- -- -- --    p : x ≡ y
--- -- -- --    p i = sq i (~ i)
-
--- -- -- --    P Q : x ≡ v 
--- -- -- --    P = refl ∙ (p ∙' q ∙ sym (~r) ∙ (~r  ∙ (λ i → r (i ∧ ~ i)) ∙  (r ∙ ((λ i → r (i ∨  ~ i))) ∙  s )))
--- -- -- --    Q = p ∙ (q ∙ refl ∙ refl ∙ r ∙ s ∙ sym s) ∙ s
+-- -- -- -- --    P Q : p i0 ≡ p i0 
+-- -- -- -- --    P = refl
+-- -- -- -- --    Q = λ i → p (i ∧ ~ i)
 
 
--- -- -- --    -- P≡Q : sym Q ≡ sym P
--- -- -- --    -- P≡Q = solvePaths
-
-
--- -- -- --   module PentaJ1Cong {x : A} (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) (s : w ≡ v) (f : A → B) where
-
-
--- -- -- --    LHS RHS : (λ i → f (p i)) ∙ (λ i → f (q i)) ∙ (λ i → f (r i)) ≡ λ i → f (((p ∙ q) ∙ r) i)
--- -- -- --    LHS = solvePaths ∙ congP (λ _ → cong f) (assoc p q r) 
-
--- -- -- --    RHS = assoc (cong f p) (cong f q) (cong f r) ∙ solvePaths
-
--- -- -- --    LHS≡RHS : LHS ≡ RHS
--- -- -- --    LHS≡RHS = solvePaths
+-- -- -- -- --    P≡Q : sym P ≡ sym Q 
+-- -- -- -- --    P≡Q = solvePaths
 
 
 
--- -- -- --    pLHS = assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s
--- -- -- --    rLHS = cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
 
--- -- -- --    pentagonTy = pLHS ≡ rLHS
--- -- -- --    pentagonTy' = Square pLHS (assoc p (q ∙ r) s)
--- -- -- --                 (cong (p ∙_) (assoc q r s))
--- -- -- --                  (sym (cong (_∙ s) (assoc p q r)))
+-- -- -- -- --   module T2'fext {x y : A} (f g : {A} → A) (p : Path ({A} → A) (λ {x} → f {x}) (λ {x} → g {x})) (q : x ≡ y) where
 
 
--- -- -- --    _ : pentagonTy'
--- -- -- --    _ = solvePaths 
-
--- -- -- --    pentagonIdentity' : pentagonTy
--- -- -- --    pentagonIdentity' = solvePaths
-
--- -- -- --    -- this 4-cubes works, but takes lots of time, good oportunity to experiment with performance
--- -- -- --    -- pentagonIdentity'≡pentagonIdentity : pentagonIdentity' ≡ pentagonIdentity p q r s
--- -- -- --    -- pentagonIdentity'≡pentagonIdentity = solvePaths'
+-- -- -- -- --    P Q : f {y}  ≡ f {y} 
+-- -- -- -- --    P = refl
+-- -- -- -- --    Q = (λ i → p i {q (~ i )}) ∙ (λ i → p (~ i) {q i})
 
 
--- -- -- --   module PentaJJ1' {x : A} (p : x ≡ y) (q : y ≡ z) (~r : w ≡ z) (r' r : z ≡ w) (s : w ≡ v) where
-
--- -- -- --    P Q : x ≡ v
--- -- -- --    P = refl ∙ (p ∙' q ∙ sym (~r) ∙ (~r ∙ (r ∙ s)))
--- -- -- --    Q = p ∙ (q ∙ refl ∙ r ∙ s ∙ sym s) ∙ s
+-- -- -- -- --    P≡Q : sym P ≡ sym Q 
+-- -- -- -- --    P≡Q = solvePaths
 
 
--- -- -- --    P≡Q : sym P ≡ sym Q
--- -- -- --    P≡Q = solvePaths
+-- -- -- -- --   module T2 {x : A} (p' p'' : x ≡ y) (xr xr' : x ≡ x) (q : y ≡ z) (~r : w ≡ z) (r' r : z ≡ w) (s : w ≡ v)
+-- -- -- -- --              (sq : Square xr (sym p'') p'' xr') where
+
+-- -- -- -- --    p : x ≡ y
+-- -- -- -- --    p i = sq i (~ i)
+
+-- -- -- -- --    P Q : x ≡ v 
+-- -- -- -- --    P = refl ∙ (p ∙' q ∙ sym (~r) ∙ (~r  ∙ (λ i → r (i ∧ ~ i)) ∙  (r ∙ ((λ i → r (i ∨  ~ i))) ∙  s )))
+-- -- -- -- --    Q = p ∙ (q ∙ refl ∙ refl ∙ r ∙ s ∙ sym s) ∙ s
+
+
+-- -- -- -- --    -- P≡Q : sym Q ≡ sym P
+-- -- -- -- --    -- P≡Q = solvePaths
+
+
+-- -- -- -- --   module PentaJ1Cong {x : A} (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) (s : w ≡ v) (f : A → B) where
+
+
+-- -- -- -- --    LHS RHS : (λ i → f (p i)) ∙ (λ i → f (q i)) ∙ (λ i → f (r i)) ≡ λ i → f (((p ∙ q) ∙ r) i)
+-- -- -- -- --    LHS = solvePaths ∙ congP (λ _ → cong f) (assoc p q r) 
+
+-- -- -- -- --    RHS = assoc (cong f p) (cong f q) (cong f r) ∙ solvePaths
+
+-- -- -- -- --    LHS≡RHS : LHS ≡ RHS
+-- -- -- -- --    LHS≡RHS = solvePaths
 
 
 
--- -- -- --    module _ (f : A → B) where
+-- -- -- -- --    pLHS = assoc p q (r ∙ s) ∙ assoc (p ∙ q) r s
+-- -- -- -- --    rLHS = cong (p ∙_) (assoc q r s) ∙∙ assoc p (q ∙ r) s ∙∙ cong (_∙ s) (assoc p q r)
+
+-- -- -- -- --    pentagonTy = pLHS ≡ rLHS
+-- -- -- -- --    pentagonTy' = Square pLHS (assoc p (q ∙ r) s)
+-- -- -- -- --                 (cong (p ∙_) (assoc q r s))
+-- -- -- -- --                  (sym (cong (_∙ s) (assoc p q r)))
+
+
+-- -- -- -- --    _ : pentagonTy'
+-- -- -- -- --    _ = solvePaths 
+
+-- -- -- -- --    pentagonIdentity' : pentagonTy
+-- -- -- -- --    pentagonIdentity' = solvePaths
+
+-- -- -- -- --    -- this 4-cubes works, but takes lots of time, good oportunity to experiment with performance
+-- -- -- -- --    -- pentagonIdentity'≡pentagonIdentity : pentagonIdentity' ≡ pentagonIdentity p q r s
+-- -- -- -- --    -- pentagonIdentity'≡pentagonIdentity = solvePaths'
+
+
+-- -- -- -- --   module PentaJJ1' {x : A} (p : x ≡ y) (q : y ≡ z) (~r : w ≡ z) (r' r : z ≡ w) (s : w ≡ v) where
+
+-- -- -- -- --    P Q : x ≡ v
+-- -- -- -- --    P = refl ∙ (p ∙' q ∙ sym (~r) ∙ (~r ∙ (r ∙ s)))
+-- -- -- -- --    Q = p ∙ (q ∙ refl ∙ r ∙ s ∙ sym s) ∙ s
+
+
+-- -- -- -- --    P≡Q : sym P ≡ sym Q
+-- -- -- -- --    P≡Q = solvePaths
 
 
 
--- -- -- --     P' = refl ∙ cong f (p ∙' q ∙ sym (~r) ∙ (~r ∙ (r ∙ s)))
--- -- -- --     Q' = cong f p ∙ (cong f (q ∙ refl) ∙ cong f (r ∙∙ s ∙∙ sym s)) ∙ cong f s
-
--- -- -- --     _ : cong f (p ∙ sym p) ≡ cong f p ∙ cong f (sym p)
--- -- -- --     _ = solvePaths
+-- -- -- -- --    module _ (f : A → B) where
 
 
--- -- -- --     _ : cong f (p ∙ sym p ∙ p ∙ q) ≡ cong f p ∙ cong f q
--- -- -- --     _ = solvePaths
 
--- -- -- --     _ : P' ≡ Q'
--- -- -- --     _ = solvePaths
+-- -- -- -- --     P' = refl ∙ cong f (p ∙' q ∙ sym (~r) ∙ (~r ∙ (r ∙ s)))
+-- -- -- -- --     Q' = cong f p ∙ (cong f (q ∙ refl) ∙ cong f (r ∙∙ s ∙∙ sym s)) ∙ cong f s
 
-
--- -- -- --    P'' Q'' : y ≡ z
--- -- -- --    P'' = (q ∙∙ sym (~r) ∙∙ (~r))
--- -- -- --    Q'' =  q
+-- -- -- -- --     _ : cong f (p ∙ sym p) ≡ cong f p ∙ cong f (sym p)
+-- -- -- -- --     _ = solvePaths
 
 
--- -- -- --    P''≡Q'' : P'' ≡ Q''
--- -- -- --    P''≡Q'' = solvePaths
+-- -- -- -- --     _ : cong f (p ∙ sym p ∙ p ∙ q) ≡ cong f p ∙ cong f q
+-- -- -- -- --     _ = solvePaths
+
+-- -- -- -- --     _ : P' ≡ Q'
+-- -- -- -- --     _ = solvePaths
 
 
--- -- -- -- module E3 {ℓ} where
+-- -- -- -- --    P'' Q'' : y ≡ z
+-- -- -- -- --    P'' = (q ∙∙ sym (~r) ∙∙ (~r))
+-- -- -- -- --    Q'' =  q
 
--- -- -- --  data D : Type ℓ where
--- -- -- --   x y z w : D
--- -- -- --   p : x ≡ y
--- -- -- --   q : y ≡ z
--- -- -- --   r : z ≡ w
--- -- -- --   f : D → D
--- -- -- --   f₂ : D → D → D
--- -- -- --   f₄ : D → D → D → D → D
+
+-- -- -- -- --    P''≡Q'' : P'' ≡ Q''
+-- -- -- -- --    P''≡Q'' = solvePaths
+
+
+-- -- -- -- -- module E3 {ℓ} where
+
+-- -- -- -- --  data D : Type ℓ where
+-- -- -- -- --   x y z w : D
+-- -- -- -- --   p : x ≡ y
+-- -- -- -- --   q : y ≡ z
+-- -- -- -- --   r : z ≡ w
+-- -- -- -- --   f : D → D
+-- -- -- -- --   f₂ : D → D → D
+-- -- -- -- --   f₄ : D → D → D → D → D
  
 
--- -- -- --  e1 : Cube {a₀₀₀ = x}
--- -- -- --          (invSides-filler refl refl) (invSides-filler refl refl)
--- -- -- --          (invSides-filler refl refl) (invSides-filler refl refl)
--- -- -- --          (invSides-filler refl refl) (invSides-filler refl refl)
--- -- -- --  e1 = solvePaths
+-- -- -- -- --  e1 : Cube {a₀₀₀ = x}
+-- -- -- -- --          (invSides-filler refl refl) (invSides-filler refl refl)
+-- -- -- -- --          (invSides-filler refl refl) (invSides-filler refl refl)
+-- -- -- -- --          (invSides-filler refl refl) (invSides-filler refl refl)
+-- -- -- -- --  e1 = solvePaths
 
