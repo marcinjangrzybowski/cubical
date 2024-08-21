@@ -168,12 +168,6 @@ module Ω-Tests where
   _ = solvePaths
       
 
-
-
-{!solvePaths!}
-  λ z i j → p (z ∨ i ∨ ~ i ∨ j ∨ ~ j) 
-
-
  module HIT where
   open import Cubical.HITs.S1.Base
 
@@ -310,9 +304,8 @@ module NoCong where
   a₋₋₁ = solvePaths
 
 
-  -- TODO : investigate why this is failing
-  -- coh : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
-  -- coh =  solvePaths
+  coh : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
+  coh =  solvePaths
 
 
  module InSubTerms {ℓ} (A : Type ℓ)
