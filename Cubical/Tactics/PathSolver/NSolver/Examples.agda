@@ -46,68 +46,65 @@ private
     A B : Type ℓ
 
 
--- module Coherence (SA : NPath 7 A) where
---   open NPath SA 
+-- -- module Coherence (SA : NPath 7 A) where
+-- --   open NPath SA 
 
 
 
---   a₀₋₋ : Square (𝑝₀ ∙ 𝑝₁) (𝑝₁ ∙∙ 𝑝₂ ∙∙ 𝑝₃) 𝑝₀ (𝑝₂ ∙ 𝑝₃)
---   a₀₋₋ = solvePaths
+-- --   a₀₋₋ : Square (𝑝₀ ∙ 𝑝₁) (𝑝₁ ∙∙ 𝑝₂ ∙∙ 𝑝₃) 𝑝₀ (𝑝₂ ∙ 𝑝₃)
+-- --   a₀₋₋ = solvePaths
   
---   a₁₋₋ : Square (𝑝₃ ∙ sym 𝑝₃) (𝑝₂ ∙ 𝑝₃ ∙ (𝑝₄ ∙∙ 𝑝₅ ∙∙ 𝑝₆)) (sym 𝑝₂)
---            (((𝑝₃ ∙' 𝑝₄) ∙' 𝑝₅) ∙' 𝑝₆)
---   a₁₋₋ = solvePaths
+-- --   a₁₋₋ : Square (𝑝₃ ∙ sym 𝑝₃) (𝑝₂ ∙ 𝑝₃ ∙ (𝑝₄ ∙∙ 𝑝₅ ∙∙ 𝑝₆)) (sym 𝑝₂)
+-- --            (((𝑝₃ ∙' 𝑝₄) ∙' 𝑝₅) ∙' 𝑝₆)
+-- --   a₁₋₋ = solvePaths
 
---   a₋₀₋ : Square (𝑝₀ ∙ 𝑝₁) (𝑝₃ ∙ sym 𝑝₃) (𝑝₀ ∙∙ 𝑝₁ ∙∙ 𝑝₂) 𝑝₂
---   a₋₀₋ = solvePaths
+-- --   a₋₀₋ : Square (𝑝₀ ∙ 𝑝₁) (𝑝₃ ∙ sym 𝑝₃) (𝑝₀ ∙∙ 𝑝₁ ∙∙ 𝑝₂) 𝑝₂
+-- --   a₋₀₋ = solvePaths
 
---   a₋₁₋ : Square (𝑝₁ ∙∙ 𝑝₂ ∙∙ 𝑝₃) (𝑝₂ ∙ 𝑝₃ ∙ (𝑝₄ ∙∙ 𝑝₅ ∙∙ 𝑝₆)) 𝑝₁
---       (𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆)
---   a₋₁₋ = solvePaths
+-- --   a₋₁₋ : Square (𝑝₁ ∙∙ 𝑝₂ ∙∙ 𝑝₃) (𝑝₂ ∙ 𝑝₃ ∙ (𝑝₄ ∙∙ 𝑝₅ ∙∙ 𝑝₆)) 𝑝₁
+-- --       (𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆)
+-- --   a₋₁₋ = solvePaths
 
---   a₋₋₀ : Square 𝑝₀ (sym 𝑝₂) (𝑝₀ ∙∙ 𝑝₁ ∙∙ 𝑝₂) 𝑝₁
---   a₋₋₀ = solvePaths
+-- --   a₋₋₀ : Square 𝑝₀ (sym 𝑝₂) (𝑝₀ ∙∙ 𝑝₁ ∙∙ 𝑝₂) 𝑝₁
+-- --   a₋₋₀ = solvePaths
 
---   a₋₋₁ : Square (𝑝₂ ∙ 𝑝₃) (((𝑝₃ ∙' 𝑝₄) ∙' 𝑝₅) ∙' 𝑝₆) 𝑝₂ (𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆)
---   a₋₋₁ = solvePaths
+-- --   a₋₋₁ : Square (𝑝₂ ∙ 𝑝₃) (((𝑝₃ ∙' 𝑝₄) ∙' 𝑝₅) ∙' 𝑝₆) 𝑝₂ (𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆)
+-- --   a₋₋₁ = solvePaths
 
---   -- this works but is slow (~2 min)
---   -- but resulting term is managable, and can be evaluated end typechecked quickly if imported in other module
+-- --   -- this works but is slow (~2 min)
+-- --   -- but resulting term is managable, and can be evaluated end typechecked quickly if imported in other module
   
---   -- coh : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
---   -- coh =  solvePaths
+-- --   -- coh : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
+-- --   -- coh =  solvePaths
 
-module CompCoherence (SA : NPath 7 A) where
-  open NPath SA 
+-- -- module CompCoherence (SA : NPath 7 A) where
+-- --   open NPath SA 
 
-  module Problem where
-   LHS₀ RHS₀ : 𝑣₀ ≡ 𝑣₄
-   LHS₀ = 𝑝₀ ∙∙ 𝑝₁ ∙ (𝑝₂ ∙ (𝑝₁ ∙ 𝑝₂) ⁻¹) ∙ 𝑝₁ ∙∙ 𝑝₂ ∙ 𝑝₃
-   RHS₀ = 𝑝₀ ∙ (λ i → 𝑝₁ (i ∧ ~ i)) ∙ 𝑝₁ ∙ 𝑝₂ ∙ (λ i → 𝑝₂ (i ∨ ~ i)) ∙  𝑝₃
+-- --    LHS₀ RHS₀ : 𝑣₀ ≡ 𝑣₄
+-- --    LHS₀ = 𝑝₀ ∙∙ 𝑝₁ ∙ (𝑝₂ ∙ (𝑝₁ ∙ 𝑝₂) ⁻¹) ∙ 𝑝₁ ∙∙ 𝑝₂ ∙ 𝑝₃
+-- --    RHS₀ = 𝑝₀ ∙ (λ i → 𝑝₁ (i ∧ ~ i)) ∙ 𝑝₁ ∙ 𝑝₂ ∙ (λ i → 𝑝₂ (i ∨ ~ i)) ∙  𝑝₃
 
-   LHS₁ RHS₁ : 𝑣₄ ≡ 𝑣₇
-   LHS₁ = 𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆
-   RHS₁ = 𝑝₄ ∙ refl ∙ 𝑝₅ ∙ refl ∙ refl ∙ 𝑝₆
+-- --    LHS₁ RHS₁ : 𝑣₄ ≡ 𝑣₇
+-- --    LHS₁ = 𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆
+-- --    RHS₁ = 𝑝₄ ∙ refl ∙ 𝑝₅ ∙ refl ∙ refl ∙ 𝑝₆
 
-   LHS₀≡RHS₀ : LHS₀ ≡ RHS₀
-   LHS₀≡RHS₀ = solvePaths
+-- --    LHS₀≡RHS₀ : LHS₀ ≡ RHS₀
+-- --    LHS₀≡RHS₀ = solvePaths
 
-   LHS₁≡RHS₁ : LHS₁ ≡ RHS₁
-   LHS₁≡RHS₁ = solvePaths
+-- --    LHS₁≡RHS₁ : LHS₁ ≡ RHS₁
+-- --    LHS₁≡RHS₁ = solvePaths
 
-   LHS₀∙LHS₁≡RHS₀∙RHS₁ : LHS₀ ∙ LHS₁ ≡ RHS₀ ∙ RHS₁
-   LHS₀∙LHS₁≡RHS₀∙RHS₁ = solvePaths
+-- --    LHS₀∙LHS₁≡RHS₀∙RHS₁ : LHS₀ ∙ LHS₁ ≡ RHS₀ ∙ RHS₁
+-- --    LHS₀∙LHS₁≡RHS₀∙RHS₁ = solvePaths
 
-   _ : cong₂ _∙_ LHS₀≡RHS₀ LHS₁≡RHS₁ ≡ LHS₀∙LHS₁≡RHS₀∙RHS₁
-   _ = solvePaths
+-- --    _ : cong₂ _∙_ LHS₀≡RHS₀ LHS₁≡RHS₁ ≡ LHS₀∙LHS₁≡RHS₀∙RHS₁
+-- --    _ = solvePaths
 
-   LHS₀⁻¹≡RHS₀⁻¹ : LHS₀ ⁻¹ ≡ RHS₀ ⁻¹
-   LHS₀⁻¹≡RHS₀⁻¹ = solvePaths
+-- --    LHS₀⁻¹≡RHS₀⁻¹ : LHS₀ ⁻¹ ≡ RHS₀ ⁻¹
+-- --    LHS₀⁻¹≡RHS₀⁻¹ = solvePaths
 
-   _ :  cong (_⁻¹) LHS₀≡RHS₀ ≡ LHS₀⁻¹≡RHS₀⁻¹
-   _ = solvePaths
-
-
+-- --    _ :  cong (_⁻¹) LHS₀≡RHS₀ ≡ LHS₀⁻¹≡RHS₀⁻¹
+-- --    _ = solvePaths
 
 
     
@@ -238,20 +235,25 @@ module CompCoherence (SA : NPath 7 A) where
 
 
 
--- module _ {A : Type} {x y z w v : A} (p' p'' : x ≡ y) (xr xr' : x ≡ x) (q : y ≡ z) (~r : w ≡ z) (r' r : z ≡ w) (s : w ≡ v)
---            (sq : Square xr (sym p'') p'' xr') where
+module _ {A : Type} {x y z w v : A} (p' p'' : x ≡ y) (xr xr' : x ≡ x) (q : y ≡ z) (~r : w ≡ z) (r' r : z ≡ w) (s : w ≡ v)
+           (sq : Square xr (sym p'') p'' xr') where
 
---  _ : refl ≡ λ i → p' (i ∨ ~ i)
---  _ = solvePaths
+ _ : refl ≡ λ i → p' (i ∨ ~ i)
+ _ = solvePaths
+
+ _ : Cube
+        (λ i j → p' (i ∨ ~ i ∨ j ∨ ~ j)) (λ _ _ → y)
+        (λ _ _ → y) (λ _ _ → y)
+        (λ _ _ → y) (λ _ _ → y)
+ _ = solvePaths
+
+ _ : (λ i → sq i (~ i)) ∙ refl ∙ ((λ i → sq (~ i) i) ∙ (λ i → sq i (~ i)) ∙' q ∙ sym (~r) ∙
+         (~r  ∙ (λ i → r (i ∧ ~ i)) ∙
+              (r ∙ ((λ i → r (i ∨  ~ i))) ∙  s )))
+      ≡ (λ i → sq i (~ i)) ∙ (q ∙ refl ∙ refl ∙ r ∙ s ∙ sym s) ∙ s
 
 
---  _ : (λ i → sq i (~ i)) ∙ refl ∙ ((λ i → sq (~ i) i) ∙ (λ i → sq i (~ i)) ∙' q ∙ sym (~r) ∙
---          (~r  ∙ (λ i → r (i ∧ ~ i)) ∙
---               (r ∙ ((λ i → r (i ∨  ~ i))) ∙  s )))
---       ≡ (λ i → sq i (~ i)) ∙ (q ∙ refl ∙ refl ∙ r ∙ s ∙ sym s) ∙ s
-
-
---  _ = solvePaths
+ _ = solvePaths
 
 
 
