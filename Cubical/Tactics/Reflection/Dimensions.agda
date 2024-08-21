@@ -616,9 +616,9 @@ undegenFcs dim l = do
   do
      foldrM (λ sf fe → _++fe fe <$> (if ((sfDim sf) =ℕ 0) then pure [ sf ] else do
         isNonDegForEvery ← foldrM
-            (\ie b →  (b and_)  <$> (isNonDegen (sfDim sf) (evalIExprOnFace sf ie)))
+            (\ie b →  (b and_)  <$> (isNonDegen dim (evalIExprOnFace sf ie)))
               true l
-        pure $ if isNonDegForEvery then [] else [ sf ]))
+        pure $ if isNonDegForEvery then [ sf ] else []))
       [] (filter ((_<ℕ dim) ∘ sfDim) (allSubFacesOfDim dim))
 
 

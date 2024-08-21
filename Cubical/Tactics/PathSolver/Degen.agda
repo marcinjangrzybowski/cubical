@@ -93,7 +93,11 @@ module UndegenCell (dim : ℕ) where
      
  undegenCell : (R.Term × R.Term) → R.Term → R.TC R.Term
  undegenCell (t0 , tI) t = do
-   fe ← undegenFcs dim (extractAllIExprs t0)
+   let eai = (extractAllIExprs t0)
+   -- concatMapM (pure ∘S ("" ∷nl_) ∘S [_]ₑ ∘S IExpr→Term) eai >>= R.typeError
+
+   fe ← undegenFcs dim eai --(extractAllIExprs t0)
+   
    -- Mb.rec (pure t)
    let ie = IExpr→Term (F→I dim fe) 
    pure
