@@ -304,8 +304,8 @@ module NoCong where
   a₋₋₁ = solvePaths
 
 
-  coh : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
-  coh =  solvePaths
+  _ : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
+  _ =  solvePaths
 
 
  module InSubTerms {ℓ} (A : Type ℓ)
@@ -362,8 +362,8 @@ module NoCong where
   a₋₋₁ = solvePaths
 
 
-  coh : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
-  coh =  solvePaths
+  _ : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
+  _ =  solvePaths
 
 module WithCong where
 
@@ -407,8 +407,6 @@ module WithCong where
   _ : cong[solve] ≡ solve[cong]
   _ = solvePaths
 
-  -- sol1 : (𝑝₀ ∙ refl ∙ 𝑝₁) ∙ (𝑝₂ ∙ refl ∙ 𝑝₃) ≡ (𝑝₀ ∙∙ (𝑝₁ ∙∙ refl ∙∙ 𝑝₂) ∙∙ 𝑝₃)
-  -- sol1 = {!!}
 
   
 module CompCoherence {A : Type ℓ} (SA : NPath 7 A) where

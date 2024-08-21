@@ -221,16 +221,16 @@ private
 
 
 
--- module compPathR-PathP∙∙ 
---         {x y : A} {p : x ≡ y} 
---     where
+module compPathR-PathP∙∙ 
+        {x y : A} {p : x ≡ y} 
+    where
 
---  invSides-filler-rot' : (invSides-filler p p) ≡ (symP (invSides-filler (sym p) (sym p)))
+ invSides-filler-rot' : (invSides-filler p p) ≡ (symP (invSides-filler (sym p) (sym p)))
 
---  invSides-filler-rot' = solvePaths
+ invSides-filler-rot' = solvePaths
 
---  _ : invSides-filler-rot p ≡ invSides-filler-rot'
---  _ = solvePaths
+ _ : invSides-filler-rot p ≡ invSides-filler-rot'
+ _ = solvePaths
 
 
 

@@ -424,8 +424,9 @@ macro
 
  solvePaths : R.Term → R.TC Unit
  solvePaths h = R.withReduceDefs (false , doNotReduceInPathSolver) do
-  hTy ← R.inferType h >>= wait-for-term >>= R.normalise
   R.debugPrint "solvePaths" 0 $ [ "solvePaths - start" ]ₑ
+  hTy ← R.inferType h >>= wait-for-term >>=
+      (λ x → (R.debugPrint "solvePaths" 0 $ "solvePaths - " ∷ₑ [ x ]ₑ) >> pure x) >>= R.normalise
   bdTM@(A , fcs) ← matchNCube hTy
   R.debugPrint "solvePaths" 0 $ [ "solvePaths - matchNCube done" ]ₑ
   let dim = length fcs
