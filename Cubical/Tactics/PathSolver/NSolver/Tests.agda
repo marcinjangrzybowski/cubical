@@ -361,7 +361,7 @@ module NoCong where
 module WithCong where
 
 
- module ReflTests {A : Type ℓ} {B : Type ℓ'} (f : A → B) (a : A) where
+ module Refl {A : Type ℓ} {B : Type ℓ'} (f : A → B) (a : A) where
 
   _ : cong f (refl {x = a} ∙ refl) ≡ refl
   _ = solvePaths
