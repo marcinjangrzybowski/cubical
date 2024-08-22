@@ -235,3 +235,4 @@ module NoCong where
 
   _ : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
   _ =  solvePaths
+

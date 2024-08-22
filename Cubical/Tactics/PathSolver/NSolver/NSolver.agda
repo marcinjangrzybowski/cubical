@@ -433,11 +433,14 @@ macro
 
   (t0 , _) ← Mb.rec (R.typeError [ "imposible in solvePaths''" ]ₑ) pure (lookup fcs zero)
 
-  cuFcs ← ((zipWithIndex <$> quoteBd bdTM)  >>= mapM
+  cuFcs ← ((zipWithIndex <$> quoteBd bdTM
+             -- <|> R.typeError [ "quoteBd - failed" ]ₑ
+              )  >>= mapM
     (λ (k , (cu0 , cu1)) →
                (R.debugPrint "solvePaths" 0 $ "solvePaths - solve cong dimension : " ∷ₑ [ k ]ₑ)
-          >>  ⦇ ⦇ k ⦈ , ⦇ toNoCons (predℕ dim) cu0 , toNoCons (predℕ dim) cu1 ⦈ ⦈)) <|>
-      R.typeError [ "quoteBd - failed" ]ₑ
+          >>  ⦇ ⦇ k ⦈ , ⦇ toNoCons (predℕ dim) cu0 , toNoCons (predℕ dim) cu1 ⦈ ⦈ <|>
+                   R.typeError [ "toNoCons - failed" ]ₑ))
+
   
   solution ← markVertBd A cuFcs >>= foldBdTerm A t0
   R.unify solution h <|> R.typeError ("unify - failed:" ∷nl [ solution ]ₑ )

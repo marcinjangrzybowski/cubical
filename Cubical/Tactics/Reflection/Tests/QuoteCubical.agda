@@ -111,7 +111,7 @@ macro
   (dim , cu) ← extractCuTermFromNPath hTy t
   c ← codeGen false dim 100 cu 
   R.typeError [ c ]ₑ
- 
+
  extarctCuTermTest : R.Term → R.Term → R.TC Unit
  extarctCuTermTest t h = assertNoErr h do
   hTy ← R.inferType t >>= wait-for-term >>= R.normalise  
@@ -191,14 +191,35 @@ module _ {ℓ} {A : Type ℓ} {x y z w : A}
 
 module _ (A B : Type) {x y z : A} (f : A → A → B)
  (p : _≡_ {A = (A → B)} (λ x' → f x' x) (λ x' → f x' y))
- (q : _≡_ {A = (A → B)} (λ x' → f x' y) (λ x' → f x' z)) where
+ (q : _≡_ {A = (A → B)} (λ x' → f x' y) (λ x' → f x' z))
+ where
 
- _ : _ 
- _ = extarctCuTermTest (p ∙∙ q ∙∙ sym q)
+ _ : ResultIs ✓-pass
+ _ = extarctCuTermTest ((p ∙∙ q ∙∙ (sym q)))
+
 
 module _ (A B : Type) {x y z : A} (f : A → A → B)
  (p : _≡_ {A = ({A} → B)} (λ {x'} → f x' x) (λ {x'} → f x' y))
  (q : _≡_ {A = ({A} → B)} (λ {x'} → f x' y) (λ {x'} → f x' z)) where
 
- _ : _ 
+
+ _ : ResultIs ⊘-fail
  _ = extarctCuTermTest (p ∙∙ q ∙∙ sym q)
+
+module _ (A B : Type) {x y z : A} (p : x ≡ y) (q : y ≡ z) (r : x ≡ z) where
+
+ w w' : Path (B → A) (λ _ → x) λ _ → z
+ w i = λ _ → (p ∙ q) i
+ w' = cong const p ∙ cong const q
+
+ w≡w'' : w ≡ w'
+ w≡w'' = refl
+
+
+
+ _ : ResultIs ⊘-fail
+ _ = extarctCuTermTest w
+
+ _ : ResultIs ✓-pass 
+ _ = extarctCuTermTest w'
+
