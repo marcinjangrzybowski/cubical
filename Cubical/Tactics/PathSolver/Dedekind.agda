@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-exec  #-} 
+{-# OPTIONS --allow-exec  #-}
 module Cubical.Tactics.PathSolver.Dedekind where
 
 open import Cubical.Foundations.Function
@@ -40,11 +40,11 @@ strConcat = L.foldl _<>_ ""
 
 module dedekindCodeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
 
- renderSubFaceExp : SubFace → R.TC String 
+ renderSubFaceExp : SubFace → R.TC String
  renderSubFaceExp sf = R.normalise (SubFace→Term sf) >>= renderTerm
 
-  
- renderSubFacePattern : CuCtx → SubFace → String 
+
+ renderSubFacePattern : CuCtx → SubFace → String
  renderSubFacePattern ctx sf =
    foldl _<>_ "" (L.map
        ((λ (b , k) → let k' = L.lookupAlways "‼"
@@ -54,7 +54,7 @@ module dedekindCodeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
 
  ppCT'' : CuCtx → ℕ → CuTerm' A B → R.TC (List R.ErrorPart)
  -- ppCArg : CuCtx → ℕ → CuArg → R.TC (List R.ErrorPart)
-  
+
  ppCT'' _ zero _ = R.typeError [ "pPCT FAIL" ]ₑ
  ppCT'' ctx (suc d) (hco x x₁) = do
    let l = length ctx ∸ dim
@@ -69,8 +69,8 @@ module dedekindCodeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
 
             -- R.extendContext "zz" (varg (R.def (quote I) [])) $
             ( do
-               let sfTm = renderSubFacePattern ctx sf 
-               -- R.extendContext newDimVar (varg (R.def (quote I) [])) $         
+               let sfTm = renderSubFacePattern ctx sf
+               -- R.extendContext newDimVar (varg (R.def (quote I) [])) $
                (do sfTm' ← inCuCtx' (("z" , nothing) ∷ ctx) $ R.formatErrorParts [ liftVars (SubFace→TermInCtx ctx sf) ]ₑ
                    cu' ← (ppCT'' ((newDimVar , nothing) ∷ applyFaceConstraints sf ctx) d cu)
                    cu'' ← R.formatErrorParts cu'
@@ -84,7 +84,7 @@ module dedekindCodeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
    pure $ (R.strErr ("\n hcomp (" <> newDimVar <> ")") ∷
                      "[" <> rest' <> "]" ∷ₑ
                    "" ∷ₑ lid ∷ₑ "" ∷ₑ [ "\n "]ₑ)
-  
+
  ppCT'' ctx _ (cell' _ x) = do
        ctr ← inCuCtx ctx $ do
                  nt ← (if normaliseCells then R.normalise else pure) x
@@ -92,7 +92,7 @@ module dedekindCodeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
                  termRndr nt
        pure ctr
 
-  
+
     where
      renameConnections : String → String
      renameConnections =
@@ -104,14 +104,14 @@ module dedekindCodeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
        h '∨' = primStringToList "\\/"
        h '∧' = primStringToList "/\\"
        h x = [ x ]
-       
+
      termRndr : R.Term → R.TC (List R.ErrorPart)
      termRndr (R.var x []) = [_]ₑ <$> renderTerm (R.var x [])
      termRndr (R.var x args) = do
         hd ← renderTerm (R.var x [])
         tl ← mapM ((renderTerm >=& renameConnections) ∘S unArg) args
-        pure [ hd <> "(" <> strConcat (intersperse "," tl) <> ")"]ₑ 
-     termRndr _ = R.typeError [ "todo in termRndr in Dedekind.agda" ]ₑ 
+        pure [ hd <> "(" <> strConcat (intersperse "," tl) <> ")"]ₑ
+     termRndr _ = R.typeError [ "todo in termRndr in Dedekind.agda" ]ₑ
  ppCT'' ctx (suc d) (𝒄ong' h t) = pure [ "𝒄ong' - TODO" ]ₑ
 
  -- <> indent ' ' 2 (foldr (_<>_  ∘S ("\n" <>_)) "" rT)
@@ -119,8 +119,8 @@ module dedekindCodeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
   where
   argRndr :  CuTerm' A B → R.TC _
   argRndr x = (((λ s → [ "(" ]ₑ ++ s ++ [ ")" ]ₑ) <$> (ppCT'' ctx d x)))
-  
- 
+
+
 
 
 
@@ -144,7 +144,7 @@ asDedekindBd xs = do
   cc = (_, nothing) ∘S vr ∘S fst <$>  (zipWithIndex xs)
 
   h : Σ (ℕ × Bool) (λ v → CuTerm' ⊥ Unit) → R.TC String
-  h ((k , b) , cu) = 
+  h ((k , b) , cu) =
    ((mkNiceVar' "𝓲" k <> " = " <> (if b then "1" else "0") <> " -> ") <>_) <$>
       (asDedekindExpr (rev (dropAt k cc)) cu)
 
@@ -157,7 +157,7 @@ asDedekindCtx = (mapM asDedekindCtxEntry >=& (strConcat ∘S rev ∘S catMaybes)
   asDedekindCtxEntry (s , R.arg _ (R.agda-sort _)) = pure nothing
   asDedekindCtxEntry (s , R.arg _ (R.def (quote Level) _)) = pure nothing
   asDedekindCtxEntry (s , R.arg i ty) = do
-   -- (just ∘S (("\n" <> s <> "\n") <>_)) <$> (R.quoteTC ty >>= R.normalise >>= renderTerm) 
+   -- (just ∘S (("\n" <> s <> "\n") <>_)) <$> (R.quoteTC ty >>= R.normalise >>= renderTerm)
    ty' ← R.normalise ty
    nbd ← matchNCube ty' >>= quoteBdNC
    tyStr ← asDedekindBd nbd
@@ -185,8 +185,8 @@ macro
    dedInput ← matchNCube goal' >>= quoteBdNC >>= renderDedekindProblem
    (_ , (dedOutput , dedError)) ← execTC "dedekind-std" [] dedInput
    s ← R.checkFromStringTC dedOutput goal' <|>
-      (R.typeError $ "ded! - failed\n\ndedekind output: " ∷nl dedOutput 
-                     ∷nl "dedekind error:" ∷nl dedError 
+      (R.typeError $ "ded! - failed\n\ndedekind output: " ∷nl dedOutput
+                     ∷nl "dedekind error:" ∷nl dedError
                      ∷nl "dedekind input: " ∷nl [ dedInput ]ₑ )
    R.unify s h
 
@@ -219,8 +219,8 @@ module _ {ℓ} {A : Type ℓ}
   _ = ded!
 
 
-  
-  cpf-≡-cpf-ded : (compPath-filler {x = x} refl refl) ≡ (compPath-filler {x = x} refl refl) 
+
+  cpf-≡-cpf-ded : (compPath-filler {x = x} refl refl) ≡ (compPath-filler {x = x} refl refl)
   cpf-≡-cpf-ded = {!ded!!}
 
   assoc-ded-≡-assoc : assoc-ded ≡ assoc p q r
@@ -243,9 +243,9 @@ module _ {ℓ} {A : Type ℓ}
 --   (x : A)
 --   (p q r : Path (x ≡ x) refl refl) where
 
---  _ : Square p p q q       
+--  _ : Square p p q q
 --  _ = ded!
 
 
---  -- _ : Cube p p q q r r       
+--  -- _ : Cube p p q q r r
 --  -- _ = ded!

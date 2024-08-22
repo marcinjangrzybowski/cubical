@@ -1,4 +1,4 @@
-{-# OPTIONS --safe #-} 
+{-# OPTIONS --safe #-}
 module Cubical.Tactics.PathSolver.Cartesian where
 
 
@@ -32,7 +32,7 @@ private
     ℓ : Level
 
 
--- really just refl ∙_  
+-- really just refl ∙_
 reComp : ∀ {ℓ} {A : Type ℓ} {x y : A} (p : x ≡ y) → x ≡ y
 reComp p i =
   hcomp {φ = i ∨ ~ i} (λ k _ → (p (i ∧ k))) (p i0)
@@ -48,23 +48,23 @@ addConstSubfaces : ℕ → CuTermNC → R.TC CuTermNC
 addConstSubfaces = h
  where
 
- addMiss : ℕ → List (SubFace × CuTermNC) → CuTermNC → R.TC (List (SubFace × CuTermNC)) 
+ addMiss : ℕ → List (SubFace × CuTermNC) → CuTermNC → R.TC (List (SubFace × CuTermNC))
  addMiss dim xs xb = do
    newSfs ← catMaybes <$> mapM mbTermForFace msf
    pure (newSfs ++fe× xs)
   where
    msf = missingSubFaces dim (L.map fst xs)
-   
-   mbTermForFace : SubFace → R.TC (Maybe (SubFace × CuTermNC)) 
+
+   mbTermForFace : SubFace → R.TC (Maybe (SubFace × CuTermNC))
    mbTermForFace sf =  do
      cOnSF ← cuEvalN sf (hco xs xb)
      if (allCellsConstant? (suc (sfDim sf)) cOnSF)
       then pure $ just (sf , cell (liftVars (mostNestedCap cOnSF)))
       else ⦇ nothing ⦈
-   
+
  h : ℕ → CuTermNC → R.TC CuTermNC
  hh : List (SubFace × CuTermNC) → R.TC (List (SubFace × CuTermNC))
- 
+
  h dim (hco x x₁) = do
   x' ← hh x
   xb ← (h dim x₁)
@@ -75,7 +75,7 @@ addConstSubfaces = h
  hh [] = ⦇ [] ⦈
  hh ((sf , x) ∷ xs) =
    ⦇ ⦇ ⦇ sf ⦈ , h (suc (sfDim sf)) x ⦈ ∷ (hh xs) ⦈
- 
+
 
 module unConnect (do-fill : Bool) where
 
@@ -103,9 +103,9 @@ module unConnect (do-fill : Bool) where
  unConn dim (hco x x₁) = ⦇ hco (unConnS x) (unConn dim x₁) ⦈
  unConn dim (cell' x x₁) =
    if do-fill
-   then unConnCell (suc dim) (𝒗 dim) (liftVarsFrom (suc zero) dim x₁) 
-   else unConnCell dim (endTerm true) x₁ 
- unConn dim (𝒄ong' {cg = cg} x x₁) = 𝒄ong' {cg = cg} x <$> unConnA dim x₁ 
+   then unConnCell (suc dim) (𝒗 dim) (liftVarsFrom (suc zero) dim x₁)
+   else unConnCell dim (endTerm true) x₁
+ unConn dim (𝒄ong' {cg = cg} x x₁) = 𝒄ong' {cg = cg} x <$> unConnA dim x₁
 
  unConnS [] = ⦇ [] ⦈
  unConnS ((sf , x) ∷ xs) = ⦇ ⦇ ⦇ (sf ++ (if do-fill then [ nothing ] else [])) ⦈
@@ -203,15 +203,15 @@ module _ {A : Type ℓ} {x y z w : A} (p : x ≡ y)(q : y ≡ z)(r : z ≡ w) wh
          "     │ │ y                                   " ∷
          "     │ └───────────                          " ∷
          "     └───────────                            " ∷ [])
- _ = unConnTest (suc (suc zero)) λ (i j : I) → doubleCompPath-filler p q r i j 
+ _ = unConnTest (suc (suc zero)) λ (i j : I) → doubleCompPath-filler p q r i j
 
- assocCC : Square _ _ _ _ 
+ assocCC : Square _ _ _ _
  assocCC = unConnM (suc (suc zero)) λ (i j : I) → assoc p q r i j
 
- 
+
 
 module Sq-rot-refl {A : Type ℓ}
-  {a : A} 
+  {a : A}
   (s : Square {a₀₀ = a} refl refl refl refl) where
 
   rot-refl : Cube
@@ -231,7 +231,7 @@ module Sq-rot-refl {A : Type ℓ}
 
 
   rot-refl' : s ≡ λ i j → s j (~ i)
-  rot-refl' t i j = 
+  rot-refl' t i j =
     hcomp (λ l → λ { (t = i0) → s i j
                    ; (t = i1) → s j (~ i)
                    ; (i = i0) → s (~ l ∧ t ∧ j) ((~ t ∧ j) ∨ t ∨ j)
@@ -246,4 +246,3 @@ module Sq-rot-refl {A : Type ℓ}
   rot-refl'CC : Cube _ _ _ _ _ _
   rot-refl'CC = unConnM (suc (suc (suc zero))) λ (z i j : I) → rot-refl' z i j
 
-  

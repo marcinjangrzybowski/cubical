@@ -1,4 +1,4 @@
-{-# OPTIONS --safe  #-} 
+{-# OPTIONS --safe  #-}
 
 module Cubical.Tactics.Reflection.CuTerm where
 
@@ -30,7 +30,7 @@ private
   variable
     ℓ : Level
     A B : Type ℓ
-    
+
 data CuTerm' (CongGuard : Type) (A : Type ℓ) : Type ℓ
 
 data CuArg' (CongGuard : Type) (A : Type ℓ) : Type ℓ where
@@ -52,10 +52,10 @@ pattern
 
 CuTerm = CuTerm' Unit Unit
 
-CuTermNC = CuTerm' ⊥ Unit 
+CuTermNC = CuTerm' ⊥ Unit
 
 
- 
+
 isCell : CuTerm → Bool
 isCell (cell x) = true
 isCell _ = false
@@ -63,7 +63,7 @@ isCell _ = false
 
 is𝑪ongFreeF : List (SubFace × CuTerm) → Bool
 
-is𝑪ongFree : CuTerm → Bool 
+is𝑪ongFree : CuTerm → Bool
 is𝑪ongFree (hco x x₁) = is𝑪ongFreeF x and is𝑪ongFree x₁
 is𝑪ongFree (cell x) = true
 is𝑪ongFree (𝒄ong x x₁) = false
@@ -86,11 +86,11 @@ almostLeafQ _ = false
 
 module prettyPrinter {A B : Type} (cellTermRender : CuCtx → R.Term →  R.TC (List R.ErrorPart)) (dim : ℕ) where
 
- renderSubFaceExp : SubFace → R.TC String 
+ renderSubFaceExp : SubFace → R.TC String
  renderSubFaceExp sf = R.normalise (SubFace→Term sf) >>= renderTerm
 
-  
- renderSubFacePattern : CuCtx → SubFace → String 
+
+ renderSubFacePattern : CuCtx → SubFace → String
  renderSubFacePattern ctx sf =
    foldl _<>_ "" (L.map
        ((λ (b , k) → let k' = L.lookupAlways "‼"
@@ -103,7 +103,7 @@ module prettyPrinter {A B : Type} (cellTermRender : CuCtx → R.Term →  R.TC (
 
  ppCT'' : CuCtx → ℕ → CuTerm' A B → R.TC (List R.ErrorPart)
  -- ppCArg : CuCtx → ℕ → CuArg → R.TC (List R.ErrorPart)
-  
+
  ppCT'' _ zero _ = R.typeError [ "pPCT FAIL" ]ₑ
  ppCT'' ctx (suc d) (hco x x₁) = do
    let l = length ctx ∸ dim
@@ -118,8 +118,8 @@ module prettyPrinter {A B : Type} (cellTermRender : CuCtx → R.Term →  R.TC (
 
             -- R.extendContext "zz" (varg (R.def (quote I) [])) $
             ( do
-               let sfTm = renderSubFacePattern ctx sf 
-               -- R.extendContext newDimVar (varg (R.def (quote I) [])) $         
+               let sfTm = renderSubFacePattern ctx sf
+               -- R.extendContext newDimVar (varg (R.def (quote I) [])) $
                (do sfTm' ← inCuCtx' (("z" , nothing) ∷ ctx) $ R.formatErrorParts [ liftVars (SubFace→TermInCtx ctx sf) ]ₑ
                    cu' ← (ppCT'' ((newDimVar , nothing) ∷ applyFaceConstraints sf ctx) d cu)
                    cu'' ← R.formatErrorParts cu'
@@ -133,7 +133,7 @@ module prettyPrinter {A B : Type} (cellTermRender : CuCtx → R.Term →  R.TC (
    pure $ (R.strErr ("\n𝒉𝒄𝒐𝒎𝒑 λ " <> newDimVar <> "\n")) ∷
                    (rest' ∷ₑ "\n├─────────── \n" ∷ₑ
                    lid ∷ₑ [ "\n└─────────── "]ₑ)
-  
+
  ppCT'' ctx _ (cell' _ x) = do
   ctr ← cellTermRender ctx x >>=
              --inCuCtx ctx ∘
@@ -142,13 +142,13 @@ module prettyPrinter {A B : Type} (cellTermRender : CuCtx → R.Term →  R.TC (
  ppCT'' ctx (suc d) (𝒄ong' h t) = do
   rT ← mapM (argRndr >=> R.formatErrorParts) t
   rHead ← inCuCtx ctx $ addNDimsToCtx' "𝒙" (length t) $ renderTerm h
-  pure  $ [ rHead <> indent ' ' 2 (foldr (_<>_  ∘S ("\n" <>_)) "" rT)]ₑ 
+  pure  $ [ rHead <> indent ' ' 2 (foldr (_<>_  ∘S ("\n" <>_)) "" rT)]ₑ
 
   where
   argRndr :  CuTerm' A B → R.TC _
   argRndr x =
       ((λ s → [ "(" ]ₑ ++ s ++ [ ")" ]ₑ) <$> (ppCT'' ctx d x))
-  
+
  ppCT' :  ℕ → CuTerm' A B → R.TC (List R.ErrorPart)
  ppCT' = ppCT'' (defaultCtx dim)
 
@@ -159,7 +159,7 @@ ppCTn b =
         do inCuCtx ctx $ do
             nt ← (if b then R.normalise else R.reduce) x
             x'' ← R.formatErrorParts [ nt ]ₑ
-            pure [ R.strErr x'' ]) 
+            pure [ R.strErr x'' ])
 
 
 ppCT : {A B : Type} → ℕ → ℕ → CuTerm' A B  → R.TC (List R.ErrorPart)
@@ -167,7 +167,7 @@ ppCT = ppCTn true
 
 
 ppCTs : {A B : Type} → ℕ → ℕ → CuTerm' A B  → R.TC (List R.ErrorPart)
-ppCTs = prettyPrinter.ppCT' (λ _ x → pure [ R.strErr "■" ]) 
+ppCTs = prettyPrinter.ppCT' (λ _ x → pure [ R.strErr "■" ])
 
 
 
@@ -183,17 +183,17 @@ module ToTerm {A B : Type} where
  toTermA : CuCtx → List (CuTerm' A B) → List (R.Term)
 
 
- mkSFTrm : CuCtx → SubFace × CuTerm' A B → R.Term 
+ mkSFTrm : CuCtx → SubFace × CuTerm' A B → R.Term
  mkSFTrm ctx (sf , cu) =
    R.def (quote constPartial)
     (toTerm (("𝒛" , nothing) ∷ applyFaceConstraints sf ctx) cu v∷
        v[ liftVars (SubFace→TermInCtx ctx sf) ])
- 
+
  toSides : CuCtx → List (SubFace × CuTerm' A B) → R.Term
  toSides ctx [] = R.pat-lam [] []
  toSides ctx (x ∷ []) = mkSFTrm ctx x
 
- 
+
 
  toSides ctx ((sf , cu) ∷ xs@(_ ∷ _)) =
    R.def (quote primPOr)
@@ -202,12 +202,12 @@ module ToTerm {A B : Type} where
 
  toTermA ctx [] = []
  toTermA ctx (x ∷ xs) =
-    (toTerm ctx x) ∷  toTermA ctx xs 
+    (toTerm ctx x) ∷  toTermA ctx xs
 
  toTerm ctx (hco x x₁) =
    R.def (quote hcomp)
      (vlam "𝒛" (toSides ctx x) v∷ v[ toTerm ctx x₁ ])
- toTerm ctx (cell' _ x) = 
+ toTerm ctx (cell' _ x) =
    liftWhere (L.map ((λ { (just _) → true ; _ → false }) ∘S snd ) ctx) x
 
  toTerm ctx (𝒄ong' h t) =
@@ -222,10 +222,10 @@ module ToTerm {A B : Type} where
  toTermFill' ctx x x₁ =
    R.def (quote hfill)
      (liftVarsFrom 1 (length ctx) (vlam "𝒛" (toSides ctx x)) v∷
-       R.def (quote inS) v[ liftVarsFrom 1 (length ctx) (toTerm ctx x₁) ] v∷ v[ 𝒗 (length ctx) ]) 
+       R.def (quote inS) v[ liftVarsFrom 1 (length ctx) (toTerm ctx x₁) ] v∷ v[ 𝒗 (length ctx) ])
 
 toTerm : {A B : Type} → ℕ → CuTerm' A B → R.Term
-toTerm dim = vlamⁿ dim ∘ (ToTerm.toTerm (defaultCtx dim)) 
+toTerm dim = vlamⁿ dim ∘ (ToTerm.toTerm (defaultCtx dim))
 
 
 
@@ -233,7 +233,7 @@ module cuEval {A : Type} {b : B} where
 
  cuEval : ℕ → SubFace → CuTerm' A B → CuTerm' A B
  cuEvalL : ℕ → SubFace → List (CuTerm' A B) → List (CuTerm' A B)
- 
+
  cuEvalL _ sf [] = []
  cuEvalL fuel sf (x ∷ l) = cuEval fuel sf x ∷ cuEvalL fuel sf l
  cuEval zero _ _ = cell' b (R.lit (R.string "out of fuel in cuEval"))
@@ -246,8 +246,8 @@ module cuEval {A : Type} {b : B} where
   msf (sf' , t) =
     map-Maybe
      (λ sf'' → (injSF sf sf'') , cuEval fuel (nothing ∷ (injSF sf' sf'')) t)
-     (sf' sf∩ sf) 
-    
+     (sf' sf∩ sf)
+
   h :  Maybe (SubFace × CuTerm' A B) → CuTerm' A B
   h (just (_ , x)) = cuEval fuel (just true ∷ repeat (sfDim sf) nothing) x
   h nothing =
@@ -265,7 +265,7 @@ module cuEval {A : Type} {b : B} where
     in 𝒄ong' {cg = cg} h' (cuEvalL fuel  sf tl)
 
 cuEval : {A : Type} {B : Type ℓ} {b : B} → SubFace → CuTerm' A B → CuTerm' A B
-cuEval {b = b} = cuEval.cuEval {b = b} 100 
+cuEval {b = b} = cuEval.cuEval {b = b} 100
 
 
 
@@ -283,7 +283,7 @@ pickSFfromPartial = pickSFfromPartial' _
 
 module normaliseCells where
 
- 
+
  nc : ℕ → ℕ → (CuTerm' A B) → R.TC (CuTerm' A B)
  nc zero _ _ = R.typeError [ "out of fuel in normaliceCells" ]ₑ
  nc (suc fuel) dim (hco x x₁) =
@@ -302,7 +302,7 @@ cuEvalN : SubFace → (CuTerm' A Unit) → R.TC (CuTerm' A Unit)
 cuEvalN sf = normaliseCells (sfDim sf) ∘S cuEval sf
 
 
-mostNestedCap : CuTermNC → R.Term 
+mostNestedCap : CuTermNC → R.Term
 mostNestedCap (hco x x₁) = mostNestedCap x₁
 mostNestedCap (cell' x x₁) = x₁
 
@@ -310,19 +310,19 @@ mostNestedCap (cell' x x₁) = x₁
 -- this can be trusted, only if we sure that term already typechecks!
 
 allCellsConstant? : ℕ → CuTerm' A B → Bool
-allCellsConstant? dim x = h dim x 
+allCellsConstant? dim x = h dim x
  where
  h : ℕ → CuTerm' _ _  → Bool
  hs : List (SubFace × CuTerm' _ _)  → Bool
 
  h dim (hco x₁ x₂) = h dim x₂ and hs x₁
-  
+
  h dim (cell' x₁ x₂) = not (hasVarBy (_<ℕ dim) x₂)
  h dim (𝒄ong' x₁ x₂) = false
 
  hs [] = true
  hs ((sf , x) ∷ xs) = (h (suc (sfDim sf)) x) and hs xs
- 
+
 module permuteVars where
 
  permute : (ℕ → ℕ) → SubFace → SubFace
@@ -337,17 +337,17 @@ module permuteVars where
  fromFace (nothing ∷ xs) zero = zero
  fromFace (nothing ∷ xs) (suc k) = suc (fromFace xs k)
  fromFace (just x ∷ xs) k = suc (fromFace xs k)
- 
+
  sfPerm : SubFace → (ℕ → ℕ) → (ℕ → ℕ)
  sfPerm sf f k =
   if k =ℕ sfDim sf
   then k
   else intoFace (permute f sf) (f (fromFace sf k))
- 
- nc : ℕ → (ℕ → ℕ) →  ℕ → CuTerm → R.TC CuTerm 
+
+ nc : ℕ → (ℕ → ℕ) →  ℕ → CuTerm → R.TC CuTerm
  nc zero _ _ _ = R.typeError [ "out of fuel in permuteVars" ]ₑ
  nc (suc fuel) prm dim (hco x x₁) = do
-   
+
    ⦇ hco
       (mapM (λ (sf , c) → ⦇ ⦇ (permute prm sf) ⦈ , (nc fuel (sfPerm sf prm) (suc (sfDim sf)) c) ⦈) x)
       (nc (suc fuel) prm dim x₁) ⦈
@@ -369,7 +369,7 @@ tryCastAsNoCongS :  (List (SubFace × CuTerm)) → Maybe (List (SubFace × CuTer
 
 
 tryCastAsNoCong : CuTerm → Maybe (CuTerm' ⊥ Unit)
-tryCastAsNoCong (hco x x₁) = 
+tryCastAsNoCong (hco x x₁) =
     ⦇ hco (tryCastAsNoCongS x) (tryCastAsNoCong x₁) ⦈
 tryCastAsNoCong (cell x) = pure $ cell' _ x
 tryCastAsNoCong (𝒄ong' x x₁) = nothing
@@ -384,7 +384,7 @@ foldCells : (A → B → B) → CuTerm' ⊥ A → B → B
 foldCells {A = A} {B = B} f = fc
  where
  fcs : List (SubFace × CuTerm' ⊥ A) → B → B
- 
+
  fc : CuTerm' ⊥ A → B → B
  fc (hco x x₂) b = fc x₂ (fcs x b)
  fc (cell' x x₂) b = f x b
@@ -414,15 +414,15 @@ pattern metaCell = cell (R.def (quote MetaTag) [])
 
 module codeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
 
- renderSubFaceExp : SubFace → R.TC String 
+ renderSubFaceExp : SubFace → R.TC String
  renderSubFaceExp sf = R.normalise (SubFace→Term sf) >>= renderTerm
 
- 
+
 
  max-𝒛-idx : CuCtx → ℕ
  max-𝒛-idx = foldr ((max ∘S (λ { (just ("𝒛" , k )) → (suc k) ; _ → zero }) ∘S getSubscript) ∘S fst ) zero
-  
- renderSubFacePattern : CuCtx → SubFace → String 
+
+ renderSubFacePattern : CuCtx → SubFace → String
  renderSubFacePattern ctx sf =
    foldl _<>_ "" (L.map
        ((λ (b , k) → let k' = L.lookupAlways "‼"
@@ -432,7 +432,7 @@ module codeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
 
  ppCT'' : CuCtx → ℕ → CuTerm' A B → R.TC (List R.ErrorPart)
  -- ppCArg : CuCtx → ℕ → CuArg → R.TC (List R.ErrorPart)
-  
+
  ppCT'' _ zero _ = R.typeError [ "pPCT FAIL" ]ₑ
  ppCT'' ctx (suc d) (hco x x₁) = do
    let l = max (length ctx ∸ dim)  (max-𝒛-idx ctx)
@@ -447,8 +447,8 @@ module codeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
 
             -- R.extendContext "zz" (varg (R.def (quote I) [])) $
             ( do
-               let sfTm = renderSubFacePattern ctx sf 
-               -- R.extendContext newDimVar (varg (R.def (quote I) [])) $         
+               let sfTm = renderSubFacePattern ctx sf
+               -- R.extendContext newDimVar (varg (R.def (quote I) [])) $
                (do sfTm' ← inCuCtx' (("z" , nothing) ∷ ctx) $ R.formatErrorParts [ liftVars (SubFace→TermInCtx ctx sf) ]ₑ
                    cu' ← (ppCT'' ((newDimVar , nothing) ∷ applyFaceConstraints sf ctx) d cu)
                    cu'' ← R.formatErrorParts cu'
@@ -463,7 +463,7 @@ module codeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
                    (rest' ∷ₑ "\n    }) \n" ∷ₑ
                    "(" ∷ₑ lid ∷ₑ ")" ∷ₑ [ "\n "]ₑ)
 
- ppCT'' ctx _ (cell' _ (R.def (quote MetaTag) [])) = pure [ R.strErr "?" ] 
+ ppCT'' ctx _ (cell' _ (R.def (quote MetaTag) [])) = pure [ R.strErr "?" ]
  ppCT'' ctx _ (cell' _ x) = do
   ctr ← inCuCtx ctx $ do
             nt ← (if normaliseCells then R.normalise else pure) x
@@ -472,36 +472,36 @@ module codeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
      -- cellTermRender ctx x >>=
      --         --inCuCtx ctx ∘
      --         R.formatErrorParts
-  pure ctr 
+  pure ctr
  ppCT'' ctx (suc d) (𝒄ong' h t) = do
   rT ← (L.map (λ (k , s) → R.strErr ("\n    " <> mkNiceVar' "𝒙" k <> " = " <> s ))
             ∘S zipWithIndex) <$> (mapM (argRndr >=> (R.formatErrorParts >=& indent' false ' ' 6)) t)
   rHead ← inCuCtx ctx $ addNDimsToCtx' "𝒙" (length t) $ renderTerm h
-  pure  $ "\nlet " ∷ₑ rT ++ "\nin " ∷ₑ [ rHead ]ₑ 
+  pure  $ "\nlet " ∷ₑ rT ++ "\nin " ∷ₑ [ rHead ]ₑ
 
   where
   argRndr :  CuTerm' A B → R.TC _
   argRndr x = (((λ s → [ "(" ]ₑ ++ s ++ [ ")" ]ₑ) <$> (ppCT'' ctx d x)))
-  
+
  ppCT' :  ℕ → CuTerm' A B → R.TC (List R.ErrorPart)
  ppCT' = ppCT'' (defaultCtx dim)
 
 
 
 genAbstr : ℕ → String
-genAbstr dim = "λ" <> 
+genAbstr dim = "λ" <>
  (L.foldl _<>_ "" $ L.map (λ k →  (" " <> mkNiceVar' "𝓲" k)) (rev (range dim))) <> " → "
- 
+
 codeGen : {A B : Type} (normaliseCells₁ : Bool) (dim : ℕ) →
             ℕ → CuTerm' A B → R.TC String
 codeGen nc dim fuel cu = ((genAbstr dim <>_) ∘S (indent' false ' ' 6)) <$>
   (codeGen.ppCT' nc dim fuel cu >>= R.formatErrorParts)
 
-data ⁇ : Type where  
+data ⁇ : Type where
 
-hcoFromIExpr : ℕ → FExpr → R.Term → R.TC CuTerm 
+hcoFromIExpr : ℕ → FExpr → R.Term → R.TC CuTerm
 hcoFromIExpr dim fe (R.def (quote ⁇) []) =
- pure $ hco ((_, metaCell) <$> fe) metaCell 
+ pure $ hco ((_, metaCell) <$> fe) metaCell
 hcoFromIExpr dim fe tm' = do
   let tm = liftVarsFrom dim zero tm'
   xs ← mapM (λ sf → (sf ,_) <$> (cell ∘S liftVars <$> pure (subfaceCell sf tm)) ) fe

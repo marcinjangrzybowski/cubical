@@ -1,4 +1,4 @@
-{-# OPTIONS --safe -v 3 #-} 
+{-# OPTIONS --safe -v 3 #-}
 module Cubical.Tactics.Reflection.Tests.QuoteCubical where
 
 import Agda.Builtin.Reflection as R
@@ -19,7 +19,7 @@ open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Univalence
 
-open import Cubical.Tactics.Reflection 
+open import Cubical.Tactics.Reflection
 open import Cubical.Tactics.Reflection.Utilities
 
 
@@ -32,23 +32,23 @@ open import Cubical.Tactics.Reflection.Error
 
 
 macro
- extractIExprTest : R.Term → R.Term → R.TC Unit 
+ extractIExprTest : R.Term → R.Term → R.TC Unit
  extractIExprTest t h = assertNoErr h do
-   t' ← extractIExprM t 
+   t' ← extractIExprM t
    R.unify t (IExpr→Term t')
 
- normIExprTest : R.Term → R.Term → R.TC Unit 
+ normIExprTest : R.Term → R.Term → R.TC Unit
  normIExprTest t h = do
-   t' ← R.normalise t >>= extractIExprM 
+   t' ← R.normalise t >>= extractIExprM
    R.unify t (IExpr→Term t')
    R.unify t (IExpr→Term (normIExpr t'))
    wrapError h ("t    : " ∷ₑ IExpr→Term t' ∷nl
                  "norm : " ∷ₑ (IExpr→Term (normIExpr t')) ∷ₑ [])
 
-   
+
    -- R.unify R.unknown h
 
- -- degenTest : R.Term → R.Term → R.TC Unit 
+ -- degenTest : R.Term → R.Term → R.TC Unit
  -- degenTest t h = do
  --   t' ← extractIExprM t
  --   let dim = (suc (getMaxVar t'))
@@ -56,9 +56,9 @@ macro
  --   -- let ii = undegen' dim t'
  --   -- addNDimsToCtx (suc dim) $ R.typeError [ IExpr→Term $ i' ]ₑ
  --   -- addNDimsToCtx dim $ R.typeError $ L.join $ L.map (λ (sf , ie , b , bb) →
- --   --        sf ∷ₑ " → " ∷ₑ IExpr→Term ie ∷ₑ " " ∷ₑ b ∷ₑ "/" ∷ₑ  bb ∷nl []) ii 
+ --   --        sf ∷ₑ " → " ∷ₑ IExpr→Term ie ∷ₑ " " ∷ₑ b ∷ₑ "/" ∷ₑ  bb ∷nl []) ii
  --   R.unify (IExpr→Term $ i') h
-   
+
 _ : ResultIs ✓-pass
 _ = extractIExprTest i0
 
@@ -109,12 +109,12 @@ macro
  showCuCode t h = do
   hTy ← R.inferType t >>= wait-for-term >>= R.normalise
   (dim , cu) ← extractCuTermFromNPath hTy t
-  c ← codeGen false dim 100 cu 
+  c ← codeGen false dim 100 cu
   R.typeError [ c ]ₑ
 
  extarctCuTermTest : R.Term → R.Term → R.TC Unit
  extarctCuTermTest t h = assertNoErr h do
-  hTy ← R.inferType t >>= wait-for-term >>= R.normalise  
+  hTy ← R.inferType t >>= wait-for-term >>= R.normalise
   (dim , cu) ← extractCuTermFromNPath hTy t
   (R.unify t (toTerm dim cu))
 
@@ -167,7 +167,7 @@ module _ where
 module _ where
  open import Cubical.HITs.S1
  open import Cubical.Data.Int
- 
+
  _ : ResultIs ✓-pass
  _ = extarctCuTermTest (decodeSquare (pos 4))
 
@@ -220,6 +220,6 @@ module _ (A B : Type) {x y z : A} (p : x ≡ y) (q : y ≡ z) (r : x ≡ z) wher
  _ : ResultIs ⊘-fail
  _ = extarctCuTermTest w
 
- _ : ResultIs ✓-pass 
+ _ : ResultIs ✓-pass
  _ = extarctCuTermTest w'
 

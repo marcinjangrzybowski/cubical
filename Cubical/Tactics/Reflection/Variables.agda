@@ -112,12 +112,12 @@ getSubscript s =
   fromBase10rev : List ℕ → ℕ
   fromBase10rev [] = ℕ.zero
   fromBase10rev (x ∷ xs) = x +ℕ (10 *ℕ fromBase10rev xs)
- 
+
 mkNiceVar' : String → ℕ → String
 mkNiceVar' v k = v <>
  primStringFromList (map digitsToSubscripts (primStringToList (primShowNat k)))
 
 
 mkNiceVar : ℕ → String
-mkNiceVar = mkNiceVar' "𝒙" 
+mkNiceVar = mkNiceVar' "𝒙"
 

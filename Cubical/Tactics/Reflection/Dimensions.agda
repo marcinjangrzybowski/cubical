@@ -1,4 +1,4 @@
-{-# OPTIONS --safe  #-} 
+{-# OPTIONS --safe  #-}
 
 module Cubical.Tactics.Reflection.Dimensions where
 
@@ -55,7 +55,7 @@ ie[ x ] = [ [ true , x ] ]
 
 
 normIExpr : IExpr → IExpr
-normIExpr = norm∨ ∘S L.map norm∧ 
+normIExpr = norm∨ ∘S L.map norm∧
  where
   disc𝟚×ℕ = (discreteΣ 𝟚._≟_ λ _ → discreteℕ)
 
@@ -63,7 +63,7 @@ normIExpr = norm∨ ∘S L.map norm∧
   norm∧ = nub disc𝟚×ℕ
 
   norm∨ : IExpr → IExpr
-  
+
   norm∨' : List (Bool × ℕ) → IExpr → IExpr
   norm∨' x [] = [ x ]
   norm∨' x (x' ∷ xs) with subs? disc𝟚×ℕ x x' | subs? disc𝟚×ℕ x' x
@@ -116,7 +116,7 @@ allSubFacesOfDim (suc x) =
  let l = allSubFacesOfDim x
  in    L.map (nothing ∷_) l
     ++ L.map (just false ∷_) l
-    ++ L.map (just true ∷_) l 
+    ++ L.map (just true ∷_) l
 
 sfDim : SubFace → ℕ
 sfDim sf = length sf ∸ length (filter (λ { (just _) → true ; _ → false} ) sf)
@@ -168,7 +168,7 @@ _<mb>_ : Maybe Bool → Maybe Bool → <SF>
 nothing <mb> nothing = ⊂⊃
 nothing <mb> just x = ⊃
 just x <mb> nothing = ⊂
-just x <mb> just x₁ = if (x ⊕ x₁) then ⊃⊂ else ⊂⊃ 
+just x <mb> just x₁ = if (x ⊕ x₁) then ⊃⊂ else ⊂⊃
 
 _<sf>_ : SubFace → SubFace → <SF>
 [] <sf> [] = ⊂⊃
@@ -198,19 +198,19 @@ infixr 5 _fe∷_ _fe∷×_
 
 _fe∷_ : SubFace → FExpr → FExpr
 x fe∷ [] = x ∷ []
-x fe∷ y@(sf ∷ x₁) with sf <sf> x 
+x fe∷ y@(sf ∷ x₁) with sf <sf> x
 ... | ⊂ = x fe∷ x₁
 ... | ⊃ = y
-... | ⊃⊂ = sf ∷ (x fe∷ x₁) 
+... | ⊃⊂ = sf ∷ (x fe∷ x₁)
 ... | ⊂⊃ = y
 
 
 _fe∷×_ : ∀ {ℓ} {A : Type ℓ} → (SubFace × A) → List (SubFace × A)  → List (SubFace × A)
 (x , a) fe∷× [] = (x , a) ∷ []
-(x , a) fe∷× y@((sf , a') ∷ x₁) with sf <sf> x 
+(x , a) fe∷× y@((sf , a') ∷ x₁) with sf <sf> x
 ... | ⊂ = (x , a) fe∷× x₁
 ... | ⊃ = y
-... | ⊃⊂ = (sf , a') ∷ ((x , a) fe∷× x₁) 
+... | ⊃⊂ = (sf , a') ∷ ((x , a) fe∷× x₁)
 ... | ⊂⊃ = y
 
 
@@ -242,7 +242,7 @@ x ⊂? (y ∷ sf) with x <sf> y
 -- mkFacePlus : ℕ → SubFace → SubFace
 -- mkFacePlus = ?
 
-mkFace : Bool → ℕ → SubFace 
+mkFace : Bool → ℕ → SubFace
 mkFace b k = iter k (nothing ∷_ ) (just b ∷ [])
 
 _∪Mb_ : Maybe Bool → Maybe Bool → Maybe (Maybe Bool)
@@ -285,7 +285,7 @@ I→F (x ∷ x₁) =
  Mb.rec
    (I→F x₁)
    (λ x → x fe∷ I→F x₁)
-   (fromSF x) 
+   (fromSF x)
 
 
 -- IExpr→Term : IExpr → R.Term
@@ -302,19 +302,19 @@ I→F (x ∷ x₁) =
 -- IExpr→Term' = {!!}
 
 
-endTerm : Bool → R.Term 
+endTerm : Bool → R.Term
 endTerm = (if_then R.con (quote i1) [] else R.con (quote i0) [])
 
 
 IExpr∧→Term : List (Bool × ℕ) → R.Term
 IExpr∧→Term [] = endTerm true
 IExpr∧→Term ((b , k) ∷ []) = (let x' = R.var (k) [] in  if b then x' else R.def (quote ~_) v[ x' ])
-IExpr∧→Term ((b , k) ∷ xs) = 
+IExpr∧→Term ((b , k) ∷ xs) =
   R.def (quote _∧_)
     ((let x' = R.var (k) [] in  if b then x' else R.def (quote ~_) v[ x' ]) v∷ v[ IExpr∧→Term xs ])
 
 
-getMaxVar : IExpr → ℕ 
+getMaxVar : IExpr → ℕ
 getMaxVar = maximum ∘S L.map snd ∘S join
  where
   maximum : List ℕ → ℕ
@@ -331,7 +331,7 @@ getMaxVar = maximum ∘S L.map snd ∘S join
 
 --  sq= : Cube sq1 refl {!!} {!!} {!!} {!!}
 --  sq= = {!interp!}
- 
+
 
 
 -- undegen : IExpr → IExpr
@@ -352,7 +352,7 @@ interpolateIExpr : IExpr → IExpr → IExpr → IExpr
 interpolateIExpr t ie0 ie1 = normIExpr $
   (((~' t) ∧' ie0) ∨' ((t) ∧' ie1)) ∨' (ie0 ∧' ie1)
 
-IExpr→MaybeEnd : IExpr → Maybe Bool 
+IExpr→MaybeEnd : IExpr → Maybe Bool
 IExpr→MaybeEnd = (λ { [] -> just false ; ([] ∷ []) → just true ; _ → nothing } ) ∘S normIExpr
 
 evalIExprOnFace : SubFace → IExpr → IExpr
@@ -366,8 +366,8 @@ evalIExprOnFace sf = catMaybes ∘S L.map (h (zipWithIndex sf))
   hh (k , just b) (just xs) =
      if elem? (discreteΣ 𝟚._≟_ λ _ → discreteℕ) (not b , k) xs
       then nothing
-      else just (filter (not ∘S Dec→Bool ∘ (discreteΣ 𝟚._≟_ λ _ → discreteℕ) (b , k)) xs) 
-  
+      else just (filter (not ∘S Dec→Bool ∘ (discreteΣ 𝟚._≟_ λ _ → discreteℕ) (b , k)) xs)
+
   h : List (ℕ × Maybe Bool) → (List (Bool × ℕ)) → Maybe (List (Bool × ℕ))
   h sf xs = foldr hh (just xs) sf
 
@@ -376,13 +376,13 @@ evalIExprOnFace sf = catMaybes ∘S L.map (h (zipWithIndex sf))
 
 module _ (s : String) where
 
- addNDimsToCtx' : ℕ → R.TC A → R.TC A 
+ addNDimsToCtx' : ℕ → R.TC A → R.TC A
  addNDimsToCtx' zero f = f
  addNDimsToCtx' (suc k) =
   R.extendContext (mkNiceVar' s k) (varg (R.def (quote I) []))
     ∘S (addNDimsToCtx' k)
 
-addNDimsToCtx = addNDimsToCtx' "𝓲" 
+addNDimsToCtx = addNDimsToCtx' "𝓲"
 
 
 
@@ -399,7 +399,7 @@ extractIExpr (R.def (quote _∧_) (x v∷ v[ y ])) =
   ⦇ extractIExpr x ∧' extractIExpr y ⦈
 extractIExpr (R.def (quote ~_) v[ x ] ) =
     ⦇ ~' (extractIExpr x) ⦈
-extractIExpr _ = nothing 
+extractIExpr _ = nothing
 
 
 extractIExprM : R.Term → R.TC IExpr
@@ -430,8 +430,8 @@ SubFace→TermInCtx ctx = h 0
  kInCtx [] k = k
  kInCtx ((fst₁ , nothing) ∷ xs) zero = zero
  kInCtx ((fst₁ , nothing) ∷ xs) (suc k) = suc (kInCtx xs k)
- kInCtx ((fst₁ , just x) ∷ xs) k = suc (kInCtx (xs) k) 
- 
+ kInCtx ((fst₁ , just x) ∷ xs) k = suc (kInCtx (xs) k)
+
  h : ℕ → SubFace → R.Term
  h k [] = R.con (quote i1) []
  h k (nothing ∷ xs) = h (suc k) xs
@@ -456,7 +456,7 @@ IExpr→TermInCtx ctx =
  kInCtx [] k = k
  kInCtx ((fst₁ , nothing) ∷ xs) zero = zero
  kInCtx ((fst₁ , nothing) ∷ xs) (suc k) = suc (kInCtx xs k)
- kInCtx ((fst₁ , just x) ∷ xs) k = suc (kInCtx (xs) k) 
+ kInCtx ((fst₁ , just x) ∷ xs) k = suc (kInCtx (xs) k)
 
 
 applyFaceConstraints : SubFace → CuCtx → CuCtx
@@ -472,7 +472,7 @@ freeVars : CuCtx → List String
 freeVars = L.map fst ∘S filter (λ { (_ , (nothing)) → true ; _ → false} )
 
 boundedDims : CuCtx → List (String × Bool)
-boundedDims = catMaybes ∘S L.map (uncurry λ s → map-Maybe (s ,_)) 
+boundedDims = catMaybes ∘S L.map (uncurry λ s → map-Maybe (s ,_))
 
 
 
@@ -549,8 +549,8 @@ undegen' n ie' =
                      in foldr
                           _and_
                             true (L.map (λ sf' → Mb.fromJust-def false (IExpr→MaybeEnd (evalIExprOnFace sf' ie))) sfs)
-     
-     
+
+
  in  L.map h (allSubFacesOfDim n)
 
 
@@ -565,7 +565,7 @@ instance
 
 
 unifyTest : ℕ → R.Term → R.Term → R.TC Bool
-unifyTest dim t t' = addNDimsToCtx dim $ 
+unifyTest dim t t' = addNDimsToCtx dim $
  (R.unify t t' >> pure true)  <|> (pure false)
 
 
@@ -580,16 +580,16 @@ nonDegFExpr n ie' =
          let sfs = allVertsOfSF sf
          in foldr
             _and_
-              true (L.map (λ sf' → Mb.fromJust-def false (IExpr→MaybeEnd (evalIExprOnFace sf' ie))) sfs)  
+              true (L.map (λ sf' → Mb.fromJust-def false (IExpr→MaybeEnd (evalIExprOnFace sf' ie))) sfs)
    in foldr _fe∷_ [] (filter h (allSubFacesOfDim n))
-   
+
 
 undegen : Bool → ℕ → IExpr → IExpr
 undegen onEnd n ie' =
 
  let ie = normIExpr ie'
      w = nonDegFExpr n ie'
-     
+
  in if onEnd
     then (F→I n w)
     else interpolateIExpr ie[ n ] ie (F→I n w)
@@ -599,20 +599,20 @@ undegen2 onEnd n ie' =
 
  let ie = normIExpr ie'
      w = nonDegFExpr n ie'
-     
+
  in if onEnd
     then (F→I n w)
-    else interpolateIExpr ie[ zero ] (mapVarsInIExpr suc (F→I n w)) (mapVarsInIExpr suc ie) 
+    else interpolateIExpr ie[ zero ] (mapVarsInIExpr suc (F→I n w)) (mapVarsInIExpr suc ie)
 
 
 
 isNonDegen : ℕ → IExpr → R.TC Bool
-isNonDegen dim iexpr = 
+isNonDegen dim iexpr =
    unifyTest dim (IExpr→Term iexpr) (IExpr→Term (undegen true dim iexpr))
 
 
-undegenFcs : ℕ → List IExpr → (R.TC (FExpr)) 
-undegenFcs dim l = do 
+undegenFcs : ℕ → List IExpr → (R.TC (FExpr))
+undegenFcs dim l = do
   do
      foldrM (λ sf fe → _++fe fe <$> (if ((sfDim sf) =ℕ 0) then pure [ sf ] else do
         isNonDegForEvery ← foldrM
@@ -627,7 +627,7 @@ normIExprInTerm offset =
     atVarOrDefM.rv
       (λ n k _ args → R.var (n + k) <$> args)
       h
-      zero 
+      zero
 
  where
 
@@ -653,7 +653,7 @@ normIExprInTerm offset =
 macro
  normIExprInTermM : R.Term → R.Term → R.TC Unit
  normIExprInTermM t h =
-    normIExprInTerm zero t >>= flip R.unify h  
+    normIExprInTerm zero t >>= flip R.unify h
 
 -- getAllIExprs : ℕ → R.Term → List IExpr
 -- getAllIExprs dim t =
@@ -720,7 +720,7 @@ mapIExprs dim offset fn =
               ∘S mapVarsInIExpr (_∸ (offset + n))) (ie[ k ])))
         else (R.var k <$> args))
       h
-      zero 
+      zero
 
  where
 

@@ -1,4 +1,4 @@
-{-# OPTIONS --safe #-} 
+{-# OPTIONS --safe #-}
 module Cubical.Tactics.PathSolver.MonoidalSolver.MonoidalSolver where
 
 
@@ -20,14 +20,14 @@ open import Cubical.Reflection.Base renaming (v to 𝒗)
 open import Cubical.Reflection.Sugar
 import Agda.Builtin.Reflection as R
 
-open import Cubical.Tactics.Reflection 
+open import Cubical.Tactics.Reflection
 
 open import Cubical.Tactics.Reflection.Utilities
 open import Cubical.Tactics.Reflection.Variables
 
 open import Cubical.Tactics.PathSolver.CongComp
 
-open import Cubical.Tactics.Reflection.QuoteCubical 
+open import Cubical.Tactics.Reflection.QuoteCubical
 open import Cubical.Tactics.Reflection.Error
 open import Cubical.Tactics.Reflection.Dimensions
 open import Cubical.Tactics.Reflection.CuTerm
@@ -54,7 +54,7 @@ record SquareTerm : Type where
 
 
 asPathTerm : R.Term → PathTerm
-asPathTerm tm = 
+asPathTerm tm =
   if (hasVar zero tm) then (𝒑λ tm) else (𝒓efl tm)
 
 
@@ -75,17 +75,17 @@ bfs' xs =  do
 
 _↙_ : PathTerm → PathTerm → R.TC (PathTerm × SquareTerm)
 𝒓efl x ↙ q = q ,_ <$>  (squareTerm <$> bfs' (⊎.rec (idfun _) (idfun _) q))
-𝒑λ x ↙ 𝒓efl y = 
-  (𝒑λ (wrapPaths x) ,_) <$> (squareTerm <$> (bfs' (wrapFills x)) ) 
+𝒑λ x ↙ 𝒓efl y =
+  (𝒑λ (wrapPaths x) ,_) <$> (squareTerm <$> (bfs' (wrapFills x)) )
 𝒑λ p ↙ 𝒑λ q = do
   pq-sq ← (absorb 0 (wrapPaths p) q)
-  
+
   pq ← (cTermEnd pq-sq) >>= Mb.rec
      ( 𝒓efl <$> (addNDimsToCtx 1 $ R.normalise
           (replaceVarWithCon (λ { zero → just (quote i0) ; _ → nothing }) p))) (pure ∘S 𝒑λ)
   -- addNDimsToCtx 1 $ R.typeError [ pq-sq ]ₑ
   pq ,_ <$> (squareTerm <$> bfs' pq-sq)
-   
+
 -- _ ↙ _ = R.typeError [ "testes" ]ₑ
 
 macro
@@ -107,12 +107,12 @@ macro
 
 
 flipOnFalse : Bool → R.Term → R.Term
-flipOnFalse b t = if b then t else R.def (quote ~_) v[ t ] 
+flipOnFalse b t = if b then t else R.def (quote ~_) v[ t ]
 
 
 
 data 1DimView (A : Type ℓ) : Type ℓ where
- [_]1d : A → 1DimView A 
+ [_]1d : A → 1DimView A
  [_∙∙1d_∙∙1d_]1d : 1DimView A → 1DimView A → 1DimView A → 1DimView A
 
 
@@ -124,7 +124,7 @@ map-1DimView f [ x ∙∙1d x₁ ∙∙1d x₂ ]1d = [ (map-1DimView f x) ∙∙
 
 
 
-module _ {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} where 
+module _ {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} where
 
  mapM-1DimView : (f : A → M B) → 1DimView A → M (1DimView B)
  mapM-1DimView f [ x ]1d = ⦇ [ f x ]1d ⦈
@@ -138,14 +138,14 @@ sym1DimView [ x ∙∙1d x₁ ∙∙1d x₂ ]1d =
   [ (sym1DimView x₂) ∙∙1d (sym1DimView x₁) ∙∙1d (sym1DimView x) ]1d
 
 module _ (a : A) where
- to1DimView :  CuTerm' ⊥ A → Maybe (1DimView (A × R.Term)) 
+ to1DimView :  CuTerm' ⊥ A → Maybe (1DimView (A × R.Term))
 
  to1DimView (hco (((just b) ∷ [] , fc) ∷ ((just b') ∷ [] , fc') ∷ []) x₁) =
    (do x₁ ← to1DimView x₁
-       f ← to1DimView fc 
+       f ← to1DimView fc
        f' ← to1DimView fc'
        let f0 = if b then f' else f
-       let f1 = if b then f else f' 
+       let f1 = if b then f else f'
        just [ sym1DimView f0 ∙∙1d x₁ ∙∙1d f1 ]1d)
 
 
@@ -153,7 +153,7 @@ module _ (a : A) where
  to1DimView _ = nothing
 
 
-1dvEnd : 1DimView (A × R.Term) → R.TC PathTerm 
+1dvEnd : 1DimView (A × R.Term) → R.TC PathTerm
 1dvEnd y@([ (_ , x) ]1d) = 𝒓efl <$> (addNDimsToCtx 1 $ R.normalise
           (replaceVarWithCon (λ { zero → just (quote i1) ; _ → nothing }) x))
 1dvEnd y@([ x ∙∙1d x₁ ∙∙1d x₂ ]1d) = 1dvEnd x₂
@@ -170,12 +170,12 @@ fill1DV' [ just (_ , ud≡) , p ]1d q = do
 fill1DV' [ p₀ ∙∙1d p₁ ∙∙1d p₂ ]1d q = do
   (s₂ , q) ← fill1DV' p₂ q
   (s₁ , q) ← fill1DV' p₁ q
-  (s₀ , q) ← fill1DV' p₀ q  
+  (s₀ , q) ← fill1DV' p₀ q
   pure (R.def (quote _∙∙■_∙∙■_) (s₀ v∷ s₁ v∷ v[ s₂ ]) , q )
 
 fill1DV : 1DimView (A × R.Term) → R.TC (R.Term × PathTerm)
-fill1DV x = 
-  
+fill1DV x =
+
   1dvEnd x >>= (fill1DV' (map-1DimView (λ (_ , pt) → nothing ,  asPathTerm pt) x))
 
 
@@ -185,7 +185,7 @@ quote1D mbty t = do
   cu ← extractCuTermFromPath mbty t
   let cu' = appCongs 1 cu
   congPa ← pure (ToTerm.toTerm (defaultCtx 2) (fillCongs 100 1 cu))
-  let mbCongPa = if (hasVar 1 congPa) then just congPa else nothing 
+  let mbCongPa = if (hasVar 1 congPa) then just congPa else nothing
   Mb.rec (R.typeError [ "imposible in simplifyPath" ]ₑ)
                (λ (x , y) → x ,_ <$> mapM-1DimView (UndegenCell.mbUndegen' 1 ∘S snd) y)
                (map-Maybe  (mbCongPa ,_) (to1DimView _ cu'))
@@ -208,27 +208,27 @@ macro
    R.unify sq h
 
  simplifyPath : R.Term → R.Term → R.TC Unit
- simplifyPath t h = do   
+ simplifyPath t h = do
    sq ← simplifyFillTerm nothing t
    R.unify (R.def (quote ◪→≡) v[ sq ]) h
 
 stepSq : R.Type → R.Term → Maybe PathTerm →  R.TC (R.Term × PathTerm)
 stepSq A p mbQ = do
   (mbCong≡ , 1dt) ← quote1D (just A) $ vlam "𝒾" p
-  
-  q ← Mb.rec (1dvEnd 1dt) pure mbQ  
+
+  q ← Mb.rec (1dvEnd 1dt) pure mbQ
   (s , q') ←  fill1DV' (map-1DimView (map-snd asPathTerm) 1dt ) q
 
   let s' = Mb.rec s
             (λ c≡ → R.def (quote comp₋₀) (s v∷ v[ vlam "𝓳" $ vlam "𝓲" c≡ ]))
             mbCong≡
-  pure $ s' , q'                 
+  pure $ s' , q'
 
 macro
- 
+
 
  solvePaths : R.Term → R.TC Unit
- solvePaths h = R.withReduceDefs (false , [ quote ua ]) do   
+ solvePaths h = R.withReduceDefs (false , [ quote ua ]) do
   hTy ← R.inferType h >>= wait-for-term >>= R.normalise
   bdTM@(A , ((a₀₋ , a₁₋) , (a₋₀ , a₋₁))) ← (matchSquare <$> matchNCube hTy) >>=
      Mb.rec (R.typeError [ "not a square" ]ₑ) pure

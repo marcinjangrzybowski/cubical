@@ -6,9 +6,9 @@ open import Cubical.Core.Primitives
 
 private
  variable
-  ℓ ℓ' : Level  
+  ℓ ℓ' : Level
   A B C E : Type ℓ
-  
+
 Functorω : Typeω
 Functorω = ∀ {ℓ} → Type ℓ → Type ℓ
 
@@ -30,7 +30,7 @@ record RawApplicative (F : Functorω) : Typeω where
  infixl 4 _<*>_ _<$>_
 
 
- 
+
 
 module _ (M : Functorω) {{RA : RawApplicative M}} where
 
@@ -57,7 +57,7 @@ module _ (M : Functorω) {{RA : RawApplicative M}} where
     fail : E → M A
     _<|>_ : M A → M A → M A
 
-   infixl 4 _<|>_ 
+   infixl 4 _<|>_
 
 
   module _  {{RME : RawMonadFail E}}  where
@@ -73,7 +73,7 @@ joinM : ∀ {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} →
    M (M A) → M A
 joinM x = x >>= (λ x → x)
 
-_>=>_ :  ∀ {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} → 
+_>=>_ :  ∀ {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} →
   (A → M B) → (B → M C) → A → M C
 (x >=> x₁) x₂ = x x₂ >>= x₁
 
@@ -85,7 +85,7 @@ instance
 
 
  RawMonadIdentityF : RawMonad IdentityF
- (RawMonadIdentityF RawMonad.>>= x) y = y (runIdentity x) 
+ (RawMonadIdentityF RawMonad.>>= x) y = y (runIdentity x)
  (RawMonadIdentityF RawMonad.>> _) y = y
 
 
@@ -110,11 +110,11 @@ record RawMonadTransformer (T : Functorω → Functorω) : Typeω where
   monadLiftT : {F : Functorω} → {{RA : RawApplicative F}} → {{_ : RawMonad F}}
      → RawMonad (T F) {{applicativeLiftT}}
 
-  
+
 open RawMonadTransformer public
 
 
-record [_RMT_]_ (T : Functorω → Functorω) (F : Functorω) {ℓ} (A : Type ℓ) : Type ℓ where  
+record [_RMT_]_ (T : Functorω → Functorω) (F : Functorω) {ℓ} (A : Type ℓ) : Type ℓ where
  constructor wrap
  field
    unwrap : T F A
@@ -127,7 +127,7 @@ open [_RMT_]_  public
 module _ {T} {{rmt : RawMonadTransformer T}} where
 
 
- private 
+ private
   instance
    ApplicativeLiftT' : {F : Functorω} →
      {{_ : RawApplicative F}} → {{_ : RawMonad F}} → RawApplicative (T F)
@@ -141,7 +141,7 @@ module _ {T} {{rmt : RawMonadTransformer T}} where
  liftM : {F : Functorω} → {{_ : RawApplicative F}} → {{_ : RawMonad F}} → F A → [ T RMT F ] A
  liftM x = wrap (lifting rmt x)
 
- instance 
+ instance
    ApplicativeLiftT : {{RA : RawApplicative M}}
       → {{RM : RawMonad M}} → RawApplicative ([ T RMT M ]_)
    unwrap ((ApplicativeLiftT RawApplicative.<$> x) x₁) = x <$> unwrap x₁

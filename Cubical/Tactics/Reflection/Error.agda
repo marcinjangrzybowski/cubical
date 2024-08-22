@@ -1,4 +1,4 @@
-{-# OPTIONS --safe  #-} 
+{-# OPTIONS --safe  #-}
 
 module Cubical.Tactics.Reflection.Error where
 
@@ -43,9 +43,9 @@ _++ₑ_  ⦃ tep ⦄ x = (map (toErrorPart tep) x) ++_
 instance
  ToErrorPartString : ToErrorPart String
  toErrorPart ToErrorPartString = R.strErr
- 
+
  ToErrorPartChar : ToErrorPart Char
- toErrorPart ToErrorPartChar = R.strErr ∘S primStringFromList ∘S [_] 
+ toErrorPart ToErrorPartChar = R.strErr ∘S primStringFromList ∘S [_]
 
 
  ToErrorPartℕ : ToErrorPart ℕ
@@ -106,7 +106,7 @@ stringLength = length ∘S primStringToList
 
 
 indent' : Bool → Char → ℕ → String → String
-indent' _ _ zero x = x 
+indent' _ _ zero x = x
 indent' b ch k =
   primStringFromList ∘S
    (if b then ((ch ∷_) ∘S (ind ++_)) else (idfun _)) ∘S h ∘S primStringToList
@@ -140,7 +140,7 @@ data ResultIs {ℓ} {A : Type ℓ} : A → Type ℓ where
  resultIs : ∀ s → ResultIs s
 
 
-wrapResult : ∀ {ℓ} {A : Type ℓ} → R.Term → A → R.TC Unit 
+wrapResult : ∀ {ℓ} {A : Type ℓ} → R.Term → A → R.TC Unit
 wrapResult hole x = do
    x' ← R.quoteTC x
    R.unify (R.con (quote resultIs) v[ x' ]) hole
@@ -154,11 +154,11 @@ lines = map primStringFromList ∘S h [] ∘S primStringToList
  h xxs ('\n' ∷ xs) = xxs ++ h [] xs
  h [] (x ∷ xs) = h [ [ x ] ] xs
 
- h xxs (x ∷ xs) =  h ((init xxs) ++ map (_∷ʳ x) (drop (predℕ (length xxs)) xxs))  xs 
+ h xxs (x ∷ xs) =  h ((init xxs) ++ map (_∷ʳ x) (drop (predℕ (length xxs)) xxs))  xs
 
 
 
-wrapError : R.Term → List (R.ErrorPart) → R.TC Unit 
+wrapError : R.Term → List (R.ErrorPart) → R.TC Unit
 wrapError hole x = do
    x' ← ((map (offsetStrR 45) ∘S lines) <$> R.formatErrorParts x) >>= R.quoteTC
    R.unify (R.con (quote resultIs) v[ x' ]) hole
@@ -170,7 +170,7 @@ data TestResult : Type where
 assertNoErr : ∀ {ℓ} {A : Type ℓ} → R.Term → R.TC A → R.TC Unit
 assertNoErr h x = do
   (x >> wrapResult h ✓-pass) <|> wrapResult h ⊘-fail
-  
+
 
 visibillityWrap : R.Visibility → String → String
 visibillityWrap R.visible x = " " <> x <> " "
@@ -183,9 +183,8 @@ showTeles = concatMapM h ∘S liftedTele
  h : String × R.Arg R.Type → R.TC (List R.ErrorPart)
  h (s , R.arg (R.arg-info v m) ty) = do
    pure $ s ∷ₑ " : " ∷ₑ ty ∷nl []
-   
+
 macro
  showCtx : R.Term → R.TC Unit
  showCtx _ = R.getContext >>= (showTeles >=> R.typeError)
-
 

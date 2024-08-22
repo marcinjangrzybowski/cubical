@@ -1,4 +1,4 @@
-{-# OPTIONS --safe #-} 
+{-# OPTIONS --safe #-}
 
 module Cubical.Tactics.PathSolver.Macro where
 
@@ -29,13 +29,13 @@ open import Cubical.Reflection.Base renaming (v to 𝒗)
 open import Cubical.Reflection.Sugar
 import Agda.Builtin.Reflection as R
 open import Cubical.Tactics.PathSolver.Reflection
-open import Cubical.Tactics.Reflection 
+open import Cubical.Tactics.Reflection
 
 open import Cubical.Tactics.Reflection.Utilities
 
 open import Cubical.Tactics.PathSolver.CongComp
 
-open import Cubical.Tactics.Reflection.QuoteCubical 
+open import Cubical.Tactics.Reflection.QuoteCubical
 
 open import Cubical.Tactics.Reflection.Error
 open import Cubical.Tactics.Reflection.Dimensions
@@ -51,7 +51,7 @@ macro
  cong$ t h = do
    ty ← R.inferType t
    t ← normaliseWithType ty t
-   cc ← getCuCtx 
+   cc ← getCuCtx
    let dim = length cc
    co ← R.getContext
    cu ← R.inContext (drop dim co) $ appCongs dim
@@ -66,35 +66,35 @@ macro
  cong! t h = do
    ty ← R.inferType t
    t ← normaliseWithType ty t
-   cc ← getCuCtx 
+   cc ← getCuCtx
    let dim = predℕ (length cc)
    co ← R.getContext
    cu ← R.inContext (drop (suc dim) co) $ fillCongs 100 dim
            <$> quoteCuTerm nothing --(just (dropVars.rv (suc dim) zero ty))
                           dim (dropVar dim t)
    let r = ToTerm.toTerm cc cu
-   
+
    R.unify r h --<|> R.typeError [ r ]ₑ
 
 makeH? : R.Term → R.Term → R.TC String
 makeH? iT eT = do
   cuCtx ← getCuCtx
-  let dim = length cuCtx 
+  let dim = length cuCtx
   fE ← iFxprFromSpec dim iT
-  
+
   cuCtx ← L.map (map-snd (const nothing)) ∘S take dim <$> R.getContext
   (((hcoFromIExpr dim fE eT) >>= codeGen.ppCT'' false dim cuCtx 10) >>= R.formatErrorParts)
-  
+
  where
  iFxprFromSpec : ℕ → R.Term → R.TC FExpr
- iFxprFromSpec dim t = 
+ iFxprFromSpec dim t =
    (R.unquoteTC {A = ℕ} t <⊎> extractIExprM t)
      <|> (R.typeError $
          "Wrong parameter!"
          ∷nl [ "pass either ℕ or Interval Expr as first argument!" ]ₑ)
    >>= pure ∘S ⊎.rec (allSubFacesOfSfDim dim ∘S min (predℕ dim))
                      ((_++fe (allSubFacesOfSfDim dim 0)) ∘S I→F)
- 
+
 macro
 
  h? : R.Term → R.Term → R.Term → R.TC Unit

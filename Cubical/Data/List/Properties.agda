@@ -351,7 +351,7 @@ rot (x ∷ xs) = xs ∷ʳ x
 rotN : ℕ → List A → List A
 rotN n = iter n rot
 
-offset : A → ℕ →  List A → List A 
+offset : A → ℕ →  List A → List A
 offset a n xs = repeat (substLen n xs) a ++ xs
  where
  substLen : ℕ → List A → ℕ
@@ -359,7 +359,7 @@ offset a n xs = repeat (substLen n xs) a ++ xs
  substLen k@(suc _) [] = k
  substLen (suc k) (_ ∷ xs) = substLen k xs
 
-offsetR : A → ℕ →  List A → List A 
+offsetR : A → ℕ →  List A → List A
 offsetR a zero xs = xs
 offsetR a (suc n) [] = repeat (suc n) a
 offsetR a (suc n) (x ∷ xs) = x ∷ offsetR a n xs
@@ -413,8 +413,8 @@ zipWith f (x ∷ xs) (y ∷ ys) = f x y ∷ zipWith f xs ys
 
 alwaysZipWith : (Maybe A → Maybe B → C) → List A → List B → List C
 alwaysZipWith f [] [] = []
-alwaysZipWith f [] ys = map (f nothing ∘ just) ys 
-alwaysZipWith f xs@(_ ∷ _) [] = map (flip f nothing ∘ just) xs 
+alwaysZipWith f [] ys = map (f nothing ∘ just) ys
+alwaysZipWith f xs@(_ ∷ _) [] = map (flip f nothing ∘ just) xs
 alwaysZipWith f (x ∷ xs) (y ∷ ys) = f (just x) (just y) ∷ alwaysZipWith f xs ys
 
 range : ℕ → List ℕ
@@ -446,7 +446,7 @@ fromAllMaybes [] = just []
 fromAllMaybes (nothing ∷ xs) = nothing
 fromAllMaybes (just x ∷ xs) = map-Maybe (x ∷_) (fromAllMaybes xs)
 
-maybeToList : Maybe A → List A 
+maybeToList : Maybe A → List A
 maybeToList nothing = []
 maybeToList (just x) = [ x ]
 
@@ -457,7 +457,7 @@ listToMaybe (x ∷ _) = just x
 
 injectiveZipWith, : (xs ys : List (A × B)) →
   map fst xs ≡ map fst ys →
-  map snd xs ≡ map snd ys →  
+  map snd xs ≡ map snd ys →
   xs ≡ ys
 injectiveZipWith, [] [] x x₁ = refl
 injectiveZipWith, [] (x₂ ∷ ys) x x₁ = ⊥.rec (¬nil≡cons x)
@@ -467,7 +467,7 @@ injectiveZipWith, (x₂ ∷ xs) (x₃ ∷ ys) x x₁ =
    (injectiveZipWith, xs ys (cons-inj₂ x) (cons-inj₂ x₁))
 
 
-cart : List  A → List B → List (A × B) 
+cart : List  A → List B → List (A × B)
 cart la lb = join (map (λ b → map (_, b) la) lb)
 
 filter : (A → Bool) → List A → List A
@@ -482,7 +482,7 @@ module _ (_≟_ : Discrete A) where
 
  elem? : A → List A → Bool
  elem? x [] = false
- elem? x (x₁ ∷ x₂) = Dec→Bool (x ≟ x₁) or elem? x x₂  
+ elem? x (x₁ ∷ x₂) = Dec→Bool (x ≟ x₁) or elem? x x₂
 
  subs? : List A → List A → Bool
  subs? xs xs' = foldr (_and_ ∘ flip elem? xs') true xs

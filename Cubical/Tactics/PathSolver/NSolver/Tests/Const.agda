@@ -1,4 +1,4 @@
-{-# OPTIONS --safe -v 0 #-} 
+{-# OPTIONS --safe -v 0 #-}
 
 module Cubical.Tactics.PathSolver.NSolver.Tests.Const where
 
@@ -28,7 +28,7 @@ module Var {A : Type ℓ} (a : A) where
        refl
        (refl ∙ refl ∙ refl ∙ refl ∙ refl ∙ refl)
        ((refl ∙ refl) ∙∙ (refl ∙ refl) ∙∙  (refl ∙ refl ))
- 
+
 
  _ : ResultIs ✓-pass
  _ = solvePathsTest
@@ -46,7 +46,7 @@ module Var {A : Type ℓ} (a : A) where
   _ : ResultIs ✓-pass
   _ = solvePathsTest
        refl {x = a'} ∙ refl ≡ refl
-  
+
 
   _ : ResultIs ✓-pass
   _ = solvePathsTest
@@ -73,7 +73,7 @@ module Var {A : Type ℓ} (a : A) where
 module DataType {ℓ} where
 
  data A : Type ℓ where
-  a : A 
+  a : A
 
  _ : ResultIs ✓-pass
  _ = solvePathsTest

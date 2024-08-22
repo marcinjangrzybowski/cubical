@@ -14,7 +14,7 @@ open import Cubical.Data.Unit
 open import Cubical.Data.Sigma
 
 
-module _ {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} where 
+module _ {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} where
 
  mapM : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'}
             → (A → M B) → List A → M (List B)
@@ -43,7 +43,7 @@ module _ {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} where
  foldrM f b (x ∷ xs) = foldrM f b xs >>= f x
 
 
-State₀T : Type → Functorω → Functorω 
+State₀T : Type → Functorω → Functorω
 State₀T S F T = S → F (T × S)
 
 
@@ -55,8 +55,8 @@ modify : {F : Functorω} {{FA : RawApplicative F }} {{FM : RawMonad F }} {S : Ty
 unwrap (modify f) s = pure (_ , f s)
 
 
-Plus₀T : Type → Functorω → Functorω 
-Plus₀T E F T = F (E ⊎.⊎ T) 
+Plus₀T : Type → Functorω → Functorω
+Plus₀T E F T = F (E ⊎.⊎ T)
 
 module _ where
  open RawMonadTransformer
@@ -65,11 +65,11 @@ module _ where
   rawMonadTransformerState₀ : ∀ {S} → RawMonadTransformer (State₀T S)
   (applicativeLiftT rawMonadTransformerState₀ RawApplicative.<$> x) = (map-fst x <$>_) ∘S_
   RawApplicative.pure (applicativeLiftT rawMonadTransformerState₀) x = pure ∘S (x ,_)
-  (applicativeLiftT rawMonadTransformerState₀ RawApplicative.<*> f) x s = 
+  (applicativeLiftT rawMonadTransformerState₀ RawApplicative.<*> f) x s =
     f s >>= uncurry (_<$>_ ∘S map-fst) ∘S map-snd x
-    
+
   (monadLiftT rawMonadTransformerState₀ RawMonad.>>= x) y s = x s >>= uncurry y
-      
+
   (monadLiftT rawMonadTransformerState₀ RawMonad.>> x) y s = x s >>= y ∘S snd
   lifting rawMonadTransformerState₀ x s = (_, s) <$> x
 
@@ -85,12 +85,12 @@ module _ where
     x >>= ⊎.rec (pure ∘S ⊎.inl) (const y)
   lifting rawMonadTransformerPlus₀ x = ⊎.inr <$> x
 
-  
-  ApplicativeSum : {E : Type} → RawApplicative (E ⊎.⊎_) 
-  ApplicativeSum = applicativeLiftT rawMonadTransformerPlus₀ {{_}} {{RawMonadIdentityM}} 
 
-  MonadSum : {E : Type} → RawMonad (E ⊎.⊎_) 
-  MonadSum = monadLiftT rawMonadTransformerPlus₀ {{_}} {{RawMonadIdentityM}} 
+  ApplicativeSum : {E : Type} → RawApplicative (E ⊎.⊎_)
+  ApplicativeSum = applicativeLiftT rawMonadTransformerPlus₀ {{_}} {{RawMonadIdentityM}}
+
+  MonadSum : {E : Type} → RawMonad (E ⊎.⊎_)
+  MonadSum = monadLiftT rawMonadTransformerPlus₀ {{_}} {{RawMonadIdentityM}}
 
 
 
@@ -111,7 +111,7 @@ instance
  RawApplicative._<$>_ ApplicativeList = L.map
  RawApplicative.pure ApplicativeList = [_]
  (ApplicativeList RawApplicative.<*> fs) xs = L.map (uncurry _$_) (cart fs xs)
- 
+
 
  MonadList : RawMonad List
  RawMonad._>>=_ MonadList xs f = L.join (map f xs)
@@ -124,14 +124,14 @@ when {M} true x = x
 
 
 
-infixl 4 _<⊎>_ 
+infixl 4 _<⊎>_
 
 
 private
  variable
-  ℓ : Level  
+  ℓ : Level
   A B E : Type ℓ
 
-_<⊎>_ : {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} {{_ : RawMonadFail M E}} → 
+_<⊎>_ : {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} {{_ : RawMonadFail M E}} →
   (M A) → (M B) → M (A ⊎.⊎ B)
-a <⊎> b = (⊎.inl <$> a) <|> (⊎.inr <$> b) 
+a <⊎> b = (⊎.inl <$> a) <|> (⊎.inr <$> b)

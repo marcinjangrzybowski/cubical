@@ -1,4 +1,4 @@
-{-# OPTIONS --safe #-} 
+{-# OPTIONS --safe #-}
 module Cubical.Tactics.PathSolver.Degen where
 
 
@@ -31,7 +31,7 @@ undegenTerm onEnd offset dim =
     atVarOrDefM.rv
       (λ n k _ args → R.var (n + k) <$> args)
       h
-      zero ∘S (if onEnd then (idfun _) else (liftVarsFrom 1 (offset + dim))) 
+      zero ∘S (if onEnd then (idfun _) else (liftVarsFrom 1 (offset + dim)))
 
  where
 
@@ -58,7 +58,7 @@ undegenTerm2 onEnd offset dim =
     atVarOrDefM.rv
       (λ n k _ args → R.var (n + k) <$> args)
       h
-      zero ∘S (if onEnd then (idfun _) else (liftVarsFrom 1 (offset + dim))) 
+      zero ∘S (if onEnd then (idfun _) else (liftVarsFrom 1 (offset + dim)))
 
  where
 
@@ -90,26 +90,26 @@ private
 
 
 module UndegenCell (dim : ℕ) where
-     
+
  undegenCell : (R.Term × R.Term) → R.Term → R.TC R.Term
  undegenCell (t0 , tI) t = do
    let eai = (extractAllIExprs t0)
    -- concatMapM (pure ∘S ("" ∷nl_) ∘S [_]ₑ ∘S IExpr→Term) eai >>= R.typeError
 
    fe ← undegenFcs dim eai --(extractAllIExprs t0)
-   
+
    -- Mb.rec (pure t)
-   let ie = IExpr→Term (F→I dim fe) 
+   let ie = IExpr→Term (F→I dim fe)
    pure
    -- addNDimsToCtx (suc dim) $ R.typeError $ [_]ₑ $
      (R.def (quote hcomp)
           (vlam "undegenCellDim"
             (R.def (quote primPOr)
               (R.def (quote ~_) v[ 𝒗 (suc dim) ] v∷ (R.def (quote _∨_) ((𝒗 (suc dim)) v∷
-                v[ (liftVars ie) ])) v∷ 
+                v[ (liftVars ie) ])) v∷
                (constPartialR (R.def (quote ~_) v[ 𝒗 (suc dim) ]) (liftVarsFrom 1 (suc dim) tI))
                  v∷ v[ constPartialR ((R.def (quote _∨_) ((𝒗 (suc dim)) v∷
-                v[ (liftVars ie) ]))) (liftVars t) ])) v∷ v[ t ])) 
+                v[ (liftVars ie) ]))) (liftVars t) ])) v∷ v[ t ]))
    where
     constPartialR : R.Term → R.Term → R.Term
     constPartialR tI tA = R.def (quote constPartial) (tA v∷ v[ tI ])
@@ -117,7 +117,7 @@ module UndegenCell (dim : ℕ) where
 
  mbUndegen : R.Term → R.TC (Maybe (R.Term × R.Term) × R.Term)
  mbUndegen tm = do
-  
+
   allNonDeg ← foldrM
             (\ie b →  (b and_)  <$> (isNonDegen dim ie))
               true (extractAllIExprs tm)
@@ -128,7 +128,7 @@ module UndegenCell (dim : ℕ) where
 
  mbUndegen' : R.Term → R.TC (Maybe (R.Term × R.Term) × R.Term)
  mbUndegen' tm = do
-  
+
   allNonDeg ← foldrM
             (\ie b →  (b and_)  <$> (isNonDegen dim ie))
               true (extractAllIExprs tm)
@@ -136,6 +136,4 @@ module UndegenCell (dim : ℕ) where
     do idt0 ← undegenTerm true zero dim tm
        idt1 ← undegenTerm false zero dim tm
        pure ( just (tm , idt1) , idt0)
-
-
 

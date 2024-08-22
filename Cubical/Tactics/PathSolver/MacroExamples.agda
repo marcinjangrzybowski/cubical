@@ -1,4 +1,4 @@
-{-# OPTIONS --safe #-} 
+{-# OPTIONS --safe #-}
 
 module Cubical.Tactics.PathSolver.MacroExamples where
 
@@ -29,13 +29,13 @@ open import Cubical.Reflection.Base renaming (v to 𝒗)
 open import Cubical.Reflection.Sugar
 import Agda.Builtin.Reflection as R
 open import Cubical.Tactics.PathSolver.Reflection
-open import Cubical.Tactics.Reflection 
+open import Cubical.Tactics.Reflection
 
 open import Cubical.Tactics.Reflection.Utilities
 
 open import Cubical.Tactics.PathSolver.CongComp
 
-open import Cubical.Tactics.Reflection.QuoteCubical 
+open import Cubical.Tactics.Reflection.QuoteCubical
 
 open import Cubical.Tactics.Reflection.Error
 open import Cubical.Tactics.Reflection.Dimensions
@@ -52,14 +52,14 @@ private
   variable
     ℓ : Level
     A B : Type ℓ
-    
+
 
 
 module _ (SA : NPath 3 A) (f : A → B) where
   open NPath SA
 
   f[assoc] : cong f 𝑝₀ ∙ cong f 𝑝₁ ∙ cong f 𝑝₂ ≡ (cong f 𝑝₀ ∙ cong f 𝑝₁) ∙ cong f 𝑝₂
-  f[assoc] i j = cong$ (f (assoc 𝑝₀ 𝑝₁ 𝑝₂ i j)) 
+  f[assoc] i j = cong$ (f (assoc 𝑝₀ 𝑝₁ 𝑝₂ i j))
 
 
 module _ (SA : NPath 6 A) (f : A → {A} → A → A) (g : A → A) (𝑝ₓ : g (NPath.𝑣₀ SA) ≡ g (NPath.𝑣₀ SA)) where
@@ -102,7 +102,7 @@ module _ (SA : NPath 6 A) (f : A → {A} → A → A) (g : A → A) (𝑝ₓ : g
                refl (cg² (𝑝₂ ∙ 𝑝₃))
   cpf2 i j = g (compPath-filler (𝑝ₓ ∙ cong g (𝑝₀ ∙ 𝑝₁)) (cong g (𝑝₂ ∙ 𝑝₃)) i j)
 
-  cpf2' : Square 
+  cpf2' : Square
               (cong g 𝑝ₓ ∙ cg² 𝑝₀ ∙ cg² 𝑝₁)
                ((cong g 𝑝ₓ ∙ cg² 𝑝₀ ∙ cg² 𝑝₁) ∙ cg² 𝑝₂ ∙ cg² 𝑝₃)
                 refl
@@ -146,7 +146,7 @@ module _ (A : Type) (a : A) (p : a ≡ a) (s : Square p p p p)  where
                                       ; 𝒛₁ (𝒛₀ = i1) → a
                                       })
                                    a
-                  
+
                  ; 𝒛₀ (j = i0) → a
                  })
               (a)

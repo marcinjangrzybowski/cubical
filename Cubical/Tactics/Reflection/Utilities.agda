@@ -51,12 +51,12 @@ argInfo (arg i x) = i
 
 
 module atVarOrConOrDefMmp {M : Functorω}
-              {{RA : RawApplicative M}} {{_ : RawMonad M {{RA}} }} 
+              {{RA : RawApplicative M}} {{_ : RawMonad M {{RA}} }}
               (f : ℕ → ℕ → (List (Arg Term)) → M (List (Arg Term)) → (List (M (Arg Term))) → (M Term))
               (h : ℕ → Name → (List (Arg Term)) → M (List (Arg Term)) → (List (M (Arg Term))) → (M Term))
               (g : ℕ → Name → (List (Arg Term)) → M (List (Arg Term)) → (List (M (Arg Term))) → (M Term))
               where
-              
+
  ra : ℕ → List (Arg Term) → M (List (Arg Term))
  raT : ℕ → List (Arg Term) → (List (M (Arg Term)))
  rc : ℕ → List Clause → M (List Clause)
@@ -69,16 +69,16 @@ module atVarOrConOrDefMmp {M : Functorω}
  rs : ℕ →  Sort → M Sort
 
  ra n [] = ⦇ [] ⦈
- ra n (arg i x ∷ x₂) = 
+ ra n (arg i x ∷ x₂) =
    ⦇ ⦇ (arg i) (rv n x) ⦈ ∷ ra n x₂ ⦈
 
  raT n [] = []
- raT n (arg i x ∷ x₂) = 
-   ⦇ (arg i) (rv n x) ⦈ ∷ raT n x₂ 
+ raT n (arg i x ∷ x₂) =
+   ⦇ (arg i) (rv n x) ⦈ ∷ raT n x₂
 
  rv n (var x args) = f n x args (ra n args) (raT n args)
  rv n (con c args) = h n c args (ra n args) (raT n args)
- rv n (def f' args) = g n f' args (ra n args) (raT n args)  
+ rv n (def f' args) = g n f' args (ra n args) (raT n args)
  rv n (lam v₁ (abs s x)) =
    (lam v₁) <$> (abs s <$> (rv (suc n) x))
  rv n (pat-lam cs args) = ⦇ pat-lam (rc n cs) (ra n args) ⦈
@@ -129,7 +129,7 @@ atVarOrConOrDefMmp = atVarOrConOrDefMmp.rv0
 
 
 module atVarOrDefMmp {M : Functorω}
-              {{RA : RawApplicative M}} {{RM : RawMonad M {{RA}} }} 
+              {{RA : RawApplicative M}} {{RM : RawMonad M {{RA}} }}
               (f : ℕ → ℕ → (List (Arg Term)) → M (List (Arg Term)) → (List (M (Arg Term))) → (M Term))
               (g : ℕ → Name → (List (Arg Term)) → M (List (Arg Term)) → (List (M (Arg Term))) → (M Term))
               where
@@ -143,11 +143,11 @@ atVarOrDefMmp = atVarOrDefMmp.rv0
 
 
 module atVarOrDefM {M : Functorω}
-              {{RA : RawApplicative M}} {{RM : RawMonad M {{RA}} }} 
+              {{RA : RawApplicative M}} {{RM : RawMonad M {{RA}} }}
               (f : ℕ → ℕ → (List (Arg Term)) → M (List (Arg Term)) → (M Term))
               (g : ℕ → Name → (List (Arg Term)) → M (List (Arg Term)) → (M Term))
               where
-              
+
  open atVarOrDefMmp {M = M}
               {{RA}} {{RM }}
               (λ n k l l' _ → f n k l l')
@@ -159,11 +159,11 @@ atVarOrM : (ℕ → ℕ → List (Arg Term) → Maybe Term) → (ℕ → Name �
 atVarOrM f g = rv zero
  where
  open atVarOrDefM {{_}} {{RawMonadIdentityM}}
-    (λ n k _ args →  
+    (λ n k _ args →
           let t = var k args
               t' = (Mb.fromJust-def t (f n (k ∸ n) args))
           in (if (k <ℕ n) then t else t'))
-   (λ n nm _ args →  
+   (λ n nm _ args →
           let t = def nm args
           in  Mb.fromJust-def t (g n nm args))
 
@@ -171,11 +171,11 @@ atVarOrM' : (ℕ → ℕ → List (Arg Term) → Maybe Term) → (ℕ → Name �
 atVarOrM' f g = rv zero
  where
  open atVarOrDefM {{_}} {{RawMonadIdentityM}}
-    (λ n k args0 args →  
+    (λ n k args0 args →
           let t = var k args
               t' = (Mb.fromJust-def t (f n (k ∸ n) args0))
           in (if (k <ℕ n) then t else t'))
-   (λ n nm args0 args →  
+   (λ n nm args0 args →
           Mb.fromJust-def (def nm args) (g n nm args0))
 
 atVarOrConM' : (ℕ → ℕ → List (Arg Term) → Maybe Term) →
@@ -184,46 +184,46 @@ atVarOrConM' : (ℕ → ℕ → List (Arg Term) → Maybe Term) →
 atVarOrConM' f h g = rv zero
  where
  open atVarOrConOrDefMmp {{_}} {{RawMonadIdentityM}}
-    (λ n k args0 args _ →  
+    (λ n k args0 args _ →
           let t = var k args
               t' = (Mb.fromJust-def t (f n (k ∸ n) args0))
           in (if (k <ℕ n) then t else t'))
-   (λ n nm args0 args _ →  
+   (λ n nm args0 args _ →
           Mb.fromJust-def (con nm args) (h n nm args0))
-   (λ n nm args0 args _ →  
+   (λ n nm args0 args _ →
           Mb.fromJust-def (def nm args) (g n nm args0))
 
 
 
 module atVarM {M : Functorω}
-              {{RA : RawApplicative M}} {{RM : RawMonad M {{RA}} }} 
+              {{RA : RawApplicative M}} {{RM : RawMonad M {{RA}} }}
               (f : ℕ → ℕ → List (Arg Term) → Maybe (M Term)) where
 
 
  open atVarOrDefM
-      (λ n k _ args → RawMonad._>>=_ RM args λ args → 
+      (λ n k _ args → RawMonad._>>=_ RM args λ args →
           let t = var k args
           in (Mb.fromJust-def (RawApplicative.pure RA t) (if (k <ℕ n) then nothing else (f n (k ∸ n) args))))
       (λ n nm _ args → RawMonad._>>=_ RM args λ args → RawApplicative.pure RA (def nm args))
       public
 
 module atVar (f : ℕ → ℕ → List (Arg Term) → Maybe (Term)) where
- 
- open atVarM 
+
+ open atVarM
       {{_}}
       {{RawMonadIdentityM}} f
       public
 
 atVarM : {M : Functorω}
-              {{RA : RawApplicative M}} {{_ : RawMonad M {{RA}} }} 
+              {{RA : RawApplicative M}} {{_ : RawMonad M {{RA}} }}
               (f : ℕ → ℕ → List (Arg Term) → Maybe (M Term)) → Term → M Term
-atVarM f = atVarM.rv f zero 
+atVarM f = atVarM.rv f zero
 
 
 atVar : (ℕ → ℕ → List (Arg Term) → Maybe Term) → Term → Term
 atVar f = atVar.rv f zero
 
-remapVars : (ℕ → ℕ) → Term → Term 
+remapVars : (ℕ → ℕ) → Term → Term
 remapVars f = atVar λ n k args → just (var (f k + n) args)
 
 
@@ -241,7 +241,7 @@ liftVarsFrom m = atVar.rv (λ n k args → just (var (n + m + k) args))
 module LiftFrom (m : ℕ) where
  open atVar (λ n k args → just (var (n + m + k) args)) public
 
- 
+
 
 dropVar : ℕ → Term → Term
 dropVar = atVar.rv (λ n k args → just (var (n + predℕ k) args))
@@ -259,7 +259,7 @@ invVar m = atVar λ where
               then just (def (quote ~_) v[ var (k + n) [] ])
               else nothing
     _ _ _ → nothing
-   
+
 
 
 
@@ -293,9 +293,9 @@ findInterval dim tm =
       in wrap (identity ∘S (var k (fst z) ,_) ∘S
              (_mb>> snd z ∘S  _mb>> f n k (fst z))))
      (λ n nm _ args' →
-      let z =  (runIdentity (unwrap args' nothing)) 
+      let z =  (runIdentity (unwrap args' nothing))
       in wrap
-           (identity ∘S (def nm (fst z) ,_) ∘S 
+           (identity ∘S (def nm (fst z) ,_) ∘S
               (_mb>> snd z
                 ∘S _mb>> (map-Maybe (dropVars.rv n zero) (g nm (fst z) (def nm (fst z)))))))
      0 tm) nothing)
@@ -312,7 +312,7 @@ findInterval dim tm =
          then just (var (x ∸ n) [])
          else nothing
     f n k (x ∷ args) = nothing
-      
+
     g :  Name → List (Arg Term) → Term → Maybe Term
     g (quote _∨_) a@(_ v∷ v[ _ ]) tm = just tm
     g (quote _∧_) a@(_ v∷ v[ _ ]) tm = just tm
@@ -321,7 +321,7 @@ findInterval dim tm =
 
 
 replaceVarWithTerm : (ℕ → Maybe Term) → Term → Term
-replaceVarWithTerm f = 
+replaceVarWithTerm f =
    atVar λ n k _ →
        map-Maybe (liftVarsFrom n zero) (f k)
 
@@ -335,7 +335,7 @@ replaceAtTrm k t =
 
  where
  z : ℕ → ℕ → Maybe Term
- z zero zero = just t 
+ z zero zero = just t
  z zero (suc y) = nothing
  z (suc x) zero = nothing
  z (suc x) (suc y) = z x y

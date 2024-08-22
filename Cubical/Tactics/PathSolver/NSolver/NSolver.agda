@@ -1,5 +1,5 @@
-{-# OPTIONS --safe -v testMarkVert:3 -v tactic:3 #-} 
--- -v 3 
+{-# OPTIONS --safe -v testMarkVert:3 -v tactic:3 #-}
+-- -v 3
 module Cubical.Tactics.PathSolver.NSolver.NSolver where
 
 
@@ -27,7 +27,7 @@ open import Cubical.Reflection.Base renaming (v to 𝒗)
 open import Cubical.Reflection.Sugar
 import Agda.Builtin.Reflection as R
 open import Cubical.Tactics.PathSolver.Reflection
-open import Cubical.Tactics.Reflection 
+open import Cubical.Tactics.Reflection
 
 open import Cubical.Tactics.Reflection.Utilities
 
@@ -51,7 +51,7 @@ private
 
 normaliseWithType : String → R.Type → R.Term → R.TC R.Term
 normaliseWithType s ty tm = do
-  -- R.debugPrint "" 3 $ s <> " nwt: " ∷ₑ [ ty ]ₑ 
+  -- R.debugPrint "" 3 $ s <> " nwt: " ∷ₑ [ ty ]ₑ
   normaliseWithType' ty tm
 
 
@@ -67,13 +67,13 @@ Vert = List Bool
 
 
 isRedex? : (Bool × R.Term) → (Bool × R.Term) → R.TC Bool
-isRedex? (b , x) (b' , x') = 
+isRedex? (b , x) (b' , x') =
  if (b ⊕ b')
- then 
+ then
    (((addNDimsToCtx 1 $ R.unify x x')>> pure true)
-     <|> pure false) 
+     <|> pure false)
  else (pure false)
- 
+
 η· : Bool × R.Term → [𝟚×Term] → R.TC [𝟚×Term]
 η· x [] = ⦇ [ ⦇ x ⦈ ] ⦈
 η· x (y ∷ xs) = do
@@ -92,12 +92,12 @@ asPath : R.Term → R.TC (Maybe (Bool × R.Term))
 asPath tm = addNDimsToCtx 1 do
   -- fi ← findInterval 1 <$> R.normalise tm
   fi ← Mb.rec (pure nothing) (λ x → just <$> R.normalise x) $ findInterval 1 tm
-  
+
   Mb.rec (⦇ nothing ⦈) (zz') fi
 
  where
  zz : R.Term → R.TC (R.Term ⊎.⊎ Maybe (Bool × R.Term))
- zz (R.var zero []) = pure $ pure $ just (true , tm) 
+ zz (R.var zero []) = pure $ pure $ just (true , tm)
  zz (R.def (quote ~_) v[ R.var zero [] ]) = pure $ pure (just (false , invVar zero tm))
  zz (R.con _ _) = pure $ pure nothing
  zz (R.def (quote ~_) v[ R.var (suc k) [] ]) =
@@ -111,7 +111,7 @@ asPath tm = addNDimsToCtx 1 do
        R.typeError ([ "imposible in asPath: " ]ₑ ++ₑ [ tm ]ₑ ++ₑ [ "\n\n" ]ₑ ++ₑ [ tmI ]ₑ))
        (pure))) pure
 
- 
+
 data CellVerts : Type where
   cv0 : [𝟚×Term] → [𝟚×Term] → CellVerts
   cvN : CellVerts → CellVerts → CellVerts
@@ -126,7 +126,7 @@ mapCellVertsM f (cv0 x x₁) = ⦇ cv0 (f x) (f x₁) ⦈
 mapCellVertsM f (cvN x x₁) = ⦇ cvN (mapCellVertsM f x) (mapCellVertsM f x₁) ⦈
 
 
-cellVert : CellVerts → Vert → R.TC [𝟚×Term] 
+cellVert : CellVerts → Vert → R.TC [𝟚×Term]
 cellVert (cv0 x x₂) (false ∷ []) = pure x
 cellVert (cv0 x x₂) (true ∷ []) = pure x₂
 cellVert (cvN x x₂) (false ∷ x₃) = cellVert x x₃
@@ -140,13 +140,13 @@ getAtomPa : R.Term → R.TC [𝟚×Term]
 getAtomPa = (maybeToList <$>_) ∘S asPath
 
 print[𝟚×] :  [𝟚×Term] → List R.ErrorPart
-print[𝟚×] = 
+print[𝟚×] =
   join ∘S (L.map (λ (b , t)
             → ", (" ∷ₑ  vlam "𝕚" t  ∷ₑ [ ")" <> (if b then "" else "⁻¹") ]ₑ ))
 
 CellVerts→List : CellVerts → List (Vert × [𝟚×Term])
-CellVerts→List (cv0 x x₁) = ([ false ] , x) ∷ [ [ true ] , x₁ ] 
-CellVerts→List (cvN x x₁) = 
+CellVerts→List (cv0 x x₁) = ([ false ] , x) ∷ [ [ true ] , x₁ ]
+CellVerts→List (cvN x x₁) =
   L.map (λ (x , y) →  (false ∷ x) , y) (CellVerts→List x)
    ++ L.map ((λ (x , y) → true ∷ x , y)) (CellVerts→List x₁)
 
@@ -156,10 +156,10 @@ allEqual? _≟_ (x ∷ (y ∷ xs)) = Dec→Bool (x ≟ y) and allEqual? _≟_ (y
 allEqual? _≟_ _ = true
 
 
-          
+
 printCellVerts : CellVerts → List (R.ErrorPart)
 printCellVerts = (join ∘ L.map
-   (λ (v , x) →  L.map (if_then "□" else "◼") v ++ₑ print[𝟚×] x ++ₑ [ "\n" ]ₑ)) ∘ CellVerts→List 
+   (λ (v , x) →  L.map (if_then "□" else "◼") v ++ₑ print[𝟚×] x ++ₑ [ "\n" ]ₑ)) ∘ CellVerts→List
 
 
 
@@ -178,7 +178,7 @@ module _ (ty : R.Type) where
 
    cvN gtv0 <$> (mapCellVertsM (_[·] p0i) gtv1)
 
-getVert : ℕ → Vert → CuTerm' ⊥ (Maybe (R.Term × R.Term) × ((Maybe IExpr) × CellVerts)) → R.TC [𝟚×Term] 
+getVert : ℕ → Vert → CuTerm' ⊥ (Maybe (R.Term × R.Term) × ((Maybe IExpr) × CellVerts)) → R.TC [𝟚×Term]
 getVert zero v (hco xs _) =  R.typeError [ "ran out of magic in getVert" ]ₑ
 getVert (suc m) v (hco xs _) = do
   (sf , x) ← Mb.rec (R.typeError [ "imposible getVert" ]ₑ) pure
@@ -186,7 +186,7 @@ getVert (suc m) v (hco xs _) = do
   let v' : Vert
       v' = (L.map (snd) $ (filter ((λ { nothing → true ; _ → false }) ∘S fst)
                 (zipWith _,_ sf v)))
-  getVert m (true ∷ v') x  
+  getVert m (true ∷ v') x
 getVert _ x (cell' (_ , (_ , x₁)) _) = cellVert x₁ x
 
 
@@ -212,7 +212,7 @@ module _ (ty : R.Type) where
    let v' : Vert
        v' = (L.map (snd) $ (filter ((λ { nothing → true ; _ → false }) ∘S fst)
                  (zipWith _,_ sf v)))
-   xs' ← markVert m (suc (sfDim sf)) [] x                
+   xs' ← markVert m (suc (sfDim sf)) [] x
    p0 ← getVert m (false ∷ v') xs'
    p1 ← getVert m (true ∷ v') xs'
    p1 [·] (invLi p0)
@@ -233,16 +233,16 @@ module _ (ty : R.Type) where
    zz ← getTermVerts ty dim x >>= 𝒏[_]
    -- ia ← getIArg dim x <|>
    --        R.typeError (printCellVerts zz)
-   ia ← Mb.rec (⦇ nothing ⦈) ((extractIExprM >=> 𝒏[_]) >=& just) (findInterval dim x) 
+   ia ← Mb.rec (⦇ nothing ⦈) ((extractIExprM >=> 𝒏[_]) >=& just) (findInterval dim x)
 
    zzT ← R.quoteTC zz
    iaT ← R.quoteTC ia
 
-   R.debugPrint "testMarkVert" 3 $ ("markVert : \n" ∷ₑ zzT ∷ₑ "\n" ∷ₑ [ iaT  ]ₑ)       
+   R.debugPrint "testMarkVert" 3 $ ("markVert : \n" ∷ₑ zzT ∷ₑ "\n" ∷ₑ [ iaT  ]ₑ)
    ⦇ cell'
       ⦇ ⦇ mbX ⦈ , ⦇ ⦇ ia ⦈ , mapCellVertsM (_[·] w) zz ⦈ ⦈
       ⦇ x ⦈
-      ⦈ 
+      ⦈
 
  markVertSnd : ℕ → ℕ → [𝟚×Term] → ((CuTerm' ⊥ Unit) × A)
    → R.TC (CuTerm' ⊥ (Maybe (R.Term × R.Term) × ((Maybe IExpr) × CellVerts)) × A)
@@ -251,7 +251,7 @@ module _ (ty : R.Type) where
  markVertBd : foldBdTermWithCuInput'
     → R.TC foldBdTermWithCuInput
  markVertBd [] = R.typeError [ "markVertBd undefined" ]ₑ
- markVertBd (_ ∷ []) = R.typeError [ "markVertBd undefined" ]ₑ 
+ markVertBd (_ ∷ []) = R.typeError [ "markVertBd undefined" ]ₑ
  markVertBd xs = do
    let dim = predℕ (length xs)
        v0 = repeat dim false
@@ -263,20 +263,20 @@ module _ (ty : R.Type) where
              (lookup fcs0 0)
    fcs0₁ ← Mb.rec (R.typeError [ "imposible" ]ₑ)
      (getVert 100 (replaceAt (predℕ dim) true v0) ∘S fst) (lookup fcs0 1)
-   
+
    fcs1 ← mapM (idfun _)
-           (zipWith (markVertSnd 100 dim) (fcs0₁ ∷ fcs0₀) ((snd ∘S snd) <$> xs)) 
+           (zipWith (markVertSnd 100 dim) (fcs0₁ ∷ fcs0₀) ((snd ∘S snd) <$> xs))
    pure $ zipWithIndex (zipWith _,_ fcs0 fcs1)
 
 
 
 flipOnFalse : Bool → R.Term → R.Term
-flipOnFalse b t = if b then t else R.def (quote ~_) v[ t ] 
+flipOnFalse b t = if b then t else R.def (quote ~_) v[ t ]
 
 
 
 cpf : ∀ {ℓ} {A : Type ℓ} {x y z : A} (p : x ≡ y) (q : y ≡ z) → PathP (λ j → _ ≡ q j) p (p ∙ q)
-      
+
 cpf {x = x} {y} p q i z = hcomp
                 (λ { j (z = i1) → q (i ∧ j)
                    ; j (z = i0) → x
@@ -290,7 +290,7 @@ cpf {x = x} {y} p q i z = hcomp
    R∙ (vlam "_" (liftVars (subfaceCell [ just (not b) ] tm)))
       (vlam "𝕚'" (if b then tm else (invVar zero tm))) --(if b then tm else Rsym tm)
 [𝟚×ℕ]→PathTerm ((b , tm) ∷ xs) = R∙ ([𝟚×ℕ]→PathTerm xs)
-      (vlam "𝕚'" (if b then tm else (invVar zero tm))) 
+      (vlam "𝕚'" (if b then tm else (invVar zero tm)))
 
 [𝟚×ℕ]→FillTerm : Bool × R.Term → [𝟚×Term] → R.Term
 [𝟚×ℕ]→FillTerm (b , tm) [] =
@@ -314,18 +314,18 @@ module MakeFoldTerm (t0 : R.Term) where
     R.def (quote $≡) (liftVarsFrom (suc dim) 0 ([𝟚×ℕ]→PathTerm tl) v∷
        v[ R.def (quote ~_) v[ 𝒗 dim ] ])
  cellTerm dim (just ie , just (b , tm) , tl) _ = --vlamⁿ 1 (liftVarsFrom 1 0 t)
-   
+
     R.def (quote $≡)
          ((R.def (quote $≡) (liftVarsFrom (suc dim) 0 ([𝟚×ℕ]→FillTerm (b , tm) tl) v∷
             -- v[ (IExpr→Term ie) ]) v∷
             v[ flipOnFalse (b) (IExpr→Term ie) ]) v∷
        v[ R.def (quote ~_) v[ 𝒗 dim ] ]))
  cellTerm _  _ _ = R.lit (R.string ("unexpected in MakeFoldTerm.cellTerm"))
- 
+
 
  ctils : List (SubFace × (CuTerm' ⊥ (Maybe (R.Term × R.Term) × ((Maybe IExpr) × CellVerts)))) →
     R.TC (List (SubFace × CuTerm))
- 
+
  ctil : ℕ → (CuTerm' ⊥ (Maybe (R.Term × R.Term) × ((Maybe IExpr) × CellVerts))) → R.TC CuTerm
  ctil dim (hco x c) =
    ⦇ hco ⦇ pure (repeat dim nothing ++ [ just true ] , cell
@@ -344,8 +344,8 @@ module MakeFoldTerm (t0 : R.Term) where
             ) mbt
 
   where
-  cellVertsHead : CellVerts → Maybe (Bool × R.Term) × [𝟚×Term]  
-  cellVertsHead cv = 
+  cellVertsHead : CellVerts → Maybe (Bool × R.Term) × [𝟚×Term]
+  cellVertsHead cv =
     let l = L.map (snd) $ CellVerts→List cv
         lM = L.map (length) l
 
@@ -356,7 +356,7 @@ module MakeFoldTerm (t0 : R.Term) where
 
 
  ctils [] = ⦇ [] ⦈
- ctils ((sf , x) ∷ xs) = 
+ ctils ((sf , x) ∷ xs) =
    ⦇ ⦇ pure (sf ++ [ nothing ]) , ctil (suc (sfDim sf)) x ⦈ ∷ ctils xs ⦈
 
 
@@ -452,7 +452,7 @@ macro
    R.unify solution h <|> R.typeError ("unify - failed:" ∷nl [ solution ]ₑ )
 
  infixr 2 solvePathsTest_
- 
+
  solvePathsTest_ : R.Term → R.Term → R.TC Unit
  solvePathsTest_ goal h = assertNoErr h (
   do solution ← solvePathsSolver goal

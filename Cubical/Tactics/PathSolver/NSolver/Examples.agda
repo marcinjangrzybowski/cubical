@@ -1,21 +1,15 @@
-{-# OPTIONS --safe #-} 
+{-# OPTIONS --safe #-}
 
 module Cubical.Tactics.PathSolver.NSolver.Examples where
 
 
 open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Function
-open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Path
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Univalence
 
-open import Cubical.Relation.Nullary
-
-open import Cubical.Data.Bool
-open import Cubical.Data.Empty
 open import Cubical.Data.Maybe as Mb
 open import Cubical.Data.List as L
 open import Cubical.Data.Nat as ℕ
@@ -23,20 +17,6 @@ open import Cubical.Data.Sum
 
 open import Cubical.Data.Sigma
 
-open import Cubical.Reflection.Base renaming (v to 𝒗)
-import Agda.Builtin.Reflection as R
-open import Cubical.Tactics.PathSolver.Reflection
-open import Cubical.Tactics.Reflection 
-open import Agda.Builtin.String
-open import Agda.Builtin.Char
-open import Cubical.Tactics.Reflection.Utilities
-
-
-open import Cubical.Tactics.PathSolver.CongComp
-open import Cubical.Tactics.Reflection.CuTerm
-
-open import Cubical.Tactics.Reflection.QuoteCubical
-open import Cubical.Tactics.Reflection.Dimensions
 open import Cubical.Tactics.PathSolver.NSolver.NSolver
 open import Cubical.Tactics.PathSolver.Path
 
@@ -49,13 +29,13 @@ private
 
 
 module Coherence (SA : NPath 7 A) where
-  open NPath SA 
+  open NPath SA
 
 
 
   a₀₋₋ : Square (𝑝₀ ∙ 𝑝₁) (𝑝₁ ∙∙ 𝑝₂ ∙∙ 𝑝₃) 𝑝₀ (𝑝₂ ∙ 𝑝₃)
   a₀₋₋ = solvePaths
-  
+
   a₁₋₋ : Square (𝑝₃ ∙ sym 𝑝₃) (𝑝₂ ∙ 𝑝₃ ∙ (𝑝₄ ∙∙ 𝑝₅ ∙∙ 𝑝₆)) (sym 𝑝₂)
            (((𝑝₃ ∙' 𝑝₄) ∙' 𝑝₅) ∙' 𝑝₆)
   a₁₋₋ = solvePaths
@@ -75,12 +55,12 @@ module Coherence (SA : NPath 7 A) where
 
   -- this works but is slow (~2 min)
   -- but resulting term is managable, and can be evaluated end typechecked quickly if imported in other module
-  
+
   -- coh : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
   -- coh =  solvePaths
 
 module CompCoherence (SA : NPath 7 A) where
-   open NPath SA 
+   open NPath SA
 
    LHS₀ RHS₀ : 𝑣₀ ≡ 𝑣₄
    LHS₀ = 𝑝₀ ∙∙ 𝑝₁ ∙ (𝑝₂ ∙ (𝑝₁ ∙ 𝑝₂) ⁻¹) ∙ 𝑝₁ ∙∙ 𝑝₂ ∙ 𝑝₃
@@ -109,12 +89,12 @@ module CompCoherence (SA : NPath 7 A) where
    _ = solvePaths
 
 
-    
+
 module GroupoidLaws (SA : NPath 6 A) where
- open NPath SA 
+ open NPath SA
 
  symDist₅ : sym (𝑝₀ ∙ 𝑝₁ ∙ 𝑝₂ ∙ 𝑝₃ ∙ 𝑝₄ ∙ 𝑝₅)
-          ≡ sym 𝑝₅ ∙ sym 𝑝₄ ∙ sym 𝑝₃ ∙ sym 𝑝₂ ∙ sym 𝑝₁ ∙ sym 𝑝₀ 
+          ≡ sym 𝑝₅ ∙ sym 𝑝₄ ∙ sym 𝑝₃ ∙ sym 𝑝₂ ∙ sym 𝑝₁ ∙ sym 𝑝₀
  symDist₅ = solvePaths
 
 
@@ -191,8 +171,8 @@ module 2GroupoidLaws where
 
    cf : ∀ {x y} → (p : x ≡ y) → f x ≡ f y
    cf = cong f
-   
-   pentagonIdentityCong : 
+
+   pentagonIdentityCong :
        Square
         (assoc (cf 𝑝₀) (cf 𝑝₁) ((cf 𝑝₂) ∙ (cf 𝑝₃)) ∙ assoc ((cf 𝑝₀) ∙ (cf 𝑝₁)) (cf 𝑝₂) (cf 𝑝₃))
         (sym (cong-∙ f _ _) ∙∙ cong cf (assoc 𝑝₀ (𝑝₁ ∙ 𝑝₂) 𝑝₃) ∙∙ cong-∙ f _ _)
@@ -229,8 +209,8 @@ module funTypes {x y z : A} (f : A → A → B)
 
 
 
-module compPathR-PathP∙∙ 
-        {x y : A} {p : x ≡ y} 
+module compPathR-PathP∙∙
+        {x y : A} {p : x ≡ y}
     where
 
  invSides-filler-rot' : (invSides-filler p p) ≡ (symP (invSides-filler (sym p) (sym p)))
@@ -273,10 +253,10 @@ module _ {ℓ} where
   q : y ≡ z
   f : D → D
   r : f z ≡ f w
-  
+
 
  _ : Square
-         (cong f (p ∙ q)) (cong f q ∙ r) 
+         (cong f (p ∙ q)) (cong f q ∙ r)
          (cong f p) r
  _ = solvePaths
 

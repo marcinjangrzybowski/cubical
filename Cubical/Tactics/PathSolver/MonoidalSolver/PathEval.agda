@@ -1,5 +1,5 @@
-{-# OPTIONS --safe -v testMarkVert:3 -v tactic:3 #-} 
--- -v 3 
+{-# OPTIONS --safe -v testMarkVert:3 -v tactic:3 #-}
+-- -v 3
 module Cubical.Tactics.PathSolver.MonoidalSolver.PathEval where
 
 open import Cubical.Foundations.Prelude
@@ -47,20 +47,20 @@ WTerm = R.Term
 CTerm = R.Term
 
 
-pattern fw[1,_] x = R.def (quote FillWrap) (R.lit (R.name (quote true)) v∷ v[ x ])   
-pattern fw[0,_] x = R.def (quote FillWrap) (R.lit (R.name (quote false)) v∷ v[ x ])   
+pattern fw[1,_] x = R.def (quote FillWrap) (R.lit (R.name (quote true)) v∷ v[ x ])
+pattern fw[0,_] x = R.def (quote FillWrap) (R.lit (R.name (quote false)) v∷ v[ x ])
 
 
-pattern pw[_] x = R.def (quote PathWrap) (x v∷ [])   
+pattern pw[_] x = R.def (quote PathWrap) (x v∷ [])
 pattern pwd args = R.def (quote PathWrap) args
 
 
 pattern cwd args = R.def (quote CompWrap) args
 
-pattern cw[] = R.def (quote CompWrap) []   
-pattern cw[_] x = R.def (quote CompWrap) (x v∷ [])   
+pattern cw[] = R.def (quote CompWrap) []
+pattern cw[_] x = R.def (quote CompWrap) (x v∷ [])
 pattern cw xs = R.def (quote CompWrap) xs
-pattern _∷cw_ x xs = R.def (quote CompWrap) (x v∷ xs)  
+pattern _∷cw_ x xs = R.def (quote CompWrap) (x v∷ xs)
 
 
 intervalTest : ℕ → R.Term → Bool
@@ -75,7 +75,7 @@ wrapPaths : R.Term → WTerm
 wrapPaths = atVarOrConM' f h g
  where
   f : ℕ → ℕ → List (R.Arg R.Term) → Maybe R.Term
-  f n v args =  
+  f n v args =
      if any? (L.map (intervalTest n ∘S unArg) args)
      then  just pw[ (R.var (v + n) args) ]
      else nothing
@@ -96,7 +96,7 @@ wrapFills : R.Term → WTerm
 wrapFills = atVarOrConM' f h g
  where
   f : ℕ → ℕ → List (R.Arg R.Term) → Maybe R.Term
-  f n v args =  
+  f n v args =
      if any? (L.map (intervalTest n ∘S unArg) args)
      then  just fw[1, pw[ (R.var (v + n) args) ] ]
      else nothing
@@ -134,10 +134,10 @@ absorbStep : ℕ → WTerm → WTerm → R.TC (Maybe CTerm)
 absorbStep n (cwd _) _ = R.typeError [ "cwd in absorbStep" ]ₑ
 absorbStep n _ (cwd _) = R.typeError [ "cwd in absorbStep" ]ₑ
 absorbStep zero pw[ x ] pw[ y ] = do
-  -- R.debugPrint "testMarkVert" 3 $ "-----" ∷nl x ∷nl "** \n" ∷nl [ y ]ₑ 
+  -- R.debugPrint "testMarkVert" 3 $ "-----" ∷nl x ∷nl "** \n" ∷nl [ y ]ₑ
   (if_then (just fw[0, y ]) else nothing) <$> unifyTest (suc zero) x (invVar zero y)
 absorbStep (suc _) pw[ x ] pw[ y ] =
- R.typeError [ "absorbStep: todo - paths under abstraction" ]ₑ  
+ R.typeError [ "absorbStep: todo - paths under abstraction" ]ₑ
 absorbStep n x pw[ y ] = pure nothing
 absorbStep n pw[ x ] y = pure nothing
 absorbStep n (pwd _) _ = R.typeError [ "pwd1 in absorbStep!" ]ₑ
@@ -147,7 +147,7 @@ absorbStep n x y = just <$> h x y
 
  hs : R.Sort → R.Sort → R.TC R.Sort
  h : WTerm → WTerm → R.TC CTerm
- 
+
  ha : List (R.Arg R.Term) → List (R.Arg R.Term) → R.TC (List (R.Arg R.Term))
  ha [] [] = pure []
  ha (R.arg ax x ∷ xs) (R.arg _ x' ∷ xs')  =
@@ -163,7 +163,7 @@ absorbStep n x y = just <$> h x y
  h (R.pi (R.arg ai a) (R.abs bi b)) (R.pi (R.arg ai' a') (R.abs bi' b')) =
      ⦇ R.pi ⦇ R.arg ⦇ ai ⦈ (absorb n a a') ⦈ ⦇ R.abs ⦇ bi ⦈ (absorb (suc n) b b') ⦈  ⦈
  h (R.agda-sort s) (R.agda-sort s') = R.agda-sort <$> hs s s'
- h (R.lit l) (R.lit l') = pure (R.lit l) 
+ h (R.lit l) (R.lit l') = pure (R.lit l)
  h (R.meta x x₂) (R.meta x' x₂') = R.typeError [ "absorbStep: todo - meta" ]ₑ
  h R.unknown R.unknown = ⦇ R.unknown ⦈
  h t t' = R.typeError
@@ -178,7 +178,7 @@ absorbStep n x y = just <$> h x y
  hs _ _ = R.typeError [ "absorbStep: hs-failed" ]ₑ
 
 absorbStep' : ℕ → WTerm → WTerm → R.TC (Maybe CTerm)
-absorbStep' n x y = 
+absorbStep' n x y =
   w (hasVar zero x) (hasVar zero y)
 
  where
@@ -187,7 +187,7 @@ absorbStep' n x y =
   w true false = pure $ just (wrapFills (dropPathWraps x))
   w false false = pure (just x)
   w false true = pure (just y)
-  
+
 absorb _ _ cw[] = R.typeError [ "cw[] in absorb!" ]ₑ
 absorb _ _ (cw[ y ]) = R.typeError [ "cw[_] in absorb!" ]ₑ
 absorb n x (y ∷cw ys) =
@@ -223,12 +223,12 @@ cTermEnd = fixMb ∘S
    if (hasVar n p) then pure t  else
     (pure (if length ps =ℕ 1 then ps0 else cw ps))
   reduceComps _ x = pure x
-  
+
   fixMb : R.TC WTerm → R.TC (Maybe WTerm)
   fixMb x = x >>= λ x → pure $ if (hasVar 0 x) then just x else nothing
 
 data FillWrapEval : Type where
- headFW dropFW : FillWrapEval    
+ headFW dropFW : FillWrapEval
 
 dropFillWraps : FillWrapEval -> CTerm → R.Term
 dropFillWraps fwe = atVarOrDefM {{_}} {{RawMonadIdentityM}}
@@ -240,14 +240,14 @@ dropFillWraps fwe = atVarOrDefM {{_}} {{RawMonadIdentityM}}
   lift0Dim = remapVars λ { zero → suc zero ; n → n }
 
   w : FillWrapEval → R.Term → R.Term
-  -- w offsetFW fw[1, x ] = lift0Dim x 
+  -- w offsetFW fw[1, x ] = lift0Dim x
   -- w offsetFW fw[0, x ] = invVar 1 (lift0Dim x)
   w headFW fw[1, x ] = replaceVarWithTerm
     (λ { zero → just (R.def (quote _∨_) (𝒗 1 v∷ v[ 𝒗 0 ]))
-       ; _ → nothing }) x 
+       ; _ → nothing }) x
   w headFW fw[0, x ] = replaceVarWithTerm
-    (λ { zero → just (R.def (quote _∨_) ((R.def (quote ~_) v[ 𝒗 1 ]) v∷ v[ 𝒗 0 ])) ; _ → nothing }) x 
-  w dropFW fw[1, x ] = x 
+    (λ { zero → just (R.def (quote _∨_) ((R.def (quote ~_) v[ 𝒗 1 ]) v∷ v[ 𝒗 0 ])) ; _ → nothing }) x
+  w dropFW fw[1, x ] = x
   w dropFW fw[0, x ] = x
   w _ x = x
 
@@ -267,15 +267,15 @@ fill-flatten' = hTop ∘S atVarOrConOrDefMmp
 
 
 
- fill-offsetPa' : ℕ → List (R.Arg R.Term) → List (R.Arg R.Term) 
+ fill-offsetPa' : ℕ → List (R.Arg R.Term) → List (R.Arg R.Term)
  fill-offsetPa' n xs =
   let hd = fromJust-def (varg (R.lit (R.string "fatal in PathEval - offsetPa'")))
             (lookup xs zero)
-      hs* = mapArg (dropFillWraps headFW) hd      
+      hs* = mapArg (dropFillWraps headFW) hd
       hd' = mapArg
              (replaceVarWithCon (λ { zero → just (quote i0) ; _ → nothing })) hs*
   in repeat (n ∸ length xs ) hd' ++
-       hs* ∷ L.map (mapArg (dropFillWraps dropFW)) (tail xs) 
+       hs* ∷ L.map (mapArg (dropFillWraps dropFW)) (tail xs)
 
 
  h : List (List (R.Arg R.Term)) → List (List (R.Arg R.Term))
@@ -317,10 +317,10 @@ fillHeadTrm p (just q) = do
    p₁ ←  hasVar 0 <$> (addNDimsToCtx 2 $ R.normalise
         (replaceVarWithCon (λ { (suc zero) → just (quote i1) ; _ → nothing }) p))
    h p₀ p₁
-   
+
  where
   h : Bool → Bool → R.TC R.Term
   h false false = R.typeError [ "imposible in fillHeadTrm" ]ₑ
-  h false true = pure $ R.def (quote _∙f1_) (vlam "𝒋" (vlam "𝒊" p) v∷ v[ vlam "𝒋" q ]) 
+  h false true = pure $ R.def (quote _∙f1_) (vlam "𝒋" (vlam "𝒊" p) v∷ v[ vlam "𝒋" q ])
   h true false = pure $ R.def (quote _∙f0_) (vlam "𝒋" (vlam "𝒊" p) v∷ v[ vlam "𝒋" q ])
   h true true = pure $ vlam "𝒋" (R∙' (vlam "𝓲" p) q)

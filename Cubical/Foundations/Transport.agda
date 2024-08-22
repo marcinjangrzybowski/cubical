@@ -222,18 +222,18 @@ transport-filler-ua {A = A} {B = B} (e , _) a j i =
 
 subst₂-≡ : ∀ {ℓ ℓ' ℓ''} → {A : Type ℓ} {B : Type ℓ'} (C : A → B → Type ℓ'')
             → {a₀ a₁ : A} → (p : a₀ ≡ a₁) → {b₀ b₁ : B} → (q : b₀ ≡ b₁)
-            → ∀ c₀ c₁ 
+            → ∀ c₀ c₁
             → (PathP (λ i → C (p i) (q i)) c₀ c₁) →
             (transport (λ i → C a₀ (q i)) c₀
               ≡ transport (λ i → C (p (~ i)) b₁) c₁)
 subst₂-≡ {B = B} C {a₀} =
   J (λ a₁ p → {b₀ b₁ : B} → (q : b₀ ≡ b₁)
-            → ∀ c₀ c₁ 
+            → ∀ c₀ c₁
             → (PathP (λ i → C (p i) (q i)) c₀ c₁)
             → (transport (λ i → C a₀ (q i)) c₀
               ≡ transport (λ i → C (p (~ i)) b₁) c₁))
       λ {b₀} → J (λ b₁ q →
-        ∀ c₀ c₁ 
+        ∀ c₀ c₁
             → (PathP (λ i → C a₀ (q i)) c₀ c₁)
             → (transport (λ i → C a₀ (q i)) c₀
               ≡ transport (λ i → C a₀ b₁) c₁))

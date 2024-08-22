@@ -1,4 +1,4 @@
-{-# OPTIONS --safe -v 0 #-} 
+{-# OPTIONS --safe -v 0 #-}
 
 module Cubical.Tactics.PathSolver.NSolver.Tests.Cong where
 
@@ -25,7 +25,7 @@ module Refl {A : Type ℓ} {B : Type ℓ'} (f : A → B) (a : A) where
  _ : ResultIs ✓-pass
  _ = solvePathsTest
        cong f (refl ∙ (refl {x = a} ∙ refl) ∙ refl) ∙ cong f ((refl ∙ refl) ∙ refl) ≡ refl
-       
+
  _ : ResultIs ✓-pass
  _ = solvePathsTest
       Square
@@ -41,7 +41,7 @@ module Refl {A : Type ℓ} {B : Type ℓ'} (f : A → B) (a : A) where
         (cong (refl ∙_) (lUnit refl) ∙ solvePaths)
         (cong (_∙ refl) (rUnit refl) ∙ solvePaths)
         refl refl
-        
+
 module CongCoherent {A : Type ℓ} {B : Type ℓ'} (f : A → B) (SA : NPath 4 A) where
  open NPath SA
 
