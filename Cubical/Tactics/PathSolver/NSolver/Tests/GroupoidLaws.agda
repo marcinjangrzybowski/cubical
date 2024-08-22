@@ -6,6 +6,7 @@ module Cubical.Tactics.PathSolver.NSolver.Tests.GroupoidLaws where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Tactics.PathSolver.NSolver.NSolver
+open import Cubical.Tactics.Reflection.Error
 
 
 private
@@ -17,18 +18,18 @@ module Ω-Tests where
   _ : ResultIs ✓-pass
   _ = solvePathsTest
        p ∙ p ∙ p ∙ p ∙ p ≡ ((((p ∙ p) ∙ p) ∙ p) ∙ p)
-  
+
 
   _ : ResultIs ✓-pass
   _ = solvePathsTest
        p ∙ refl ∙ p ∙ refl ∙ p ∙ refl ∙ refl ∙ p ∙ refl ∙ refl ∙ p ∙ refl
          ≡ p ∙ p ∙ p ∙ p ∙ p
-  
+
 
   _ : ResultIs ✓-pass
   _ = solvePathsTest
        p ∙ p ⁻¹ ∙ p ∙' p ∙ p ⁻¹ ∙ p ∙ p ∙ p ⁻¹ ∙ p ⁻¹ ∙ p ⁻¹  ≡ refl
-  
+
 
 
   _ : ResultIs ✓-pass
@@ -37,15 +38,15 @@ module Ω-Tests where
          refl (assoc p refl p)
          (cong (p ∙_) (lUnit p)) (cong (_∙ p) (rUnit p))
          refl refl
-  
+
 
 
   _ : ResultIs ✓-pass
- _ = solvePathsTest
-       Cube
-         (λ i j → p (i ∨ ~ i ∨ j ∨ ~ j)) (λ _ _ → a)
-         (λ _ _ → a) (λ _ _ → a)
-         (λ _ _ → a) (λ _ _ → a)
+  _ = solvePathsTest
+        Cube
+          (λ i j → p (i ∨ ~ i ∨ j ∨ ~ j)) (λ _ _ → a)
+          (λ _ _ → a) (λ _ _ → a)
+          (λ _ _ → a) (λ _ _ → a)
   
       
 
@@ -149,7 +150,7 @@ module HIT {ℓ} where
   _ = solvePathsTest
        Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
 
- module Edges&Diags {ℓ} (A : Type ℓ)
+module Edges&Diags {ℓ} (A : Type ℓ)
          (a⁵ : I → I → I → I → I → A)  where
 
   𝑝₀ : _  ≡ _
@@ -199,7 +200,7 @@ module HIT {ℓ} where
        Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
 
 
- module InSubTerms {ℓ} (A : Type ℓ)
+module InSubTerms {ℓ} (A : Type ℓ)
          (a₀ a₁ a₂ a₃ : A)
          (p₀₁ : a₀ ≡ a₁)
          (p₁₂ : a₁ ≡ a₂)
