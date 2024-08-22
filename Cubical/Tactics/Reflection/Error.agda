@@ -167,7 +167,7 @@ wrapError hole x = do
 data TestResult : Type where
  ✓-pass ⊘-fail : TestResult
 
-assertNoErr : R.Term → R.TC Unit → R.TC Unit
+assertNoErr : ∀ {ℓ} {A : Type ℓ} → R.Term → R.TC A → R.TC Unit
 assertNoErr h x = do
   (x >> wrapResult h ✓-pass) <|> wrapResult h ⊘-fail
   

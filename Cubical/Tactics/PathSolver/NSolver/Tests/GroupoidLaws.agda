@@ -14,49 +14,67 @@ private
 
 module Ω-Tests where
  module Var (A : Type ℓ) (a : A) (p : a ≡ a) where
-  _ : p ∙ p ∙ p ∙ p ∙ p ≡ ((((p ∙ p) ∙ p) ∙ p) ∙ p)
-  _ = solvePaths
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+       p ∙ p ∙ p ∙ p ∙ p ≡ ((((p ∙ p) ∙ p) ∙ p) ∙ p)
+  
 
-  _ : p ∙ refl ∙ p ∙ refl ∙ p ∙ refl ∙ refl ∙ p ∙ refl ∙ refl ∙ p ∙ refl
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+       p ∙ refl ∙ p ∙ refl ∙ p ∙ refl ∙ refl ∙ p ∙ refl ∙ refl ∙ p ∙ refl
          ≡ p ∙ p ∙ p ∙ p ∙ p
-  _ = solvePaths
+  
 
-  _ : p ∙ p ⁻¹ ∙ p ∙' p ∙ p ⁻¹ ∙ p ∙ p ∙ p ⁻¹ ∙ p ⁻¹ ∙ p ⁻¹  ≡ refl
-  _ = solvePaths
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+       p ∙ p ⁻¹ ∙ p ∙' p ∙ p ⁻¹ ∙ p ∙ p ∙ p ⁻¹ ∙ p ⁻¹ ∙ p ⁻¹  ≡ refl
+  
 
 
-  _ : Cube
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+       Cube
          refl (assoc p refl p)
          (cong (p ∙_) (lUnit p)) (cong (_∙ p) (rUnit p))
          refl refl
-  _ = solvePaths
+  
 
 
-  _ : Cube
+  _ : ResultIs ✓-pass
+ _ = solvePathsTest
+       Cube
          (λ i j → p (i ∨ ~ i ∨ j ∨ ~ j)) (λ _ _ → a)
          (λ _ _ → a) (λ _ _ → a)
          (λ _ _ → a) (λ _ _ → a)
-  _ = solvePaths
+  
       
 
  module HIT where
   open import Cubical.HITs.S1.Base
 
-  _ : loop ∙ loop ∙ loop ∙ loop ∙ loop ≡ ((((loop ∙ loop) ∙ loop) ∙ loop) ∙ loop)
-  _ = solvePaths
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+       loop ∙ loop ∙ loop ∙ loop ∙ loop ≡ ((((loop ∙ loop) ∙ loop) ∙ loop) ∙ loop)
+  
 
-  _ : loop ∙ refl ∙ loop ∙ refl ∙ loop ∙ refl ∙ refl ∙ loop ∙ refl ∙ refl ∙ loop ∙ refl
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+       loop ∙ refl ∙ loop ∙ refl ∙ loop ∙ refl ∙ refl ∙ loop ∙ refl ∙ refl ∙ loop ∙ refl
          ≡ loop ∙ loop ∙ loop ∙ loop ∙ loop
-  _ = solvePaths
+  
 
-  _ : loop ∙ loop ⁻¹ ∙ loop ∙' loop ∙ loop ⁻¹ ∙ loop ∙ loop ∙ loop ⁻¹ ∙ loop ⁻¹ ∙ loop ⁻¹  ≡ refl
-  _ = solvePaths
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+       loop ∙ loop ⁻¹ ∙ loop ∙' loop ∙ loop ⁻¹ ∙ loop ∙ loop ∙ loop ⁻¹ ∙ loop ⁻¹ ∙ loop ⁻¹  ≡ refl
+  
 
-  _ : Cube
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+       Cube
          refl (assoc loop refl loop)
          (cong (loop ∙_) (lUnit loop)) (cong (_∙ loop) (rUnit loop))
          refl refl
-  _ = solvePaths
+  
 
 
 
@@ -90,10 +108,11 @@ module NoCong where
   a₋₋₁ : Square (𝑝₂ ∙ 𝑝₃) (((𝑝₃ ∙' 𝑝₄) ∙' 𝑝₅) ∙' 𝑝₆) 𝑝₂ (𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆)
   a₋₋₁ = solvePaths
   
-  coh : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
-  coh =  solvePaths
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+        Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
 
- module HIT {ℓ} where
+module HIT {ℓ} where
 
 
   data A : Type ℓ where
@@ -126,9 +145,9 @@ module NoCong where
   a₋₋₁ : Square (𝑝₂ ∙ 𝑝₃) (((𝑝₃ ∙' 𝑝₄) ∙' 𝑝₅) ∙' 𝑝₆) 𝑝₂ (𝑝₄ ∙ 𝑝₅ ∙ 𝑝₆)
   a₋₋₁ = solvePaths
 
-  coh : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
-  coh =  solvePaths
-
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+       Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
 
  module Edges&Diags {ℓ} (A : Type ℓ)
          (a⁵ : I → I → I → I → I → A)  where
@@ -175,8 +194,9 @@ module NoCong where
   a₋₋₁ = solvePaths
 
 
-  _ : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
-  _ =  solvePaths
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+       Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
 
 
  module InSubTerms {ℓ} (A : Type ℓ)
@@ -233,6 +253,7 @@ module NoCong where
   a₋₋₁ = solvePaths
 
 
-  _ : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
-  _ =  solvePaths
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+        Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
 

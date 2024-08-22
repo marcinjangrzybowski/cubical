@@ -6,6 +6,7 @@ module Cubical.Tactics.PathSolver.NSolver.Tests.Const where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Tactics.PathSolver.NSolver.NSolver
+open import Cubical.Tactics.Reflection.Error
 
 private
  variable
@@ -13,50 +14,59 @@ private
 
 module Var {A : Type ℓ} (a : A) where
 
- _ : refl {x = a} ∙ refl ≡ refl
- _ = solvePaths
+ _ : ResultIs ✓-pass
+ _ = solvePathsTest
+        refl {x = a} ∙ refl ≡ refl
 
- _ : refl ∙ (refl {x = a} ∙ refl) ∙ refl ∙ (refl ∙ refl) ∙ refl ≡ refl
- _ = solvePaths
-
- _ : Square
+ _ : ResultIs ✓-pass
+ _ = solvePathsTest
+       refl ∙ (refl {x = a} ∙ refl) ∙ refl ∙ (refl ∙ refl) ∙ refl ≡ refl
+ _ : ResultIs ✓-pass
+ _ = solvePathsTest
+       Square
        (((((refl {x = a} ∙ refl) ∙ refl) ∙ refl) ∙ refl) ∙ refl)
        refl
        (refl ∙ refl ∙ refl ∙ refl ∙ refl ∙ refl)
        ((refl ∙ refl) ∙∙ (refl ∙ refl) ∙∙  (refl ∙ refl ))
- _ = solvePaths
+ 
 
+ _ : ResultIs ✓-pass
+ _ = solvePathsTest
+      Cube
+         refl (assoc (refl {x = a}) refl refl)
+         (cong (refl ∙_) (lUnit refl)) (cong (_∙ refl) (rUnit refl))
+         refl refl
 
- _ : Cube
-        refl (assoc (refl {x = a}) refl refl)
-        (cong (refl ∙_) (lUnit refl)) (cong (_∙ refl) (rUnit refl))
-        refl refl
- _ = solvePaths
 
  module Def where
   abstract
    a' : A
    a' = a
 
-  _ : refl {x = a'} ∙ refl ≡ refl
-  _ = solvePaths
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+       refl {x = a'} ∙ refl ≡ refl
+  
 
-  _ : refl ∙ (refl {x = a'} ∙ refl) ∙ refl ∙ (refl ∙ refl) ∙ refl ≡ refl
-  _ = solvePaths
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+       refl ∙ (refl {x = a'} ∙ refl) ∙ refl ∙ (refl ∙ refl) ∙ refl ≡ refl
 
-  _ : Square
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+       Square
         (((((refl {x = a'} ∙ refl) ∙ refl) ∙ refl) ∙ refl) ∙ refl)
         refl
         (refl ∙ refl ∙ refl ∙ refl ∙ refl ∙ refl)
         ((refl ∙ refl) ∙∙ (refl ∙ refl) ∙∙  (refl ∙ refl ))
-  _ = solvePaths
 
 
-  _ : Cube
+  _ : ResultIs ✓-pass
+  _ = solvePathsTest
+       Cube
          refl (assoc (refl {x = a'}) refl refl)
          (cong (refl ∙_) (lUnit refl)) (cong (_∙ refl) (rUnit refl))
          refl refl
-  _ = solvePaths
 
 
 
@@ -65,23 +75,27 @@ module DataType {ℓ} where
  data A : Type ℓ where
   a : A 
 
- _ : refl {x = a} ∙ refl ≡ refl
- _ = solvePaths
+ _ : ResultIs ✓-pass
+ _ = solvePathsTest
+       refl {x = a} ∙ refl ≡ refl
 
- _ : refl ∙ (refl {x = a} ∙ refl) ∙ refl ∙ (refl ∙ refl) ∙ refl ≡ refl
- _ = solvePaths
+ _ : ResultIs ✓-pass
+ _ = solvePathsTest
+       refl ∙ (refl {x = a} ∙ refl) ∙ refl ∙ (refl ∙ refl) ∙ refl ≡ refl
 
- _ : Square
+ _ : ResultIs ✓-pass
+ _ = solvePathsTest
+       Square
        (((((refl {x = a} ∙ refl) ∙ refl) ∙ refl) ∙ refl) ∙ refl)
        refl
        (refl ∙ refl ∙ refl ∙ refl ∙ refl ∙ refl)
        ((refl ∙ refl) ∙∙ (refl ∙ refl) ∙∙  (refl ∙ refl ))
- _ = solvePaths
 
 
- _ : Cube
+ _ : ResultIs ✓-pass
+ _ = solvePathsTest
+       Cube
         refl (assoc (refl {x = a}) refl refl)
         (cong (refl ∙_) (lUnit refl)) (cong (_∙ refl) (rUnit refl))
         refl refl
- _ = solvePaths
 

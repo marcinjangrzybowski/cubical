@@ -420,28 +420,40 @@ toNoCons dim cu =
   (λ x → ⦇ ⦇ x ⦈ , ⦇ nothing ⦈ ⦈)
   (tryCastAsNoCong cu)
 
+
+solvePathsSolver : R.Type → R.TC R.Term
+solvePathsSolver goal = R.withReduceDefs (false , doNotReduceInPathSolver) do
+ R.debugPrint "solvePaths" 0 $ [ "solvePaths - start" ]ₑ
+ hTy ← wait-for-term goal  >>=
+     (λ x → (R.debugPrint "solvePaths" 0 $ "solvePaths - " ∷ₑ [ x ]ₑ) >> pure x) >>= R.normalise
+ bdTM@(A , fcs) ← matchNCube hTy
+ R.debugPrint "solvePaths" 0 $ [ "solvePaths - matchNCube done" ]ₑ
+ let dim = length fcs
+
+ (t0 , _) ← Mb.rec (R.typeError [ "imposible in solvePaths''" ]ₑ) pure (lookup fcs zero)
+
+ cuFcs ← ((zipWithIndex <$> quoteBd bdTM
+            -- <|> R.typeError [ "quoteBd - failed" ]ₑ
+             )  >>= mapM
+   (λ (k , (cu0 , cu1)) →
+              (R.debugPrint "solvePaths" 0 $ "solvePaths - solve cong dimension : " ∷ₑ [ k ]ₑ)
+         >>  ⦇ ⦇ k ⦈ , ⦇ toNoCons (predℕ dim) cu0 , toNoCons (predℕ dim) cu1 ⦈ ⦈ <|>
+                  R.typeError [ "toNoCons - failed" ]ₑ))
+
+
+ markVertBd A cuFcs >>= foldBdTerm A t0
+
+
 macro
 
  solvePaths : R.Term → R.TC Unit
- solvePaths h = R.withReduceDefs (false , doNotReduceInPathSolver) do
-  R.debugPrint "solvePaths" 0 $ [ "solvePaths - start" ]ₑ
-  hTy ← R.inferType h >>= wait-for-term >>=
-      (λ x → (R.debugPrint "solvePaths" 0 $ "solvePaths - " ∷ₑ [ x ]ₑ) >> pure x) >>= R.normalise
-  bdTM@(A , fcs) ← matchNCube hTy
-  R.debugPrint "solvePaths" 0 $ [ "solvePaths - matchNCube done" ]ₑ
-  let dim = length fcs
+ solvePaths h = do
+   solution ← R.inferType h >>= solvePathsSolver
+   R.unify solution h <|> R.typeError ("unify - failed:" ∷nl [ solution ]ₑ )
 
-  (t0 , _) ← Mb.rec (R.typeError [ "imposible in solvePaths''" ]ₑ) pure (lookup fcs zero)
-
-  cuFcs ← ((zipWithIndex <$> quoteBd bdTM
-             -- <|> R.typeError [ "quoteBd - failed" ]ₑ
-              )  >>= mapM
-    (λ (k , (cu0 , cu1)) →
-               (R.debugPrint "solvePaths" 0 $ "solvePaths - solve cong dimension : " ∷ₑ [ k ]ₑ)
-          >>  ⦇ ⦇ k ⦈ , ⦇ toNoCons (predℕ dim) cu0 , toNoCons (predℕ dim) cu1 ⦈ ⦈ <|>
-                   R.typeError [ "toNoCons - failed" ]ₑ))
-
-  
-  solution ← markVertBd A cuFcs >>= foldBdTerm A t0
-  R.unify solution h <|> R.typeError ("unify - failed:" ∷nl [ solution ]ₑ )
-
+ infixr 2 solvePathsTest_
+ 
+ solvePathsTest_ : R.Term → R.Term → R.TC Unit
+ solvePathsTest_ goal h = assertNoErr h (
+  do solution ← solvePathsSolver goal
+     R.checkType solution goal)
