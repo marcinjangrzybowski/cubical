@@ -6,14 +6,12 @@ module Cubical.Tactics.PathSolver.NSolver.Tests.Coherence where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Tactics.PathSolver.NSolver.NSolver
+open import Cubical.Tactics.Reflection.Error
 
 
 private
  variable
   ℓ ℓ' : Level
-
-
-
 
   
 module CompCoherence {A : Type ℓ} (SA : NPath 7 A) where
@@ -38,15 +36,17 @@ module CompCoherence {A : Type ℓ} (SA : NPath 7 A) where
    LHS₀∙LHS₁≡RHS₀∙RHS₁ = solvePaths
 
 
-   _ : cong₂ _∙_ LHS₀≡RHS₀ LHS₁≡RHS₁ ≡ LHS₀∙LHS₁≡RHS₀∙RHS₁
-   _ = solvePaths
-
+   _ : ResultIs ✓-pass
+   _ = solvePathsTest
+         cong₂ _∙_ LHS₀≡RHS₀ LHS₁≡RHS₁ ≡ LHS₀∙LHS₁≡RHS₀∙RHS₁
+         
    LHS₀⁻¹≡RHS₀⁻¹ : LHS₀ ⁻¹ ≡ RHS₀ ⁻¹
    LHS₀⁻¹≡RHS₀⁻¹ = solvePaths
 
-   _ :  cong (_⁻¹) LHS₀≡RHS₀ ≡ LHS₀⁻¹≡RHS₀⁻¹
-   _ = solvePaths
-
+   _ : ResultIs ✓-pass
+   _ = solvePathsTest
+         cong (_⁻¹) LHS₀≡RHS₀ ≡ LHS₀⁻¹≡RHS₀⁻¹
+         
   module WithDegens where
    LHS₀ RHS₀ : 𝑣₀ ≡ 𝑣₄
    LHS₀ = 𝑝₀ ∙∙ 𝑝₁ ∙ (𝑝₂ ∙ (𝑝₁ ∙ 𝑝₂) ⁻¹) ∙ 𝑝₁ ∙∙ 𝑝₂ ∙ 𝑝₃
@@ -65,12 +65,12 @@ module CompCoherence {A : Type ℓ} (SA : NPath 7 A) where
    LHS₀∙LHS₁≡RHS₀∙RHS₁ : LHS₀ ∙ LHS₁ ≡ RHS₀ ∙ RHS₁
    LHS₀∙LHS₁≡RHS₀∙RHS₁ = solvePaths
 
-   _ : cong₂ _∙_ LHS₀≡RHS₀ LHS₁≡RHS₁ ≡ LHS₀∙LHS₁≡RHS₀∙RHS₁
-   _ = solvePaths
-
+   _ : ResultIs ✓-pass 
+   _ = solvePathsTest
+        cong₂ _∙_ LHS₀≡RHS₀ LHS₁≡RHS₁ ≡ LHS₀∙LHS₁≡RHS₀∙RHS₁
    LHS₀⁻¹≡RHS₀⁻¹ : LHS₀ ⁻¹ ≡ RHS₀ ⁻¹
    LHS₀⁻¹≡RHS₀⁻¹ = solvePaths
 
-   _ :  cong (_⁻¹) LHS₀≡RHS₀ ≡ LHS₀⁻¹≡RHS₀⁻¹
-   _ = solvePaths
-
+   _ : ResultIs ✓-pass
+   _ = solvePathsTest
+        cong (_⁻¹) LHS₀≡RHS₀ ≡ LHS₀⁻¹≡RHS₀⁻¹

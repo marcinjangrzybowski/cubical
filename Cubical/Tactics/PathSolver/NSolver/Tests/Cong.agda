@@ -1,11 +1,13 @@
 {-# OPTIONS --safe -v 0 #-} 
 
-module Cubical.Tactics.PathSolver.NSolver.Tests.GroupoidLaws where
+module Cubical.Tactics.PathSolver.NSolver.Tests.Cong where
 
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Tactics.PathSolver.NSolver.NSolver
+open import Cubical.Tactics.PathSolver.Path
+open import Cubical.Tactics.Reflection.Error
 
 
 private
@@ -16,27 +18,30 @@ private
 
 module Refl {A : Type ℓ} {B : Type ℓ'} (f : A → B) (a : A) where
 
- _ : cong f (refl {x = a} ∙ refl) ≡ refl
- _ = solvePaths
+ _ : ResultIs ✓-pass
+ _ = solvePathsTest
+      cong f (refl {x = a} ∙ refl) ≡ refl
 
- _ : cong f (refl ∙ (refl {x = a} ∙ refl) ∙ refl) ∙ cong f ((refl ∙ refl) ∙ refl) ≡ refl
- _ = solvePaths
-
- _ : Square
+ _ : ResultIs ✓-pass
+ _ = solvePathsTest
+       cong f (refl ∙ (refl {x = a} ∙ refl) ∙ refl) ∙ cong f ((refl ∙ refl) ∙ refl) ≡ refl
+       
+ _ : ResultIs ✓-pass
+ _ = solvePathsTest
+      Square
        ((cong f (((refl {x = a} ∙ refl) ∙ refl) ∙ refl) ∙ refl) ∙ refl)
        refl
        (refl ∙ cong f (refl ∙ refl ∙ refl) ∙ cong f (refl ∙ refl))
        (cong f ((refl ∙ refl) ∙∙ (refl ∙ refl) ∙∙  (refl ∙ refl )))
- _ = solvePaths
 
-
- _ : Cube
+ _ : ResultIs ✓-pass
+ _ = solvePathsTest
+       Cube
         refl (congP (λ _ → cong f) (assoc (refl {x = a}) refl refl))
         (cong (refl ∙_) (lUnit refl) ∙ solvePaths)
         (cong (_∙ refl) (rUnit refl) ∙ solvePaths)
         refl refl
- _ = solvePaths
-
+        
 module CongCoherent {A : Type ℓ} {B : Type ℓ'} (f : A → B) (SA : NPath 4 A) where
  open NPath SA
 
@@ -50,5 +55,6 @@ module CongCoherent {A : Type ℓ} {B : Type ℓ'} (f : A → B) (SA : NPath 4 A
 
  cong[solve] = cong (cong f) solvePaths
 
- _ : cong[solve] ≡ solve[cong]
- _ = solvePaths
+ _ : ResultIs ✓-pass
+ _ = solvePathsTest
+       cong[solve] ≡ solve[cong]
