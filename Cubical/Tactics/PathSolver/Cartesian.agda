@@ -96,7 +96,7 @@ module unConnect (do-fill : Bool) where
 
  unConnS : List (SubFace × CuTermNC) → R.TC (List (SubFace × CuTermNC))
 
- unConnA : ℕ → List (CuTermNC) → R.TC (List (CuTermNC))
+ unConnA : ℕ → List (Hco ⊥ Unit) → R.TC (List (Hco ⊥ Unit))
 
 
  unConn : ℕ → CuTermNC → R.TC (CuTermNC)
@@ -112,7 +112,7 @@ module unConnect (do-fill : Bool) where
   , unConn (suc (sfDim sf)) x ⦈ ∷ unConnS xs ⦈
 
  unConnA _ [] = ⦇ [] ⦈
- unConnA dim (x ∷ xs) = ⦇ (unConn dim x) ∷ (unConnA dim xs) ⦈
+ unConnA dim (hcodata x x₁ ∷ xs) = ⦇ ⦇ hcodata (unConnS x) (unConn dim x₁) ⦈ ∷ (unConnA dim xs) ⦈
 
 
 

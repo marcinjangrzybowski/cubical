@@ -224,11 +224,15 @@ stepSq A p mbQ = do
             mbCong≡
   pure $ s' , q'
 
+
+_$sp_ : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → (A → B) → A → B
+f $sp a = f a
+
 macro
 
 
  solvePaths : R.Term → R.TC Unit
- solvePaths h = R.withReduceDefs (false , [ quote ua ]) do
+ solvePaths h = R.withReduceDefs (false , quote _$sp_ ∷ [ quote ua ]) do
   hTy ← R.inferType h >>= wait-for-term >>= R.normalise
   bdTM@(A , ((a₀₋ , a₁₋) , (a₋₀ , a₋₁))) ← (matchSquare <$> matchNCube hTy) >>=
      Mb.rec (R.typeError [ "not a square" ]ₑ) pure

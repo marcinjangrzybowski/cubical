@@ -34,8 +34,6 @@ private
     ℓ ℓ' : Level
     A B C D E F : Type ℓ
 
-
-
 module _ {ℓ} {A : Type ℓ} (SA : NPath 5 A) (f : A → A → A)
            where
 
@@ -160,4 +158,12 @@ module _ (A B C D : Type ℓ)
               (cong List (cong₂ _⊎_ (ua A≃B ∙∙ ua B≃C ∙∙ ua C≃D) (sym (ua B≃C))))
               refl (cong List (cong (_⊎ B) (ua C≃D)))
  _ = solvePaths
+
+
+homotopyNatural' : {B : Type ℓ'} {f g : A → B} (H : ∀ a → f a ≡ g a) {x y : A} (p : x ≡ y) →
+                  H x ∙ cong g p ≡ cong f p ∙ H y
+homotopyNatural' {f = f} {g = g} H {x} {y} p = h (funExt H)
+ where 
+ h : (H' : f ≡ g) → (cong (_$sp x) H') ∙ cong (g $sp_) p ≡ cong (f $sp_) p ∙ (cong (_$sp y) H')  
+ h H' = solvePaths
 
