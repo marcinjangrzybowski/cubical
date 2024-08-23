@@ -25,14 +25,38 @@ open import Cubical.Tactics.PathSolver.Path
 
 
 
+open import Cubical.Tactics.Reflection.CuTerm
+
+
+
 private
   variable
     ℓ ℓ' : Level
-    A B C D E : Type ℓ
+    A B C D E F : Type ℓ
 
 
-module E0' (SA : NPath 3 A)
-           (SB : NPath 3 B)
+
+module _ {ℓ} {A : Type ℓ} (SA : NPath 5 A) (f : A → A → A)
+           where
+
+ open NPath SA
+
+ -- -- problem 1
+ -- module _ (qq : f (𝑣 0) (𝑣 3) ≡ f (𝑣 0) (𝑣 3))  where
+ --  p : f (f (𝑣 0) (𝑣 3)) (f (𝑣 3) (𝑣 1)) ≡
+ --        f (f (𝑣 2) (𝑣 5)) (f (𝑣 5) (𝑣 3))
+ --  p = (cong₂ f refl (cong₂ f (𝑝₃ ∙ 𝑝₄) (𝑝₁ ∙ 𝑝₂)))
+ --    ∙ (cong₂ f (qq ∙ cong₂ f (𝑝₀ ∙ 𝑝₁) (𝑝₃ ∙ 𝑝₄)) refl)
+
+ --  _ : p
+ --        ≡
+ --        ((λ 𝓲 → f (qq 𝓲) (f (𝑝 3 i0) (𝑝 1 i0))) ∙'
+ --        ((λ 𝓲 → f (f (𝑝 0 𝓲) (𝑝 3 𝓲)) (f (𝑝 3 𝓲) (𝑝 1 𝓲))) ∙'
+ --         (λ 𝓲 → f (f (𝑝 1 𝓲) (𝑝 4 𝓲)) (f (𝑝 4 𝓲) (𝑝 2 𝓲)))))
+ --  _ = solvePaths
+
+module E0' (SA : NPath 5 A)
+           (SB : NPath 5 B)
            (SC : NPath 3 C)
            (SD : NPath 3 D)  where
 
@@ -40,6 +64,60 @@ module E0' (SA : NPath 3 A)
  module B = NPath SB
  module C = NPath SC
  module D = NPath SD
+
+ module _ (f f' : A → B → D)
+          (p : f A.𝑣₂ B.𝑣₁ ≡ f' A.𝑣₃ B.𝑣₂)
+          where
+
+  _ :    cong₂ f
+            (A.𝑝₀ ∙ A.𝑝₁)
+            (B.𝑝₀ ∙∙ B.𝑝₁ ∙∙ sym B.𝑝₁ )
+      ∙∙ p
+      ∙∙ cong (f' A.𝑣₃) (B.𝑝₂ ∙ B.𝑝₃) 
+      ∙∙ cong (flip f' B.𝑣₄) (A.𝑝₃ ∙ A.𝑝₄)
+      ∙∙ cong (f' A.𝑣₅) (sym B.𝑝₃)
+      ∙∙ cong (flip f' B.𝑣₃) (sym A.𝑝₄)
+      ∙∙ refl
+      ∙∙ cong (f' A.𝑣₄) (sym B.𝑝₂)
+      ∙∙ cong (flip f' B.𝑣₂) (sym A.𝑝₃)
+      ∙∙ sym p
+      ∙∙ cong (f A.𝑣₂) (sym B.𝑝₀)
+      ∙∙ cong (flip f B.𝑣₀) (sym A.𝑝₁)
+      ∙∙ cong (flip f B.𝑣₀) (sym A.𝑝₀)
+       ≡ refl
+  _ = solvePaths
+
+ -- -- problem
+ module _ (f f' : A → B → D) (h : A → A → A)
+          (p : f A.𝑣₂ B.𝑣₁ ≡ f' A.𝑣₃ B.𝑣₂)
+          (q : A.𝑣₂ ≡ h A.𝑣₂ A.𝑣₂) where
+
+  -- _ :
+  --      (cong₂ f
+  --           (cong₂ h (A.𝑝₀ ∙ A.𝑝₁) (A.𝑝₀ ∙ A.𝑝₁) ∙ sym q)
+  --           (B.𝑝₀ ∙∙ B.𝑝₁ ∙∙ sym B.𝑝₁ )
+  --            ∙ cong (f A.𝑣₂) (sym B.𝑝₀))
+
+  --      ≡ sym (cong (flip f B.𝑣₀) (q ∙ cong₂ h (sym A.𝑝₁) (sym A.𝑝₁))
+  --            ∙ cong (flip f B.𝑣₀) (cong₂ h (sym A.𝑝₀) (sym A.𝑝₀)))
+  -- _ = solvePaths
+         
+     -- simplifyPath
+     --    (cong₂ f
+     --        (cong₂ h (A.𝑝₀ ∙ A.𝑝₁) (A.𝑝₀ ∙ A.𝑝₁) ∙ sym q)
+     --        (B.𝑝₀ ∙∙ B.𝑝₁ ∙∙ sym B.𝑝₁ )
+     --         ∙∙ p
+     --         ∙∙ cong (f' A.𝑣₃) (B.𝑝₂ ∙ B.𝑝₃) 
+     --         ∙∙ cong (flip f' B.𝑣₄) (A.𝑝₃ ∙ A.𝑝₄)
+     --         ∙∙ cong (f' A.𝑣₅) (sym B.𝑝₃)
+     --         ∙∙ cong (flip f' B.𝑣₃) (sym A.𝑝₄)
+     --         ∙∙ refl
+     --         ∙∙ cong (f' A.𝑣₄) (sym B.𝑝₂)
+     --         ∙∙ cong (flip f' B.𝑣₂) (sym A.𝑝₃)
+     --         ∙∙ sym p
+     --         ∙∙ cong (f A.𝑣₂) (sym B.𝑝₀)
+     --         ∙∙ cong (flip f B.𝑣₀) (q ∙ cong₂ h (sym A.𝑝₁) (sym A.𝑝₁))
+     --         ∙∙ cong (flip f B.𝑣₀) (cong₂ h (sym A.𝑝₀) (sym A.𝑝₀)))
 
  module _ (f₄ : A → {B} → C → D → E) where
    cong₄Funct∙₃ :

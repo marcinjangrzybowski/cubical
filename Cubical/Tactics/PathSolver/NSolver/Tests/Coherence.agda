@@ -6,6 +6,7 @@ module Cubical.Tactics.PathSolver.NSolver.Tests.Coherence where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Tactics.PathSolver.NSolver.NSolver
+open import Cubical.Tactics.PathSolver.Path
 open import Cubical.Tactics.Reflection.Error
 
 
