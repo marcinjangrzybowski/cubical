@@ -14,15 +14,16 @@ open import Cubical.Data.Sigma
 
 
 import Agda.Builtin.Reflection as R
+open import Agda.Builtin.String
 
 open import Cubical.Tactics.Reflection.Utilities
 open import Cubical.Tactics.Reflection.Dimensions
 open import Cubical.Tactics.Reflection.CuTerm
-
+open import Cubical.Tactics.Reflection.Variables
 
 -- TODO : test this
-normal𝑪ong* : R.Term → List CuTerm → (R.Term × List (List (SubFace × CuTerm) × CuTerm))
-normal𝑪ong* t xs = h 200 0  t xs
+normal𝑪ong* : String → R.Term → List CuTerm → (R.Term × List (List (SubFace × CuTerm) × CuTerm))
+normal𝑪ong* mark t xs = h 200 0  t xs
  where
  h : ℕ → ℕ → R.Term → List CuTerm → (R.Term × List (List (SubFace × CuTerm) × CuTerm))
  h _ k t [] = t , []
@@ -35,8 +36,7 @@ normal𝑪ong* t xs = h 200 0  t xs
  -- h fuel k t (𝒄ong' x x₁ ∷ []) =
  --   h fuel k ((replaceAtTrm zero x (liftVarsFrom (length x₁) 1 t))) x₁
 
- -- h _ k t (𝒄ong' x x₁ ∷ []) = R.lit (R.string "todo in normal𝑪ong*") , []
- h _ k t (𝒄ong' x x₁ ∷ xs) = R.lit (R.string "imposible in normal𝑪ong*") , []
+ h _ k t (𝒄ong' x x₁ ∷ xs) = R.lit (R.string $ "imposible in normal𝑪ong* " <> mark) , []
 
 normal𝑪ong : R.Term → List CuTermNC → (R.Term × List (List (SubFace × CuTermNC) × CuTermNC))
 normal𝑪ong t xs = h 200 0  t xs
@@ -126,17 +126,18 @@ module fillCongs where
  congFill : ℕ → ℕ → R.Term → List (List (SubFace × CuTerm) × CuTerm) → CuTermNC
  congFill fuel dim t xs =
    let lid = fillCongs fuel dim $ uncurry (𝒄ong)
-                 (map-snd (L.map (uncurry hco)) (normal𝑪ong* t (L.map snd xs)))
+                 (map-snd (L.map (uncurry hco)) (normal𝑪ong* "A" t (L.map snd xs)))
    in hco (((repeat dim nothing ∷ʳ just false)  , f0) ∷
-      L.map ff sfUnion)  lid --(L.map ff sfUnion)
+      L.map ff sfUnion)  lid 
   where
   sfUnion = foldr (_++fe_ ∘S L.map fst ∘S fst) [] xs
 
   ff : SubFace → SubFace × CuTermNC
   ff sf = sf ,
-   let ts = L.map (uncurry (getSide sf)) xs
+   let ts : List (CuTerm)
+       ts = L.map (uncurry (getSide sf)) xs
    in fillCongs fuel (suc (sfDim sf)) $ uncurry (𝒄ong)
-                 (map-snd (L.map (uncurry hco)) (normal𝑪ong*
+                 (map-snd (L.map (uncurry hco)) (normal𝑪ong* "B"
                   (liftVarsFrom 1 (length xs)
         (subfaceCell ((repeat (length xs) nothing) ++ sf) t)) ts))
 
@@ -155,7 +156,7 @@ module fillCongs where
  fillCongs (suc fuel) dim (𝒄ong' t []) = cell (liftVarsFrom 1 dim t)
       -- uncurry (congFill fuel dim) (normal𝑪ong* t xs)
  fillCongs (suc fuel) dim (𝒄ong' t xs) =
-      uncurry (congFill fuel dim) (normal𝑪ong* t xs)
+      uncurry (congFill fuel dim) (normal𝑪ong* "C" t xs)
 
  fillCongsS fuel [] = []
  fillCongsS fuel ((sf , x) ∷ xs) =
