@@ -4,46 +4,30 @@ module Cubical.Tactics.PathSolver.Macro where
 
 
 open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Function
-open import Cubical.Foundations.Univalence
-open import Cubical.Foundations.GroupoidLaws
 
-open import Cubical.Relation.Nullary
-
+open import Cubical.Data.Unit
 open import Cubical.Data.Bool
-open import Cubical.Data.Empty
 open import Cubical.Data.Sum as ⊎
 open import Cubical.Data.Maybe as Mb
 open import Cubical.Data.List as L
 open import Cubical.Data.Nat as ℕ
 open import Cubical.Data.Sigma
 
-open import Agda.Builtin.Nat using () renaming (_==_ to _=ℕ_ ; _<_ to _<ℕ_)
 open import Agda.Builtin.String
-open import Agda.Builtin.Char
-
-open import Cubical.Data.Sigma.Base
 
 open import Cubical.Reflection.Base renaming (v to 𝒗)
 open import Cubical.Reflection.Sugar
 import Agda.Builtin.Reflection as R
-open import Cubical.Tactics.PathSolver.Reflection
+
 open import Cubical.Tactics.Reflection
-
-open import Cubical.Tactics.Reflection.Utilities
-
-open import Cubical.Tactics.PathSolver.CongComp
-
 open import Cubical.Tactics.Reflection.QuoteCubical
-
+open import Cubical.Tactics.Reflection.Utilities
 open import Cubical.Tactics.Reflection.Error
 open import Cubical.Tactics.Reflection.Dimensions
 open import Cubical.Tactics.Reflection.CuTerm
-open import Cubical.Tactics.PathSolver.Reflection
-open import Cubical.Tactics.Reflection.Variables
-open import Cubical.Tactics.PathSolver.Degen
-open import Cubical.Tactics.PathSolver.Path
+
+open import Cubical.Tactics.PathSolver.CongComp
 
 
 macro

@@ -105,7 +105,7 @@ module appCongs where
  congCus _ _ t [] = cell t
 
 
- 
+
  appCongsS : ℕ → List (SubFace × CuTerm) → List (SubFace × CuTermNC)
  appCongsS zero _ = []
  appCongsS _ [] = []
@@ -138,7 +138,7 @@ module fillCongs where
  congFill fuel dim t xs =
    let lid = fillCongs fuel dim $ 𝒄ongF t (L.map (Hco.bottom) xs)
    in hco (((repeat dim nothing ∷ʳ just false)  , f0) ∷
-      L.map ff sfUnion)  lid 
+      L.map ff sfUnion)  lid
   where
   sfUnion = foldr (_++fe_ ∘S L.map fst ∘S Hco.sides) [] xs
 

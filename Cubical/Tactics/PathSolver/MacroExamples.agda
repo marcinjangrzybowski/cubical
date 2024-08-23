@@ -4,45 +4,8 @@ module Cubical.Tactics.PathSolver.MacroExamples where
 
 
 open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Function
-open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.GroupoidLaws
-
-open import Cubical.Relation.Nullary
-
-open import Cubical.Data.Bool
-open import Cubical.Data.Empty
-open import Cubical.Data.Sum as ⊎
-open import Cubical.Data.Maybe as Mb
-open import Cubical.Data.List as L
-open import Cubical.Data.Nat as ℕ
-open import Cubical.Data.Sigma
-
-open import Agda.Builtin.Nat using () renaming (_==_ to _=ℕ_ ; _<_ to _<ℕ_)
-open import Agda.Builtin.String
-open import Agda.Builtin.Char
-
-open import Cubical.Data.Sigma.Base
-
-open import Cubical.Reflection.Base renaming (v to 𝒗)
-open import Cubical.Reflection.Sugar
-import Agda.Builtin.Reflection as R
-open import Cubical.Tactics.PathSolver.Reflection
-open import Cubical.Tactics.Reflection
-
-open import Cubical.Tactics.Reflection.Utilities
-
-open import Cubical.Tactics.PathSolver.CongComp
-
-open import Cubical.Tactics.Reflection.QuoteCubical
-
-open import Cubical.Tactics.Reflection.Error
-open import Cubical.Tactics.Reflection.Dimensions
-open import Cubical.Tactics.Reflection.CuTerm
-open import Cubical.Tactics.PathSolver.Reflection
-open import Cubical.Tactics.Reflection.Variables
-open import Cubical.Tactics.PathSolver.Degen
 open import Cubical.Tactics.PathSolver.Path
 
 open import Cubical.Tactics.PathSolver.Macro
@@ -68,7 +31,7 @@ module _ (SA : NPath 6 A) (f : A → {A} → A → A) (g : A → A) (𝑝ₓ : g
   p : f 𝑣₀ 𝑣₁ ≡ f 𝑣₃ 𝑣₆
   p i =  (f ((𝑝₀ ∙∙ 𝑝₁ ∙∙ 𝑝₂) i) {g ((𝑝₁ ∙' 𝑝₂) i)} ((𝑝₁ ∙∙ 𝑝₂ ∙∙ (𝑝₃ ∙∙ 𝑝₄ ∙∙ 𝑝₅)) i))
 
-  
+
   _ :  (λ i → cong$ (p i))
         ≡
           (λ i → f (𝑝₀ i) {g (𝑝₁ i)} (𝑝₁ i))
@@ -112,11 +75,11 @@ module _ (SA : NPath 6 A) (f : A → {A} → A → A) (g : A → A) (𝑝ₓ : g
 
 
   -- TODO : debug this
-  -- cpf2≡cpf2' : Cube
-  --             cpf2 cpf'
-  --             _ _
-  --             _ _
-  -- cpf2≡cpf2' _ i j = cong! (cpf2 i j)
+  cpf2≡cpf2' : Cube
+              cpf2 cpf2'
+              _ _
+              _ _
+  cpf2≡cpf2' _ i j = cong! (cpf2 i j)
 
 
 

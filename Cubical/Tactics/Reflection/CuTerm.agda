@@ -42,7 +42,7 @@ record Hco (CongGuard : Type) (A : Type ℓ) : Type ℓ where
  inductive
  constructor hcodata
  field
-  sides : List (SubFace × CuTerm' CongGuard A) 
+  sides : List (SubFace × CuTerm' CongGuard A)
   bottom : CuTerm' CongGuard A
 
 data CuTerm' CongGuard A where
@@ -52,7 +52,7 @@ data CuTerm' CongGuard A where
 
 pattern
  cell x = cell' tt x
- 
+
 pattern
  hco x y = hco' (hcodata x y)
 
@@ -60,7 +60,7 @@ pattern
  𝒄ong th tl = 𝒄ong' {cg = tt} th tl
 
 𝒄ongF : ∀ {CongGuard} {A : Type ℓ} {cg : CongGuard} {a : A} → R.Term → List ((CuTerm' CongGuard A)) → CuTerm' CongGuard A
-𝒄ongF {cg = cg} {a = a} t xs = uncurry h (snd (foldl g (length xs , (t , [])) xs)) 
+𝒄ongF {cg = cg} {a = a} t xs = uncurry h (snd (foldl g (length xs , (t , [])) xs))
 
  where
  h : R.Term → List (Hco _ _) → CuTerm' _ _
@@ -71,14 +71,14 @@ pattern
  g (n , (t , xs)) (hco' x) = n , (t , xs ∷ʳ x)
  g (n , (t , xs)) (cell' x x₁) =
    predℕ n , replaceAtTrm (length xs) (liftVarsFrom n zero x₁) t , xs
- g (n , (t , xs)) (𝒄ong' t' xs') = 
+ g (n , (t , xs)) (𝒄ong' t' xs') =
    (predℕ n + length xs') ,
      replaceAtTrm (length xs)
        (liftVarsFrom (n ∸ suc (length xs)) ((length xs') + suc (length xs))
           $ liftVarsFrom (suc (length xs)) zero t')
         (liftVarsFrom (length xs') (suc (length xs)) t) ,
        xs ++ xs'
- 
+
 CuTerm = CuTerm' Unit Unit
 
 CuTermNC = CuTerm' ⊥ Unit
@@ -327,7 +327,7 @@ module normaliseCells where
  nc : ℕ → ℕ → (CuTerm' A B) → R.TC (CuTerm' A B)
  nc zero _ _ = R.typeError [ "out of fuel in normaliceCells" ]ₑ
  nc (suc fuel) dim (hco' x) = ⦇ hco' (ncH (fuel) dim x) ⦈
-   
+
  nc (suc fuel) dim (cell' x x₁) =
    cell' x <$> (addNDimsToCtx dim $ R.normalise x₁)
  nc (suc fuel) dim (𝒄ong' {cg = cg} x x₁) =
