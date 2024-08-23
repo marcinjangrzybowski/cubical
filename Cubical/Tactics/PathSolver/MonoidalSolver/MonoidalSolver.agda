@@ -240,5 +240,5 @@ macro
   let solution = R.def (quote ◪mkSq)
         (a₀₋' v∷ a₁₋' v∷ a₋₀' v∷ a₋₁' v∷ [])
 
-  R.unify solution h  <|> R.typeError [ solution ]ₑ
+  R.unify solution h <|> R.typeError [ solution ]ₑ
 

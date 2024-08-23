@@ -37,23 +37,61 @@ data CuArg' (CongGuard : Type) (A : Type ℓ) : Type ℓ where
  iArg : IExpr → CuArg' CongGuard A
  tArg : CuTerm' CongGuard A → CuArg' CongGuard A
 
+
+record Hco (CongGuard : Type) (A : Type ℓ) : Type ℓ where
+ inductive
+ constructor hcodata
+ field
+  sides : List (SubFace × CuTerm' CongGuard A) 
+  bottom : CuTerm' CongGuard A
+
 data CuTerm' CongGuard A where
- hco : List (SubFace × CuTerm' CongGuard A) → CuTerm' CongGuard A → CuTerm' CongGuard A
+ hco' : Hco CongGuard A → CuTerm' CongGuard A
  cell' : A → R.Term → CuTerm' CongGuard A
- 𝒄ong' : {cg : CongGuard} → R.Term → List ((CuTerm' CongGuard A)) → CuTerm' CongGuard A
+ 𝒄ong' : {cg : CongGuard} → R.Term → List ((Hco CongGuard A)) → CuTerm' CongGuard A
 
 pattern
  cell x = cell' tt x
--- pattern
---  hco x y = hco' tt x y
+ 
+pattern
+ hco x y = hco' (hcodata x y)
 
 pattern
  𝒄ong th tl = 𝒄ong' {cg = tt} th tl
 
+𝒄ongF : ∀ {CongGuard} {A : Type ℓ} {cg : CongGuard} {a : A} → R.Term → List ((CuTerm' CongGuard A)) → CuTerm' CongGuard A
+𝒄ongF {cg = cg} {a = a} t xs = uncurry h (snd (foldl g (length xs , (t , [])) xs)) 
+
+ where
+ h : R.Term → List (Hco _ _) → CuTerm' _ _
+ h t [] = cell' a t
+ h = 𝒄ong' {cg = cg}
+
+ g : ℕ × (R.Term × List (Hco _ _)) → CuTerm' _ _ → ℕ × (R.Term × (List (Hco _ _)))
+ g (n , (t , xs)) (hco' x) = n , (t , xs ∷ʳ x)
+ g (n , (t , xs)) (cell' x x₁) =
+   predℕ n , replaceAtTrm (length xs) (liftVarsFrom n zero x₁) t , xs
+ g (n , (t , xs)) (𝒄ong' t' xs') = 
+   (predℕ n + length xs') ,
+     replaceAtTrm (length xs)
+       (liftVarsFrom (n ∸ suc (length xs)) ((length xs') + suc (length xs))
+          $ liftVarsFrom (suc (length xs)) zero t')
+        (liftVarsFrom (length xs') (suc (length xs)) t) ,
+       xs ++ xs'
+ 
 CuTerm = CuTerm' Unit Unit
 
 CuTermNC = CuTerm' ⊥ Unit
 
+
+HcoNC→Hco : List (SubFace × CuTerm' ⊥ Unit) → List (SubFace × CuTerm' Unit Unit)
+
+CuTermNC→CuTerm : CuTermNC → CuTerm
+CuTermNC→CuTerm (hco sides bottom) = hco (HcoNC→Hco sides) (CuTermNC→CuTerm bottom)
+CuTermNC→CuTerm (cell' x x₁) = cell' x x₁
+
+HcoNC→Hco [] = []
+HcoNC→Hco ((sf , x) ∷ xs) = (sf , CuTermNC→CuTerm x) ∷ HcoNC→Hco xs
 
 
 isCell : CuTerm → Bool
@@ -140,7 +178,7 @@ module prettyPrinter {A B : Type} (cellTermRender : CuCtx → R.Term →  R.TC (
              R.formatErrorParts
   pure [ ctr ]ₑ
  ppCT'' ctx (suc d) (𝒄ong' h t) = do
-  rT ← mapM (argRndr >=> R.formatErrorParts) t
+  rT ← mapM ((argRndr ∘S hco')  >=> R.formatErrorParts) t
   rHead ← inCuCtx ctx $ addNDimsToCtx' "𝒙" (length t) $ renderTerm h
   pure  $ [ rHead <> indent ' ' 2 (foldr (_<>_  ∘S ("\n" <>_)) "" rT)]ₑ
 
@@ -177,10 +215,10 @@ constPartial a φ 1=1 = a
 module ToTerm {A B : Type} where
 
  toTerm : CuCtx → CuTerm' A B → R.Term
- toTermFill toTermFill' : CuCtx → List (SubFace × CuTerm' A B) → CuTerm' A B → R.Term
+ toTermFill toTermFill' : CuCtx → Hco A B → R.Term
 
 
- toTermA : CuCtx → List (CuTerm' A B) → List (R.Term)
+ toTermA : CuCtx → List (Hco A B) → List (R.Term)
 
 
  mkSFTrm : CuCtx → SubFace × CuTerm' A B → R.Term
@@ -202,9 +240,9 @@ module ToTerm {A B : Type} where
 
  toTermA ctx [] = []
  toTermA ctx (x ∷ xs) =
-    (toTerm ctx x) ∷  toTermA ctx xs
+    (toTerm ctx (hco' x)) ∷  toTermA ctx xs
 
- toTerm ctx (hco x x₁) =
+ toTerm ctx (hco' (hcodata x x₁)) =
    R.def (quote hcomp)
      (vlam "𝒛" (toSides ctx x) v∷ v[ toTerm ctx x₁ ])
  toTerm ctx (cell' _ x) =
@@ -212,14 +250,14 @@ module ToTerm {A B : Type} where
 
  toTerm ctx (𝒄ong' h t) =
   let h' = liftWhere (repeat (length t) false ++ L.map ((λ { (just _) → true ; _ → false }) ∘S snd ) ctx) h
-  in substTms (toTermA ctx t) h'
+  in substTms (toTermA ctx (t)) h'
 
- toTermFill ctx x x₁ =
+ toTermFill ctx (hcodata x x₁) =
    R.def (quote hfill)
      (liftVars (vlam "𝒛" (toSides ctx x)) v∷
        R.def (quote inS) v[ liftVars (toTerm ctx x₁) ] v∷ v[ 𝒗 zero ])
 
- toTermFill' ctx x x₁ =
+ toTermFill' ctx (hcodata x x₁) =
    R.def (quote hfill)
      (liftVarsFrom 1 (length ctx) (vlam "𝒛" (toSides ctx x)) v∷
        R.def (quote inS) v[ liftVarsFrom 1 (length ctx) (toTerm ctx x₁) ] v∷ v[ 𝒗 (length ctx) ])
@@ -232,10 +270,10 @@ toTerm dim = vlamⁿ dim ∘ (ToTerm.toTerm (defaultCtx dim))
 module cuEval {A : Type} {b : B} where
 
  cuEval : ℕ → SubFace → CuTerm' A B → CuTerm' A B
- cuEvalL : ℕ → SubFace → List (CuTerm' A B) → List (CuTerm' A B)
+ cuEvalL : ℕ → SubFace → List (Hco A B) → List (CuTerm' A B)
 
  cuEvalL _ sf [] = []
- cuEvalL fuel sf (x ∷ l) = cuEval fuel sf x ∷ cuEvalL fuel sf l
+ cuEvalL fuel sf (x ∷ l) = cuEval fuel sf (hco' x) ∷ cuEvalL fuel sf l
  cuEval zero _ _ = cell' b (R.lit (R.string "out of fuel in cuEval"))
  cuEval (suc fuel) sf (hco l y) =
   let sSf = findBy (⊂⊃? ∘S (sf <sf>_) ∘S fst) l
@@ -262,7 +300,7 @@ module cuEval {A : Type} {b : B} where
  cuEval fuel sf (cell'  x x₁) = cell' x (subfaceCell sf x₁)
  cuEval fuel sf (𝒄ong' {cg = cg} h tl) =
    let h' = subfaceCell (repeat (length tl)  nothing ++ sf) h
-    in 𝒄ong' {cg = cg} h' (cuEvalL fuel  sf tl)
+    in 𝒄ongF {cg = cg} {a = b} h' (cuEvalL fuel  sf tl)
 
 cuEval : {A : Type} {B : Type ℓ} {b : B} → SubFace → CuTerm' A B → CuTerm' A B
 cuEval {b = b} = cuEval.cuEval {b = b} 100
@@ -284,16 +322,21 @@ pickSFfromPartial = pickSFfromPartial' _
 module normaliseCells where
 
 
+ ncH : ℕ → ℕ → (Hco A B) → R.TC (Hco A B)
+
  nc : ℕ → ℕ → (CuTerm' A B) → R.TC (CuTerm' A B)
  nc zero _ _ = R.typeError [ "out of fuel in normaliceCells" ]ₑ
- nc (suc fuel) dim (hco x x₁) =
-   ⦇ hco
-       (mapM (λ (sf , x) → ⦇ ⦇ sf ⦈ , ( nc fuel (suc (sfDim sf)) x) ⦈ ) x)
-       (nc (suc fuel) dim x₁) ⦈
+ nc (suc fuel) dim (hco' x) = ⦇ hco' (ncH (fuel) dim x) ⦈
+   
  nc (suc fuel) dim (cell' x x₁) =
    cell' x <$> (addNDimsToCtx dim $ R.normalise x₁)
  nc (suc fuel) dim (𝒄ong' {cg = cg} x x₁) =
-   𝒄ong' {cg = cg} x <$> mapM (nc fuel dim) x₁
+   𝒄ong' {cg = cg} x <$> mapM (ncH fuel dim) x₁
+
+ ncH fuel dim (hcodata x x₁) =
+   ⦇ hcodata
+       (mapM (λ (sf , x) → ⦇ ⦇ sf ⦈ , ( nc fuel (suc (sfDim sf)) x) ⦈ ) x)
+       (nc (fuel) dim x₁) ⦈
 
 normaliseCells : ℕ → CuTerm' A B → R.TC (CuTerm' _ _)
 normaliseCells = normaliseCells.nc 100
@@ -480,8 +523,8 @@ module codeGen {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
   pure  $ "\nlet " ∷ₑ rT ++ "\nin " ∷ₑ [ rHead ]ₑ
 
   where
-  argRndr :  CuTerm' A B → R.TC _
-  argRndr x = (((λ s → [ "(" ]ₑ ++ s ++ [ ")" ]ₑ) <$> (ppCT'' ctx d x)))
+  argRndr :  Hco A B → R.TC _
+  argRndr x = (((λ s → [ "(" ]ₑ ++ s ++ [ ")" ]ₑ) <$> (ppCT'' ctx d (hco' x))))
 
  ppCT' :  ℕ → CuTerm' A B → R.TC (List R.ErrorPart)
  ppCT' = ppCT'' (defaultCtx dim)

@@ -57,7 +57,7 @@ macro
    cu ← R.inContext (drop dim co) $ appCongs dim
            <$> quoteCuTerm (just (dropVars.rv dim zero ty)) dim (t)
    let r = ToTerm.toTerm cc cu
-   R.unify r h
+   R.unify r h <|> R.typeError [ r ]ₑ
 
 
 

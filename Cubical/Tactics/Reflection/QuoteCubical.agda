@@ -115,7 +115,7 @@ module ECT where
     (traceHComps t)
    where
 
-   withTracing : R.Term × List R.Term → R.TC (Maybe (R.Term × List CuTerm))
+   withTracing : R.Term × List R.Term → R.TC (Maybe (R.Term × List (CuTerm)))
    withTracing (_ , []) = pure nothing
    withTracing (R.var zero [] , _) = pure nothing
    withTracing (h , tl) = ⦇ just ⦇ ⦇ h ⦈ , (mapM (extractCuTerm' nothing m dim) tl) ⦈  ⦈
@@ -127,7 +127,7 @@ module ECT where
    addNDimsToCtx dim (getCuCase t) >>=
     Mb.rec ( (pure t )
              >>= λ t' → --R.debugPrint "checkHcomp" 4 ("cell: \n " ∷ₑ [ tt ]ₑ) >>
-               (  try𝒄ong m dim t' ) >>= pure ∘S Mb.rec (cell t') (uncurry 𝒄ong)
+               (  try𝒄ong m dim t' ) >>= pure ∘S Mb.rec (cell t') (uncurry 𝒄ongF)
                )
            λ ((A , φTm , fcs , cap) , φ) →
                  (checkHcomp
@@ -260,13 +260,13 @@ nCubeToEqPath (A , []) = q[ refl ]
 nCubeToEqPath (A , (f0 , f1) ∷ xs) =
   let dim = (length xs)
   in vlamⁿ (suc dim) (ToTerm.toTermFill' {Unit} {Unit} (defaultCtx dim)
-         (join $ L.map (λ (k , (x , y)) →
+         (hcodata (join $ L.map (λ (k , (x , y)) →
                       ((rev $ L.insertAt k (just false) (repeat (predℕ (length xs)) nothing))
                         , cell (rotVars (predℕ $ length xs) $ x))
                   ∷ [ ((rev $ L.insertAt k (just true) (repeat (predℕ (length xs)) nothing))
                         , cell (rotVars (predℕ $ length xs) $ y)) ])
                 (L.zipWithIndex xs))
-           (cell f0))
+           (cell f0)))
 
 faceSubFace : ℕ → (Bool × ℕ) → SubFace
 faceSubFace dim (b , k) =
