@@ -1,3 +1,52 @@
+{-
+
+This module provides utilities for working with interval expressions (`IExpr`) in a reflected syntax.
+It introduces an abstract representation of interval expressions and face expressions (`FExpr`).
+
+1. **Interval Expressions (IExpr)**
+   - Defined as `List (List (Bool × ℕ))`.
+   - Operations:
+     - `∨'` (disjunction)
+     - `∧'` (conjunction)
+     - `~'` (negation)
+     - `ie[ _ ]` (singleton interval expression)
+   - Normalization using `normIExpr`.
+   - Conversion between `IExpr` and terms (`IExpr→Term`).
+
+2. **Face Expressions (FExpr)**
+   - Defined as `List SubFace`.
+   - Operations:
+     - `fe∷` (face extension)
+     - `fe∷×` (face extension with additional data)
+     - `++fe` (concatenation for `FExpr`)
+     - `++fe×` (concatenation for `FExpr` with additional data)
+   - Conversion between `IExpr` and `FExpr` via `I→F`.
+
+3. **SubFaces and Constraints**
+   - Definition and manipulation of faces and subfaces in the interval (e.g., `allSubFacesOfDim`, `subFaceConstraints`).
+   - Operations and relations between subfaces (`<SF>`, `sf∩`, `<sf>`).
+
+4. **Contextual Operations**
+   - Addition of interval dimensions to contexts (`addNDimsToCtx`).
+   - Handling and applying face constraints within contexts.
+
+5. **Utility Functions**
+   - Extraction and manipulation of interval expressions from terms (`extractIExpr`, `extractIExprM`).
+   - Lifting and dropping variables in terms based on boolean masks (`liftWhere`, `dropWhere`).
+
+6. **Non-Degenerate Faces**
+   - Check and filter for non-degenerate faces and expressions (`nonDegFExpr`, `isNonDegen`).
+
+
+The current representations of interval and face expressions are not very type-safe.
+While functions for manipulating and combining expressions typically produce normalized versions,
+this is not enforced at the type level. Additionally, the representations are not parameterized
+by context, meaning the well-scopedness of these expressions is not enforced.
+Making these aspects type-safe should not be difficult, would be a natural progression and should be a focus
+for future refactoring.
+
+-}
+
 {-# OPTIONS --safe  #-}
 
 module Cubical.Tactics.Reflection.Dimensions where
@@ -86,21 +135,12 @@ vlamⁿ (suc n) t = vlam "𝒊" (vlamⁿ n t)
 $i : ∀ {ℓ} {A : Type ℓ} → (I → A) → I → A
 $i = λ f i → f i
 
--- $I : ∀ {ℓ} {A : I → SSet ℓ} → (∀ i → A i) → ∀ i → A i
--- $I f i = f i
-
 $≡ : ∀ {ℓ} {A : I → Type ℓ} {x : A i0} {y : A i1} → (PathP A x y) → ∀ i → A i
 $≡ f i = f i
 
 
 $PI : ∀ {ℓ} (A : Type ℓ) → (I → (Partial i1 A)) → I → A
 $PI _ f i = f i 1=1
-
-
--- appNDims≡ : ℕ → R.Term → R.Term
--- appNDims≡ zero t = t
--- appNDims≡ (suc n) t =
---  appNDims≡ n $ R.def (quote $≡) ( t v∷ v[ R.var n [] ])
 
 
 appNDimsI : ℕ → R.Term → R.Term
@@ -235,13 +275,6 @@ x ⊂? (y ∷ sf) with x <sf> y
 ¬⊃⊂? _ = true
 
 
--- mkFaceTail : ℕ → SubFace
--- mkFaceTail zero = []
--- mkFaceTail (suc x) = nothing ∷ mkFaceTail x
-
--- mkFacePlus : ℕ → SubFace → SubFace
--- mkFacePlus = ?
-
 mkFace : Bool → ℕ → SubFace
 mkFace b k = iter k (nothing ∷_ ) (just b ∷ [])
 
@@ -288,19 +321,6 @@ I→F (x ∷ x₁) =
    (fromSF x)
 
 
--- IExpr→Term : IExpr → R.Term
--- IExpr→Term = foldl (λ x y → R.def (quote _∨_) (x v∷
---        v[ foldl (λ x (b , k) → R.def (quote _∧_) (x v∷
---               v[ (let x' = R.var (k) []
---                       x'' = if b then x' else R.def (quote ~_) v[ x' ]
---                   in x'')
---                   ] ))
---                (R.con (quote i1) []) y ] ))
---      (R.con (quote i0) [])
-
--- IExpr→Term' : IExpr → {!!}
--- IExpr→Term' = {!!}
-
 
 endTerm : Bool → R.Term
 endTerm = (if_then R.con (quote i1) [] else R.con (quote i0) [])
@@ -321,23 +341,6 @@ getMaxVar = maximum ∘S L.map snd ∘S join
   maximum = foldr max zero
 
 
--- module _ (A : Type) (a₀ a₁ : A) (a : a₀ ≡ a₁) where
-
---  sq1 : Square
---          (λ i → a (i ∧ ~ i))
---          (λ i → a (i ∨ ~ i))
---          a a
---  sq1 i j = a ((i ∨ (j ∧ ~ j)) ∧ ( j ∨ ~ j))
-
---  sq= : Cube sq1 refl {!!} {!!} {!!} {!!}
---  sq= = {!interp!}
-
-
-
--- undegen : IExpr → IExpr
--- undegen ie =
---  let dim = getMaxVar ie
---  in {!!}
 
 IExpr→Term : IExpr → R.Term
 IExpr→Term [] = endTerm false
@@ -655,37 +658,6 @@ macro
  normIExprInTermM t h =
     normIExprInTerm zero t >>= flip R.unify h
 
--- getAllIExprs : ℕ → R.Term → List IExpr
--- getAllIExprs dim t =
---   snd $ runIdentity (unwrap {T = State₀T (List IExpr)}
---    (atVarOrDefM.rv f g zero t) [])
---  where
---   f : ℕ → ℕ → List (R.Arg R.Term) → _
---   f n x [] argsM = do
---             when ((n <ℕ (suc x)) and (x <ℕ (n + dim)))
---              (modify (ie[ x ∸ n ] ∷_))
---             R.var x <$> argsM
---   f n x args argsM = R.var x <$> argsM
-
---     -- f n x [] =
---     --      if (n <ℕ (suc x)) and (x <ℕ (n + dim))
---     --      then just (var (x ∸ n) [])
---     --      else nothing
---     -- f n k (x ∷ args) = nothing
-
---   g' :  R.Name → List (R.Arg R.Term) → R.Term → Maybe R.Term
---   g' (quote _∨_) a@(_ v∷ v[ _ ]) tm = just tm
---   g' (quote _∧_) a@(_ v∷ v[ _ ]) tm = just tm
---   g' (quote ~_) a@(v[ _ ]) tm = just tm
---   g' _ _ _ = nothing
-
-
---   g : ℕ → R.Name → List (R.Arg R.Term) → _
---   g n nm args argsM =
---     Mb.rec
---       (R.def nm <$> argsM)
---       {!!}
---       (g' nm args (R.def nm args))
 
 
 extractAllIExprs : R.Term → List IExpr

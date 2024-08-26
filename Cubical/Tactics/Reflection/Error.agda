@@ -1,3 +1,33 @@
+{-
+This module provides  utilities designed for printing messages and errors in the context of macros.
+
+Key functionalities include:
+
+- **Error Message Composition:**
+  - Custom composable error parts using the `_∷ₑ_`, `_++ₑ_`, `_∷nl_`, and `_++nl_` operators.
+  - Instances for converting various types (`String`, `Char`, `ℕ`, `Bool`, `R.Term`, `R.Name`, `R.ErrorPart`) to `R.ErrorPart`.
+
+- **String Manipulation:**
+  - Indentation and offsetting functions (`indent'`, `indent`, `indentₑ`, `offsetStr`, `offsetStrR`).
+  - String formatting and line handling (`lines`).
+
+- **Error Rendering:**
+  - Functions for rendering terms and arguments (`renderTerm`, `renderArg`).
+  - Concatenating runs of consecutive strErr in List of ErrorParts  (`<>StrErr`).
+
+- **Result Wrappers:**
+  - Wrapping results and errors in the `ResultIs` type using `wrapResult` and `wrapError`.
+
+- **Testing Helpers:**
+  - `assertNoErr` function to facilitate writing tests that check for the presence or absence of errors.
+  - `TestResult` data type which includes `✓-pass` and `⊘-fail` constructors.
+
+- **Macros:**
+  - `showCtx` macro for printing the current context in the form of a type error.
+  - `showTeles` function to generate a list of error parts from a telescope.
+
+-}
+
 {-# OPTIONS --safe  #-}
 
 module Cubical.Tactics.Reflection.Error where
@@ -119,13 +149,9 @@ indent' b ch k =
   h (x ∷ xs) with primCharEquality x '\n'
   ... | false = x ∷ h xs
   ... | true =  '\n' ∷ ch ∷ ind ++ h xs
-    -- {!!} ++ h xs
+
 
 indent = indent' true
-
-
-
-
 
 indentₑ : ℕ → List R.ErrorPart → List R.ErrorPart
 indentₑ k = map (λ { (R.strErr x) → R.strErr (indent ' ' k x) ; x → x }) ∘S <>StrErr

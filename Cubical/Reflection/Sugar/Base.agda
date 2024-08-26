@@ -1,8 +1,34 @@
+{-
+
+This module introduces several key classes and concepts for syntactic sugar in Agda:
+
+- **Raw Monad**: Defines a basic monadic structure.
+- **Raw Monad Fail**: Extends `Raw Monad` to handle failure cases.
+- **Raw Applicative**: Defines an applicative structure.
+- **Raw Monad Transformer**: Facilitates monad transformers.
+- **Identity Functor**: Provides an identity functor to use with the above structures.
+
+Key characteristics:
+
+- No dependencies on the Cubical library, ensuring broad usability.
+- Designed to simplify macro writing, not for formal reasoning.
+- Utilizes type-level `ω` for defining functors to ease instance writing without requiring universe polymorphism.
+
+All definitions necessary for syntactic sugar are implemented, allowing the use of multiple monads and applicatives correctly within the same context through instance resolution.
+
+-}
+
 {-# OPTIONS --no-exact-split --safe #-}
 module Cubical.Reflection.Sugar.Base where
 
-open import Cubical.Core.Primitives
-
+open import Agda.Primitive public
+  using    ( Level
+           ; SSet )
+  renaming ( lzero to ℓ-zero
+           ; lsuc  to ℓ-suc
+           ; _⊔_   to ℓ-max
+           ; Set   to Type
+           ; Setω  to Typeω )
 
 private
  variable

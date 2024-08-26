@@ -1,3 +1,27 @@
+{-
+
+This module provides specific instances for various classes defined in `Sugar.Base`, integrating definitions from the Cubical library. The instances cover several widely-used types and structures within the Cubical library.
+
+Key Features:
+
+- **Applicative and Monad Instances**:
+  - `Maybe`: Instance implementations for `RawApplicative` and `RawMonad`.
+  - `List`: Instance implementations for `RawApplicative` and `RawMonad`.
+  - `Sum`: Supports sum types (`⊎`), with instances for both `RawApplicative` and `RawMonad`.
+
+- **Monad Transformer Instances**:
+  - `State`: Provides a monad transformer instance for state computations.
+  - `Plus`: Provides a monad transformer instance for sum types.
+
+- **Utility Functions**: 
+  - Functions like `mapM`, `concatMapM`, `foldlM`, and `foldrM` facilitate common monadic operations on lists.
+  - Functions `get` and `modify` support stateful computations.
+
+
+Note how the use of type-level `ω` simplifies the writing of instances without dealing with universe polymorphism, wich is instead dealt with in de definition of functions relaying on those instances.
+
+-}
+
 {-# OPTIONS --no-exact-split --safe #-}
 module Cubical.Reflection.Sugar.Instances where
 
