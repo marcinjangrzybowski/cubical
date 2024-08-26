@@ -240,8 +240,7 @@ flipSquare≡cong-sym P = sym (sym≡flipSquare P) ∙ sym (sym-cong-sym≡id (c
 -- Applying cong sym is the same as inverting a square in Ω²A
 sym≡cong-sym : ∀ {ℓ} {A : Type ℓ} {x : A} (P : Square (refl {x = x}) refl refl refl)
   → sym P ≡ cong sym P
-sym≡cong-sym {x = x} P =
- sym-cong-sym≡id (sym P)
+sym≡cong-sym {x = x} P = sym-cong-sym≡id (sym P)
 
 -- sym induces an equivalence on path types
 symIso : {a b : A} → Iso (a ≡ b) (b ≡ a)
