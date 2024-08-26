@@ -22,13 +22,10 @@ All definitions necessary for syntactic sugar are implemented, allowing the use 
 module Cubical.Reflection.Sugar.Base where
 
 open import Agda.Primitive public
-  using    ( Level
-           ; SSet )
-  renaming ( lzero to ℓ-zero
-           ; lsuc  to ℓ-suc
-           ; _⊔_   to ℓ-max
-           ; Set   to Type
-           ; Setω  to Typeω )
+  using    ( Level )
+  renaming (  Set   to Type
+           ;  Setω  to Typeω
+           )
 
 private
  variable
