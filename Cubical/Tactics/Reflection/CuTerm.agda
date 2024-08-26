@@ -1,3 +1,50 @@
+{-
+
+This module provides a representation of reflected syntax focused on terms involving compositions.
+
+The representation can be thought as version of `Term` with additional nodes, capturing the composition operations and partial elements.
+
+Definition is parameterized by two types:
+* `CongGuard`: A type that can be either `Unit` or `⊥`, acting as a flag to enable or disable specific operations over composition terms.
+* `A`: A type that allows attaching specific data to the faces of the cubical complex, represented by nested compositions.
+
+Main definitions and functions:
+
+* `CuTerm'`: The core datatype representing cubical terms, parameterized by `CongGuard` and `A`.
+  - `hco'`: Constructor for hcomp node.
+  - `cell'`: Constructor for a `leaf` cell - `Term` with associated type `A`.
+  - `𝒄ong'`: Constructor for terms which are not `hcomp` , but contains `hcomp` as some subterms.
+             This is the constructor which is guarded by `CongGuard`
+
+* `CuTerm` and `CuTermNC`: Specializations of `CuTerm'` with specific `CongGuard` values.
+
+* Utility functions:
+  - `isCell`: Checks if a `CuTerm` is a cell.
+  - `is𝑪ongFree`, `is𝑪ongFreeF`: Checks if a `CuTerm` or a list of terms are free of `𝒄ong`.
+  - `cellQ`: Checks if a `CuTerm` is a cell.
+  - `almostLeafQ`: Checks if a `CuTerm` is an almost leaf node in its structure.
+
+* Modules and utilities for rendering and term conversion:
+  - `prettyPrinter`: Pretty prints `CuTerm'` for diagnostic purposes.
+  - `ToTerm`: Converts `CuTerm'` into `R.Term` for further processing or evaluation.
+
+* Normalization and evaluation:
+  - `cuEval`, `cuEvalL`: Evaluates a `CuTerm'` given a subface and specific parameters.
+  - `normaliseCells`: Normalizes cells within `CuTerm'`.
+
+* Miscellaneous functions:
+  - `pickSFfromPartial'`, `pickSFfromPartial`: Picks a subface from a list given a partial value.
+  - `permuteVars`: Permutes variables within a `CuTerm` by a given function.
+  - `foldCells`, `visitCellsM`: Utility functions to traverse and apply transformations or checks over the cells.
+  - `tryCastAsNoCong`, `tryCastAsNoCongS`: Attempts to cast `CuTerm` to form where hcomps apears only ont the `top` level
+
+* Code generation:
+  - `codeGen`: Generates code from `CuTerm'` - this is version of pretty printer producing valid agda code, suitable for use within `checkFromStringTC`.
+
+Special annotations and constructs like `MetaTag` and `⁇` aid in reflection-based manipulation of terms and help manage intermediate or unspecified terms within the system.
+
+-}
+
 {-# OPTIONS --safe  #-}
 
 module Cubical.Tactics.Reflection.CuTerm where
@@ -32,10 +79,6 @@ private
     A B : Type ℓ
 
 data CuTerm' (CongGuard : Type) (A : Type ℓ) : Type ℓ
-
-data CuArg' (CongGuard : Type) (A : Type ℓ) : Type ℓ where
- iArg : IExpr → CuArg' CongGuard A
- tArg : CuTerm' CongGuard A → CuArg' CongGuard A
 
 
 record Hco (CongGuard : Type) (A : Type ℓ) : Type ℓ where
@@ -152,12 +195,8 @@ module prettyPrinter {A B : Type} (cellTermRender : CuCtx → R.Term →  R.TC (
    rest ← (L.intersperse (R.strErr "\n") ∘S L.join)  <$> mapM
          (λ (sf , cu) → do
 
-
-
-            -- R.extendContext "zz" (varg (R.def (quote I) [])) $
             ( do
                let sfTm = renderSubFacePattern ctx sf
-               -- R.extendContext newDimVar (varg (R.def (quote I) [])) $
                (do sfTm' ← inCuCtx' (("z" , nothing) ∷ ctx) $ R.formatErrorParts [ liftVars (SubFace→TermInCtx ctx sf) ]ₑ
                    cu' ← (ppCT'' ((newDimVar , nothing) ∷ applyFaceConstraints sf ctx) d cu)
                    cu'' ← R.formatErrorParts cu'

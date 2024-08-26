@@ -13,7 +13,7 @@ Key Features:
   - `State`: Provides a monad transformer instance for state computations.
   - `Plus`: Provides a monad transformer instance for sum types.
 
-- **Utility Functions**: 
+- **Utility Functions**:
   - Functions like `mapM`, `concatMapM`, `foldlM`, and `foldrM` facilitate common monadic operations on lists.
   - Functions `get` and `modify` support stateful computations.
 

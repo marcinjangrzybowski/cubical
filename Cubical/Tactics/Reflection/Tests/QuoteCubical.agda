@@ -1,3 +1,7 @@
+{-
+This module defines several tests for verifying the functionality of cubical term reflection and extraction provided by `Cubical.Tactics.Reflection.QuoteCubical`.
+-}
+
 {-# OPTIONS --safe -v 3 #-}
 module Cubical.Tactics.Reflection.Tests.QuoteCubical where
 
@@ -44,20 +48,6 @@ macro
    R.unify t (IExpr→Term (normIExpr t'))
    wrapError h ("t    : " ∷ₑ IExpr→Term t' ∷nl
                  "norm : " ∷ₑ (IExpr→Term (normIExpr t')) ∷ₑ [])
-
-
-   -- R.unify R.unknown h
-
- -- degenTest : R.Term → R.Term → R.TC Unit
- -- degenTest t h = do
- --   t' ← extractIExprM t
- --   let dim = (suc (getMaxVar t'))
- --   let i' = undegen dim t'
- --   -- let ii = undegen' dim t'
- --   -- addNDimsToCtx (suc dim) $ R.typeError [ IExpr→Term $ i' ]ₑ
- --   -- addNDimsToCtx dim $ R.typeError $ L.join $ L.map (λ (sf , ie , b , bb) →
- --   --        sf ∷ₑ " → " ∷ₑ IExpr→Term ie ∷ₑ " " ∷ₑ b ∷ₑ "/" ∷ₑ  bb ∷nl []) ii
- --   R.unify (IExpr→Term $ i') h
 
 _ : ResultIs ✓-pass
 _ = extractIExprTest i0

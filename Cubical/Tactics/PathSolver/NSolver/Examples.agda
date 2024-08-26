@@ -1,3 +1,11 @@
+{-
+
+This file serves as a demonstration of the NSolver module, showcasing practical examples of its usage. It provides concrete cases for computing fillings of n-dimensional cubes under the assumption that boundary cells are expressible as paths (potentialy applied to arbitrary complex interval expressions).
+
+Unlike the `Tests` folder, which focuses on verifying correctness through unit tests, this file emphasizes illustration and practical application.
+
+-}
+
 {-# OPTIONS --safe #-}
 
 module Cubical.Tactics.PathSolver.NSolver.Examples where
@@ -163,7 +171,9 @@ module 2GroupoidLaws where
   pentagonIdentity' = solvePaths
 
 
-  -- solving this takes ~10 min (but memory spikes to more than 100GiB !)
+  -- solving this 4-cube commented code bellow takes
+  -- ~8 min (but memory spikes to more than 100GiB !)
+
   -- pentagonIdentity'≡pentagonIdentity : pentagonIdentity' ≡ pentagonIdentity 𝑝₀ 𝑝₁ 𝑝₂ 𝑝₃
   -- pentagonIdentity'≡pentagonIdentity = solvePaths
 

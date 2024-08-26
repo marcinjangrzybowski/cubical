@@ -1,3 +1,64 @@
+{-
+
+This module provides utilities for traversing the reflected representation of terms using monadic operations. It is designed to apply operations specifically at `variable`, `constructor`, and `definition` nodes. It also handles the lifting of terms inside lambda expressions and pattern lambdas.
+
+### General Overview
+
+- **Functionality**:
+  - Assists in traversing reflected terms.
+  - Applies operations at specific nodes (`variable`, `constructor`, `definition`).
+  - Manages lifting within lambda and pattern lambda expressions.
+
+- **Usages**:
+  - Can act either as a fold or a map depending on the application with diferent monads.
+  - Facilitates easier refactoring of code when the reflected representation changes.
+  - Handles termination issues that are cumbersome when functions traverse or map over reflected terms.
+  - Allows for the easy inclusion of state or error handling while refactoring functions operating over terms.
+
+#### Specialized Transformations
+
+- **`remapVars`**:
+  - Remaps variables using a specified function.
+
+- **`replaceVarWithCon`**:
+  - Replaces variables with constructors based on a mapping function.
+
+- **`liftVars`** and **`liftVarsFrom`**:
+  - Functions to lift variables by a specified amount.
+
+- **`dropVar`**:
+  - Drops a specified variable.
+
+#### Modules for Specific Transformations
+
+- **`LiftFrom`**:
+  - Provides a public interface for lifting variables by a specified amount.
+
+- **`dropVars`**:
+  - Offers a function to drop a specified number of variables.
+
+#### Additional Utilities
+
+- **`invVar`**:
+  - Replaces Interval variable with a negated form.
+
+- **`hasVar`** and **`hasVarBy`**:
+  - Checks for the presence of a variable based on given conditions.
+
+- **`findInterval`**:
+  - Finds an interval within a term.
+
+- **`replaceVarWithTerm`**:
+  - Replaces variables with terms based on a mapping function.
+
+- **`substTms`**:
+  - Substitutes a list of terms into a given term.
+
+- **`replaceAtTrm`**:
+  - Replaces a term at a specified variable position.
+
+-}
+
 {-# OPTIONS --safe #-}
 module Cubical.Tactics.Reflection.Utilities where
 
@@ -48,7 +109,6 @@ unArg (arg i x) = x
 
 argInfo : ∀ {ℓ} → {A : Type ℓ} → Arg A → ArgInfo
 argInfo (arg i x) = i
-
 
 module atVarOrConOrDefMmp {M : Functorω}
               {{RA : RawApplicative M}} {{_ : RawMonad M {{RA}} }}

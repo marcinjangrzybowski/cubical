@@ -1,5 +1,53 @@
+{-
+
+
+This module implements a solver for computing fillings of n-dimensional cubes, assuming the boundary of the cube consists solely of paths. Each cell within the cubical complex must be expressible as a path applied to some interval expression. This path may be a diagonal or a face of a higher-dimensional cube, containing complex interval expressions.
+
+### Overview
+
+- **Assumptions**:
+  - Each cell in the complex can be expressed as a path with an interval expression.
+  - Paths can be complex, involving higher-dimensional cubes and intricate interval expressions.
+
+### Implementation
+
+- **Boundary Processing**:
+  - The initial step applies the generalised `cong-∙` lemma from `CongComp` to the entire boundary if necessary.
+  - Solver works by traversing the 1-dimensional skeleton (`1-skel`) of the boundary.
+
+- **Path Normalization**:
+  - For each vertex, the normal form of the path from the `i0ⁿ` corner to this vertex is computed.
+  - This normalization treats paths as elements of a free group,
+    to have robust(not necessary efficient) test for equality we use `unify` from `Agda.Builtin.Reflection`.
+
+
+- **Filler Term Generation**:
+  - For vertices (becoming edges), the path lists are folded using the usual path composition operations.
+  - For edges (now becoming squares), the `compPath-filler` (specialized as `cpf`) is used when necessary
+    (depending of the comparison of length of normal form of path on the vertexes connected by edge).
+
+- **Generic Construction**:
+  - The algorithm supports arbitrary dimensions and can generate all coherence conditions for paths.
+
+### Core Definitions and Functions
+
+- **`solvePathsSolver`**: Main entry point for solving paths, managing reduction and boundary decomposition.
+- **`markVert`**: Marks vertices with normal forms their associated paths, used during path traversal.
+- **`foldBdTerm`**: Folds terms over the boundary, constructing the final term of solution.
+- **notable helper Functions**:
+  - `isRedex?`, `η·`, `_ [·] _` for path composition and unification checks.
+  - `print[𝟚×]`, `printCellVerts` for debugging and visualization.
+  - `[𝟚×Term]→PathTerm`, `[𝟚×Term]→FillTerm` for generating cells in filler based on results of
+    computing normal forms during traversal
+
+### Examples and Usage
+
+The accompanying `Examples.agda` file demonstrates application of the solver and its limitations.
+
+-}
+
 {-# OPTIONS --safe -v testMarkVert:3 -v tactic:3 #-}
--- -v 3
+
 module Cubical.Tactics.PathSolver.NSolver.NSolver where
 
 
@@ -284,20 +332,20 @@ cpf {x = x} {y} p q i z = hcomp
                    })
                 (p z)
 
-[𝟚×ℕ]→PathTerm : [𝟚×Term] → R.Term
-[𝟚×ℕ]→PathTerm [] = q[ refl ]
-[𝟚×ℕ]→PathTerm ((b , tm) ∷ []) =
+[𝟚×Term]→PathTerm : [𝟚×Term] → R.Term
+[𝟚×Term]→PathTerm [] = q[ refl ]
+[𝟚×Term]→PathTerm ((b , tm) ∷ []) =
    R∙ (vlam "_" (liftVars (subfaceCell [ just (not b) ] tm)))
       (vlam "𝕚'" (if b then tm else (invVar zero tm))) --(if b then tm else Rsym tm)
-[𝟚×ℕ]→PathTerm ((b , tm) ∷ xs) = R∙ ([𝟚×ℕ]→PathTerm xs)
+[𝟚×Term]→PathTerm ((b , tm) ∷ xs) = R∙ ([𝟚×Term]→PathTerm xs)
       (vlam "𝕚'" (if b then tm else (invVar zero tm)))
 
-[𝟚×ℕ]→FillTerm : Bool × R.Term → [𝟚×Term] → R.Term
-[𝟚×ℕ]→FillTerm (b , tm) [] =
+[𝟚×Term]→FillTerm : Bool × R.Term → [𝟚×Term] → R.Term
+[𝟚×Term]→FillTerm (b , tm) [] =
     R.def (quote cpf) ((vlam "_" (liftVars (subfaceCell [ just (not b) ] tm)))
          v∷ v[ (vlam "𝕚'" (if b then tm else (invVar zero tm))) ])
-[𝟚×ℕ]→FillTerm (b , tm) xs =
-  R.def (quote cpf) ([𝟚×ℕ]→PathTerm xs v∷
+[𝟚×Term]→FillTerm (b , tm) xs =
+  R.def (quote cpf) ([𝟚×Term]→PathTerm xs v∷
     v[ (vlam "𝕚'" (if b then tm else (invVar zero tm))) ])
 
 dbgId : ∀ {ℓ} {A : Type ℓ} → String → A → A
@@ -311,12 +359,12 @@ module MakeFoldTerm (t0 : R.Term) where
  cellTerm dim (mbi , nothing , []) t =
     (liftVars t)
  cellTerm dim (mbi , nothing , tl@(_ ∷ _)) _ = --R.unknown
-    R.def (quote $≡) (liftVarsFrom (suc dim) 0 ([𝟚×ℕ]→PathTerm tl) v∷
+    R.def (quote $≡) (liftVarsFrom (suc dim) 0 ([𝟚×Term]→PathTerm tl) v∷
        v[ R.def (quote ~_) v[ 𝒗 dim ] ])
  cellTerm dim (just ie , just (b , tm) , tl) _ = --vlamⁿ 1 (liftVarsFrom 1 0 t)
 
     R.def (quote $≡)
-         ((R.def (quote $≡) (liftVarsFrom (suc dim) 0 ([𝟚×ℕ]→FillTerm (b , tm) tl) v∷
+         ((R.def (quote $≡) (liftVarsFrom (suc dim) 0 ([𝟚×Term]→FillTerm (b , tm) tl) v∷
             -- v[ (IExpr→Term ie) ]) v∷
             v[ flipOnFalse (b) (IExpr→Term ie) ]) v∷
        v[ R.def (quote ~_) v[ 𝒗 dim ] ]))

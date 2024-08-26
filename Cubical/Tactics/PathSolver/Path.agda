@@ -1,5 +1,13 @@
-{-# OPTIONS --safe -v testMarkVert:3 -v tactic:3 #-}
--- -v 3
+{-
+This module defines the `NPath` type, which conveniently represents a sequence of paths in a given type `A`.
+This abstraction is primarily intended to ease the introduction of multiple paths into the context,
+facilitating the creation of tests and examples.
+
+The module also provides several utility lemmas for composing squares and cubes, which are frequently used in the accompanying solvers within the `PathSolver` module.
+-}
+
+{-# OPTIONS --safe #-}
+
 module Cubical.Tactics.PathSolver.Path where
 
 open import Cubical.Foundations.Prelude
@@ -9,6 +17,87 @@ open import Cubical.Data.Nat as ℕ
 open import Cubical.Data.Nat.Order.Recursive
 
 open import Cubical.Data.Sigma.Base
+
+
+
+
+record NPath {ℓ} n (A : Type ℓ) : Type ℓ where
+ field
+  𝑣 : ∀ k → {k ≤ n} → A
+  𝑝 : ∀ k → ∀ {k≤n sk≤n} → 𝑣 k {k≤n} ≡ 𝑣 (suc k) {sk≤n}
+
+ abstract
+  𝑣₀ : A
+  𝑣₀ = 𝑣 0
+
+  𝑣₁ : {1 ≤ n} → A
+  𝑣₁ {k≤} = 𝑣 1 {k≤}
+
+  𝑣₂ : {2 ≤ n} → A
+  𝑣₂ {k≤} = 𝑣 2 {k≤}
+
+  𝑣₃ : {3 ≤ n} → A
+  𝑣₃ {k≤} = 𝑣 3 {k≤}
+
+  𝑣₄ : {4 ≤ n} → A
+  𝑣₄ {k≤} = 𝑣 4 {k≤}
+
+  𝑣₅ : {5 ≤ n} → A
+  𝑣₅ {k≤} = 𝑣 5 {k≤}
+
+  𝑣₆ : {6 ≤ n} → A
+  𝑣₆ {k≤} = 𝑣 6 {k≤}
+
+  𝑣₇ : {7 ≤ n} → A
+  𝑣₇ {k≤} = 𝑣 7 {k≤}
+
+
+  𝑝₀ : ∀ {sk≤n} → 𝑣₀ ≡ 𝑣₁ {sk≤n}
+  𝑝₀ {sk≤n} = 𝑝 zero {tt} {sk≤n}
+
+  𝑝₁ : ∀ {k≤n sk≤n} → 𝑣₁ {k≤n} ≡ 𝑣₂ {sk≤n}
+  𝑝₁ {k≤n} {sk≤n} = 𝑝 1 {k≤n} {sk≤n}
+
+  𝑝₂ : ∀ {k≤n sk≤n} → 𝑣₂ {k≤n} ≡ 𝑣₃ {sk≤n}
+  𝑝₂ {k≤n} {sk≤n} = 𝑝 2 {k≤n} {sk≤n}
+
+  𝑝₃ : ∀ {k≤n sk≤n} → 𝑣₃ {k≤n} ≡ 𝑣₄ {sk≤n}
+  𝑝₃ {k≤n} {sk≤n} = 𝑝 3 {k≤n} {sk≤n}
+
+  𝑝₄ : ∀ {k≤n sk≤n} → 𝑣₄ {k≤n} ≡ 𝑣₅ {sk≤n}
+  𝑝₄ {k≤n} {sk≤n} = 𝑝 4 {k≤n} {sk≤n}
+
+  𝑝₅ : ∀ {k≤n sk≤n} → 𝑣₅ {k≤n} ≡ 𝑣₆ {sk≤n}
+  𝑝₅ {k≤n} {sk≤n} = 𝑝 5 {k≤n} {sk≤n}
+
+  𝑝₆ : ∀ {k≤n sk≤n} → 𝑣₆ {k≤n} ≡ 𝑣₇ {sk≤n}
+  𝑝₆ {k≤n} {sk≤n} = 𝑝 6 {k≤n} {sk≤n}
+
+data Sequence (n : ℕ) : Type where
+ 𝓿 : ∀ k → {k ≤ n} → Sequence n
+ 𝓹 : ∀ k → ∀ {k≤n sk≤n} → 𝓿 k {k≤n} ≡ 𝓿 (suc k) {sk≤n}
+
+
+module _ {ℓ} n (A : Type ℓ) where
+
+ fromNPath : (Sequence n → A) → NPath n A
+ fromNPath x .NPath.𝑣 k {k≤n} = x (𝓿 k {k≤n})
+ fromNPath x .NPath.𝑝 k {k≤n} {k≤n'} i = x (𝓹 k {k≤n} {k≤n'} i)
+
+ toNPath : NPath n A → (Sequence n → A)
+ toNPath x (𝓿 k {k≤n}) = x .NPath.𝑣 k {k≤n}
+ toNPath x (𝓹 k {k≤n} {k≤n'} i) = x .NPath.𝑝 k {k≤n} {k≤n'} i
+
+ IsoFunSequenceNPath : Iso (NPath n A) (Sequence n → A)
+ IsoFunSequenceNPath .Iso.fun = toNPath
+ IsoFunSequenceNPath .Iso.inv = fromNPath
+ IsoFunSequenceNPath .Iso.rightInv b i a@(𝓿 k) = b a
+ IsoFunSequenceNPath .Iso.rightInv b i a@(𝓹 k i₁) = b a
+ IsoFunSequenceNPath .Iso.leftInv a i .NPath.𝑣 = a .NPath.𝑣
+ IsoFunSequenceNPath .Iso.leftInv a i .NPath.𝑝 = a .NPath.𝑝
+
+
+
 
 
 
@@ -105,84 +194,6 @@ comp₋₀ s p i j =
      (j = i0) → s₋₀ i (~ k)
      (j = i1) → s₋₁ i (~ k))
     a₁₁
-
-
-data Sequence (n : ℕ) : Type where
- 𝓿 : ∀ k → {k ≤ n} → Sequence n
- 𝓹 : ∀ k → ∀ {k≤n sk≤n} → 𝓿 k {k≤n} ≡ 𝓿 (suc k) {sk≤n}
-
-
-record NPath {ℓ} n (A : Type ℓ) : Type ℓ where
- field
-  𝑣 : ∀ k → {k ≤ n} → A
-  𝑝 : ∀ k → ∀ {k≤n sk≤n} → 𝑣 k {k≤n} ≡ 𝑣 (suc k) {sk≤n}
-
- abstract
-  𝑣₀ : A
-  𝑣₀ = 𝑣 0
-
-  𝑣₁ : {1 ≤ n} → A
-  𝑣₁ {k≤} = 𝑣 1 {k≤}
-
-  𝑣₂ : {2 ≤ n} → A
-  𝑣₂ {k≤} = 𝑣 2 {k≤}
-
-  𝑣₃ : {3 ≤ n} → A
-  𝑣₃ {k≤} = 𝑣 3 {k≤}
-
-  𝑣₄ : {4 ≤ n} → A
-  𝑣₄ {k≤} = 𝑣 4 {k≤}
-
-  𝑣₅ : {5 ≤ n} → A
-  𝑣₅ {k≤} = 𝑣 5 {k≤}
-
-  𝑣₆ : {6 ≤ n} → A
-  𝑣₆ {k≤} = 𝑣 6 {k≤}
-
-  𝑣₇ : {7 ≤ n} → A
-  𝑣₇ {k≤} = 𝑣 7 {k≤}
-
-
-  𝑝₀ : ∀ {sk≤n} → 𝑣₀ ≡ 𝑣₁ {sk≤n}
-  𝑝₀ {sk≤n} = 𝑝 zero {tt} {sk≤n}
-
-  𝑝₁ : ∀ {k≤n sk≤n} → 𝑣₁ {k≤n} ≡ 𝑣₂ {sk≤n}
-  𝑝₁ {k≤n} {sk≤n} = 𝑝 (suc zero) {k≤n} {sk≤n}
-
-  𝑝₂ : ∀ {k≤n sk≤n} → 𝑣₂ {k≤n} ≡ 𝑣₃ {sk≤n}
-  𝑝₂ {k≤n} {sk≤n} = 𝑝 (suc (suc zero)) {k≤n} {sk≤n}
-
-  𝑝₃ : ∀ {k≤n sk≤n} → 𝑣₃ {k≤n} ≡ 𝑣₄ {sk≤n}
-  𝑝₃ {k≤n} {sk≤n} = 𝑝 (suc (suc (suc zero))) {k≤n} {sk≤n}
-
-  𝑝₄ : ∀ {k≤n sk≤n} → 𝑣₄ {k≤n} ≡ 𝑣₅ {sk≤n}
-  𝑝₄ {k≤n} {sk≤n} = 𝑝 (suc (suc (suc (suc zero)))) {k≤n} {sk≤n}
-
-  𝑝₅ : ∀ {k≤n sk≤n} → 𝑣₅ {k≤n} ≡ 𝑣₆ {sk≤n}
-  𝑝₅ {k≤n} {sk≤n} = 𝑝 (suc (suc (suc (suc (suc zero))))) {k≤n} {sk≤n}
-
-  𝑝₆ : ∀ {k≤n sk≤n} → 𝑣₆ {k≤n} ≡ 𝑣₇ {sk≤n}
-  𝑝₆ {k≤n} {sk≤n} = 𝑝 (suc (suc (suc (suc (suc (suc zero)))))) {k≤n} {sk≤n}
-
-
-module _ {ℓ} n (A : Type ℓ) where
-
- fromNPath : (Sequence n → A) → NPath n A
- fromNPath x .NPath.𝑣 k {k≤n} = x (𝓿 k {k≤n})
- fromNPath x .NPath.𝑝 k {k≤n} {k≤n'} i = x (𝓹 k {k≤n} {k≤n'} i)
-
- toNPath : NPath n A → (Sequence n → A)
- toNPath x (𝓿 k {k≤n}) = x .NPath.𝑣 k {k≤n}
- toNPath x (𝓹 k {k≤n} {k≤n'} i) = x .NPath.𝑝 k {k≤n} {k≤n'} i
-
- IsoFunSequenceNPath : Iso (NPath n A) (Sequence n → A)
- IsoFunSequenceNPath .Iso.fun = toNPath
- IsoFunSequenceNPath .Iso.inv = fromNPath
- IsoFunSequenceNPath .Iso.rightInv b i a@(𝓿 k) = b a
- IsoFunSequenceNPath .Iso.rightInv b i a@(𝓹 k i₁) = b a
- IsoFunSequenceNPath .Iso.leftInv a i .NPath.𝑣 = a .NPath.𝑣
- IsoFunSequenceNPath .Iso.leftInv a i .NPath.𝑝 = a .NPath.𝑝
-
 
 
 coh₃helper : ∀ {ℓ} {A : Type ℓ} →

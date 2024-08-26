@@ -1,3 +1,60 @@
+{-
+
+## Cubical.Tactics.Reflection.QuoteCubical
+
+This module provides functionality for reflecting cubical terms within Agda, focusing on handling higher-dimensional compositions. It leverages the capabilities defined in `Cubical.Tactics.Reflection.CuTerm` to extract cubical terms.
+
+### Main Types and Functions:
+
+* `MarkHCompsVar`:
+  * A marker datatype used internally to handle `hcomp` terms during reflection.
+
+* `traceHComps`:
+  * Given a term, it traces and encodes `hcomp` terms, substituting them with a marker.
+  * Returns either a string message in case of error or a pair of the transformed term and the list of identified `hcomp` terms.
+
+#### Internal Monad `M`:
+  * Composed of states and error management, used to encapsulate reflection operations.
+
+#### Functions for Encoding and Decoding `hcomp` Terms:
+  * `codeHcomps`: Encodes `hcomp` terms by replacing them with a marker (`markHCompsVar`).
+  * `decodeHcomps`: Decodes `hcomp` markers back to their original term representations.
+
+
+### Extraction and Evaluation:
+
+* `extractCuTerm'`:
+  * Extracts cubical terms recursively, handling `hcomp` and `𝒄ong` constructions based on specified depth and dimension parameters.
+  * Uses auxiliary functions like `checkHcomp` to handle `hcomp` terms and `try𝒄ong` to manage `𝒄ong` terms.
+
+* `quoteCuTerm` and `extractCuTerm`:
+  * Wrappers around `extractCuTerm'` to initiate extraction with a default depth of 100.
+
+* `pathApp` and `pathAppN`:
+  * Utility functions to apply a term along a path, handling various term constructions recursively.
+
+### Boundary Matching and Normalization:
+
+* `matchNCubeF`, `matchNCubeP`, and `matchNCube`:
+  * Match types od higher-dimensional cubes (n-cubes) and reduce them to their boundary terms.
+
+* `NBoundaryTerm`:
+  * Represents terms at the boundaries of cubes, encapsulating a term and its list of boundaries.
+
+* `quoteBd` and `quoteBdNC`:
+  * Quote the boundaries of n-cubes to CuTerm representation.
+
+
+### Utilities for Extracting and Displaying Cubical Terms:
+
+* `extractCuTermFromNPath`: Extracts cubical terms from n-path terms, calculating the appropriate dimension.
+
+* `showCuTerm` and `showCuCode` (macros):
+  * Display structured or code representation of cubical terms for a given term and its inferred type.
+
+
+-}
+
 {-# OPTIONS --safe #-}
 module Cubical.Tactics.Reflection.QuoteCubical where
 
