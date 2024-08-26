@@ -548,4 +548,4 @@ hcoFromIExpr dim fe (R.def (quote ⁇) []) =
 hcoFromIExpr dim fe tm' = do
   let tm = liftVarsFrom dim zero tm'
   xs ← mapM (λ sf → (sf ,_) <$> (cell ∘S liftVars <$> pure (subfaceCell sf tm)) ) fe
-  pure $ hco xs (cell tm)
+  pure (hco xs (cell tm))

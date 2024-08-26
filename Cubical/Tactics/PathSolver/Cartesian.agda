@@ -37,7 +37,6 @@ reComp : ∀ {ℓ} {A : Type ℓ} {x y : A} (p : x ≡ y) → x ≡ y
 reComp p i =
   hcomp {φ = i ∨ ~ i} (λ k _ → (p (i ∧ k))) (p i0)
 
-
 --  really just lUnit
 reFill : ∀ {ℓ} {A : Type ℓ} {x y : A} (p : x ≡ y) → p ≡ reComp p
 reFill p j i =
@@ -243,6 +242,13 @@ module Sq-rot-refl {A : Type ℓ}
           (s ((~ t ∧ i) ∨ (t ∧ j) ∨ i ∧ j) ((~ t ∧ j) ∨ (t ∧ ~ i) ∨ j ∧ ~ i))
 
 
-  rot-refl'CC : Cube _ _ _ _ _ _
+  s' : Square {a₀₀ = a} refl refl refl refl
+  s' = unConnM (suc (suc zero)) (λ (i j : I) → s i j)
+
+  s'-rot : Square {a₀₀ = a} refl refl refl refl
+  s'-rot = unConnM (suc (suc zero)) (λ (i j : I) → s j (~ i))
+
+
+  rot-refl'CC : s' ≡ s'-rot
   rot-refl'CC = unConnM (suc (suc (suc zero))) λ (z i j : I) → rot-refl' z i j
 

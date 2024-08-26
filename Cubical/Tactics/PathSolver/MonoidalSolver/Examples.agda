@@ -163,7 +163,7 @@ module _ (A B C D : Type ℓ)
 homotopyNatural' : {B : Type ℓ'} {f g : A → B} (H : ∀ a → f a ≡ g a) {x y : A} (p : x ≡ y) →
                   H x ∙ cong g p ≡ cong f p ∙ H y
 homotopyNatural' {f = f} {g = g} H {x} {y} p = h (funExt H)
- where 
- h : (H' : f ≡ g) → (cong (_$sp x) H') ∙ cong (g $sp_) p ≡ cong (f $sp_) p ∙ (cong (_$sp y) H')  
+ where
+ h : (H' : f ≡ g) → (cong (_$sp x) H') ∙ cong (g $sp_) p ≡ cong (f $sp_) p ∙ (cong (_$sp y) H')
  h H' = solvePaths
 

@@ -9,6 +9,7 @@ open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Tactics.PathSolver.Path
 
 open import Cubical.Tactics.PathSolver.Macro
+open import Cubical.Tactics.Reflection.QuoteCubical
 
 
 private
@@ -21,7 +22,8 @@ private
 module _ (SA : NPath 3 A) (f : A → B) where
   open NPath SA
 
-  f[assoc] : cong f 𝑝₀ ∙ cong f 𝑝₁ ∙ cong f 𝑝₂ ≡ (cong f 𝑝₀ ∙ cong f 𝑝₁) ∙ cong f 𝑝₂
+  f[assoc] : cong f 𝑝₀ ∙ cong f 𝑝₁ ∙ cong f 𝑝₂
+              ≡ (cong f 𝑝₀ ∙ cong f 𝑝₁) ∙ cong f 𝑝₂
   f[assoc] i j = cong$ (f (assoc 𝑝₀ 𝑝₁ 𝑝₂ i j))
 
 
@@ -74,7 +76,6 @@ module _ (SA : NPath 6 A) (f : A → {A} → A → A) (g : A → A) (𝑝ₓ : g
   cpf2' i j = cong$ (cpf2 i j)
 
 
-  -- TODO : debug this
   cpf2≡cpf2' : Cube
               cpf2 cpf2'
               _ _
@@ -82,35 +83,49 @@ module _ (SA : NPath 6 A) (f : A → {A} → A → A) (g : A → A) (𝑝ₓ : g
   cpf2≡cpf2' _ i j = cong! (cpf2 i j)
 
 
+module _ (A : Type) (x y z w v : A)
+         (p : x ≡ y)(q : y ≡ z)(r : z ≡ w)(s : w ≡ v)
+           where
 
-module _ (A : Type) (a : A) (p : a ≡ a) (s : Square p p p p)  where
+ -- _ : p ∙ q ∙ r ∙ s ≡ (p ∙ q) ∙ r ∙ s
+ -- _ = {!showCuCode (assoc p q (r ∙ s))!}
 
 
- zz : Cube {A = A}
-        _ _
-        _ _
-        _ _
- zz i j k = hcomp
-              (λ { 𝒛₀ (i = i0) (j = i1) (k = i0) → a
-                 ; 𝒛₀ (i = i1) → a
-                 ; 𝒛₀ (k = i1) → hcomp
-                                   (λ { 𝒛₁ (i = i0) → a
-                                      ; 𝒛₁ (i = i1) → a
-                                      ; 𝒛₁ (j = i0) → hcomp
-                                                        (λ { 𝒛₂ (i = i0) → a
-                                                           ; 𝒛₂ (i = i1) → a
-                                                           ; 𝒛₂ (𝒛₀ = i0) → a
-                                                           ; 𝒛₂ (𝒛₀ = i1) → a
-                                                           ; 𝒛₂ (𝒛₁ = i0) → a
-                                                           ; 𝒛₂ (𝒛₁ = i1) → a
-                                                           })
-                                                        a
-                                      ; 𝒛₁ (j = i1) → a
-                                      ; 𝒛₁ (𝒛₀ = i0) → a
-                                      ; 𝒛₁ (𝒛₀ = i1) → a
-                                      })
-                                   a
+-- module _ (A : Type) (a : A) (p : a ≡ a)
+--          (s : Square p p p p)  where
 
-                 ; 𝒛₀ (j = i0) → a
-                 })
-              (a)
+-- ```agda
+-- λ 𝓲₀ 𝓲₁ →
+--        hcomp (λ 𝒛₀ → λ {
+--           (𝓲₁ = i0) → x
+--           ;(𝓲₁ = i1) →
+--              hcomp (λ 𝒛₁ → λ {
+--                 (𝓲₀ = i1) →
+--                    hcomp (λ 𝒛₂ → λ {
+--                       (𝒛₁ = i0)          → z
+--                       ;(𝒛₀ = i0)          → z
+--                       ;(𝒛₁ = i1)(𝒛₀ = i1) → s 𝒛₂
+--                        })
+--                    (  r (𝒛₀ ∧ 𝒛₁))
+
+--                 ;(𝒛₀ = i1) →
+--                    hcomp (λ 𝒛₂ → λ {
+--                       (𝒛₁ = i0) → z
+--                       ;(𝒛₁ = i1) → s 𝒛₂
+--                        })
+--                    (  r 𝒛₁)
+
+--                 ;(𝒛₀ = i0) → q 𝓲₀
+--                  })
+--              (  q (𝒛₀ ∨ 𝓲₀))
+
+--            })
+--        (
+--          hcomp (λ 𝒛₀ → λ {
+--             (𝓲₀ = i0) → p 𝓲₁
+--             ;(𝓲₁ = i0) → x
+--             ;(𝓲₁ = i1) → q (𝓲₀ ∧ 𝒛₀)
+--              })
+--          (  p 𝓲₁)
+--           )
+-- ```

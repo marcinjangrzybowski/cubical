@@ -98,20 +98,6 @@ module _ (f : ℕ → I) (i j k l : ℕ) where
 
 macro
 
- showCuTerm : R.Term → R.Term → R.TC Unit
- showCuTerm t h = do
-  hTy ← R.inferType t >>= wait-for-term >>= R.normalise
-  (dim , cu) ← extractCuTermFromNPath hTy t
-  te ← ppCT dim 100 cu
-  R.typeError te
-
- showCuCode : R.Term → R.Term → R.TC Unit
- showCuCode t h = do
-  hTy ← R.inferType t >>= wait-for-term >>= R.normalise
-  (dim , cu) ← extractCuTermFromNPath hTy t
-  c ← codeGen false dim 100 cu
-  R.typeError [ c ]ₑ
-
  extarctCuTermTest : R.Term → R.Term → R.TC Unit
  extarctCuTermTest t h = assertNoErr h do
   hTy ← R.inferType t >>= wait-for-term >>= R.normalise

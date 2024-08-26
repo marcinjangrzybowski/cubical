@@ -27,6 +27,8 @@ open import Cubical.Tactics.Reflection.Error
 open import Cubical.Tactics.Reflection.Dimensions
 open import Cubical.Tactics.Reflection.CuTerm
 
+open import Cubical.Tactics.Reflection.CuTerm public using (⁇)
+
 open import Cubical.Tactics.PathSolver.CongComp
 
 
@@ -89,4 +91,4 @@ macro
  h?' : R.Term → R.Term → R.Term → R.TC Unit
  h?' iT eT _ = do
   src ← makeH? iT eT
-  R.typeError [ src ]ₑ
+  R.typeError [ indent ' ' 8 src ]ₑ

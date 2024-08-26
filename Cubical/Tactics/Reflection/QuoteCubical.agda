@@ -275,25 +275,6 @@ faceSubFace dim (b , k) =
   drop k (repeat (predℕ dim) nothing)
 
 
-macro
- printCu : R.Term → R.Term → R.TC Unit
- printCu t _ = do
-   t' ← R.normalise t
-   ty ← R.inferType t >>= wait-for-type >>= R.normalise
-   (_ , fcs) ← matchNCubeF 100 ty
-   let dim = length fcs
-   cu ← extractCuTerm nothing dim t'
-   te ← ppCT dim 100 cu
-   R.typeError $ te
-
- printCu' : R.Term → R.Term → R.TC Unit
- printCu' t _ = do
-   t' ← R.normalise t
-   ty ← R.inferType t >>= wait-for-type >>= R.normalise
-   (_ , fcs) ← matchNCubeF 100 ty
-   let dim = length fcs
-   R.typeError $ [ dim ]ₑ
-
 
 tryCastAsNoCongM : CuTerm → R.TC (CuTerm' ⊥ Unit)
 tryCastAsNoCongM = fromJust [ "failed to cast as no cong" ]ₑ ∘S tryCastAsNoCong
@@ -323,3 +304,18 @@ extractCuTermFromNPath ty tm = do
      (just A)
      100 dim (pathAppN dim tm)
 
+
+macro
+ showCuTerm : R.Term → R.Term → R.TC Unit
+ showCuTerm t h = do
+  hTy ← R.inferType t >>= wait-for-term >>= R.normalise
+  (dim , cu) ← extractCuTermFromNPath hTy t
+  te ← ppCT dim 100 cu
+  R.typeError te
+
+ showCuCode : R.Term → R.Term → R.TC Unit
+ showCuCode t h = do
+  hTy ← R.inferType t >>= wait-for-term >>= R.normalise
+  (dim , cu) ← extractCuTermFromNPath hTy t
+  c ← codeGen false dim 100 cu
+  R.typeError [ c ]ₑ
