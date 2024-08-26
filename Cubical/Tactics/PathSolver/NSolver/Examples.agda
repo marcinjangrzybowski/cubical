@@ -4,6 +4,9 @@ This file serves as a demonstration of the NSolver module, showcasing practical 
 
 Unlike the `Tests` folder, which focuses on verifying correctness through unit tests, this file emphasizes illustration and practical application.
 
+Limitations of this solver, are best exemplified in the `Cubical.Tactics.PathSolver.MonoidalSolver.Examples`,
+containing examples of complementary solver usage, capable of applying monoidal groupoid laws.
+
 -}
 
 {-# OPTIONS --safe #-}

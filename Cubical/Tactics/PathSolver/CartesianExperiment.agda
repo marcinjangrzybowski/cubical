@@ -1,5 +1,15 @@
+{-
+This module serves as an experimental demonstration of the potential usage of cubical-flavored reflection machinery. It focuses on transforming terms to a form where all interval expressions are either `i0`, `i1`, or a single interval variable (This transformation excludes the implicit `φ` argument of `hcomp`, which is effectively a face expression), effectively mimicking the Cartesian cubical theory.
+
+### Example Transformations
+
+- **`cpfCC`**: Demonstrates the transformation on a compPath-filler.
+- **`assocCC`**: Demonstrates the transformation on a paths associativity.
+- ** `rot-refl'CC`**: Examples of transformed cubes.
+-}
+
 {-# OPTIONS --safe #-}
-module Cubical.Tactics.PathSolver.Cartesian where
+module Cubical.Tactics.PathSolver.CartesianExperiment where
 
 
 open import Cubical.Foundations.Prelude
@@ -23,7 +33,6 @@ open import Cubical.Tactics.Reflection.Utilities
 open import Cubical.Tactics.Reflection.Dimensions
 open import Cubical.Tactics.Reflection.QuoteCubical
 open import Cubical.Tactics.Reflection.CuTerm
--- open import Cubical.Tactics.PathSolver.Degen
 open import Cubical.Tactics.Reflection.Error
 
 
@@ -157,7 +166,7 @@ module _ (dim : ℕ) where
 
 module _ {A : Type ℓ} {x y z w : A} (p : x ≡ y)(q : y ≡ z)(r : z ≡ w) where
 
- _ : ResultIs
+ cpfCC : ResultIs
         ("input:                                       " ∷
          "                                             " ∷
          "     𝒉𝒄𝒐𝒎𝒑 λ 𝒛₀                              " ∷
@@ -202,7 +211,7 @@ module _ {A : Type ℓ} {x y z w : A} (p : x ≡ y)(q : y ≡ z)(r : z ≡ w) wh
          "     │ │ y                                   " ∷
          "     │ └───────────                          " ∷
          "     └───────────                            " ∷ [])
- _ = unConnTest (suc (suc zero)) λ (i j : I) → doubleCompPath-filler p q r i j
+ cpfCC = unConnTest (suc (suc zero)) λ (i j : I) → doubleCompPath-filler p q r i j
 
  assocCC : Square _ _ _ _
  assocCC = unConnM (suc (suc zero)) λ (i j : I) → assoc p q r i j

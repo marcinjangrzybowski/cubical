@@ -1,3 +1,15 @@
+{-
+
+This file provides concrete examples demonstrating the usage of the `solvePaths` and `simplifyPath` macros from the `MonoidalSolver` module.
+
+Examples here are crafted specificaly to showcase instances where monoidal-groupoid laws are
+necessary (NSolver would fail on those).
+
+Higher dimensional examples are absent,
+since this solver is capable only of handling squares at this point.
+
+-}
+
 {-# OPTIONS --safe #-}
 
 module Cubical.Tactics.PathSolver.MonoidalSolver.Examples where
@@ -14,7 +26,6 @@ open import Cubical.Data.List as L
 open import Cubical.Data.Nat as ℕ
 open import Cubical.Data.Sum
 
-open import Cubical.Data.Sigma
 
 open import Agda.Builtin.String
 
@@ -159,6 +170,27 @@ module _ (A B C D : Type ℓ)
               refl (cong List (cong (_⊎ B) (ua C≃D)))
  _ = solvePaths
 
+
+
+ module _ where
+  open import Cubical.Data.Prod
+
+  --  if we switch to Σ based definition of product, the following will fail due
+  --  to the problem with handling constant lambdas in the solver (TODO)
+  --  open import Cubical.Data.Sigma
+
+
+  _ : Square (cong List (cong₂ _×_ (ua A≃B) (sym (ua B≃C))) ∙ cong List (cong (_× B) (ua B≃C)))
+               (cong List (cong₂ _×_ (ua A≃B ∙∙ ua B≃C ∙∙ ua C≃D) (sym (ua B≃C))))
+               refl (cong List (cong (_× B) (ua C≃D)))
+  _ = solvePaths
+
+
+
+
+-- proving this requires little bit of gymnastics:
+-- 1. using _$sp_ wich is version of _$_ wich is prevented from normalisation inside the macro
+-- 2. suplying H as equality of functions
 
 homotopyNatural' : {B : Type ℓ'} {f g : A → B} (H : ∀ a → f a ≡ g a) {x y : A} (p : x ≡ y) →
                   H x ∙ cong g p ≡ cong f p ∙ H y

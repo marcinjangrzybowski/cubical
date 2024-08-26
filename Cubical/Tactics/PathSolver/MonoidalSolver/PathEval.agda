@@ -9,11 +9,14 @@ This module provides an implementation that can be perceived as a free monoidal 
 - **Normalization**: Treats terms with multiple subterms identified as "paths" as functors applied to the product of these subterms. Terms prepared in that way can be normalized according to monoidal-groupoid laws, generalizing the `cong₂Funct` lemma from the `Foundations.GroupoidLaws` module.
 
 
-### Specialized Definitions
+### Specialized Definitions Used only temporairly as markers during processing AST
 
 - **`ASTMarkers`**: Defines markers for `PathWrap`, `FillWrap`, and `CompWrap`.
 - **Term Patterns**: Various term patterns (`fw`, `pw`, `cwd`, etc.) are used for identifying and manipulating wrapped terms.
-- **Utilities**: Functions like `intervalTest`, `transpose`, and `reduceComps` are utility functions aiding the main functionalities.
+
+
+### Utilities**
+Functions like `intervalTest`, `transpose`, and `reduceComps` are utility functions aiding the main functionalities.
 
 At the end, whole process is wrapped into _↙_ operator, which can be seen as analogue of `compPath-filler` from prelude, but operating only on already normalised paths, and with composition operation resulting in "normalised" path according to monoidal-groipoid laws.
 
@@ -378,7 +381,7 @@ bfs' xs =  do
 
 -- compPath'-filler, but composition is 'simplified' according to groupoid laws
 -- (p : x ≡ y) → (q : y ≡ z) → (Σ (p∙q ∈ x ≡ z) (Square q p∙q p refl))
--- assumes that terms are already pre rpocessed : addNDimsToCtx 1 ∘S R.normalise ∘S pathApp
+-- assumes that terms are already pre processed ussing : addNDimsToCtx 1 ∘S R.normalise ∘S pathApp
 
 _↙_ : PathTerm → PathTerm → R.TC (PathTerm × SquareTerm)
 𝒓efl x ↙ q = q ,_ <$>  (squareTerm <$> bfs' (⊎.rec (idfun _) (idfun _) q))

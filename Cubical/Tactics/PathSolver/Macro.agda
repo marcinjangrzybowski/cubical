@@ -1,9 +1,15 @@
+{-
+
+This module provides macros for manipulating cubical terms using reflection machinery. It includes utilities to transform terms by exposing functions from the `CongComp` module and simplify the construction of `hcomps`.
+
+Usage examples for these macros are available in the `Cubical.Tactics.PathSolver.MacroExamples` module.
+
+-}
+
 {-# OPTIONS --safe #-}
 
 module Cubical.Tactics.PathSolver.Macro where
 
-
-open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 
 open import Cubical.Data.Unit
@@ -31,6 +37,18 @@ open import Cubical.Tactics.Reflection.CuTerm public using (⁇)
 
 open import Cubical.Tactics.PathSolver.CongComp
 
+{-
+
+### Macros Exposing Helpers from `CongComp` Module
+
+These macros expose helpers from the `CongComp` module, offering broader application beyond the `NSolver` and `MonoidalSolver` macros. They support terms of arbitrary dimensions and complex interval expressions.
+
+- **Usage**: Apply these macros in a context where interval variables are present. Paths and n-cubes must be applied to the respective dimensions.
+- **Functionality**:
+  - **`cong$` Macro**: Transforms the given term by bringing all `hcomps` to the top, so all functions are applied "all the way down" through the `hcomps`. This process happens iteratively for all subterms.
+  - **`cong$-fill` Macro**: Provides a filler path from the initial term to the term produced by `cong$`. Assumes there is an additional interval variable in the context not present in the processed term, used as the filling direction.
+
+-}
 
 macro
  cong$ : R.Term → R.Term → R.TC Unit
@@ -48,8 +66,8 @@ macro
 
 
 macro
- cong! : R.Term → R.Term → R.TC Unit
- cong! t h = do
+ cong$-fill : R.Term → R.Term → R.TC Unit
+ cong$-fill t h = do
    ty ← R.inferType t
    t ← normaliseWithType ty t
    cc ← getCuCtx
@@ -61,6 +79,8 @@ macro
    let r = ToTerm.toTerm cc cu
 
    R.unify r h --<|> R.typeError [ r ]ₑ
+
+
 
 makeH? : R.Term → R.Term → R.TC String
 makeH? iT eT = do
@@ -81,13 +101,36 @@ makeH? iT eT = do
    >>= pure ∘S ⊎.rec (allSubFacesOfSfDim dim ∘S min (predℕ dim))
                      ((_++fe (allSubFacesOfSfDim dim 0)) ∘S I→F)
 
+{-
+
+The following macros are designed to facilitate the construction of homogeneous `hcomps` given a face expression. They simplify the process of writing nested `hcomp`'s .
+
+## Macros Overview
+
+ **Usage**: These macros must be called in a context where interval variables are in scope.
+ **Arguments**:
+   **First Argument**:
+    - A face expression (e.g., `(i ∨ k) ∨ (~k ∧ ~j)`) or
+    - A natural number that specifies the dimension. This will generate a face expression consisting of all faces of the specified dimension from available interval variables.
+   **Second Argument**:
+    - A term to serve as a value for all generated cells, or
+    - The `⁇` symbol (`\??`) to insert holes into all cells for further editing.
+-}
+
 macro
 
+
+ -- Produces the term directly in the hole where it is called (via `C-c C-m` in emacs).
+ -- Note: This macro may have issues correctly introducing holes in the face expressions.
  h? : R.Term → R.Term → R.Term → R.TC Unit
  h? iT eT h = do
   src ← makeH? iT eT
   unifyFromString src h
 
+
+ -- Generates a slightly better-looking term compared to `h?`.
+ -- The result is printed to the AgdaInfo buffer,
+ -- and users must manually copy it to the desired location in the code.
  h?' : R.Term → R.Term → R.Term → R.TC Unit
  h?' iT eT _ = do
   src ← makeH? iT eT

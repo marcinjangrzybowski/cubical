@@ -1,3 +1,8 @@
+{-
+This module provides usage examples for the macros defined in `Cubical.Tactics.PathSolver.Macro`.
+Usage of macros is documented in `Cubical.Tactics.PathSolver.Macro` module.
+-}
+
 {-# OPTIONS --safe #-}
 
 module Cubical.Tactics.PathSolver.MacroExamples where
@@ -59,7 +64,7 @@ module _ (SA : NPath 6 A) (f : A → {A} → A → A) (g : A → A) (𝑝ₓ : g
               cpf cpf'
               _ _
               _ _
-  cpf≡cpf' _ i j = cong! (cpf i j)
+  cpf≡cpf' _ i j = cong$-fill (cpf i j)
 
 
 
@@ -80,52 +85,71 @@ module _ (SA : NPath 6 A) (f : A → {A} → A → A) (g : A → A) (𝑝ₓ : g
               cpf2 cpf2'
               _ _
               _ _
-  cpf2≡cpf2' _ i j = cong! (cpf2 i j)
+  cpf2≡cpf2' _ i j = cong$-fill (cpf2 i j)
 
 
-module _ (A : Type) (x y z w v : A)
-         (p : x ≡ y)(q : y ≡ z)(r : z ≡ w)(s : w ≡ v)
-           where
 
- -- _ : p ∙ q ∙ r ∙ s ≡ (p ∙ q) ∙ r ∙ s
- -- _ = {!showCuCode (assoc p q (r ∙ s))!}
+module _ (A : Type) (a : A) (p : a ≡ a)
+         (s : Square p p p p)  where
 
 
--- module _ (A : Type) (a : A) (p : a ≡ a)
---          (s : Square p p p p)  where
+ {-
+  Examples below can be recreated by replacing the body of the definition with a hole,
+  then placing the example macro call in that hole and executing `C-c C-m` in Emacs.
+  (for h?' macro, result needs to be manually coppied from AgdaInfo buffer)
 
--- ```agda
--- λ 𝓲₀ 𝓲₁ →
---        hcomp (λ 𝒛₀ → λ {
---           (𝓲₁ = i0) → x
---           ;(𝓲₁ = i1) →
---              hcomp (λ 𝒛₁ → λ {
---                 (𝓲₀ = i1) →
---                    hcomp (λ 𝒛₂ → λ {
---                       (𝒛₁ = i0)          → z
---                       ;(𝒛₀ = i0)          → z
---                       ;(𝒛₁ = i1)(𝒛₀ = i1) → s 𝒛₂
---                        })
---                    (  r (𝒛₀ ∧ 𝒛₁))
+  results including holes are commented out to allow compilation of module
+ -}
 
---                 ;(𝒛₀ = i1) →
---                    hcomp (λ 𝒛₂ → λ {
---                       (𝒛₁ = i0) → z
---                       ;(𝒛₁ = i1) → s 𝒛₂
---                        })
---                    (  r 𝒛₁)
 
---                 ;(𝒛₀ = i0) → q 𝓲₀
---                  })
---              (  q (𝒛₀ ∨ 𝓲₀))
+ -- -- h?' 1 ⁇
+ -- c₀ : I → I → I → A
+ -- c₀ i j k =
+ --          hcomp (λ 𝒛₀ → λ {
+ --            (j = i0)(i = i0) → {!!}
+ --            ;(j = i0)(i = i1) → {!!}
+ --            ;(j = i1)(i = i0) → {!!}
+ --            ;(j = i1)(i = i1) → {!!}
+ --            ;(k = i0)(i = i0) → {!!}
+ --            ;(k = i0)(i = i1) → {!!}
+ --            ;(k = i0)(j = i0) → {!!}
+ --            ;(k = i0)(j = i1) → {!!}
+ --            ;(k = i1)(i = i0) → {!!}
+ --            ;(k = i1)(i = i1) → {!!}
+ --            ;(k = i1)(j = i0) → {!!}
+ --            ;(k = i1)(j = i1) → {!!}
+ --             })
+ --         (  {!!})
 
---            })
---        (
---          hcomp (λ 𝒛₀ → λ {
---             (𝓲₀ = i0) → p 𝓲₁
---             ;(𝓲₁ = i0) → x
---             ;(𝓲₁ = i1) → q (𝓲₀ ∧ 𝒛₀)
---              })
---          (  p 𝓲₁)
---           )
--- ```
+
+ -- h? 2 (s i (j ∧ k))
+ c₁ : I → I → I → A
+ c₁ i j k = hcomp
+              (λ { 𝒛₀ (i = i0) → s i0 (j ∧ k)
+                 ; 𝒛₀ (i = i1) → s i1 (j ∧ k)
+                 ; 𝒛₀ (j = i0) → s i (i0 ∧ k)
+                 ; 𝒛₀ (j = i1) → s i (i1 ∧ k)
+                 ; 𝒛₀ (k = i0) → s i (j ∧ i0)
+                 ; 𝒛₀ (k = i1) → s i (j ∧ i1)
+                 })
+              (s i (j ∧ k))
+
+ -- -- h? (i ∨ ~ j ∨ (~ i ∧ j)) ⁇
+ -- c₂ : I → I → I → A
+ -- c₂ i j k = hcomp
+ --              (λ { 𝒛₀ (i = i1) → _
+ --                 ; 𝒛₀ (j = i0) → _
+ --                 ; 𝒛₀ (i = i0) (j = i1) → _
+ --                 })
+ --              {!!}
+
+ --  h?' (i ∨ ~ j ∨ (~ i ∧ j)) (s i (j ∧ k))
+ c₃ : I → I → I → A
+ c₃ i j k =
+       hcomp (λ 𝒛₀ → λ {
+            (i = i1)         → s i (j ∧ k)
+            ;(j = i0)         → s i (j ∧ k)
+            ;(j = i1)(i = i0) → s i (j ∧ k)
+             })
+         (  s i (j ∧ k))
+

@@ -1,3 +1,34 @@
+{-
+
+This module implements a solver capable of handling squares, which are boundaries built of one-dimensional faces. At this stage, it does not support higher-dimensional cubes.
+
+**Simplified One-Dimensional View**:
+  - Represents compositions involving only one interval variable.
+  - Defined using the specialized `1DimView` type.
+  - Equipped with instances of both `RawMonad` and `RawApplicative`.
+  - Simplifies the manipulation and normalization of paths within the solver
+    (compared to more general, arbitrary dimensional CuTerm representation)
+
+### Solver steps:
+
+1. **Identifying Boundaries**:
+   - The solver begins by identifying the boundary of a square term.
+
+2. **Quoting into Specialized Representation**:
+   - The boundary terms are quoted into a specialized one-dimensional representation using the `quote1D` function.
+
+3. **Applying Generalized `cong-∙`**:
+   - (if necessary) Uses the  `fillCongs` functions from the `CongComp` module to "push to the bottom" all application of functions (bring all the composiitons to the "top")
+
+4. **Filler Construction**:
+   - Constructs fillers for each face using the `_↙_` operator from the `PathEval` module.
+   - Relies on the aspects of the free monoidal groupoid structure as implemented in `PathEval`.
+
+5. **Assembling the Final Square**:
+   - The final square term is assembled using the `◪mkSq` lemma from `Path.agda`.
+
+-}
+
 {-# OPTIONS --safe #-}
 module Cubical.Tactics.PathSolver.MonoidalSolver.MonoidalSolver where
 
