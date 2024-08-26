@@ -41,67 +41,6 @@ private
     ℓ : Level
     A B : Type ℓ
 
-PathTerm = R.Term ⊎ R.Term
-
-pattern 𝒓efl x = inl x
-pattern 𝒑λ x = inr x
-
-
-record SquareTerm : Type where
- constructor squareTerm
- field
-  term : R.Term
-
-
-asPathTerm : R.Term → PathTerm
-asPathTerm tm =
-  if (hasVar zero tm) then (𝒑λ tm) else (𝒓efl tm)
-
-
-bfs' : CTerm → R.TC R.Term
-bfs' xs =  do
-    let q = (foldPath' (tail (fill-flatten' xs)))
-    hd ← Mb.rec (R.typeError [ "imposible tfct≡" ]ₑ )
-           pure (listToMaybe (fill-flatten' xs))
-    -- addNDimsToCtx 2 $  R.typeError [ hd ]ₑ
-    fillHeadTrm hd q
-
-
-
-
--- compPath'-filler, but composition is 'simplified' according to groupoid laws
--- (p : x ≡ y) → (q : y ≡ z) → (Σ (p∙q ∈ x ≡ z) (Square q p∙q p refl))
--- assumes that terms are already pre rpocessed : addNDimsToCtx 1 ∘S R.normalise ∘S pathApp
-
-_↙_ : PathTerm → PathTerm → R.TC (PathTerm × SquareTerm)
-𝒓efl x ↙ q = q ,_ <$>  (squareTerm <$> bfs' (⊎.rec (idfun _) (idfun _) q))
-𝒑λ x ↙ 𝒓efl y =
-  (𝒑λ (wrapPaths x) ,_) <$> (squareTerm <$> (bfs' (wrapFills x)) )
-𝒑λ p ↙ 𝒑λ q = do
-  pq-sq ← (absorb 0 (wrapPaths p) q)
-
-  pq ← (cTermEnd pq-sq) >>= Mb.rec
-     ( 𝒓efl <$> (addNDimsToCtx 1 $ R.normalise
-          (replaceVarWithCon (λ { zero → just (quote i0) ; _ → nothing }) p))) (pure ∘S 𝒑λ)
-  -- addNDimsToCtx 1 $ R.typeError [ pq-sq ]ₑ
-  pq ,_ <$> (squareTerm <$> bfs' pq-sq)
-
--- _ ↙ _ = R.typeError [ "testes" ]ₑ
-
-macro
- ↙-test : R.Term → R.Term → R.Term → R.TC Unit
- ↙-test p q h = do
-   p' ← asPathTerm <$> (addNDimsToCtx 1 ∘S R.normalise ∘S pathApp) p
-   q' ← asPathTerm ∘S wrapPaths <$> (addNDimsToCtx 1 ∘S R.normalise ∘S pathApp) q
-   pq ← (SquareTerm.term ∘S snd) <$> p' ↙ q'
-   R.unify pq h
-
-
-
-
-
-
-
 
 
 
