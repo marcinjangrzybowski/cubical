@@ -78,7 +78,7 @@ open import Cubical.Data.Bool
 open import Cubical.Data.Unit
 open import Cubical.Data.FinData using () renaming (zero to fzero; suc to fsuc)
 open import Cubical.Data.Sigma
-open import Cubical.Data.Nat using (ℕ; suc; _+_; zero; _∸_; discreteℕ; predℕ)
+open import Cubical.Data.Nat using (ℕ; suc; _+_; zero; _∸_; discreteℕ; predℕ; iter)
 
 open import Cubical.Tactics.Reflection
 open import Cubical.Tactics.Reflection.Variables
@@ -188,6 +188,18 @@ module atVarOrConOrDefMmp {M : Functorω}
 atVarOrConOrDefMmp = atVarOrConOrDefMmp.rv0
 
 
+onTermM :
+   {M : Functorω}
+   {{RA : RawApplicative M}} {{_ : RawMonad M {{RA}} }}
+   → (ℕ → Term → (M Term) → (M Term))
+     → Term → M Term
+onTermM f = rv0 where
+ open
+  atVarOrConOrDefMmp
+    ((λ ff v tl tlM _ → ff (var v tl) (var v <$> tlM)) ∘S f)
+    ((λ ff c tl tlM _ → ff (con c tl) (con c <$> tlM)) ∘S f)
+    ((λ ff d tl tlM _ → ff (def d tl) (def d <$> tlM)) ∘S f)
+ 
 module atVarOrDefMmp {M : Functorω}
               {{RA : RawApplicative M}} {{RM : RawMonad M {{RA}} }}
               (f : ℕ → ℕ → (List (Arg Term)) → M (List (Arg Term)) → (List (M (Arg Term))) → (M Term))
@@ -295,6 +307,7 @@ liftVars : Term → Term
 liftVars = atVar λ n k args → just (var (n + suc k) args)
 
 liftVarsFrom : ℕ → ℕ → Term → Term
+liftVarsFrom zero _ t = t 
 liftVarsFrom m = atVar.rv (λ n k args → just (var (n + m + k) args))
 
 
@@ -412,3 +425,49 @@ macro
  q[_] : Term → Term → TC Unit
  q[_] tm h =
    quoteTC tm >>= quoteTC >=> unify h
+  
+termApp : Term → Term
+termApp (var x₁ args) = var (suc x₁)  $ (LiftFrom.ra 1 0 args) ++ v[ v zero ]
+termApp (con c args) = con c $ (LiftFrom.ra 1 0 args) ++ v[ v zero ]
+termApp (def f args) = def f $ (LiftFrom.ra 1 0 args) ++ v[ v zero ]
+termApp (lam v (abs _ t)) = t
+termApp (pat-lam cs args) =
+ pat-lam (LiftFrom.rc 1 0 cs) $ (LiftFrom.ra 1 0 args) ++ v[ v zero ]
+termApp (pi a b) = lit (string ("unexpected in termApp"))
+termApp (agda-sort s) = lit (string ("unexpected in termApp"))
+termApp (lit l) = lit (string ("unexpected in termApp"))
+termApp (meta x₁ args) = meta x₁ $ (LiftFrom.ra 1 0 args) ++ v[ v zero ]
+termApp unknown = unknown
+
+lamⁿ : ℕ → Term → Term
+lamⁿ n = iter n (vlam (mkNiceVar n))
+
+macro
+ [_]norm : Term → Term → TC Unit
+ [_]norm t h = do
+   ty ← inferType t >>= normalise
+   normalise t >>= unify h
+   checkType h ty
+   pure _
+
+termTail : Term → List (Arg Term)
+termTail (var x args) = args
+termTail (con c args) = args
+termTail (def f args) = args
+termTail (lam v₁ t) = []
+termTail (pat-lam cs args) = args
+termTail (pi a b) = []
+termTail (agda-sort s) = []
+termTail (lit l) = []
+termTail (meta x x₁) = x₁
+termTail unknown = []
+
+mbMeta : Term → Maybe Meta
+mbMeta (lam v₁ (abs s x)) = mbMeta x
+mbMeta (meta x x₁) = just x
+mbMeta _ = nothing
+
+checkIfSameMeta : Term → Term → Bool
+checkIfSameMeta t t' with (mbMeta t) | (mbMeta t')
+... | just x | just x₁ = primMetaEquality x x₁
+... | _ | _ = false

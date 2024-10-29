@@ -502,3 +502,9 @@ mapAt : (A → A) → ℕ → List A → List A
 mapAt _ _ [] = []
 mapAt f (suc k) (x ∷ xs) = x ∷ mapAt f k xs
 mapAt f zero (x ∷ xs) = f x ∷ xs
+
+inlsInrs : List (A ⊎ B) → List A × List B 
+inlsInrs [] = [] , []
+inlsInrs (x ∷ xs) =
+ let (inls , inrs) = inlsInrs xs
+ in ⊎.rec (λ a → (a ∷ inls , inrs)) (λ b → (inls , b ∷ inrs)) x

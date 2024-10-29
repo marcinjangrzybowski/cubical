@@ -89,6 +89,15 @@ cong₂ : {C : (a : A) → (b : B a) → Type ℓ} →
 cong₂ f p q i = f (p i) (q i)
 {-# INLINE cong₂ #-}
 
+congS₂ : {B : Type ℓ} {C : Type ℓ'} →
+        (f : A → B → C) →
+        (p : x ≡ y) →
+        ∀ {u v : B} → (u ≡ v) →
+        (f x u) ≡ (f y v)
+congS₂ f p q i = f (p i) (q i)
+{-# INLINE cong₂ #-}
+
+
 congP₂ : {A : I → Type ℓ} {B : (i : I) → A i → Type ℓ'}
   {C : (i : I) (a : A i) → B i a → Type ℓ''}
   (f : (i : I) → (a : A i) → (b : B i a) → C i a b)
@@ -100,6 +109,7 @@ congP₂ f p q i = f i (p i) (q i)
 
 congL : {C : Type ℓ} (f : (a : A) → C → B a) (p : x ≡ y)
         → {z : C} → PathP (λ i → B (p i)) (f x z) (f y z)
+        
 congL f p {z} i = f (p i) z
 {-# INLINE congL #-}
 

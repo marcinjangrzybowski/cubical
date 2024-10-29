@@ -20,7 +20,6 @@ open import Cubical.Data.Sigma.Base
 
 
 
-
 record NPath {ℓ} n (A : Type ℓ) : Type ℓ where
  field
   𝑣 : ∀ k → {k ≤ n} → A

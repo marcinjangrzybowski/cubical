@@ -60,6 +60,7 @@ module Cubical.Tactics.Reflection.QuoteCubical where
 
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Univalence
 
 
 open import Cubical.Data.Bool
@@ -364,14 +365,14 @@ extractCuTermFromNPath ty tm = do
 
 macro
  showCuTerm : R.Term → R.Term → R.TC Unit
- showCuTerm t h = do
+ showCuTerm t h = R.withReduceDefs (false , [ quote ua ]) do
   hTy ← R.inferType t >>= wait-for-term >>= R.normalise
   (dim , cu) ← extractCuTermFromNPath hTy t
   te ← ppCT dim 100 cu
   R.typeError te
 
  showCuCode : R.Term → R.Term → R.TC Unit
- showCuCode t h = do
+ showCuCode t h = R.withReduceDefs (false , [ quote ua ]) do
   hTy ← R.inferType t >>= wait-for-term >>= R.normalise
   (dim , cu) ← extractCuTermFromNPath hTy t
   c ← codeGen false dim 100 cu

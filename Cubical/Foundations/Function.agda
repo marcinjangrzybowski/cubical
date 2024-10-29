@@ -157,6 +157,13 @@ homotopyNatural {f = f} {g = g} H {x} {y} p i j =
                    ; (j = i1) → cong g p (i ∨ k) })
           (H (p i) j)
 
+homotopyNatural-conj : {B : Type ℓ'} {f g : A → B} (H : ∀ a → f a ≡ g a) {x y : A} (p : x ≡ y) →
+                  H x  ≡ cong f p ∙∙ H y ∙∙ cong g (sym p)
+homotopyNatural-conj {f = f} {g = g} H {x} {y} p i j =
+  hcomp {φ = ~ i ∨ j ∨ ~ j}
+    (λ z _ → H (p (i ∧ (~ z))) j)
+    (H (p i) j)
+
 homotopySymInv : {f : A → A} (H : ∀ a → f a ≡ a) (a : A)
                → Path (f a ≡ f a) (λ i → H (H a (~ i)) i) refl
 homotopySymInv {f = f} H a j i =

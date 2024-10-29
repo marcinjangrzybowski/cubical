@@ -182,6 +182,16 @@ module _ {A : Type ℓ} {B : A → Type ℓ'} {C : ∀ a → B a → Type ℓ''}
 
   unquoteDecl Σ-Π-≃ = declStrictIsoToEquiv Σ-Π-≃ Σ-Π-Iso
 
+module _ {B : I → Type ℓ'} {C : ∀ i → B i → Type ℓ''} where
+
+  Σ-Π-IsoI : Iso ((a : I) → Σ[ b ∈ B a ] C a b) (Σ[ f ∈ ((a : I) → B a) ] ∀ a → C a (f a))
+  fun Σ-Π-IsoI f         = ((λ i → fst (f i)) , λ i → snd (f i))
+  inv Σ-Π-IsoI (f , g) x = (f x , g x)
+  rightInv Σ-Π-IsoI _    = refl
+  leftInv Σ-Π-IsoI _     = refl
+
+  unquoteDecl Σ-Π-≃I = declStrictIsoToEquiv Σ-Π-≃I Σ-Π-IsoI
+
 module _ {A : Type ℓ} {B : A → Type ℓ'} {B' : ∀ a → Type ℓ''} where
   Σ-assoc-swap-Iso : Iso (Σ[ a ∈ Σ A B ] B' (fst a)) (Σ[ a ∈ Σ A B' ] B (fst a))
   fun Σ-assoc-swap-Iso ((x , y) , z) = ((x , z) , y)

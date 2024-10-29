@@ -189,3 +189,10 @@ map2-Maybe : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''
           → (A → B → C) → Maybe A → Maybe B → Maybe C
 map2-Maybe _ nothing _ = nothing
 map2-Maybe f (just x) = map-Maybe (f x)
+
+FromMaybe : ∀ {ℓ} (A : Type ℓ) → Maybe A → Type ℓ
+FromMaybe A = rec Unit* λ _ → A
+
+fromMaybe : ∀ {ℓ} {A : Type ℓ} → ∀ x →  FromMaybe A x
+fromMaybe nothing = tt*
+fromMaybe (just x) = x

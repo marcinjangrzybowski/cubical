@@ -459,6 +459,12 @@ module _ {a b : A} {p q : a ≡ b}  where
       (λ _ → compPath-filler p (sym q) (~ z) j) λ _ → q (j ∧ z))
             (s i j)
 
+ pathsEq→cancel : p ≡ q → p ∙ sym q ≡ refl
+ pathsEq→cancel s i j =
+    hcomp (λ z → primPOr (~ i) (i ∨ j ∨ ~ j)
+       (λ _ → compPath-filler p (sym q) (z) j) λ _ → q (j ∧ ~ z))
+             (s i j)
+
 module 2-cylinder-from-square
    {a₀₀ a₀₁ a₁₀ a₁₁ a₀₀' a₀₁' a₁₀' a₁₁' : A }
    {a₀₋  : a₀₀  ≡ a₀₁ } {a₁₋  : a₁₀  ≡ a₁₁ } {a₋₀  : a₀₀  ≡ a₁₀ } {a₋₁  : a₀₁  ≡ a₁₁ }

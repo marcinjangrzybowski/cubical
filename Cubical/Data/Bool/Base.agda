@@ -15,7 +15,7 @@ open import Agda.Builtin.Bool public
 private
   variable
     ℓ : Level
-    A : Type ℓ
+    A A' : Type ℓ
 
 infixr 6 _and_
 infixr 5 _or_
@@ -99,3 +99,11 @@ false* = lift false
 Bool*∙ : ∀ {ℓ} → Σ[ X ∈ Type ℓ ] X
 fst Bool*∙ = Bool*
 snd Bool*∙ = true*
+
+FromNo : ∀ {ℓ} (A' : Type ℓ) → Dec A → Type ℓ
+FromNo _ (yes _) = Unit*
+FromNo A' (no _) = ¬ A'
+
+fromNo : (A' → A) → ∀ x → FromNo {A = A} A' x
+fromNo f (yes p) = tt*
+fromNo f (no ¬p) = λ x → ¬p (f x)

@@ -4,11 +4,13 @@
 module Cubical.Data.Graph.Path where
 
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Path
 open import Cubical.Foundations.Prelude hiding (Path)
 
 open import Cubical.Data.Graph.Base
 open import Cubical.Data.List.Base hiding (_++_; map)
 open import Cubical.Data.Nat.Base
+open import Cubical.Data.Empty
 open import Cubical.Data.Nat.Properties
 open import Cubical.Data.Sigma.Base hiding (Path)
 
@@ -20,6 +22,8 @@ module _ (G : Graph ℓv ℓe) where
     pnil : ∀ {v} → Path v v
     pcons : ∀ {v x w} → Edge G v x → Path x w → Path v w
 
+  pattern p[_] x = pcons x pnil
+
 module _ {G : Graph ℓv ℓe} where
 
   -- Path concatenation
@@ -29,6 +33,35 @@ module _ {G : Graph ℓv ℓe} where
 
   _++_ = ccat
   infixr 20 _++_
+
+  
+
+  isPnil : ∀ {v w} → Path G v w → Type
+  isPnil pnil = Unit
+  isPnil (pcons x x₁) = ⊥
+
+  isPcons : ∀ {v w} → Path G v w → Type
+  isPcons pnil = ⊥
+  isPcons (pcons x x₁) = Unit
+
+  -- isPcons' : ΣPath G → Type
+  -- isPcons' (_ , x) = isPcons x
+
+  isPcons++ʳ : ∀ {v w u} → (xs : Path G v w) (ys : Path G w u) → isPcons ys → isPcons (xs ++ ys)
+  isPcons++ʳ pnil ys x = x
+  isPcons++ʳ (pcons x₁ xs) ys x = tt
+  
+  substSrc : ∀ {v' v w} → (v' ≡ v) → Path G v w → Path G v' w
+  substSrc x pnil = subst (λ x → Path G x _) (sym x) pnil
+  substSrc x (pcons x₁ x₂) = pcons (subst _ (sym x) x₁) x₂
+
+  substSrcP : ∀ {v' v w} → (p : v' ≡ v) → (xs : Path G v w) →
+     PathP (λ i → Path G (p i) w) (substSrc p xs) xs
+  substSrcP p pnil = toPathP⁻ refl
+  substSrcP p (pcons {x₁} {x₂} x xs) i = pcons (subst-filler (λ x → Edge G x _) (sym p) x (~ i) ) xs
+
+  pconsʳ : ∀ {v x w} → Path G v x → Edge G x w  → Path G v w
+  pconsʳ a b = a ++ p[ b ]
 
   -- Some properties
   pnil++ : ∀ {v w} (P : Path G v w) → pnil ++ P ≡ P
@@ -53,13 +86,31 @@ module _ {G : Graph ℓv ℓe} where
 
   -- Path v w is a set
   -- Lemma 4.2 of https://arxiv.org/abs/2112.06609
+
+  PathWithLen : ℕ → Node G → Node G → Type (ℓ-max ℓv ℓe)
+  PathWithLen 0 v w = Lift {j = ℓe} (v ≡ w)
+  PathWithLen (suc n) v w = Σ[ x ∈ Node G ] (Edge G v x × PathWithLen n x w)
+
+  Path→PathWithLen : ∀ {v w} → Path G v w → Σ[ n ∈ ℕ ] PathWithLen n v w
+  Path→PathWithLen pnil = 0 , lift refl
+  Path→PathWithLen (pcons e P) = suc (Path→PathWithLen P .fst) , _ , e , Path→PathWithLen P .snd
+
+
+  PathWithLen→Path : ∀ {v w} → Σ[ n ∈ ℕ ] PathWithLen n v w → Path G v w
+  PathWithLen→Path (0 , q) = subst (Path G _) (q .lower) pnil
+  PathWithLen→Path (suc n , _ , e , pwl) = pcons e (PathWithLen→Path (n , pwl))
+
+
+  Path→PWL→Path : ∀ {v w} P → PathWithLen→Path {v} {w} (Path→PathWithLen P) ≡ P
+  Path→PWL→Path {v} pnil = substRefl {B = Path G v} pnil
+  Path→PWL→Path (pcons P x) = cong₂ pcons refl (Path→PWL→Path _)
+
+
   module _ (isSetNode : isSet (Node G))
            (isSetEdge : ∀ v w → isSet (Edge G v w)) where
 
     -- This is called ̂W (W-hat) in the paper
-    PathWithLen : ℕ → Node G → Node G → Type (ℓ-max ℓv ℓe)
-    PathWithLen 0 v w = Lift {j = ℓe} (v ≡ w)
-    PathWithLen (suc n) v w = Σ[ x ∈ Node G ] (Edge G v x × PathWithLen n x w)
+
 
     isSetPathWithLen : ∀ n v w → isSet (PathWithLen n v w)
     isSetPathWithLen 0 _ _ = isOfHLevelLift 2 (isProp→isSet (isSetNode _ _))
@@ -69,21 +120,28 @@ module _ {G : Graph ℓv ℓe} where
     isSet-ΣnPathWithLen : ∀ {v w} → isSet (Σ[ n ∈ ℕ ] PathWithLen n v w)
     isSet-ΣnPathWithLen = isSetΣ isSetℕ (λ _ → isSetPathWithLen _ _ _)
 
-    Path→PathWithLen : ∀ {v w} → Path G v w → Σ[ n ∈ ℕ ] PathWithLen n v w
-    Path→PathWithLen pnil = 0 , lift refl
-    Path→PathWithLen (pcons e P) = suc (Path→PathWithLen P .fst) , _ , e , Path→PathWithLen P .snd
-
-    PathWithLen→Path : ∀ {v w} → Σ[ n ∈ ℕ ] PathWithLen n v w → Path G v w
-    PathWithLen→Path (0 , q) = subst (Path G _) (q .lower) pnil
-    PathWithLen→Path (suc n , _ , e , pwl) = pcons e (PathWithLen→Path (n , pwl))
-
-    Path→PWL→Path : ∀ {v w} P → PathWithLen→Path {v} {w} (Path→PathWithLen P) ≡ P
-    Path→PWL→Path {v} pnil = substRefl {B = Path G v} pnil
-    Path→PWL→Path (pcons P x) = cong₂ pcons refl (Path→PWL→Path _)
-
     isSetPath : ∀ v w → isSet (Path G v w)
     isSetPath v w = isSetRetract Path→PathWithLen PathWithLen→Path
                                  Path→PWL→Path isSet-ΣnPathWithLen
+
+  -- module _ (m n : HLevel)
+  --          (isOfHLevelNode : isOfHLevel (suc (suc m)) (Node G))
+  --          (isOfHLevelEdge : ∀ v w → isOfHLevel (suc (suc m)) (Edge G v w)) where
+
+
+
+    -- isSetPathWithLen : ∀ n v w → isSet (PathWithLen n v w)
+    -- isSetPathWithLen 0 _ _ = isOfHLevelLift 2 (isProp→isSet (isSetNode _ _))
+    -- isSetPathWithLen (suc n) _ _ = isSetΣ isSetNode λ _ →
+    --     isSet× (isSetEdge _ _) (isSetPathWithLen _ _ _)
+
+    -- isSet-ΣnPathWithLen : ∀ {v w} → isSet (Σ[ n ∈ ℕ ] PathWithLen n v w)
+    -- isSet-ΣnPathWithLen = isSetΣ isSetℕ (λ _ → isSetPathWithLen _ _ _)
+
+    -- isSetPath : ∀ v w → isSet (Path G v w)
+    -- isSetPath v w = isSetRetract Path→PathWithLen PathWithLen→Path
+    --                              Path→PWL→Path isSet-ΣnPathWithLen
+
 
 module _ {G : Graph ℓv ℓe} {H : Graph ℓv' ℓe'} where
   open GraphHom

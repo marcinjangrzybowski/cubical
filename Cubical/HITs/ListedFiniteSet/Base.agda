@@ -113,3 +113,47 @@ map f (trunc xs ys p q i j) =
 
 disj-union : LFSet A → LFSet B → LFSet (A ⊎ B)
 disj-union xs ys = map ⊎.inl xs ++ map ⊎.inr ys
+
+
+module _ {ℓ} (A : Type ℓ) where
+
+ record ElimR {ℓ'} (B : LFSet A → Type ℓ') : Type (ℓ-max ℓ ℓ') where
+  no-eta-equality
+  field
+   isSetB : ∀ x → isSet (B x)
+   b[]   : B []
+   b∷   : (x : A) → (xs : LFSet A) → B xs → B (x ∷ xs)
+   bdup   : ∀ x xs → (b : B xs) →
+     PathP (λ i → B (dup x xs i)) (b∷ _ _ (b∷ _ _ b)) (b∷ _ _ b)
+   bcomm  : ∀ x y xs b → PathP (λ i → B (comm x y xs i))
+                          (b∷ _ _ (b∷ _ _ b))
+                          (b∷ _ _ (b∷ _ _ b))
+
+  f : ∀ x → B x
+  f [] = b[]
+  f (x ∷ xs) = b∷ _ _ (f xs)
+  f (dup x xs i) = bdup x xs (f xs) i
+  f (comm x y xs i) = bcomm x y xs (f xs) i
+  f (trunc x y p q i i₁) =
+    isOfHLevel→isOfHLevelDep 2
+     (isSetB) _ _
+     (cong f p) (cong f q) (trunc x y p q) i i₁ 
+
+ record ElimPropR {ℓ'} (B : LFSet A → Type ℓ') : Type (ℓ-max ℓ ℓ') where
+  no-eta-equality
+  field
+   isPropB : ∀ x → isProp (B x)
+   b[]   : B []
+   b∷   : (x : A) → (xs : LFSet A) → B xs → B (x ∷ xs)
+
+  f : ∀ x → B x
+  f = ElimR.f w
+   where
+   w : ElimR B
+   w .ElimR.isSetB x = isProp→isSet (isPropB x)
+   w .ElimR.b[] = b[]
+   w .ElimR.b∷ = b∷
+   w .ElimR.bdup x xs b =
+     isProp→PathP (λ i → isPropB (dup x xs i)) _ _
+   w .ElimR.bcomm x y xs b =
+     isProp→PathP (λ i → isPropB (comm x y xs i)) _ _

@@ -46,6 +46,7 @@ open import Cubical.Reflection.Sugar
 open import Cubical.Data.List
 open import Cubical.Data.Nat
 open import Cubical.Data.Bool
+open import Cubical.Data.Sum as ⊎ hiding (map)
 open import Cubical.Data.Sigma
 
 open import Cubical.Tactics.Reflection.Variables
@@ -55,20 +56,37 @@ record ToErrorPart {ℓ} (A : Type ℓ) : Type ℓ where
  field
    toErrorPart : A → R.ErrorPart
 
+record ToErrorParts {ℓ} (A : Type ℓ) : Type ℓ where
+ field
+   toErrorParts : A → List R.ErrorPart
+
+
 open ToErrorPart
+open ToErrorParts
 
 infixr 5 _∷ₑ_ _∷nl_ _++ₑ_ _++nl_
 
 
 
+visibillityWrap : R.Visibility → String → String
+visibillityWrap R.visible x = " " <> x <> " "
+visibillityWrap R.hidden x = "{" <> x <> "}"
+visibillityWrap R.instance′ x = "⦃" <> x <> "⦄"
+
+
 _∷ₑ_ :  ∀ {ℓ} {A : Type ℓ} → {{ToErrorPart A}} → A → List R.ErrorPart → List R.ErrorPart
 _∷ₑ_  ⦃ tep ⦄ x = (toErrorPart tep x) ∷_
 
-_++ₑ_ :  ∀ {ℓ} {A : Type ℓ} → {{ToErrorPart A}} → List A → List R.ErrorPart → List R.ErrorPart
-_++ₑ_  ⦃ tep ⦄ x = (map (toErrorPart tep) x) ++_
+
+mapₑ : ∀ {ℓ} {A : Type ℓ} → {{ToErrorPart A}} → List A → List R.ErrorPart
+mapₑ ⦃ tep ⦄ = map (toErrorPart tep)
+
+[_]E : ∀ {ℓ} {A : Type ℓ} → {{ToErrorParts A}} → A → List R.ErrorPart
+[_]E ⦃ tep ⦄ = toErrorParts tep
 
 [_]ₑ :  ∀ {ℓ} {A : Type ℓ} → {{ToErrorPart A}} → A → List R.ErrorPart
 [_]ₑ = _∷ₑ []
+
 
 instance
  ToErrorPartString : ToErrorPart String
@@ -94,12 +112,43 @@ instance
  ToErrorPartErrorPart : ToErrorPart R.ErrorPart
  toErrorPart ToErrorPartErrorPart x = x
 
+ ToErrorPartAbs : ToErrorPart (R.ArgInfo)
+ toErrorPart ToErrorPartAbs (R.arg-info v (R.modality r q)) =   
+   R.strErr (visibillityWrap v (rev-render r <> quant-render q))
+
+   where
+    rev-render : R.Relevance → String
+    rev-render R.relevant = ""
+    rev-render R.irrelevant = "."
+
+    quant-render : R.Quantity → String
+    quant-render R.quantity-0 = "0"
+    quant-render R.quantity-ω = "ω"
+
+ -- ToErrorPartsToErrorPart : ∀ {ℓ} {A : Type ℓ} → ⦃ ToErrorPart A ⦄ → ToErrorParts A
+ -- ToErrorPartsToErrorPart .ToErrorParts.toErrorParts = [_]ₑ
+
+ ToErrorParts⊎ : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'}
+                   → ⦃ ToErrorPart A ⦄ → ⦃ ToErrorPart B ⦄ → ToErrorParts (A ⊎ B)
+ ToErrorParts⊎ ⦃ tep ⦄ ⦃ tep' ⦄ .ToErrorParts.toErrorParts =
+   ⊎.rec (("𝒊𝒏𝒍 " ∷ₑ_) ∘ [_]ₑ) (("𝒊𝒏𝒓 " ∷ₑ_) ∘ [_]ₑ)
+
+ ToErrorPartsJoin : ∀ {ℓ} {A : Type ℓ}
+                   → ⦃ ToErrorParts A ⦄ → ToErrorParts (List A)
+ ToErrorPartsJoin .toErrorParts =  join ∘S map (("\n" ∷ₑ_) ∘ [_]E) 
+ 
+_++ₑ_ :  ∀ {ℓ} {A : Type ℓ} → {{ToErrorPart A}} → List A → List R.ErrorPart → List R.ErrorPart
+_++ₑ_  ⦃ tep ⦄ x = mapₑ x ++_
 
 _∷nl_ :  ∀ {ℓ} {A : Type ℓ} → {{ToErrorPart A}} → A → List R.ErrorPart → List R.ErrorPart
 _∷nl_  x y = x ∷ₑ "\n" ∷ₑ y
 
 _++nl_ :  ∀ {ℓ} {A : Type ℓ} → {{ToErrorPart A}} → List A → List R.ErrorPart → List R.ErrorPart
 _++nl_  x y = x ++ₑ "\n" ∷ₑ y
+
+
+splitNL : List R.ErrorPart → List R.ErrorPart
+splitNL = join ∘ map (_∷nl [])
 
 
 <>StrErr :  List R.ErrorPart → List R.ErrorPart
@@ -119,6 +168,8 @@ niceAtomList = h 0
   h k (x ∷ xs) = (mkNiceVar k  <> " = ") ∷ₑ x ∷ₑ  "\n"  ∷ₑ h (suc k) xs
 
 
+aInfo : ∀ {ℓ} {A : Type ℓ} → R.Arg A → R.ArgInfo
+aInfo (R.arg i x) = i
 
 unArgs : List (R.Arg (R.Term)) → List R.ErrorPart
 unArgs [] = []
@@ -130,6 +181,9 @@ renderTerm = R.formatErrorParts ∘ [_]ₑ
 renderArg : R.Arg R.Term → R.TC String
 renderArg (R.arg i x) = renderTerm x
 
+
+mapChar : (Char → Char) → String → String
+mapChar f = primStringFromList ∘S map f ∘S primStringToList
 
 stringLength : String → ℕ
 stringLength = length ∘S primStringToList
@@ -203,12 +257,6 @@ assertNoErr : ∀ {ℓ} {A : Type ℓ} → R.Term → R.TC A → R.TC Unit
 assertNoErr h x = do
   (x >> wrapResult h ✓-pass) <|> wrapResult h ⊘-fail
 
-
-visibillityWrap : R.Visibility → String → String
-visibillityWrap R.visible x = " " <> x <> " "
-visibillityWrap R.hidden x = "{" <> x <> "}"
-visibillityWrap R.instance′ x = "⦃" <> x <> "⦄"
-
 showTeles : R.Telescope → R.TC (List R.ErrorPart)
 showTeles = concatMapM h ∘S liftedTele
  where
@@ -220,3 +268,6 @@ macro
  showCtx : R.Term → R.TC Unit
  showCtx _ = R.getContext >>= (showTeles >=> R.typeError)
 
+
+typeError' : List R.ErrorPart → R.TC Unit
+typeError' = R.typeError

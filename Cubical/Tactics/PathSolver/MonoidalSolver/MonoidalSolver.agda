@@ -170,6 +170,12 @@ simplifyFillTerm mbTy t = do
   -- (R.typeError $ [ s ]ₑ)
 
 
+_$sp_ : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → (A → B) → A → B
+f $sp a = f a
+
+$sp₂ : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''} → (A → B → C) → A → B → C
+$sp₂ f a b = f a b
+
 
 macro
  simplifyFill : R.Term → R.Term → R.TC Unit
@@ -178,7 +184,7 @@ macro
    R.unify sq h
 
  simplifyPath : R.Term → R.Term → R.TC Unit
- simplifyPath t h = do
+ simplifyPath t h = R.withReduceDefs (false , quote _$sp_ ∷ [ quote ua ]) do
    sq ← simplifyFillTerm nothing t
    R.unify (R.def (quote ◪→≡) v[ sq ]) h
 
@@ -195,14 +201,11 @@ stepSq A p mbQ = do
   pure $ s' , q'
 
 
-_$sp_ : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → (A → B) → A → B
-f $sp a = f a
-
 macro
 
 
  solvePaths : R.Term → R.TC Unit
- solvePaths h = R.withReduceDefs (false , quote _$sp_ ∷ [ quote ua ]) do
+ solvePaths h = R.withReduceDefs (false , quote $sp₂ ∷ quote _$sp_ ∷ [ quote ua ]) do
   hTy ← R.inferType h >>= wait-for-term >>= R.normalise
   bdTM@(A , ((a₀₋ , a₁₋) , (a₋₀ , a₋₁))) ← (matchSquare <$> matchNCube hTy) >>=
      Mb.rec (R.typeError [ "not a square" ]ₑ) pure
@@ -213,6 +216,21 @@ macro
 
   let solution = R.def (quote ◪mkSq)
         (a₀₋' v∷ a₁₋' v∷ a₋₀' v∷ a₋₁' v∷ [])
+
+  R.unify solution h <|> R.typeError [ solution ]ₑ
+
+ solvePathsHole : R.Term → R.TC Unit
+ solvePathsHole h = R.withReduceDefs (false , quote $sp₂ ∷ quote _$sp_ ∷ [ quote ua ]) do
+  hTy ← R.inferType h >>= wait-for-term >>= R.normalise
+  bdTM@(A , ((a₀₋ , a₁₋) , (a₋₀ , a₋₁))) ← (matchSquare <$> matchNCube hTy) >>=
+     Mb.rec (R.typeError [ "not a square" ]ₑ) pure
+  (a₁₋' , p₁₀) ← stepSq A a₁₋ nothing
+  (a₋₁' , p₀₁) ← stepSq A a₋₁ nothing
+  (a₀₋' , _) ← stepSq A a₀₋ (just p₀₁)
+  -- (a₋₀' , _) ← stepSq A a₋₀ (just p₁₀)
+
+  let solution = R.def (quote ◪mkSq)
+        (a₀₋' v∷ a₁₋' v∷ R.unknown v∷ a₋₁' v∷ [])
 
   R.unify solution h <|> R.typeError [ solution ]ₑ
 

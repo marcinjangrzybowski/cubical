@@ -28,6 +28,10 @@ decRec : ∀ {ℓ ℓ'} {P : Type ℓ} {A : Type ℓ'} → (P → A) → (¬ P �
 decRec ifyes ifno (yes p) = ifyes p
 decRec ifyes ifno (no ¬p) = ifno ¬p
 
+decElim : ∀ {ℓ ℓ'} {P : Type ℓ} (A : Dec P → Type ℓ') → ∀ x → (∀ p → A (yes p)) → (∀ ¬p → A (no ¬p)) → A x
+decElim _ (yes p) ifyes ifno = ifyes p
+decElim _ (no ¬p) ifyes ifno = ifno ¬p
+
 NonEmpty : Type ℓ → Type ℓ
 NonEmpty A = ¬ ¬ A
 

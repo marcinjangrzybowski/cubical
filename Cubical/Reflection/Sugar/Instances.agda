@@ -54,6 +54,7 @@ module _ {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} where
  concatMapM f [] = ⦇ [] ⦈
  concatMapM f (x ∷ xs) = ⦇ f x ++ concatMapM f xs ⦈
 
+ 
 
  foldlM : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'}
             → (B → A → M B) → B → List A → M B
@@ -77,6 +78,14 @@ unwrap get s = pure (s , s)
 modify : {F : Functorω} {{FA : RawApplicative F }} {{FM : RawMonad F }} {S : Type}  →
   (S → S) → [ State₀T S RMT F ] Unit
 unwrap (modify f) s = pure (_ , f s)
+
+
+unwrapState : ∀ {F : Functorω} {S : Type} {ℓ} {A : Type ℓ} → [ State₀T S RMT F ] A → State₀T S F A
+unwrapState = unwrap
+
+unwrapStateId : ∀ {S : Type} {ℓ} {A : Type ℓ}
+                     → S → [ State₀T S RMT IdentityF ] A →  (A × S)
+unwrapStateId s x = runIdentity (unwrap x s)
 
 
 Plus₀T : Type → Functorω → Functorω
@@ -115,6 +124,17 @@ module _ where
 
   MonadSum : {E : Type} → RawMonad (E ⊎.⊎_)
   MonadSum = monadLiftT rawMonadTransformerPlus₀ {{_}} {{RawMonadIdentityM}}
+
+
+
+instance
+ MonadStateFailT' : ∀ {ℓe} {F : Functorω} →
+   {{_ : RawApplicative F}} → {{_ : RawMonad F}} →
+   ∀ {S} {E : Type ℓe}
+   → {{_ : RawMonadFail F E}}
+   → RawMonadFail ([ State₀T S RMT F ]_) (S → E)
+ MonadStateFailT' .RawMonadFail.fail e .unwrap = λ x → fail (e x)
+ (MonadStateFailT' RawMonadFail.<|> wrap x) (wrap y) = wrap λ s → x s <|> y s
 
 
 

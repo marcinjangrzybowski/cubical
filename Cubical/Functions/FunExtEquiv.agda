@@ -78,6 +78,16 @@ module _ {A : Type ℓ} {B : A → Type ℓ₁} {C : (x : A) → B x → Type �
   funExt₃Path : (∀ x y z → PathP (D x y z) (f x y z) (g x y z)) ≡ (PathP (λ i → ∀ x y z → D x y z i) f g)
   funExt₃Path = ua funExt₃Equiv
 
+-- funExtSq : {A : Type ℓ} {B : Type ℓ₁} {C : Type ℓ₂} →
+--              {f₀₀ f₀₁ f₁₀ f₁₁ : A → B → C} →
+--              {f₀₋ : ∀ a b → f₀₀ a b ≡ f₀₁ a b}
+--              {f₁₋ : ∀ a b → f₁₀ a b ≡ f₁₁ a b}
+--              {f₋₀ : ∀ a b → f₀₀ a b ≡ f₁₀ a b}
+--              {f₋₁ : ∀ a b → f₀₁ a b ≡ f₁₁ a b}
+--                → (∀ a b → Square (f₀₋ a b) (f₁₋ a b) (f₋₀ a b) (f₋₁ a b))
+--                → PathP (λ i → ∀ a b → f₋₀ a b i ≡ f₋₁ a b i)
+--                  f₀₋ f₁₋
+-- funExtSq sq = funExt₂ {!!}
 
 -- n-ary non-dependent funext
 nAryFunExt : {X : Type ℓ} {Y : I → Type ℓ₁} (n : ℕ) (fX : nAryOp n X (Y i0)) (fY : nAryOp n X (Y i1))

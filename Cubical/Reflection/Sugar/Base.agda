@@ -144,7 +144,9 @@ record [_RMT_]_ (T : Functorω → Functorω) (F : Functorω) {ℓ} (A : Type �
 
 open [_RMT_]_  public
 
-
+mapWraped : ∀ {T : Functorω → Functorω} {F : Functorω} {ℓ} {A : Type ℓ}
+             → (T F A → T F A) → ([ T RMT F ] A → [ T RMT F ] A)  
+mapWraped x (wrap u) .unwrap = x u
 
 
 module _ {T} {{rmt : RawMonadTransformer T}} where
@@ -160,6 +162,7 @@ module _ {T} {{rmt : RawMonadTransformer T}} where
    MonadLiftT' : {F : Functorω} →
      {{_ : RawApplicative F}} → {{_ : RawMonad F}} → RawMonad (T F)
    MonadLiftT' = monadLiftT rmt
+
 
  liftM : {F : Functorω} → {{_ : RawApplicative F}} → {{_ : RawMonad F}} → F A → [ T RMT F ] A
  liftM x = wrap (lifting rmt x)
