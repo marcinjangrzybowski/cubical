@@ -494,6 +494,40 @@ solvePathsSolver goal = R.withReduceDefs (false , doNotReduceInPathSolver) do
  markVertBd A cuFcs >>= foldBdTerm A t0
 
 
+prettyBoundaryMacro : R.Type → R.TC Unit
+prettyBoundaryMacro goal = R.withReduceDefs (false , doNotReduceInPathSolver) do
+ R.debugPrint "prettyBoundary" 0 $ [ "prettyBoundary - start" ]ₑ
+ hTy ← wait-for-term goal  >>=
+     (λ x → (R.debugPrint "prettyBoundary" 0 $ "prettyBoundary - " ∷ₑ [ x ]ₑ) >> pure x)
+       >>= (R.normalise <|>>= λ x → R.typeError $ "failed to normalise goal" ∷nl [ x ]ₑ )
+ bdTM@(A , fcs) ← matchNCube hTy
+ R.debugPrint "prettyBoundary" 0 $ [ "prettyBoundary - matchNCube done" ]ₑ
+ let dim = length fcs
+
+ (t0 , _) ← Mb.rec (R.typeError [ "imposible in prettyBoundary'" ]ₑ) pure (lookupMb fcs zero)
+
+ ((quoteBd bdTM
+            <|> R.typeError [ "quoteBd - failed" ]ₑ
+             )  >>= renderCuBoundary >>= R.typeError)
+
+prettyBoundaryMacroType : R.Type → R.TC Unit
+prettyBoundaryMacroType goal = R.withReduceDefs (false , doNotReduceInPathSolver) do
+ R.debugPrint "prettyBoundary" 0 $ [ "prettyBoundary - start" ]ₑ
+ hTy ← wait-for-term goal  >>=
+     (λ x → (R.debugPrint "prettyBoundary" 0 $ "prettyBoundary - " ∷ₑ [ x ]ₑ) >> pure x)
+       >>= (R.normalise <|>>= λ x → R.typeError $ "failed to normalise goal" ∷nl [ x ]ₑ )
+ bdTM@(A , fcs) ← matchNCube hTy
+ R.debugPrint "prettyBoundary" 0 $ [ "prettyBoundary - matchNCube done" ]ₑ
+ let dim = length fcs
+
+ (t0 , _) ← Mb.rec (R.typeError [ "imposible in prettyBoundary'" ]ₑ) pure (lookupMb fcs zero)
+
+ ((quoteBd bdTM
+            <|> R.typeError [ "quoteBd - failed" ]ₑ
+             )  >>= renderCuBoundaryTypeTerm >>= R.typeError)
+
+
+
 macro
 
  solvePaths : R.Term → R.TC Unit
@@ -501,6 +535,14 @@ macro
    solution ←
       (R.inferType h >>= solvePathsSolver)
    R.unify solution h <|> R.typeError ("unify - failed:" ∷nl [ solution ]ₑ )
+
+ prettyBoundary : R.Term → R.TC Unit
+ prettyBoundary h = R.workOnTypes (R.inferType h >>= prettyBoundaryMacro)
+
+ prettyBoundaryTy : R.Term → R.TC Unit
+ prettyBoundaryTy h = R.workOnTypes (R.inferType h >>= prettyBoundaryMacroType)
+
+
 
  infixr 2 solvePathsTest_
 

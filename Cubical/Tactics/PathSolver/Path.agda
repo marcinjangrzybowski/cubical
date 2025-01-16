@@ -141,6 +141,24 @@ _∙∙■_∙∙■_ {x = x} s₀ s₁ s₂ j i =
      (i = i1) → x
              ) (s₁ j i)
 
+
+-- [_,_,_]_∙∙■'_∙∙■'_ : ∀ {ℓ} {A : Type ℓ} →
+--          ∀ {x x₀ x₁ x₂ x₃ : A}
+--          → {p₀ : x₀ ≡ x₁} {p₁ : x₁ ≡ x₂} {p₂ : x₂ ≡ x₃}
+--            {q₀ : x₀ ≡ x} {q₁ : x₁ ≡ x} {q₂ : x₂ ≡ x} {q₃ : x₃ ≡ x}
+--          → Square q₀ q₁ p₀ refl
+--          → Square q₁ q₂ p₁ refl
+--          → Square q₂ q₃ p₂ refl
+--          → Square q₀ q₃ (p₀ ∙∙ p₁ ∙∙ p₂) refl
+-- _,_,_]_∙∙■'_∙∙■'_ {x = x} s₀ s₁ s₂ j i =
+--   hcomp (λ k → λ where
+--      (j = i0) → s₀ (~ k) i
+--      (j = i1) → s₂ k i
+--      (i = i1) → x
+--              ) (s₁ j i)
+
+
+
 ◪→≡ : ∀ {ℓ} {A : Type ℓ} {x y : A} {p p' : x ≡ y} →
            Square p' refl p refl → p ≡ p'
 ◪→≡ s i j =
@@ -176,6 +194,45 @@ comp₋₀ : ∀ {ℓ} {A : Type ℓ} →
 comp₋₀ s p i j =
   hcomp (λ k → primPOr (~ j) (j ∨ i ∨ ~ i) (λ _ → p (~ k) i) λ _ → s i j)  (s i j)
 
+
+-- comp₋₀* : ∀ {ℓ} {A : Type ℓ} →
+--     {a a₀₀ : A} {a₀₋ : a₀₀ ≡ a}
+--   {a₁₀ : A} {a₁₋ : a₁₀ ≡ a}
+--   {a₋₀ a₋₀' : a₀₀ ≡ a₁₀}
+--   → Square a₀₋ a₁₋ a₋₀ refl
+--   → a₋₀' ≡ a₋₀
+--   → Square a₀₋ a₁₋ a₋₀' refl
+-- comp₋₀* s p i j = {!!}
+--   -- hcomp (λ k → primPOr (~ j) (j ∨ i ∨ ~ i) (λ _ → p (~ k) i) λ _ → s i j)  (s i j)
+
+
+comp₋₀' : ∀ {ℓ} {A : Type ℓ} →
+    {a a₀₀ : A} {a₀₋ : a₀₀ ≡ a}
+  {a₁₀ : A} {a₁₋ : a₁₀ ≡ a}
+  {a₋₀ a₋₀' : a₀₀ ≡ a₁₀}
+  → Square a₀₋ a₁₋ a₋₀ refl
+  → sym a₋₀' ≡ sym a₋₀
+  → Square a₀₋ a₁₋ a₋₀' refl
+comp₋₀' s p = comp₋₀ s (cong sym p)
+
+comp₋₀'* : ∀ {ℓ} {A : Type ℓ} →
+    {a a₀₀ : A} {a₀₋ : a₀₀ ≡ a}
+   {a₁₋ : a ≡ a}
+  {a₋₀ a₋₀' : a₀₀ ≡ a}
+  → Square a₀₋ a₁₋ a₋₀ refl
+  → sym a₋₀' ≡ sym a₋₀
+  → a₁₋ ≡ refl
+  → Square a₀₋ refl a₋₀' refl
+comp₋₀'* s p p' i j =
+   hcomp (λ k → λ where
+     (i = i0) → s i j
+     (i = i1) → p' k j
+     (j = i0) → p (~ k) (~ i)
+     (j = i1) → s i j)
+    (s i j)
+
+
+
 ◪mkSq : ∀ {ℓ} {A : Type ℓ} →
     {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
   {a₁₀ a₁₁ : A} {a₁₋ p₁₀ : a₁₀ ≡ a₁₁}
@@ -193,6 +250,24 @@ comp₋₀ s p i j =
      (j = i0) → s₋₀ i (~ k)
      (j = i1) → s₋₁ i (~ k))
     a₁₁
+
+◪mkSq' : ∀ {ℓ} {A : Type ℓ} →
+    {a₀₀ a₀₁ : A} {a₀₋ : a₀₀ ≡ a₀₁}
+  {a₁₀ a₁₁ : A} {a₁₋ : a₁₀ ≡ a₁₁}
+  {a₋₀ : a₀₀ ≡ a₁₀} {a₋₁ : a₀₁ ≡ a₁₁}
+  → {p : a₀₁ ≡ a₀₀} {p' : a₁₁ ≡ a₀₀} {p'' : a₁₀ ≡ a₀₀}
+  → Square refl p a₀₋ refl
+  → Square p p' a₋₁ refl
+  → Square p' p'' (sym a₁₋) refl
+  → Square p'' refl (sym (a₋₀)) refl
+  → Square a₀₋ a₁₋ a₋₀ a₋₁
+◪mkSq' {a₀₀ = a₀₀} s s' s'' s''' i j =
+  hcomp (λ k → λ where
+     (i = i0) → s j (~ k)
+     (i = i1) → s'' (~ j) (~ k)
+     (j = i0) → s''' (~ i) (~ k)
+     (j = i1) → s' i (~ k))
+    a₀₀
 
 
 coh₃helper : ∀ {ℓ} {A : Type ℓ} →

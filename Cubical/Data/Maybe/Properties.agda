@@ -196,3 +196,7 @@ FromMaybe A = rec Unit* λ _ → A
 fromMaybe : ∀ {ℓ} {A : Type ℓ} → ∀ x →  FromMaybe A x
 fromMaybe nothing = tt*
 fromMaybe (just x) = x
+
+_mb⊕_ : ∀ {ℓ} {A : Type ℓ} → Maybe A → Maybe A → Maybe A
+nothing mb⊕ x₁ = x₁
+just x mb⊕ x₁ = just x

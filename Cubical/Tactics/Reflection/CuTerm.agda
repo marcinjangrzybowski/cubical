@@ -589,3 +589,91 @@ hcoFromIExpr dim fe tm' = do
   let tm = liftVarsFrom dim zero tm'
   xs ← mapM (λ sf → (sf ,_) <$> (cell ∘S liftVars <$> pure (subfaceCell sf tm)) ) fe
   pure (hco xs (cell tm))
+
+
+-- λ A a0 a1 a2 a3 p q r i j. hcom 0 1 [i = 0 j. p j; i = 1 _. a0] a0
+
+module codeGenCCTT {A B : Type} (normaliseCells : Bool)  (dim : ℕ) where
+
+ renderSubFaceExp : SubFace → R.TC String
+ renderSubFaceExp sf = R.normalise (SubFace→Term sf) >>= renderTerm
+
+
+
+ max-𝒛-idx : CuCtx → ℕ
+ max-𝒛-idx = foldr ((max ∘S (λ { (just ("𝒛" , k )) → (suc k) ; _ → zero }) ∘S getSubscript) ∘S fst ) zero
+
+ renderSubFacePattern : CuCtx → SubFace → String
+ renderSubFacePattern ctx sf =
+   foldl _<>_ "" (L.map
+       ((λ (b , k) → let k' = L.lookupAlways "‼"
+                                   (freeVars ctx) k
+                     in "" <> k' <> " = " <> (if b then "1" else "0") <> ""))
+      (subFaceConstraints sf))
+
+ ppCT'' : CuCtx → ℕ → CuTerm' A B → R.TC (List R.ErrorPart)
+ -- ppCArg : CuCtx → ℕ → CuArg → R.TC (List R.ErrorPart)
+
+ ppCT'' _ zero _ = R.typeError [ "pPCT FAIL" ]ₑ
+ ppCT'' ctx (suc d) (hco x x₁) = do
+   let l = max (length ctx ∸ dim)  (max-𝒛-idx ctx)
+   indN ← foldr max zero <$> (
+              (mapM ((((pure ∘ (renderSubFacePattern ctx)) >=& stringLength)) ∘S fst ) x))
+
+   let newDimVar = (mkNiceVar' "𝒛" l)
+   rest ← (mapAt (λ { (R.strErr s) → R.strErr $ (" " <> s) ; x → x} ) zero
+              ∘S L.intersperse (R.strErr "\n;") ∘S L.join)  <$> mapM
+         (λ (sf , cu) → do
+
+
+
+            -- R.extendContext "zz" (varg (R.def (quote I) [])) $
+            ( do
+               let sfTm = renderSubFacePattern ctx sf
+               -- R.extendContext newDimVar (varg (R.def (quote I) [])) $
+               (do sfTm' ← inCuCtx' (("z" , nothing) ∷ ctx) $ R.formatErrorParts [ liftVars (SubFace→TermInCtx ctx sf) ]ₑ
+                   cu' ← (ppCT'' ((newDimVar , nothing) ∷ applyFaceConstraints sf ctx) d cu)
+                   cu'' ← R.formatErrorParts cu'
+                   let cu''' = indent' false ' ' 2 cu''
+                   pure (offsetStrR indN sfTm  ∷ₑ
+                             -- "/" ∷ₑ sfTm' ∷ₑ
+                             " → " ∷ₑ [ cu''' ]ₑ))) >>=
+                      (R.formatErrorParts >=& [_]ₑ)) x
+   lid ← (trimLeft ∘S indent ' ' 1) <$> (ppCT'' ctx d x₁ >>= R.formatErrorParts)
+   rest' ← indent ' ' 2 <$> R.formatErrorParts rest
+   pure $ (R.strErr ("\nhcom 0 1 [" <> "\n")) ∷
+                   (rest' ∷ₑ "\n    ]) \n" ∷ₑ
+                   "(" ∷ₑ lid ∷ₑ ")" ∷ₑ [ "\n "]ₑ)
+
+ ppCT'' ctx _ (cell' _ (R.def (quote MetaTag) [])) = pure [ R.strErr "?" ]
+ ppCT'' ctx _ (cell' _ x) = do
+  ctr ← inCuCtx ctx $ do
+            nt ← (if normaliseCells then R.normalise else pure) x
+            x'' ← R.formatErrorParts [ nt ]ₑ
+            pure [ R.strErr (x'') ]
+     -- cellTermRender ctx x >>=
+     --         --inCuCtx ctx ∘
+     --         R.formatErrorParts
+  pure ctr
+ ppCT'' ctx (suc d) (𝒄ong' h t) = do
+  rT ← (L.map (λ (k , s) → R.strErr ("\n    " <> mkNiceVar' "𝒙" k <> " = " <> trimLeft s ))
+            ∘S zipWithIndex) <$> (mapM (argRndr >=&  ( indent' false ' ' 6)) t)
+  rHead ← inCuCtx ctx $ addNDimsToCtx' "𝒙" (length t) $ renderTerm h
+  pure  $ "\nlet " ∷ₑ rT ++ "\nin " ∷ₑ [ rHead ]ₑ
+
+  where
+  argRndr :  Hco A B → R.TC _
+  argRndr x = (((ppCT'' ctx d (hco' x)))) >>= R.formatErrorParts
+
+ ppCT' :  ℕ → CuTerm' A B → R.TC (List R.ErrorPart)
+ ppCT' = ppCT'' (defaultCtx dim)
+
+
+genAbstrCCTT : ℕ → String
+genAbstrCCTT dim = "λ" <>
+ (L.foldl _<>_ "" $ L.map (λ k →  (" " <> mkNiceVar' "𝓲" k)) (rev (range dim))) <> ". "
+
+codeGenCCTT : {A B : Type} (normaliseCells₁ : Bool) (dim : ℕ) →
+            ℕ → CuTerm' A B → R.TC String
+codeGenCCTT nc dim fuel cu = ((genAbstrCCTT dim <>_) ∘S (indent' false ' ' 6)) <$>
+  (codeGen.ppCT' nc dim fuel cu >>= R.formatErrorParts)

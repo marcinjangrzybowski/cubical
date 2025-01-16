@@ -164,9 +164,11 @@ quote1D mbty t = do
 
 simplifyFillTerm : Maybe R.Type → R.Term → R.TC R.Term
 simplifyFillTerm mbTy t = do
-  (_ , 1dv) ← quote1D  mbTy t
+  (mbCong≡ , 1dv) ← quote1D  mbTy t
   (s , _) ← fill1DV 1dv
-  pure s
+  pure (Mb.rec s
+            (λ c≡ → R.def (quote comp₋₀) (s v∷ v[ vlam "𝓳" $ vlam "𝓲" c≡ ]))
+            mbCong≡)
   -- (R.typeError $ [ s ]ₑ)
 
 
@@ -207,6 +209,7 @@ macro
  solvePaths : R.Term → R.TC Unit
  solvePaths h = R.withReduceDefs (false , quote $sp₂ ∷ quote _$sp_ ∷ [ quote ua ]) do
   hTy ← R.inferType h >>= wait-for-term >>= R.normalise
+  R.debugPrint "sp" 0 $ [ "solvePaths - start" ]ₑ ++ₑ [ hTy ]ₑ
   bdTM@(A , ((a₀₋ , a₁₋) , (a₋₀ , a₋₁))) ← (matchSquare <$> matchNCube hTy) >>=
      Mb.rec (R.typeError [ "not a square" ]ₑ) pure
   (a₁₋' , p₁₀) ← stepSq A a₁₋ nothing

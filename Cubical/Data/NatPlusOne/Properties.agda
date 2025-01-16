@@ -21,9 +21,9 @@ infixl 7 _·₊₁_
 _·₊₁_ : ℕ₊₁ → ℕ₊₁ → ℕ₊₁
 (1+ m) ·₊₁ (1+ n) = 1+ (n + m · (suc n))
 
-private
-  ℕ₊₁→ℕ-·₊₁-comm : ∀ m n → ℕ₊₁→ℕ (m ·₊₁ n) ≡ (ℕ₊₁→ℕ m) · (ℕ₊₁→ℕ n)
-  ℕ₊₁→ℕ-·₊₁-comm (1+ m) (1+ n) = refl
+-- private
+ℕ₊₁→ℕ-·₊₁-comm : ∀ m n → ℕ₊₁→ℕ (m ·₊₁ n) ≡ (ℕ₊₁→ℕ m) · (ℕ₊₁→ℕ n)
+ℕ₊₁→ℕ-·₊₁-comm (1+ m) (1+ n) = refl
 
 +₁-assoc : ∀ m n o → m +₁ (n +₁ o) ≡ (m +₁ n) +₁ o
 +₁-assoc one n o = refl

@@ -255,6 +255,29 @@ quoteBd (A , xs) = do
  let dim = predℕ (length xs)
  mapM (λ (t0 , t1) → ⦇ quoteCuTerm (just A) dim t0 , quoteCuTerm (just A) dim t1 ⦈ ) xs
 
+renderCuBoundary : CuBoundary → R.TC (List R.ErrorPart) 
+renderCuBoundary cbd =
+  let dim = predℕ (length cbd)
+  in concatMapM
+       (λ (k , (cu0 , cu1)) → do
+          cu0' ← ppCT dim 100 cu0
+          cu1' ← ppCT dim 100 cu1
+          pure ("dim : " ∷ₑ [ k ]ₑ
+             ++nl cu0' ++nl [ "******" ]ₑ ++nl cu1' ++nl [ "---------------------------" ]ₑ)
+          )
+       (zipWithIndex cbd)  
+
+renderCuBoundaryTypeTerm : CuBoundary → R.TC (List R.ErrorPart) 
+renderCuBoundaryTypeTerm cbd =
+  let dim = predℕ (length cbd)
+  in concatMapM
+       (λ (k , (cu0 , cu1)) → do
+          cu0' ← codeGen true dim 100 cu0
+          cu1' ← codeGen true dim 100 cu1
+          pure ("dim : " ∷ₑ [ k ]ₑ
+             ++nl [ cu0' ]ₑ ++nl [ "******" ]ₑ ++nl [ cu1' ]ₑ ++nl [ "---------------------------" ]ₑ)
+          )
+       (zipWithIndex cbd)  
 
 matchSquare : NBoundaryTerm → Maybe (R.Term × ((R.Term × R.Term)×(R.Term × R.Term)))
 matchSquare (A , ((a₀₋ , a₁₋) ∷ (a₋₀ , a₋₁) ∷ [])) =

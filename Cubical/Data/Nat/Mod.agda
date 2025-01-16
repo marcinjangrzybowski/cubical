@@ -4,7 +4,8 @@ module Cubical.Data.Nat.Mod where
 open import Cubical.Foundations.Prelude
 open import Cubical.Data.Nat
 open import Cubical.Data.Nat.Order
-open import Cubical.Data.Empty
+open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Sum as ⊎
 
 -- Defining x mod 0 to be 0. This way all the theorems below are true
 -- for n : ℕ instead of n : ℕ₊₁.
@@ -35,6 +36,9 @@ mod< n =
      λ x ind → fst ind
               , cong (λ x → fst ind + suc x)
                      (modIndStep n x) ∙ snd ind
+
+<→mod : (n x : ℕ) → x < (suc n) → x mod (suc n) ≡ x 
+<→mod = modIndBase
 
 mod-rUnit : (n x : ℕ) → x mod n ≡ ((x + n) mod n)
 mod-rUnit zero x = refl
@@ -153,6 +157,7 @@ mod-lCancel n x y =
   ∙∙ mod-rCancel n y x
   ∙∙ cong (_mod n) (+-comm y (x mod n))
 
+
 -- remainder and quotient after division by n
 -- Again, allowing for 0-division to get nicer syntax
 remainder_/_ : (x n : ℕ) → ℕ
@@ -192,3 +197,77 @@ private
 
   test₁ : ((11 + (10 mod 3)) mod 3) ≡ 0
   test₁ = refl
+
+
+
+·mod : ∀ k n m → (k · n) mod (k · m)
+             ≡ k · (n mod m)
+·mod zero n m = refl
+·mod (suc k) n zero = cong ((n + k · n) mod_) (sym (0≡m·0 (suc k)))
+                  ∙ 0≡m·0 (suc k)
+·mod (suc k) n (suc m) = ·mod' n n ≤-refl (splitℕ-≤ (suc m) n)
+
+ where
+ ·mod' : ∀ N n → n ≤ N → ((suc m) ≤ n) ⊎ (n < suc m) → 
+    ((suc k · n) mod (suc k · suc m)) ≡ suc k · (n mod suc m)
+ ·mod' _ zero x _ = cong (modInd (m + k · suc m)) (sym (0≡m·0 (suc k)))
+                  ∙ 0≡m·0 (suc k)
+ ·mod' zero (suc n) x _ = ⊥.rec (¬-<-zero x)
+ ·mod' (suc N) n@(suc n') x (inl (m' , p)) =
+  let z = ·mod' N m' (≤-trans (m
+               , +-comm m m' ∙ injSuc (sym (+-suc m' m) ∙ p))
+              (pred-≤-pred x)) (splitℕ-≤ _ _) ∙ cong ((suc k) ·_)
+            (sym (modIndStep m m') ∙
+             cong (_mod (suc m)) (+-comm (suc m) m' ∙ p))
+  in (cong (λ y → ((suc k · y) mod (suc k · suc m))) (sym p)
+       ∙ cong {x = (m' + suc m + k · (m' + suc m))}
+               {suc (m + k · suc m + (m' + k · m'))}
+            (modInd (m + k · suc m))
+              (cong (_+ k · (m' + suc m)) (+-suc m' m ∙ cong suc (+-comm m' m))
+                 ∙ cong suc
+                  (sym (+-assoc m m' _)
+                    ∙∙ cong (m +_)
+                       (((cong (m' +_) (sym (·-distribˡ k _ _)
+                         ∙ +-comm (k · m') _) ∙ +-assoc m' (k · suc m) (k · m'))
+                        ∙ cong (_+ k · m') (+-comm m' _))
+                        ∙ sym (+-assoc (k · suc m) m' (k · m')) )
+                    ∙∙ +-assoc m _ _))
+         ∙ modIndStep (m + k · suc m) (m' + k · m')) ∙ z
+ ·mod' (suc N) n x (inr x₁) =
+   modIndBase _ _ (
+     subst2 _<_ (·-comm n (suc k)) (·-comm _ (suc k))
+      (<-·sk {n} {suc m} {k = k} x₁) ) 
+    ∙ cong ((suc k) ·_) (sym (modIndBase _ _ x₁))
+
+-- ·quotient : ∀ k n m → quotient ((suc k) · n) / ((suc k) · (suc m))
+--                        ≡ quotient n / (suc m)
+-- ·quotient k zero m = {!!}
+-- ·quotient k (suc n) m = zz
+
+--   where
+
+
+--     z : 
+--           suc (remainder n / (suc m)) +
+--            (suc m · (quotient ((suc k) · n) / ((suc k) · (suc m))))
+--           ≡
+--           (remainder suc n / (suc m)) +
+--           suc m · (quotient suc n / (suc m))
+--     z = cong suc (
+--          cong (λ x →  (remainder n / (suc m)) +
+--            suc m · x) (·quotient k n m)
+--             ∙ ≡remainder+quotient ((suc m)) n)
+--           ∙
+--            (sym (≡remainder+quotient ((suc m)) (suc n)))
+
+--     zz : (quotient suc k · suc n / (suc k · suc m)) ≡
+--            (quotient suc n / suc m)
+--     zz = {!!}
+
+--   -- z : (suc k) · (remainder n / (suc m) +
+--   --           (suc m) · (quotient n / (suc m)))
+--   --        ≡ (remainder suc k · n / (suc k · suc m)) +
+--   --            (suc k) · (suc m) · (quotient (suc k · n) / (suc k · suc m))
+--   -- z = cong ((suc k) ·_) (≡remainder+quotient (suc m) n)
+--   --    ∙ sym (≡remainder+quotient ((suc k) · (suc m)) ((suc k) · n))
+--   --     -- ∙ {!!}

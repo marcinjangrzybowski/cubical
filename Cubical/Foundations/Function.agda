@@ -26,6 +26,11 @@ _$_ : ∀ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} → ((a : A) → B a) 
 f $ a = f a
 {-# INLINE _$_ #-}
 
+_$S_ : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → (A → B) → A → B
+f $S a = f a
+{-# INLINE _$S_ #-}
+
+
 infixr 9 _∘_ _∘S_
 
 _∘_ : (g : {a : A} → (b : B a) → C a b) → (f : (a : A) → B a) → (a : A) → C a (f a)
@@ -172,3 +177,65 @@ homotopySymInv {f = f} H a j i =
                  ; (j = i0) → H (H a (~ i)) i
                  ; (j = i1) → H a (i ∧ ~ k)})
         (H (H a (~ i ∨ j)) i)
+
+homotopySymInv' : {f g : A → A} (H : ∀ a → f a ≡ a) (G : ∀ a → g a ≡ a) (a : A)
+               → Square {A = A}
+                 (λ i → H (G a (~ i)) i)
+                 (λ i → G (H a i) (~ i))
+                 refl
+                 refl
+homotopySymInv' {f = f} {g = g} H G a j i =
+
+  hcomp (λ k → λ { (i = i0) → H a (~ k)
+                 ; (i = i1) → g a
+                 ; (j = i0) → H (G a (~ i)) (~ k ∨ i)
+                 ; (j = i1) → G (H a (~ k ∨ i)) (~ i)
+                 })
+        (G a (~ i))
+
+
+
+homotopySymInv'' : {f g : A → A} (H : ∀ a → f a ≡ a) (G : ∀ a → g a ≡ a)
+               → Square {A = A → A}
+                 (λ i a → H (G a (~ i)) i)
+                 (λ i a → G (H a i) (~ i))
+                 refl
+                 refl
+homotopySymInv'' {f = f} {g = g} H G j i a =
+
+  hcomp (λ k → λ { (i = i0) → H a (~ k)
+                 ; (i = i1) → g a
+                 ; (j = i0) → H (G a (~ i)) (~ k ∨ i)
+                 ; (j = i1) → G (H a (~ k ∨ i)) (~ i)
+                 })
+        (G a (~ i))
+
+homotopyCompExt : {f g : A → A} (H : ∀ a → f a ≡ a) (G : ∀ a → g a ≡ a) (a : A)
+               → Square {A = A}
+                 (λ i → H (G a (~ i)) i)
+                 (H a ∙' sym (G a))
+                 refl
+                 refl
+homotopyCompExt {f = f} {g = g} H G a j i =
+
+  hcomp (λ k → λ { (i = i0) → H a (~ k)
+                 ; (i = i1) → g a
+                 ; (j = i0) → H (G a (~ i)) (~ k ∨ i)
+                 
+                 })
+        (G a (~ i))
+
+
+homotopySymInv-swap : {f g : A → A} (H : ∀ a → f a ≡ a) (G : ∀ a → g a ≡ a) (a : A) 
+               → Square {A = A}
+                 (cong f (sym (G a)) ∙'  H (g a))
+                 ((H a) ∙ sym (G a))
+                 refl
+                 refl
+homotopySymInv-swap {f = f} {g = g} H G a j i =
+
+  hcomp (λ k → λ { (i = i0) → f (G a (j ∨ k)) 
+                 ; (i = i1) → G a (j ∧ ~ k)
+                 
+                 })
+        (H (G a j) i)

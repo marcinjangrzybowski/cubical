@@ -17,6 +17,9 @@ private
     ℓ ℓ' : Level
     A : Type ℓ
 
+
+
+
 module _ {A : I → Type ℓ} {x : A i0} {y : A i1} where
   toPathP⁻ : x ≡ transport⁻ (λ i → A i) y → PathP A x y
   toPathP⁻ p = symP (toPathP (sym p))
@@ -508,6 +511,10 @@ invSides-filler-rot {A = A} {x = x} {y} p z i j =
                  (λ _ → p (interpolateI (interpolateI i j (~ j)) (~ k ∧ z) (k ∨ z)))
                  (λ _ → p (interpolateI (interpolateI j i (~ i)) (~ k ∧ z) (k ∨ z))))
         (p z)
+        
+hconst : ∀ {ℓ} {A : Type ℓ} → I → (I → A) → A
+hconst φ a = hcomp {φ = φ} (λ z _ → a z) (a i0)
+
 
 module CompSquares
   {a₀₀₀ a₀₀₁ : A} {a₀₀₋ : a₀₀₀ ≡ a₀₀₁}
@@ -536,7 +543,7 @@ module CompSquares
   compSquares i j =
     hcomp (compSquaresSides i j) (a₀₋₋ i j)
 
-
+  
   module _ (a₁₋₋ : Square a₁₀₋ a₁₁₋ a₁₋₀ a₁₋₁) where
 
 
@@ -547,6 +554,96 @@ module CompSquares
      hcomp
         (λ k → primPOr _ (i ∨ ~ i ∨ j ∨ ~ j)
                (primPOr (~ z) z
-               (λ _ → hfill (compSquaresSides i j) (inS (a₀₋₋ i j)) (~ k)) (λ _ → p k i j))
+               (λ _ → hcomp
+                         (λ j' →
+                            primPOr (i ∨ ~ i ∨ j ∨ ~ j) k
+                                (compSquaresSides i j (~ k ∧ j'))
+                                 λ _ → a₀₋₋ i j)
+                        (a₀₋₋ i j)
+                 ) (λ _ → p k i j))
                (compSquaresSides i j (z ∨ ~ k)))
         (p i0 i j)
+
+   Cube→compSquaresPath : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁ →
+        compSquares ≡ a₁₋₋
+        
+   Cube→compSquaresPath c z i j =
+      hconst (z ∨ i ∨ ~ i ∨ j ∨ ~ j) λ z → c z i j  
+    
+
+  fillCube : Cube a₀₋₋ compSquares
+                  a₋₀₋ a₋₁₋
+                  a₋₋₀ a₋₋₁
+  fillCube = compSquaresPath→Cube compSquares refl
+
+  
+
+
+
+
+module CompCubes
+  {a₀₀₀ a₀₀₁ : A} {a₀₀₋ : a₀₀₀ ≡ a₀₀₁}
+  {a₀₁₀ a₀₁₁ : A} {a₀₁₋ : a₀₁₀ ≡ a₀₁₁}
+  {a₀₋₀ : a₀₀₀ ≡ a₀₁₀} {a₀₋₁ : a₀₀₁ ≡ a₀₁₁}
+  {a₀₋₋ : Square a₀₀₋ a₀₁₋ a₀₋₀ a₀₋₁}
+  {a₁₀₀ a₁₀₁ : A} {a₁₀₋ : a₁₀₀ ≡ a₁₀₁}
+  {a₁₁₀ a₁₁₁ : A} {a₁₁₋ : a₁₁₀ ≡ a₁₁₁}
+  {a₁₋₀ : a₁₀₀ ≡ a₁₁₀} {a₁₋₁ : a₁₀₁ ≡ a₁₁₁}
+  {a₁₋₋ : Square a₁₀₋ a₁₁₋ a₁₋₀ a₁₋₁}
+  {a₋₀₀ : a₀₀₀ ≡ a₁₀₀} {a₋₀₁ : a₀₀₁ ≡ a₁₀₁}
+  {a₋₀₋ : Square a₀₀₋ a₁₀₋ a₋₀₀ a₋₀₁}
+  {a₋₁₀ : a₀₁₀ ≡ a₁₁₀} {a₋₁₁ : a₀₁₁ ≡ a₁₁₁}
+  {a₋₁₋ : Square a₀₁₋ a₁₁₋ a₋₁₀ a₋₁₁}
+  {a₋₋₀ : Square a₀₋₀ a₁₋₀ a₋₀₀ a₋₁₀}
+  {a₋₋₁ : Square a₀₋₁ a₁₋₁ a₋₀₁ a₋₁₁}
+
+  {a'₀₀₀ a'₀₀₁ : A} {a'₀₀₋ : a'₀₀₀ ≡ a'₀₀₁}
+  {a'₀₁₀ a'₀₁₁ : A} {a'₀₁₋ : a'₀₁₀ ≡ a'₀₁₁}
+  {a'₀₋₀ : a'₀₀₀ ≡ a'₀₁₀} {a'₀₋₁ : a'₀₀₁ ≡ a'₀₁₁}
+  {a'₀₋₋ : Square a'₀₀₋ a'₀₁₋ a'₀₋₀ a'₀₋₁}
+  {a'₁₀₀ a'₁₀₁ : A} {a'₁₀₋ : a'₁₀₀ ≡ a'₁₀₁}
+  {a'₁₁₀ a'₁₁₁ : A} {a'₁₁₋ : a'₁₁₀ ≡ a'₁₁₁}
+  {a'₁₋₀ : a'₁₀₀ ≡ a'₁₁₀} {a'₁₋₁ : a'₁₀₁ ≡ a'₁₁₁}
+  {a'₁₋₋ : Square a'₁₀₋ a'₁₁₋ a'₁₋₀ a'₁₋₁}
+  {a'₋₀₀ : a'₀₀₀ ≡ a'₁₀₀} {a'₋₀₁ : a'₀₀₁ ≡ a'₁₀₁}
+  {a'₋₀₋ : Square a'₀₀₋ a'₁₀₋ a'₋₀₀ a'₋₀₁}
+  {a'₋₁₀ : a'₀₁₀ ≡ a'₁₁₀} {a'₋₁₁ : a'₀₁₁ ≡ a'₁₁₁}
+  {a'₋₁₋ : Square a'₀₁₋ a'₁₁₋ a'₋₁₀ a'₋₁₁}
+  {a'₋₋₀ : Square a'₀₋₀ a'₁₋₀ a'₋₀₀ a'₋₁₀}
+  {a'₋₋₁ : Square a'₀₋₁ a'₁₋₁ a'₋₀₁ a'₋₁₁}
+  (c : Cube a'₀₋₋ a'₁₋₋ a'₋₀₋ a'₋₁₋ a'₋₋₀ a'₋₋₁)
+
+  {p₀₀₀ p₀₀₁} {p₀₀₋ : Square _ _ p₀₀₀ p₀₀₁}
+  {p₀₁₀ p₀₁₁} {p₀₁₋ : Square _ _ p₀₁₀ p₀₁₁}
+  {p₀₋₀ : Square a'₀₋₀ a₀₋₀ p₀₀₀ p₀₁₀} {p₀₋₁ : Square a'₀₋₁ a₀₋₁  p₀₀₁ p₀₁₁}
+  (p₀₋₋ : Cube a'₀₋₋ a₀₋₋  p₀₀₋ p₀₁₋ p₀₋₀ p₀₋₁)
+  {p₁₀₀ p₁₀₁} {p₁₀₋ : Square a'₁₀₋ a₁₀₋  p₁₀₀ p₁₀₁}
+  {p₁₁₀ p₁₁₁} {p₁₁₋ : Square a'₁₁₋ a₁₁₋  p₁₁₀ p₁₁₁}
+  {p₁₋₀ : Square a'₁₋₀ a₁₋₀ p₁₀₀ p₁₁₀} {p₁₋₁ : Square a'₁₋₁ a₁₋₁ p₁₀₁ p₁₁₁}
+  (p₁₋₋ : Cube a'₁₋₋ a₁₋₋ p₁₀₋ p₁₁₋ p₁₋₀ p₁₋₁)
+  {p₋₀₀ : Square a'₋₀₀ a₋₀₀ p₀₀₀ p₁₀₀} {p₋₀₁ : Square a'₋₀₁ a₋₀₁ p₀₀₁ p₁₀₁}
+  (p₋₀₋ : Cube a'₋₀₋ a₋₀₋ p₀₀₋ p₁₀₋ p₋₀₀ p₋₀₁)
+  {p₋₁₀ : Square a'₋₁₀ a₋₁₀ p₀₁₀ p₁₁₀} {p₋₁₁ : Square a'₋₁₁ a₋₁₁ p₀₁₁ p₁₁₁}
+  (p₋₁₋ : Cube a'₋₁₋ a₋₁₋ p₀₁₋ p₁₁₋ p₋₁₀ p₋₁₁)
+  (p₋₋₀ : Cube a'₋₋₀ a₋₋₀ p₀₋₀ p₁₋₀ p₋₀₀ p₋₁₀)
+  (p₋₋₁ : Cube a'₋₋₁ a₋₋₁ p₀₋₁ p₁₋₁ p₋₀₁ p₋₁₁)
+
+
+  where
+
+  compCubesSides : ∀ i j k → I → Partial (i ∨ ~ i ∨ j ∨ ~ j ∨ k ∨ ~ k ) A
+  compCubesSides i j k z (i = i0) = p₀₋₋ z j k
+  compCubesSides i j k z (i = i1) = p₁₋₋ z j k
+  compCubesSides i j k z (j = i0) = p₋₀₋ z i k
+  compCubesSides i j k z (j = i1) = p₋₁₋ z i k
+  compCubesSides i j k z (k = i0) = p₋₋₀ z i j
+  compCubesSides i j k z (k = i1) = p₋₋₁ z i j
+
+
+  compCubes : Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁
+  compCubes i j k  = 
+    hcomp (compCubesSides i j k) (c i j k)
+
+
+
+

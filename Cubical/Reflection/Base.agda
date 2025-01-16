@@ -30,7 +30,7 @@ instance
 instance
  RawMonadFailTC : RawMonadFail R.TC (List R.ErrorPart)
  RawMonadFail.fail RawMonadFailTC = R.typeError
- RawMonadFail._<|>_ RawMonadFailTC = R.catchTC
+ RawMonadFail._<|>_ RawMonadFailTC x y = R.catchTC x y
 
 liftTC : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → (A → B) → R.TC A → R.TC B
 liftTC f ta = ta >>= λ a → R.returnTC (f a)
