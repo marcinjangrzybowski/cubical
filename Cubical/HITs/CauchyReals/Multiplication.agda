@@ -35,7 +35,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Relation.Binary
 
 open import Cubical.HITs.PropositionalTruncation as PT
-open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_) 
+open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
 
 open import Cubical.Data.Rationals using (ℚ ; [_/_])
 open import Cubical.Data.Rationals.Order using
@@ -66,7 +66,7 @@ open import Cubical.HITs.CauchyReals.Continuous
 -- HoTT (11.3.46)
 sqᵣ' : Σ (ℝ → ℝ) IsContinuous
 sqᵣ'  = (λ r → f r (getClamps r))
-  , λ u ε → 
+  , λ u ε →
      PT.elim2 {P = λ gcr _ →
         ∃[ δ ∈ ℚ₊ ] (∀ v → u ∼[ δ ] v
             → f u gcr ∼[ ε ] (f v (getClamps v)))}
@@ -89,7 +89,7 @@ sqᵣ'  = (λ r → f r (getClamps r))
                         {l = (n' ℕ.+ suc (suc (n' ℕ.+ zero)))} )))
 
             δ = (invℚ₊ L) ℚ₊· ε
-        in ∣ δ , (λ v → 
+        in ∣ δ , (λ v →
               PT.elim {P = λ gcv → u ∼[ δ ] v → f' u (1+ n , nL) ∼[ ε ] f v gcv}
                (λ _ → isPropΠ λ _ → isProp∼ _ _ _ )
                  (uncurry (λ (1+ n*) n*L u∼v →
@@ -107,7 +107,7 @@ sqᵣ'  = (λ r → f r (getClamps r))
                                    (ℚ.0<ℚ₊ ε)
                                      (subst (1 ℤ.<_)
                                        (sym (ℤ.·IdL _))
-                                        1<L )))) 
+                                        1<L ))))
                          zz* = (sym (absᵣNonNeg (absᵣ u +ᵣ rat (fst ε))
                                 (subst (_≤ᵣ (absᵣ u +ᵣ rat (fst ε)))
                                  (+IdR 0)
@@ -139,7 +139,7 @@ sqᵣ'  = (λ r → f r (getClamps r))
                                ((≤ℚ→≤ᵣ _ _ $ ℚ.0≤ℚ₊ ε)))) n'L) nL
                          subst∼[ ℚ₊≡ (ℚ.y·[x/y] L (fst ε)) ]
                          2co (1+ n') (1+ n*) v
-                          
+
                           ((isTrans≤<ᵣ (absᵣ v) _ _
                             zz' n'L))
                             n*L)
@@ -165,7 +165,7 @@ sqᵣ'  = (λ r → f r (getClamps r))
         Δ n = ℚ.<→ℚ₊
              (_//_.[ 1 , 4 ])
              (_//_.[ pos (suc (suc (n))) , 1 ])
-             
+
              ((<Δ (suc (n))))
         q* : ℕ → ℚ
         q* n = ℚ.clamp (ℚ.- (fst (Δ n))) (fst (Δ n)) q
@@ -192,13 +192,13 @@ sqᵣ'  = (λ r → f r (getClamps r))
     in cong rat z
   w .Elimℝ-Prop.limA x p R n< n<' = eqℝ _ _
     λ ε → PT.rec (isProp∼ _ _ _) (ww ε) <n⊓
-      
-    
+
+
    where
 
    n⊓ = ℕ.min n n'
    n⊔ = ℕ.max n n'
-   
+
    <n⊓ : absᵣ (lim x p) <ᵣ rat [ pos (suc n⊓) / 1+ 0 ]
    <n⊓ =
     let z = <min-rr _ _ _ n< n<'
@@ -219,14 +219,14 @@ sqᵣ'  = (λ r → f r (getClamps r))
      Δ = ℚ.<→ℚ₊ q q' q<q'
      θ = ℚ.min₊ (ℚ./3₊ ε) Δ
 
-     3θ≤ε : (fst θ) ℚ.+ ((fst θ) ℚ.+ (fst θ)) ℚ.≤ fst ε 
+     3θ≤ε : (fst θ) ℚ.+ ((fst θ) ℚ.+ (fst θ)) ℚ.≤ fst ε
      3θ≤ε = subst2 ℚ._≤_
         (3·x≡x+[x+x] (fst θ))
          (cong (3 ℚ.·_) (ℚ.·Comm _ _) ∙ ℚ.y·[x/y] 3 (fst ε))
        (ℚ.≤-o· ((ℚ.min (fst (ℚ./3₊ ε)) (fst Δ)))
-                (fst (ℚ./3₊ ε)) 3 ((ℚ.0≤ℚ₊ 3)) (ℚ.min≤ (fst (ℚ./3₊ ε)) (fst Δ))) 
-       
-       
+                (fst (ℚ./3₊ ε)) 3 ((ℚ.0≤ℚ₊ 3)) (ℚ.min≤ (fst (ℚ./3₊ ε)) (fst Δ)))
+
+
      δ = (([ pos (suc (suc n)) / 1+ (suc n⊔) ] , _)
                                     ℚ₊· θ)
      η = (([ pos (suc (suc n')) / 1+ (suc n⊔) ] , _)
@@ -248,7 +248,7 @@ sqᵣ'  = (λ r → f r (getClamps r))
              ([ pos (suc (suc n⊔)) / 1+ (suc n*) ] , _))))
            ∙ sym (ℚ.·Assoc (fst (invℚ₊ (2 ℚ₊· fromNat (suc (suc n*)))))
              [ pos (suc (suc n*)) / 1+ (suc n⊔) ] (fst θ))
-     
+
      0<ε-[δ+η] : 0< (fst ε ℚ.- (fst δ ℚ.+ fst η))
      0<ε-[δ+η] = snd (ℚ.<→ℚ₊ (fst δ ℚ.+ fst η) (fst ε)
           (ℚ.isTrans<≤ _ _ _
@@ -279,7 +279,7 @@ sqᵣ'  = (λ r → f r (getClamps r))
                in subst (ℚ._<
                      fst θ ℚ.+ (fst θ ℚ.+ fst θ))
                        (ℚ.+IdL (fst δ ℚ.+ (fst η))) z')
-            
+
                      3θ≤ε))
 
      R' :
@@ -297,7 +297,7 @@ sqᵣ'  = (λ r → f r (getClamps r))
              (fst (invℚ₊ (2 ℚ₊· fromNat (suc (suc n⊔)))))
              (fst (invℚ₊ (2 ℚ₊· fromNat (suc (suc n⊔)))))
              (fst θ))
-             (ℚ.·IdL (fst θ))             
+             (ℚ.·IdL (fst θ))
              ((ℚ.<-·o
                (((fst (invℚ₊ (2 ℚ₊· fromNat (suc (suc n⊔))))))
                 ℚ.+
@@ -306,11 +306,11 @@ sqᵣ'  = (λ r → f r (getClamps r))
               (ℚ.0<ℚ₊ θ)
                (subst (ℚ._< 1)
                  (sym (ℚ.ε/2+ε/2≡ε _) ∙ cong (λ x → x ℚ.+ x)
-                   (ℚ.·Comm _ _ ∙ cong fst 
+                   (ℚ.·Comm _ _ ∙ cong fst
                      (ℚ.invℚ₊Dist· 2 (fromNat (suc (suc n⊔))))))
                    (1/n<sucK _ _) ))))
                (ℚ.min≤' (fst (ℚ./3₊ ε)) (fst Δ))
-       
+
        ν<n⊓ : absᵣ (x υ) <ᵣ (fromNat (suc n⊓))
        ν<n⊓ = isTrans≤<ᵣ (absᵣ (x υ))
                  (rat (q ℚ.+ fst (υ ℚ₊+ υ))) ((fromNat (suc n⊓)))
@@ -325,7 +325,7 @@ sqᵣ'  = (λ r → f r (getClamps r))
                             (rat (q ℚ.+ fst (υ ℚ₊+ υ)) <ᵣ_)
                           (cong rat (lem--05 {q} {q'}))
                            (<ℚ→<ᵣ _ _ (ℚ.<-o+ _ _ q υ+υ<Δ))) q'≤n)
-       
+
        ν<n : absᵣ (x υ) <ᵣ fromNat (suc n)
        ν<n = isTrans<≤ᵣ (absᵣ (x υ)) (fromNat (suc n⊓)) (fromNat (suc n))
                 ν<n⊓ (≤ℚ→≤ᵣ _ _
@@ -350,7 +350,7 @@ sqᵣ'  = (λ r → f r (getClamps r))
      ll = cong (fst (clampedSq (suc n)) ∘S x) (ℚ₊≡ (ν-δη n))
              subst∼[ refl ]
            cong (fst (clampedSq (suc n')) ∘S x) (ℚ₊≡ (ν-δη n')) $ R'
-        
+
   w .Elimℝ-Prop.isPropA _ = isPropΠ2 λ _ _ → isSetℝ _ _
 
  f' : ∀ r → _ → ℝ
@@ -358,8 +358,8 @@ sqᵣ'  = (λ r → f r (getClamps r))
 
  f : ∀ r → ∃[ n ∈ ℕ₊₁ ] absᵣ r <ᵣ fromNat (ℕ₊₁→ℕ n) → ℝ
  f r = PT.rec→Set {B = ℝ} isSetℝ
-    (f' r) 
-    (λ (n , u) (n' , u') → 2co n n' r u u') 
+    (f' r)
+    (λ (n , u) (n' , u') → 2co n n' r u u')
 
 sqᵣ : ℝ → ℝ
 sqᵣ = fst sqᵣ'
@@ -392,17 +392,17 @@ sqᵣ-rat = ElimProp.go w
        (λ x → rat (x ℚ.· x))
         (ℚ.inClamps (ℚ.- c) c _
          -c<x x<c)
- 
+
     where
     x' = (_//_.[ x ])
-    
+
     c : ℚ
     c = (fst (fromNat (suc (suc (getClampsOnQ x' .fst .ℕ₊₁.n))))
         ℚ.- _//_.[ 1 , 4 ])
 
 
     c' = fromNat ((suc (getClampsOnQ x' .fst .ℕ₊₁.n)))
-    
+
     <c' : ℚ.abs' x' ℚ.< c'
     <c' = <ᵣ→<ℚ _ _ (snd (getClampsOnQ x'))
 
@@ -412,7 +412,7 @@ sqᵣ-rat = ElimProp.go w
                ∙ cong ((ℚ._- [ 1 / 4 ])) (ℚ.+Comm c' 1 ∙
                 ℚ.ℕ+→ℚ+ _ _))
              (ℚ.≤-o+ 0 (1 ℚ.- [ 1 / 4 ]) c' ℚ.decℚ≤?  )
-    
+
     <c : ℚ.abs' x' ℚ.≤ c
     <c = ℚ.isTrans≤ (ℚ.abs' x') c' c
        (ℚ.<Weaken≤ (ℚ.abs' x') c' <c') c'≤c
@@ -430,7 +430,7 @@ sqᵣ-rat = ElimProp.go w
 open ℚ.HLP
 
 
-rat·ᵣrat : ∀ r q → rat (r ℚ.· q) ≡ rat r ·ᵣ rat q 
+rat·ᵣrat : ∀ r q → rat (r ℚ.· q) ≡ rat r ·ᵣ rat q
 rat·ᵣrat r q =
   cong rat (
      distℚ! (r ℚ.· q) ·[ ge1 ≡ (ge1 +ge ge1) ·ge ge[ [ 1 / 2 ] ] ]
@@ -462,7 +462,7 @@ IsContinuous·ᵣR x =
 
 IsContinuous·ᵣL : ∀ x → IsContinuous (x ·ᵣ_)
 IsContinuous·ᵣL x = subst IsContinuous
-  (funExt λ z → ·ᵣComm z x) (IsContinuous·ᵣR x) 
+  (funExt λ z → ·ᵣComm z x) (IsContinuous·ᵣR x)
 
 
 
@@ -537,8 +537,8 @@ IsCommRingℝ = CR.makeIsCommRing
 
 
 
-·ᵣMaxDistrPos : ∀ x y z → ℚ.0< z →  (maxᵣ x y) ·ᵣ (rat z) ≡ maxᵣ (x ·ᵣ rat z) (y ·ᵣ rat z)   
-·ᵣMaxDistrPos x y z 0<z = 
+·ᵣMaxDistrPos : ∀ x y z → ℚ.0< z →  (maxᵣ x y) ·ᵣ (rat z) ≡ maxᵣ (x ·ᵣ rat z) (y ·ᵣ rat z)
+·ᵣMaxDistrPos x y z 0<z =
   ≡Continuous _ _
      (IsContinuous∘ _ _ (IsContinuous·ᵣR (rat z)) (IsContinuousMaxR y))
      (IsContinuous∘ _ _ (IsContinuousMaxR
@@ -550,7 +550,7 @@ IsCommRingℝ = CR.makeIsCommRing
                                 (IsContinuous·ᵣR (rat z))))
          (λ y' → sym (rat·ᵣrat _ _)
              ∙∙ cong rat (ℚ.·MaxDistrℚ x' y' z 0<z) ∙∙
-              (cong₂ maxᵣ (rat·ᵣrat x' z) (rat·ᵣrat y' z)))                    
+              (cong₂ maxᵣ (rat·ᵣrat x' z) (rat·ᵣrat y' z)))
          y)
      x
 
@@ -603,7 +603,7 @@ IsCommRingℝ = CR.makeIsCommRing
                            ) (ℚ.min≤' (fst Δ) (fst Δ'))))))) limX∼x)
              zF : f (lim x p) x∈ ∼[ ℚ./2₊ ε ] g (x δ) xδ∈P'
              zF = subst (f (lim x p) x∈ ∼[ ℚ./2₊ ε ]_)
-                  (R _ xδ∈P xδ∈P') 
+                  (R _ xδ∈P xδ∈P')
                  (θ∼ _ _ (∼-monotone≤
                     ((subst (ℚ._≤ fst θ)
                         (sym (ℚ.ε/2+ε/2≡ε
@@ -623,11 +623,11 @@ IsCommRingℝ = CR.makeIsCommRing
                        (ℚ.isTrans≤ _ _ _ ((ℚ.min≤'
                           (fst (ℚ.min₊ (Δ) (Δ'))) (fst (ℚ.min₊ θ η)))
                            ) (ℚ.min≤' (fst θ) (fst η)))))
-                       
+
                   (sym∼ _ _ _ ((𝕣-lim-self x p δ δ))))
              zz = subst∼ ((ℚ.ε/2+ε/2≡ε (fst ε))) (triangle∼ zF (sym∼ _ _ _ zG))
          in  zz)
-        f' g') (oP (lim x p) x∈) (oP' (lim x p) x∈') 
+        f' g') (oP (lim x p) x∈) (oP' (lim x p) x∈')
 
  w .Elimℝ-Prop.isPropA _ = isPropΠ2 λ _ _ → isSetℝ _ _
 
@@ -684,20 +684,20 @@ cont₂·ᵣWP P f g fC gC = IsContinuousWP∘' P _
           (contDiagNE₂WP sumR P _ _
             (IsContinuousWP∘' P _ _ IsContinuousSqᵣ fC)
             ((IsContinuousWP∘' P _ _ IsContinuousSqᵣ gC))))))
-    
 
-·-ᵣ : ∀ x y → x ·ᵣ (-ᵣ y) ≡ -ᵣ (x ·ᵣ y)  
+
+·-ᵣ : ∀ x y → x ·ᵣ (-ᵣ y) ≡ -ᵣ (x ·ᵣ y)
 ·-ᵣ x =
   ≡Continuous _ _ (IsContinuous∘ _ _
        (IsContinuous·ᵣL x) IsContinuous-ᵣ)
       (IsContinuous∘ _ _ IsContinuous-ᵣ (IsContinuous·ᵣL x))
-       λ y' → 
+       λ y' →
          ≡Continuous _ _
              (IsContinuous·ᵣR (-ᵣ (rat y')))
               ((IsContinuous∘ _ _ IsContinuous-ᵣ (IsContinuous·ᵣR (rat y'))))
           (λ x' → sym (rat·ᵣrat _ _) ∙∙ cong rat (·- x' y') ∙∙
               (cong -ᵣ_ (rat·ᵣrat _ _)))
-          x 
+          x
 
 
 -ᵣ· : ∀ x y →  ((-ᵣ x) ·ᵣ y) ≡  -ᵣ (x ·ᵣ y)
@@ -706,4 +706,4 @@ cont₂·ᵣWP P f g fC gC = IsContinuousWP∘' P _
 
 _^ⁿ_ : ℝ → ℕ → ℝ
 x ^ⁿ zero = 1
-x ^ⁿ suc n = (x ^ⁿ n) ·ᵣ x 
+x ^ⁿ suc n = (x ^ⁿ n) ·ᵣ x

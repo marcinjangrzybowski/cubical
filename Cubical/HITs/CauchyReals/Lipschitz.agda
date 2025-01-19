@@ -34,7 +34,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Relation.Binary
 
 open import Cubical.HITs.PropositionalTruncation as PT
-open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_) 
+open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
 
 open import Cubical.Data.Rationals using (ℚ ; [_/_])
 open import Cubical.Data.Rationals.Order using
@@ -109,7 +109,7 @@ sΣℚ<' {u} {v} {ε} p x =
 
 
 -- HoTT Lemma (11.3.10)
-lim-surj : ∀ r → ∃[ x ∈ _ ] (r ≡ (uncurry lim x) )  
+lim-surj : ∀ r → ∃[ x ∈ _ ] (r ≡ (uncurry lim x) )
 lim-surj = PT.map (map-snd (eqℝ _ _)) ∘ (Elimℝ-Prop.go w)
  where
  w : Elimℝ-Prop _
@@ -128,15 +128,15 @@ lim-surj = PT.map (map-snd (eqℝ _ _)) ∘ (Elimℝ-Prop.go w)
 -- TODO : (Lemma 11.3.11)
 
 
-Lipschitz-ℚ→ℚ : ℚ₊ → (ℚ → ℚ) → Type 
+Lipschitz-ℚ→ℚ : ℚ₊ → (ℚ → ℚ) → Type
 Lipschitz-ℚ→ℚ L f =
-  (∀ q r → (ε : ℚ₊) → 
+  (∀ q r → (ε : ℚ₊) →
     ℚ.abs (q ℚ.- r) ℚ.< (fst ε) → ℚ.abs (f q ℚ.- f r) ℚ.< fst (L ℚ₊· ε  ))
 
 
-Lipschitz-ℚ→ℚ' : ℚ₊ → (ℚ → ℚ) → Type 
+Lipschitz-ℚ→ℚ' : ℚ₊ → (ℚ → ℚ) → Type
 Lipschitz-ℚ→ℚ' L f =
-  ∀ q r →  
+  ∀ q r →
     ℚ.abs (f q ℚ.- f r) ℚ.≤ fst L ℚ.· ℚ.abs (q ℚ.- r)
 
 Lipschitz-ℚ→ℚ'→Lipschitz-ℚ→ℚ : ∀ L f →
@@ -145,20 +145,20 @@ Lipschitz-ℚ→ℚ'→Lipschitz-ℚ→ℚ L f P q r ε <ε =
   ℚ.isTrans≤< _ _ _ (P q r)
     (ℚ.<-o· (ℚ.abs (q ℚ.- r)) (fst ε) _ (ℚ.0<ℚ₊ L) <ε)
 
-Lipschitz-ℚ→ℚ-restr : ℚ₊ → ℚ₊ → (ℚ → ℚ) → Type 
+Lipschitz-ℚ→ℚ-restr : ℚ₊ → ℚ₊ → (ℚ → ℚ) → Type
 Lipschitz-ℚ→ℚ-restr Δ L f =
-  (∀ q r → ℚ.abs q ℚ.< fst Δ → ℚ.abs r ℚ.< fst Δ → (ε : ℚ₊) → 
+  (∀ q r → ℚ.abs q ℚ.< fst Δ → ℚ.abs r ℚ.< fst Δ → (ε : ℚ₊) →
     ℚ.abs (q ℚ.- r) ℚ.< (fst ε) → ℚ.abs (f q ℚ.- f r) ℚ.< fst (L ℚ₊· ε  ))
 
-Lipschitz-ℚ→ℚ-restr' : ℚ₊ → ℚ₊ → (ℚ → ℚ) → Type 
+Lipschitz-ℚ→ℚ-restr' : ℚ₊ → ℚ₊ → (ℚ → ℚ) → Type
 Lipschitz-ℚ→ℚ-restr' Δ L f =
-  (∀ q r → fst Δ ℚ.< ℚ.abs q → fst Δ  ℚ.< ℚ.abs r → (ε : ℚ₊) → 
+  (∀ q r → fst Δ ℚ.< ℚ.abs q → fst Δ  ℚ.< ℚ.abs r → (ε : ℚ₊) →
     ℚ.abs (q ℚ.- r) ℚ.< (fst ε) → ℚ.abs (f q ℚ.- f r) ℚ.< fst (L ℚ₊· ε  ))
 
 
 Lipschitz-ℚ→ℚ-extend : ∀ Δ L f (δ : ℚ₊) → fst δ ℚ.< fst Δ
  → Lipschitz-ℚ→ℚ-restr Δ L f
- → Lipschitz-ℚ→ℚ L (f ∘ ℚ.clamp (ℚ.- (fst Δ ℚ.- fst δ)) (fst Δ ℚ.- fst δ)) 
+ → Lipschitz-ℚ→ℚ L (f ∘ ℚ.clamp (ℚ.- (fst Δ ℚ.- fst δ)) (fst Δ ℚ.- fst δ))
 Lipschitz-ℚ→ℚ-extend Δ L f δ δ<Δ x q r ε v =
  let z : ∀ u → ℚ.abs (ℚ.clamp (ℚ.- (fst Δ ℚ.- fst δ)) (fst Δ ℚ.- fst δ) u)
                   ℚ.< fst Δ
@@ -183,40 +183,40 @@ Lipschitz-ℚ→ℚ-extend Δ L f δ δ<Δ x q r ε v =
 
 
 -- HoTT Definition (11.3.14)
-Lipschitz-ℚ→ℝ : ℚ₊ → (ℚ → ℝ) → Type 
+Lipschitz-ℚ→ℝ : ℚ₊ → (ℚ → ℝ) → Type
 Lipschitz-ℚ→ℝ L f =
-  (∀ q r → (ε : ℚ₊) → 
+  (∀ q r → (ε : ℚ₊) →
     (ℚ.- (fst ε)) ℚ.< (q ℚ.- r)
      → q ℚ.- r ℚ.< (fst ε) → f q ∼[ L ℚ₊· ε  ] f r)
 
-Lipschitz-rat∘ : ∀ l f → Lipschitz-ℚ→ℚ l f → Lipschitz-ℚ→ℝ l (rat ∘ f) 
+Lipschitz-rat∘ : ∀ l f → Lipschitz-ℚ→ℚ l f → Lipschitz-ℚ→ℝ l (rat ∘ f)
 Lipschitz-rat∘ l f x =
   λ q r ε x₁ x₂ →
-    rat-rat-fromAbs _ _ _ 
+    rat-rat-fromAbs _ _ _
        $ x q r ε (ℚ.absFrom<×< (fst ε) (q ℚ.- r) x₁ x₂)
 
-Lipschitz-ℝ→ℝ : ℚ₊ → (ℝ → ℝ) → Type 
+Lipschitz-ℝ→ℝ : ℚ₊ → (ℝ → ℝ) → Type
 Lipschitz-ℝ→ℝ L f =
-  (∀ u v → (ε : ℚ₊) → 
+  (∀ u v → (ε : ℚ₊) →
     u ∼[ ε  ] v → f u ∼[ L ℚ₊· ε  ] f v)
 
 isPropLipschitz-ℝ→ℝ : ∀ q f → isProp (Lipschitz-ℝ→ℝ q f)
 isPropLipschitz-ℝ→ℝ q f = isPropΠ4 λ _ _ _ _ → isProp∼ _ _ _
 
-·- : ∀ x y → x ℚ.· (ℚ.- y) ≡ ℚ.- (x ℚ.· y)  
+·- : ∀ x y → x ℚ.· (ℚ.- y) ≡ ℚ.- (x ℚ.· y)
 ·- x y = ℚ.·Assoc x (-1) y
          ∙∙ cong (ℚ._· y) (ℚ.·Comm x (-1))
          ∙∙ sym (ℚ.·Assoc (-1) x y)
 
 
 -- HoTT Lemma (11.3.15)
-fromLipschitz : ∀ L → Σ _ (Lipschitz-ℚ→ℝ L) → Σ _ (Lipschitz-ℝ→ℝ L) 
+fromLipschitz : ∀ L → Σ _ (Lipschitz-ℚ→ℝ L) → Σ _ (Lipschitz-ℝ→ℝ L)
 fromLipschitz L (f , fL) = f' ,
   λ u v ε x → Elimℝ.go∼ w x
  where
 
  rl : _
- rl q y ε δ p v r v' u' z = 
+ rl q y ε δ p v r v' u' z =
   𝕣-lim' (f q) (v' ∘ (invℚ₊ L) ℚ₊·_)
             (L ℚ₊· ε) (L ℚ₊· δ)
           (λ δ₁ ε₁ →
@@ -258,7 +258,7 @@ fromLipschitz L (f , fL) = f' ,
                         (x·invℚ₊[x] L) ∙ ℚ.·IdL (fst (ε))))
                         (y (invℚ₊ L ℚ₊· ε))
  w .Elimℝ.rat-rat-B q r ε x x₁ = fL q r ε x x₁
- w .Elimℝ.rat-lim-B = rl       
+ w .Elimℝ.rat-lim-B = rl
  w .Elimℝ.lim-rat-B x r ε δ p v₁ u v' u' x₁ = sym∼ _ _ _ $
   rl r x ε δ p v₁ (sym∼ _ _ _ u) v' u' (sym∼ _ _ _ x₁)
  w .Elimℝ.lim-lim-B x y ε δ η p p' v₁ r v' u' v'' u'' x₁ =
@@ -267,7 +267,7 @@ fromLipschitz L (f , fL) = f' ,
        (subst (0<_) e
          $ ℚ.·0< (fst L) (fst ε ℚ.- (fst δ ℚ.+ fst η))
               (snd L) v₁)
-     
+
         ((cong v' (ℚ₊≡ $ sym ([y·x]/y L (fst δ)))
           subst∼[ ℚ₊≡ e ]
            cong v'' (ℚ₊≡ $ sym ([y·x]/y L (fst η)))) x₁)
@@ -306,7 +306,7 @@ lipschConstIrrel L₁ L₂ =
       (p₂ : (δ ε : ℚ₊) → x (L₂ ℚ₊· δ) ∼[ δ ℚ₊+ ε ] x (L₂ ℚ₊· ε)) →
       lim (λ q → x (L₁ ℚ₊· q)) p₁ ≡ lim (λ q → x (L₂ ℚ₊· q)) p₂
  w L₁ L₂ L₂/L₁≤1 x p₁ p₂ = eqℝ _ _ $ λ ε →
-   
+
     (
       (uncurry (lim-lim _ _ ε (/4₊ ε) (/4₊ ε) p₁ p₂)
          (sΣℚ< ((((cong (fst (/4₊ ε) ℚ.+_) (ℚ.·IdL _)) ∙
@@ -324,14 +324,14 @@ lipschConstIrrel L₁ L₂ =
                   (ℚ.0≤ℚ₊ (/4₊ ε)) L₂/L₁≤1)
                    ) $ p₁ (/4₊ ε) ((invℚ₊ L₁ ℚ₊· L₂) ℚ₊· /4₊ ε))))
                    ) )
-  
+
 
 NonExpandingℚₚ : (ℚ → ℚ) → hProp ℓ-zero
-fst (NonExpandingℚₚ f) = ∀ q r → ℚ.abs (f q ℚ.- f r) ℚ.≤ ℚ.abs (q ℚ.- r) 
+fst (NonExpandingℚₚ f) = ∀ q r → ℚ.abs (f q ℚ.- f r) ℚ.≤ ℚ.abs (q ℚ.- r)
 snd (NonExpandingℚₚ f) = isPropΠ2 λ _ _ → ℚ.isProp≤ _ _
 
 NonExpandingₚ : (ℝ → ℝ) → hProp ℓ-zero
-fst (NonExpandingₚ f) = ∀ u v ε →  u ∼[ ε ] v → f u ∼[ ε ] f v 
+fst (NonExpandingₚ f) = ∀ u v ε →  u ∼[ ε ] v → f u ∼[ ε ] f v
 snd (NonExpandingₚ f) = isPropΠ4 λ _ _ _ _ → isProp∼ _ _ _
 
 NonExpandingₚ∘ : ∀ f g → ⟨ NonExpandingₚ f ⟩ → ⟨ NonExpandingₚ g ⟩ →
@@ -350,7 +350,7 @@ congLim' : ∀ x y x' → (p : ∀ q → x q ≡ x' q) →
  lim x y ≡ lim x' (subst (λ x' → (δ ε : ℚ₊) → x' δ ∼[ δ ℚ₊+ ε ] x' ε)
                       (funExt p) y)
 congLim' x y x' p =
-   congLim x y x' _ p 
+   congLim x y x' _ p
 
 -- HoTT Lemma (11.3.40)
 record NonExpanding₂ (g : ℚ → ℚ → ℚ ) : Type where
@@ -358,11 +358,11 @@ record NonExpanding₂ (g : ℚ → ℚ → ℚ ) : Type where
  field
 
   cL : ∀ q r s →
-       ℚ.abs (g q s ℚ.- g r s) ℚ.≤ ℚ.abs (q ℚ.- r) 
+       ℚ.abs (g q s ℚ.- g r s) ℚ.≤ ℚ.abs (q ℚ.- r)
 
   cR : ∀ q r s →
       (ℚ.abs (g q r ℚ.- g q s) ℚ.≤ ℚ.abs (r ℚ.- s))
-      
+
 
 
 
@@ -370,8 +370,8 @@ record NonExpanding₂ (g : ℚ → ℚ → ℚ ) : Type where
  zz q = fromLipschitz (1 , tt) (rat ∘ g q ,
     λ q₁ r₁ ε x₀ x →
       let zz : ℚ.abs (g q q₁ ℚ.- g q r₁) ℚ.≤ ℚ.abs (q₁ ℚ.- r₁)
-          zz = cR q q₁ r₁ 
-      in rat-rat-fromAbs _ _ _ 
+          zz = cR q q₁ r₁
+      in rat-rat-fromAbs _ _ _
            (ℚ.isTrans≤<
              (ℚ.abs (g q q₁ ℚ.- g q r₁)) (ℚ.abs (q₁ ℚ.- r₁))
              _ zz
@@ -385,7 +385,7 @@ record NonExpanding₂ (g : ℚ → ℚ → ℚ ) : Type where
        _ λ h h' ε v → ∀ u → (fst h u) ∼[ ε ] fst h' u
  w .Elimℝ.ratA x .fst = fst (zz x)
 
- w .Elimℝ.ratA x .snd = λ ε u v → 
+ w .Elimℝ.ratA x .snd = λ ε u v →
     subst (fst (zz x) u ∼[_] fst (zz x) v)
      (ℚ₊≡ $ ℚ.·IdL (fst ε)) ∘S snd (zz x) u v ε
  w .Elimℝ.limA x p a x₁ .fst u =
@@ -412,7 +412,7 @@ record NonExpanding₂ (g : ℚ → ℚ → ℚ ) : Type where
   where
   rr :  Elimℝ-Prop λ u → (ε : ℚ₊) (x : (ℚ.- fst ε) ℚ.< (q ℚ.- r))
          (x₁ : (q ℚ.- r) ℚ.< fst ε) →
-               fst (zz q) u ∼[ ε ] fst (zz r) u 
+               fst (zz q) u ∼[ ε ] fst (zz r) u
   rr .Elimℝ-Prop.ratA qq ε x₁ x₂ =
     rat-rat-fromAbs _ _ _
       (ℚ.isTrans≤<
@@ -434,7 +434,7 @@ record NonExpanding₂ (g : ℚ → ℚ → ℚ ) : Type where
                      fst (zz r) (x xx))
                        (ℚ₊≡ $ sym (ℚ.·IdL (fst θ/2)))
                        (ℚ₊≡ (cong (λ θ → fst ε ℚ.- θ)
-                              (sym (ε/2+ε/2≡ε θ)))) zzz)) 
+                              (sym (ε/2+ε/2≡ε θ)))) zzz))
   rr .Elimℝ-Prop.isPropA _ = isPropΠ3 λ _ _ _ → isProp∼ _ _ _
 
  w .Elimℝ.rat-lim-B _ _ ε δ _ _ _ _ _ x _ =
@@ -451,10 +451,10 @@ record NonExpanding₂ (g : ℚ → ℚ → ℚ ) : Type where
 
 
  go : ℝ → ℝ → ℝ
- go x = fst (preF x) 
+ go x = fst (preF x)
 
  go∼R : ∀ x u v ε → u ∼[ ε ] v → go x u ∼[ ε ] go x v
- go∼R x u v ε = snd (preF x) ε u v  
+ go∼R x u v ε = snd (preF x) ε u v
 
  go∼L : ∀ x u v ε → u ∼[ ε ] v → go u x ∼[ ε ] go v x
  go∼L x u v ε y = Elimℝ.go∼ w {u} {v} {ε} y x
@@ -486,7 +486,7 @@ record NonExpanding₂ (g : ℚ → ℚ → ℚ ) : Type where
                          lim (λ q → go (x (/2₊ q)) (x' (/2₊ q)))
                           yy')
  β-lim-lim/2 x y x' y' =
-   let 
+   let
        zz : lim (λ q → fst (Elimℝ.go w (x q)) (lim x' y'))
               (λ δ ε → Elimℝ.go∼ w (y δ ε) (lim x' y')) ≡
             lim (λ q → fst (Elimℝ.go w (x (/2₊ q))) (x' (/2₊ q)))
@@ -545,8 +545,8 @@ NonExpanding₂-flip g ne .NonExpanding₂.cR q r s =
 
 
 
-isPropNonExpanding₂ : ∀ g → isProp (NonExpanding₂ g) 
-isPropNonExpanding₂ g x y i .NonExpanding₂.cL = 
+isPropNonExpanding₂ : ∀ g → isProp (NonExpanding₂ g)
+isPropNonExpanding₂ g x y i .NonExpanding₂.cL =
   isPropΠ3 (λ q r s →
    ℚ.isProp≤ (ℚ.abs (g q s ℚ.- g r s)) (ℚ.abs (q ℚ.- r)))
      (λ q r s → x .NonExpanding₂.cL q r s)
@@ -557,7 +557,7 @@ isPropNonExpanding₂ g x y i .NonExpanding₂.cR =
      (λ q r s → x .NonExpanding₂.cR q r s)
     (λ q r s → y .NonExpanding₂.cR q r s) i
 
-nonExpanding₂Ext : (g g' : _) 
+nonExpanding₂Ext : (g g' : _)
    → (ne : NonExpanding₂ g) (ne' : NonExpanding₂ g')
    → (∀ x y → g x y ≡ g' x y)
    → ∀ x y → NonExpanding₂.go ne x y  ≡ NonExpanding₂.go ne' x y
@@ -575,27 +575,27 @@ NonExpanding₂-flip-go g ne flip-ne = Elimℝ-Prop2.go w
  where
  w : Elimℝ-Prop2
           λ z z₁ → NonExpanding₂.go flip-ne z z₁ ≡ NonExpanding₂.go ne z₁ z
- 
+
  w .Elimℝ-Prop2.rat-ratA _ _ = refl
- w .Elimℝ-Prop2.rat-limA r x y x₁ = 
+ w .Elimℝ-Prop2.rat-limA r x y x₁ =
    congLim _ _ _ _
      λ q → congS (NonExpanding₂.go flip-ne (rat r) ∘S x)
        ((ℚ₊≡ $ (ℚ.·IdL (fst q)) )) ∙ x₁ q
-   
+
  w .Elimℝ-Prop2.lim-ratA x y r x₁ =
     congLim _ _ _ _
      λ q → x₁ q ∙ congS (NonExpanding₂.go ne (rat r) ∘S x)
       (ℚ₊≡ $ sym (ℚ.·IdL (fst q)) )
-   
+
  w .Elimℝ-Prop2.lim-limA x y x' y' x₁ =
-      snd (NonExpanding₂.β-lim-lim/2 flip-ne 
+      snd (NonExpanding₂.β-lim-lim/2 flip-ne
         x y x' y') ∙∙
          cong (uncurry lim)
           (Σ≡Prop (λ _ → isPropΠ2 λ _ _ → isProp∼ _ _ _)
            (funExt λ q → x₁ (/2₊ q) (/2₊ q)))
          ∙∙
        sym (snd (NonExpanding₂.β-lim-lim/2 ne
-        x' y' x y)) 
+        x' y' x y))
  w .Elimℝ-Prop2.isPropA _ _ = isSetℝ _ _
 
 module NonExpanding₂-Lemmas
@@ -636,10 +636,10 @@ module NonExpanding₂-Lemmas
            subst2 (_∼[ ε ]_)
              (λ i → NE.go (gComm (lim x x')  (rat p)  i) (rat q))
              (sym (gComm (NE.go (rat p) (rat q)) (lim x x')))
-            (hhh ε)   
+            (hhh ε)
           where
           hhh : ∀ ε → NE.go (NE.go (lim x x') (rat p)) (rat q) ∼[ ε ]
-                 NE.go (lim x x') (NE.go (rat p) (rat q)) 
+                 NE.go (lim x x') (NE.go (rat p) (rat q))
           hhh ε =
            let zzz = R (/4₊ ε) (/2₊ ε)
            in uncurry (lim-lim _ _ ε (/4₊ ε)
@@ -649,7 +649,7 @@ module NonExpanding₂-Lemmas
                       subst∼[ refl ] gComm (NE.go (rat p) (rat q))
                                           (x (/4₊ ε))
                      $ zzz  ))
-           
+
          w'' .Elimℝ-Prop.isPropA _ = isPropΠ λ _ → isProp∼ _ _ _
        w' .Elimℝ-Prop.limA x x' R z ε =
         uncurry (lim-lim _ _ ε (/4₊ ε)
@@ -668,6 +668,6 @@ module NonExpanding₂-Lemmas
 fromLipshitzNEβ : ∀ f (fl : Lipschitz-ℚ→ℝ 1 f) x y →
   fst (fromLipschitz 1 (f , fl)) (lim x y) ≡
     lim (λ x₁ → Elimℝ.go _ (x x₁))
-     _  
+     _
 fromLipshitzNEβ f fl x y = congLim' _ _ _
  λ q → cong (Elimℝ.go _ ∘ x) (ℚ₊≡ $ ℚ.·IdL _)

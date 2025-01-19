@@ -873,7 +873,7 @@ lem722 : {A : Type ℓ} (R : A → A → Type ℓ')
   → isSet A
 lem722 R isPropR f ρ x =
  let u : (p : x ≡ x) →
-          PathP (λ z → p z ≡ x) (f x x (ρ x)) (f x x (transp (λ j → R (p j) x) i0 (ρ x))) 
+          PathP (λ z → p z ≡ x) (f x x (ρ x)) (f x x (transp (λ j → R (p j) x) i0 (ρ x)))
      u p = λ i → f (p i) x (coe0→i (λ i → R (p i) x) i (ρ x))
  in λ y → J (λ y p → ∀ q → p ≡ q)
      λ q i j →

@@ -512,7 +512,7 @@ isProp0< (pos (suc _)) _ _ = refl
 ·0< (pos (suc m)) (pos (suc n)) _ _ =
  subst (0<_) (pos+ (suc n) (m ℕ.· (suc n)) ∙ cong (pos (suc n) ℤ.+_) (pos·pos m (suc n))) _
 
-0<·ℕ₊₁ : ∀ m n → 0< (m ℤ.· pos (ℕ₊₁→ℕ n)) → 0< m 
+0<·ℕ₊₁ : ∀ m n → 0< (m ℤ.· pos (ℕ₊₁→ℕ n)) → 0< m
 0<·ℕ₊₁ (pos (suc m)) n x = _
 0<·ℕ₊₁ (negsuc n₁) (1+ n) x =
   ⊥.rec (subst 0<_ (negsuc·pos n₁ (suc n)
@@ -533,7 +533,7 @@ min-0< (pos (suc (suc n₁))) (pos (suc zero)) x x₁ = tt
 min-0< (pos (suc (suc n₁))) (pos (suc (suc n))) x x₁ =
   +0< (sucℤ (ℤ.min (pos n₁) (pos n))) 1 (min-0< (pos (suc n₁)) (pos (suc n)) _ _) _
 
-ℕ≤→pos-≤-pos : ∀ m n → m ℕ.≤ n → pos m ≤ pos n  
+ℕ≤→pos-≤-pos : ∀ m n → m ℕ.≤ n → pos m ≤ pos n
 ℕ≤→pos-≤-pos m n (k , p) = k , sym (pos+ m k) ∙∙ cong pos (ℕ.+-comm m k) ∙∙ cong pos p
 
 

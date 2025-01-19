@@ -112,7 +112,7 @@ record OnCommonDenomSym : Type where
   where
   w : SetQuotient.ElimProp2 (λ z z₁ → go z z₁ ≡ go z₁ z)
   w .SetQuotient.ElimProp2.isPropB _ _ = isSetℚ _ _
-  w .SetQuotient.ElimProp2.f (a , b) (c , d) i = [ g-sym (a , b) (c , d) i / ·₊₁-comm b d i ] 
+  w .SetQuotient.ElimProp2.f (a , b) (c , d) i = [ g-sym (a , b) (c , d) i / ·₊₁-comm b d i ]
 
 
 -- basic arithmetic operations on ℚ
@@ -138,7 +138,7 @@ minR .OnCommonDenomSym.g-sym (a , b) (c , d) = ℤ.minComm (a ℤ.· ℕ₊₁�
 minR .OnCommonDenomSym.g-eql = eq
 
   where abstract
-    
+
     eq : ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : a ℤ.· ℕ₊₁→ℤ d ≡ c ℤ.· ℕ₊₁→ℤ b)
        → ℕ₊₁→ℤ d ℤ.· ℤ.min (a ℤ.· ℕ₊₁→ℤ f) (e ℤ.· ℕ₊₁→ℤ b)
        ≡ ℕ₊₁→ℤ b ℤ.· ℤ.min (c ℤ.· ℕ₊₁→ℤ f) (e ℤ.· ℕ₊₁→ℤ d)
@@ -177,7 +177,7 @@ maxR .OnCommonDenomSym.g (a , b) (c , d) = ℤ.max (a ℤ.· ℕ₊₁→ℤ d) 
 maxR .OnCommonDenomSym.g-sym (a , b) (c , d) = ℤ.maxComm (a ℤ.· ℕ₊₁→ℤ d) (c ℤ.· ℕ₊₁→ℤ b)
 maxR .OnCommonDenomSym.g-eql = eq
 
-  
+
   where abstract
     eq : ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : a ℤ.· ℕ₊₁→ℤ d ≡ c ℤ.· ℕ₊₁→ℤ b)
        → ℕ₊₁→ℤ d ℤ.· ℤ.max (a ℤ.· ℕ₊₁→ℤ f) (e ℤ.· ℕ₊₁→ℤ b)
@@ -212,7 +212,7 @@ maxR .OnCommonDenomSym.g-eql = eq
 
 max = OnCommonDenomSym.go maxR
 
-   
+
 minComm : ∀ x y → min x y ≡ min y x
 minComm = OnCommonDenomSym.go-comm minR
 
@@ -371,7 +371,7 @@ maxAbsorbLMin = SetQuotient.elimProp2 (λ _ _ → isSetℚ _ _)
 
 _+_ : ℚ → ℚ → ℚ
 _+_ = OnCommonDenomSym.go +Rec
-   
+
 +Comm : ∀ x y → x + y ≡ y + x
 +Comm = OnCommonDenomSym.go-comm +Rec
 

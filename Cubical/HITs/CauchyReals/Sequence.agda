@@ -37,7 +37,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Relation.Binary
 
 open import Cubical.HITs.PropositionalTruncation as PT
-open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_) 
+open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
 
 open import Cubical.Data.Rationals using (ℚ ; [_/_])
 open import Cubical.Data.Rationals.Order using
@@ -81,7 +81,7 @@ open import Cubical.HITs.CauchyReals.Inverse
 import Cubical.Algebra.CommRing as CR
 import Cubical.Algebra.Ring as RP
 
-               
+
 Seq : Type
 Seq = ℕ → ℝ
 
@@ -131,15 +131,15 @@ Seq = ℕ → ℝ
                ℚ₊· (r' , ℚ.<→0< _ 0<r')
     in (fst (/2₊ qr₊) , fst qr₊) ,
          ≤ℚ→≤ᵣ _ _ (ℚ.0≤ℚ₊ (/2₊ qr₊)) ,
-           x/2<x qr₊ , 
+           x/2<x qr₊ ,
            subst (_≤ᵣ (m ·ᵣ n))
              (sym (rat·ᵣrat q' r'))
               (≤ᵣ₊Monotone·ᵣ (rat q')
                 (m , 0<m) (rat r' , <ℚ→<ᵣ _ _ 0<r') n
-                             q'≤m r'≤n) ) 0<m 0<n    
+                             q'≤m r'≤n) ) 0<m 0<n
 
 
-_₊／ᵣ₊_ : ℝ₊ → ℝ₊  → ℝ₊ 
+_₊／ᵣ₊_ : ℝ₊ → ℝ₊  → ℝ₊
 (q , 0<q) ₊／ᵣ₊ (r , 0<r) = (q ／ᵣ[ r , inl (0<r) ] ,
   ℝ₊· (q , 0<q) (_ , invℝ-pos r 0<r) )
 
@@ -152,14 +152,14 @@ _₊／ᵣ₊_ : ℝ₊ → ℝ₊  → ℝ₊
   (_ , invℝ'-pos (absᵣ x) (0＃→0<abs x 0＃x))
 
 <ᵣ-·ᵣo : ∀ m n (o : ℝ₊) →  m <ᵣ n → (m ·ᵣ (fst o)) <ᵣ (n ·ᵣ (fst o))
-<ᵣ-·ᵣo m n (o , 0<o) p = 
+<ᵣ-·ᵣo m n (o , 0<o) p =
   let z = subst (0 <ᵣ_) (·DistR+ n (-ᵣ m) o ∙
                    cong ((n ·ᵣ o) +ᵣ_) (-ᵣ· m o))
            (ℝ₊· (_ , x<y→0<y-x _ _ p) (o , 0<o))
   in 0<y-x→x<y _ _ z
 
 <ᵣ-o·ᵣ : ∀ m n (o : ℝ₊) →  m <ᵣ n → ((fst o) ·ᵣ m) <ᵣ ((fst o) ·ᵣ n )
-<ᵣ-o·ᵣ m n (o , 0<o) p = 
+<ᵣ-o·ᵣ m n (o , 0<o) p =
   subst2 (_<ᵣ_)
     (·ᵣComm _ _) (·ᵣComm _ _) (<ᵣ-·ᵣo m n (o , 0<o) p)
 
@@ -177,7 +177,7 @@ _₊／ᵣ₊_ : ℝ₊ → ℝ₊  → ℝ₊
         ∙ cong ((q ℚ.· [ 1 / n ]) ℚ.+_)
             (sym (ℚ.·Assoc -1 r [ 1 / n ]))))
       (ℚ.<-o· (ℚ.abs (q ℚ.- r)) (fst ε) [ 1 / n ]
-       ((ℚ.0<→< [ 1 / n ] _)) 
+       ((ℚ.0<→< [ 1 / n ] _))
        x)))
 
 
@@ -185,9 +185,9 @@ seqSumUpTo : (ℕ → ℝ) → ℕ →  ℝ
 seqSumUpTo s zero = 0
 seqSumUpTo s (suc n) = s zero +ᵣ seqSumUpTo (s ∘ suc) n
 
-seqSumUpTo· : ∀ s r n → seqSumUpTo s n ·ᵣ r ≡ seqSumUpTo ((_·ᵣ r) ∘ s) n  
+seqSumUpTo· : ∀ s r n → seqSumUpTo s n ·ᵣ r ≡ seqSumUpTo ((_·ᵣ r) ∘ s) n
 seqSumUpTo· s r zero = 𝐑'.0LeftAnnihilates r
-seqSumUpTo· s r (suc n) = 
+seqSumUpTo· s r (suc n) =
   ·DistR+ (s zero) (seqSumUpTo (s ∘ suc) n) r ∙
    cong ((s zero ·ᵣ r) +ᵣ_) (seqSumUpTo· (s ∘ suc) r n)
 
@@ -195,7 +195,7 @@ seqSumUpTo· s r (suc n) =
 
 seqSumUpTo' : (ℕ → ℝ) → ℕ →  ℝ
 seqSumUpTo' s zero = 0
-seqSumUpTo' s (suc n) = seqSumUpTo' s n +ᵣ s n 
+seqSumUpTo' s (suc n) = seqSumUpTo' s n +ᵣ s n
 
 seqΣ : Seq → Seq
 seqΣ = seqSumUpTo'
@@ -206,10 +206,10 @@ seqΣ' = seqSumUpTo
 
 seqSumUpTo-suc : ∀ f n → seqSumUpTo f n +ᵣ f n ≡
       f zero +ᵣ seqSumUpTo (λ x → f (suc x)) n
-seqSumUpTo-suc f zero = +ᵣComm _ _ 
+seqSumUpTo-suc f zero = +ᵣComm _ _
 seqSumUpTo-suc f (suc n) =
   sym (+ᵣAssoc _ _ _) ∙
-    cong ((f zero) +ᵣ_ ) (seqSumUpTo-suc _ _) 
+    cong ((f zero) +ᵣ_ ) (seqSumUpTo-suc _ _)
 
 seqSumUpTo≡seqSumUpTo' : ∀ f n → seqSumUpTo' f n ≡ seqSumUpTo f n
 seqSumUpTo≡seqSumUpTo' f zero = refl
@@ -225,10 +225,10 @@ seqSumUpTo≡seqSumUpTo' f (suc n) =
     (<-·sk-cancel {m} {n} {k}
      (ℕ.≤-k+-cancel (subst (ℕ._≤ (k ℕ.+ n ℕ.· suc k))
        (sym (ℕ.+-suc _ _)) (ℕ.pred-≤-pred x))))
- 
-2≤x→1<quotient[x/2] : ∀ n → 0 ℕ.< (ℕ.quotient (2 ℕ.+ n) / 2) 
+
+2≤x→1<quotient[x/2] : ∀ n → 0 ℕ.< (ℕ.quotient (2 ℕ.+ n) / 2)
 2≤x→1<quotient[x/2] n =
- let z : 0 ℕ.< 
+ let z : 0 ℕ.<
              ((ℕ.quotient (2 ℕ.+ n) / 2) ℕ.· 2)
      z = subst (0 ℕ.<_) (ℕ.·-comm _ _)
           (ℕ.≤<-trans ℕ.zero-≤ (ℕ.<-k+-cancel (subst (ℕ._< 2 ℕ.+
@@ -243,10 +243,10 @@ seqSumUpTo≡seqSumUpTo' f (suc n) =
 open ℕ.Minimal
 
 log2ℕ : ∀ n → Σ _ (Least (λ k → n ℕ.< 2 ^ k))
-log2ℕ n = w n n ℕ.≤-refl 
+log2ℕ n = w n n ℕ.≤-refl
  where
-   
-  w : ∀ N n → n ℕ.≤ N 
+
+  w : ∀ N n → n ℕ.≤ N
           → Σ _ (Least (λ k → n ℕ.< 2 ^ k))
   w N zero x = 0 , (ℕ.≤-refl , λ k' q → ⊥.rec (ℕ.¬-<-zero q))
   w N (suc zero) x = 1 , (ℕ.≤-refl ,
@@ -281,7 +281,7 @@ log2ℕ n = w n n ℕ.≤-refl
                     (subst2 ℕ._<_ (ℕ.·-comm _ _) (ℕ.·-comm _ _)
                       (ℕ.≤<-trans (_ , z)
                          2+n<2^k' )))}
-    
+
 
 
 
@@ -307,7 +307,7 @@ geometricProgression-suc : ∀ a r n →
    geometricProgression a r (suc n) ≡
     geometricProgression (a ·ᵣ r) r n
 geometricProgression-suc a r zero = refl
-geometricProgression-suc a r (suc n) = 
+geometricProgression-suc a r (suc n) =
   cong (_·ᵣ r) (geometricProgression-suc a r n)
 
 
@@ -325,7 +325,7 @@ Sₙ-suc a r n = cong (a +ᵣ_) (sym (seqSumUpTo· (geometricProgression a r) r 
 
 
 SₙLem' : ∀ a n r → (Sₙ a r n) ·ᵣ (1 +ᵣ (-ᵣ r))  ≡
-                   a ·ᵣ (1 +ᵣ (-ᵣ (r ^ⁿ n)))  
+                   a ·ᵣ (1 +ᵣ (-ᵣ (r ^ⁿ n)))
 SₙLem' a n r =
  let z : Sₙ a r n +ᵣ geometricProgression a r n
             ≡ (a +ᵣ (Sₙ a r n ·ᵣ r))
@@ -352,7 +352,7 @@ SₙLem' a n r =
 SₙLem : ∀ a r (0＃1-r : 0 ＃ (1 +ᵣ (-ᵣ r))) n →
               (Sₙ a r n)   ≡
                    a ·ᵣ ((1 +ᵣ (-ᵣ (r ^ⁿ n)))
-                     ／ᵣ[ (1 +ᵣ (-ᵣ r)) , 0＃1-r ])  
+                     ／ᵣ[ (1 +ᵣ (-ᵣ r)) , 0＃1-r ])
 SₙLem a r 0＃1-r n =
      x·y≡z→x≡z/y (Sₙ a r n)
        (a ·ᵣ (1 +ᵣ (-ᵣ (r ^ⁿ n))))
@@ -373,10 +373,10 @@ Sₙ-sup a r n a<0 0<r r<1  =
                (<ᵣ-o+ _ _ 1 (-ᵣ<ᵣ 0 (r ^ⁿ n) (0<x^ⁿ r n 0<r)))
                (≡ᵣWeaken≤ᵣ _ _ (+IdR _)) ))
           (≡ᵣWeaken≤ᵣ _ _ (·IdL _ ) )))
-          
+
 Seq<→Σ< : (s s' : Seq) →
   (∀ n → s n <ᵣ s' n) →
-   ∀ n → seqSumUpTo s (suc n) <ᵣ seqSumUpTo s' (suc n)  
+   ∀ n → seqSumUpTo s (suc n) <ᵣ seqSumUpTo s' (suc n)
 Seq<→Σ< s s' x zero = subst2 _<ᵣ_
   (sym (+IdR _)) (sym (+IdR _)) (x 0)
 Seq<→Σ< s s' x (suc n) = <ᵣMonotone+ᵣ _ _ _ _
@@ -384,23 +384,23 @@ Seq<→Σ< s s' x (suc n) = <ᵣMonotone+ᵣ _ _ _ _
 
 Seq≤→Σ≤ : (s s' : Seq) →
   (∀ n → s n ≤ᵣ s' n) →
-   ∀ n → seqSumUpTo s n ≤ᵣ seqSumUpTo s' n  
+   ∀ n → seqSumUpTo s n ≤ᵣ seqSumUpTo s' n
 Seq≤→Σ≤ s s' x zero = ≤ᵣ-refl _
 Seq≤→Σ≤ s s' x (suc n) = ≤ᵣMonotone+ᵣ _ _ _ _
  (x 0) (Seq≤→Σ≤ (s ∘ suc) (s' ∘ suc) (x ∘ suc) n)
 
 Seq'≤→Σ≤ : (s s' : Seq) →
   (∀ n → s n ≤ᵣ s' n) →
-   ∀ n → seqSumUpTo' s n ≤ᵣ seqSumUpTo' s' n  
+   ∀ n → seqSumUpTo' s n ≤ᵣ seqSumUpTo' s' n
 Seq'≤→Σ≤ s s' x zero = ≤ᵣ-refl _
 Seq'≤→Σ≤ s s' x (suc n) =
- ≤ᵣMonotone+ᵣ _ _ _ _ 
+ ≤ᵣMonotone+ᵣ _ _ _ _
  (Seq'≤→Σ≤ s s' x n)  (x n)
 
 0≤seqΣ : ∀ s → (∀ n → 0 ≤ᵣ s n)
             → ∀ n → 0 ≤ᵣ seqΣ s n
 0≤seqΣ s x zero = ≤ᵣ-refl _
-0≤seqΣ s x (suc n) = 
+0≤seqΣ s x (suc n) =
   ≤ᵣMonotone+ᵣ _ _ _ _ (0≤seqΣ s x n) (x n)
 
 seriesDiff : (s : Seq)  →
@@ -423,12 +423,12 @@ IsCauchySequence s =
 IsConvSeries : Seq → Type
 IsConvSeries s =
     ∀ (ε : ℝ₊) →
-     Σ[ N ∈ ℕ ] ∀ n m → 
-       absᵣ (seqΣ (s ∘ (ℕ._+ (n ℕ.+ (suc N)))) m) <ᵣ fst ε  
+     Σ[ N ∈ ℕ ] ∀ n m →
+       absᵣ (seqΣ (s ∘ (ℕ._+ (n ℕ.+ (suc N)))) m) <ᵣ fst ε
 
 
 IsoIsConvSeriesIsCauchySequenceSum : (s : Seq) →
-  Iso (IsConvSeries s) (IsCauchySequence (seqΣ s)) 
+  Iso (IsConvSeries s) (IsCauchySequence (seqΣ s))
 IsoIsConvSeriesIsCauchySequenceSum s =
    codomainIsoDep λ ε →
      Σ-cong-iso-snd λ N →
@@ -452,11 +452,11 @@ IsoIsConvSeriesIsCauchySequenceSum s =
                (f (n ℕ.+ (suc N)) (m ℕ.+ (n ℕ.+ suc N))
                (subst (N ℕ.<_) (sym (ℕ.+-assoc _ _ _))
                  (ℕ.≤SumRight {suc N} {m ℕ.+ n}))
-               (ℕ.≤SumRight {suc N} {n})) 
+               (ℕ.≤SumRight {suc N} {n}))
 
 
 IsConvSeries≃IsCauchySequenceSum : (s : Seq) →
-  IsConvSeries s ≃ IsCauchySequence (seqΣ s) 
+  IsConvSeries s ≃ IsCauchySequence (seqΣ s)
 IsConvSeries≃IsCauchySequenceSum s =
   isoToEquiv (IsoIsConvSeriesIsCauchySequenceSum s)
 
@@ -467,7 +467,7 @@ isCauchyAprox f = (δ ε : ℚ₊) →
   (absᵣ (f δ +ᵣ (-ᵣ  f ε)) <ᵣ rat (fst (δ ℚ₊+ ε)))
 
 lim' : ∀ x → isCauchyAprox x → ℝ
-lim' x y = lim x λ δ ε  → (invEq (∼≃abs<ε _ _ _)) (y δ ε)  
+lim' x y = lim x λ δ ε  → (invEq (∼≃abs<ε _ _ _)) (y δ ε)
 
 
 fromCauchySequence : ∀ s → IsCauchySequence s → ℝ
@@ -491,7 +491,7 @@ fromCauchySequence s ics =
               ℕ.≤-refl  (ℕ.suc-≤-suc δₙ≤εₙ )
    in isTrans<ᵣ (absᵣ (x δ +ᵣ (-ᵣ x ε)))
            (rat (fst (δ))) (rat (fst (δ ℚ₊+ ε)))
-           z (<ℚ→<ᵣ _ _ (ℚ.<+ℚ₊' (fst δ) (fst δ) ε (ℚ.isRefl≤ (fst δ)))) 
+           z (<ℚ→<ᵣ _ _ (ℚ.<+ℚ₊' (fst δ) (fst δ) ε (ℚ.isRefl≤ (fst δ))))
   ww (inr εₙ<δₙ) =
     let z = snd (ics (ℚ₊→ℝ₊ ε)) (suc εₙ) (suc δₙ)
                (ℕ.≤-suc εₙ<δₙ) ℕ.≤-refl
@@ -502,7 +502,7 @@ fromCauchySequence s ics =
                (ℚ.<+ℚ₊' (fst ε) (fst ε) δ (ℚ.isRefl≤ (fst ε))))))
 
 limₙ→∞_is_ : Seq → ℝ → Type
-limₙ→∞ s is x = 
+limₙ→∞ s is x =
   ∀ (ε : ℝ₊) → Σ[ N ∈ ℕ ]
     (∀ n → N ℕ.< n →
       absᵣ ((s n) +ᵣ (-ᵣ x)) <ᵣ (fst ε))
@@ -510,4 +510,4 @@ limₙ→∞ s is x =
 
 
 Limₙ→∞ : Seq → Type
-Limₙ→∞ s = Σ _ (limₙ→∞ s is_) 
+Limₙ→∞ s = Σ _ (limₙ→∞ s is_)

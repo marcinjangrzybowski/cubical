@@ -443,20 +443,20 @@ isTrans≤< =
 
 <≤Monotone+ : ∀ m n o s → m < n → o ≤ s → m ℚ.+ o < n ℚ.+ s
 <≤Monotone+ m n o s x x₁ =
-   isTrans<≤ (m ℚ.+ o) (n ℚ.+ o) (n ℚ.+ s) (<-+o m n o x) (≤-o+ o s n x₁)  
+   isTrans<≤ (m ℚ.+ o) (n ℚ.+ o) (n ℚ.+ s) (<-+o m n o x) (≤-o+ o s n x₁)
 
 ≤<Monotone+ : ∀ m n o s → m ≤ n → o < s → m ℚ.+ o < n ℚ.+ s
 ≤<Monotone+ m n o s x x₁ =
-   isTrans≤< (m ℚ.+ o) (n ℚ.+ o) (n ℚ.+ s) (≤-+o m n o x) (<-o+ o s n x₁)  
+   isTrans≤< (m ℚ.+ o) (n ℚ.+ o) (n ℚ.+ s) (≤-+o m n o x) (<-o+ o s n x₁)
 
 
 <Weaken+nonNeg : ∀ m n o → m < n → 0 ≤ o → m < (n ℚ.+ o)
-<Weaken+nonNeg m n o u v = 
-  subst (_< (n ℚ.+ o)) (ℚ.+IdR m) (<≤Monotone+ m n 0 o u v) 
+<Weaken+nonNeg m n o u v =
+  subst (_< (n ℚ.+ o)) (ℚ.+IdR m) (<≤Monotone+ m n 0 o u v)
 
 <WeakenNonNeg+ : ∀ m n o → m < n → 0 ≤ o → m < (o ℚ.+ n)
-<WeakenNonNeg+ m n o u v = 
-  subst (_< (o ℚ.+ n)) (ℚ.+IdL m) (≤<Monotone+ 0 o m n v u) 
+<WeakenNonNeg+ m n o u v =
+  subst (_< (o ℚ.+ n)) (ℚ.+IdL m) (≤<Monotone+ 0 o m n v u)
 
 
 ≤-·o : ∀ m n o → 0 ≤ o → m ≤ n → m ℚ.· o ≤ n ℚ.· o
@@ -680,7 +680,7 @@ minus-< m n p =
                ((cong (ℚ._+ - n) (+InvR m) ∙ +IdL (- n) ))
       q : n ℚ.+ ((- (n ℚ.+ m))) ≡ - m
       q = cong (n ℚ.+_) (-Distr n m) ∙∙ +Assoc n (- n) (- m) ∙∙
-           (cong (ℚ._+ - m) (+InvR n) ∙ +IdL (- m) ) 
+           (cong (ℚ._+ - m) (+InvR n) ∙ +IdL (- m) )
   in subst2 _<_ p q z
 
 
@@ -694,15 +694,15 @@ minus-≤ m n p =
                ((cong (ℚ._+ - n) (+InvR m) ∙ +IdL (- n) ))
       q : n ℚ.+ ((- (n ℚ.+ m))) ≡ - m
       q = cong (n ℚ.+_) (-Distr n m) ∙∙ +Assoc n (- n) (- m) ∙∙
-           (cong (ℚ._+ - m) (+InvR n) ∙ +IdL (- m) ) 
+           (cong (ℚ._+ - m) (+InvR n) ∙ +IdL (- m) )
   in subst2 _≤_ p q z
 
 <→<minus : ∀ m n → m < n → 0 < n - m
 <→<minus m n x = subst (_< n - m) (+InvR m) (<-+o m n (- m) x)
 
 
-minus-<' : ∀ n m → - n < - m → m < n 
-minus-<' n m p = 
+minus-<' : ∀ n m → - n < - m → m < n
+minus-<' n m p =
   subst2 _<_ (-Invol m) (-Invol n)
    (minus-< (ℚ.- n) (ℚ.- m) p)
 
@@ -712,7 +712,7 @@ minus-<' n m p =
  where
  w : Rec (hProp ℓ-zero)
  w .Rec.isSetB = isSetHProp
- w .Rec.f (x , _) = ℤ.0< x , ℤ.isProp0< x 
+ w .Rec.f (x , _) = ℤ.0< x , ℤ.isProp0< x
  w .Rec.f∼ (x , y) (x' , y') p =
   ⇔toPath --0<·ℕ₊₁
      (λ u → ℤ.0<·ℕ₊₁ x' y
@@ -728,22 +728,22 @@ minus-<' n m p =
 ·0< : ∀ m n → 0< m → 0< n → 0< (m ℚ.· n)
 ·0< = elimProp2
   (λ x x' → isPropΠ2 λ _ _ → snd (0<ₚ (x ℚ.· x')) )
-  λ (x , _) (x' , _) → ℤ.·0< x x'  
+  λ (x , _) (x' , _) → ℤ.·0< x x'
 
 +0< : ∀ m n → 0< m → 0< n → 0< (m ℚ.+ n)
 +0< = elimProp2
   (λ x x' → isPropΠ2 λ _ _ → snd (0<ₚ (x ℚ.+ x')) )
-  λ (x , y) (x' , y')  p p' → 
+  λ (x , y) (x' , y')  p p' →
     ℤ.+0< (x ℤ.· ℕ₊₁→ℤ y') (x' ℤ.· ℕ₊₁→ℤ y)
-      (ℤ.·0< x (ℕ₊₁→ℤ y') p tt) (ℤ.·0< x' (ℕ₊₁→ℤ y) p' tt)  
+      (ℤ.·0< x (ℕ₊₁→ℤ y') p tt) (ℤ.·0< x' (ℕ₊₁→ℤ y) p' tt)
 
 +0<' : ∀ m n o → 0< m → 0< n → (m ℚ.+ n) ≡ o → 0< o
 +0<' m n o x y p = subst (0<_) p (+0< m n x y)
 
 +₃0< : ∀ m n o → 0< m → 0< n → 0< o → 0< ((m ℚ.+ n) ℚ.+ o)
-+₃0< m n o x y z = +0< (m ℚ.+ n) o (+0< m n x y) z 
++₃0< m n o x y z = +0< (m ℚ.+ n) o (+0< m n x y) z
 
-+₃0<' : ∀ m n o o' → 0< m → 0< n → 0< o 
++₃0<' : ∀ m n o o' → 0< m → 0< n → 0< o
         → ((m ℚ.+ n) ℚ.+ o) ≡ o' → 0< o'
 +₃0<' m n o o' x y z p = subst 0<_ p (+₃0< m n o x y z)
 
@@ -754,25 +754,25 @@ minus-<' n m p =
 
 instance
   fromNatℚ₊ : HasFromNat ℚ₊
-  fromNatℚ₊ = 
+  fromNatℚ₊ =
    record { Constraint = λ { zero → ⊥ ; _ → Unit }
              ; fromNat = λ { (suc n) → ([ ℤ.pos (suc n) , 1 ] , _) } }
 
 ℚ₊≡ : {x y : ℚ₊} → fst x ≡ fst y → x ≡ y
 ℚ₊≡ = Σ≡Prop (snd ∘ 0<ₚ_)
 
-_ℚ₊·_ : ℚ₊ → ℚ₊ → ℚ₊ 
+_ℚ₊·_ : ℚ₊ → ℚ₊ → ℚ₊
 _ℚ₊·_ x x₁ = ((fst x) ℚ.· (fst x₁)) ,
   ·0< (fst x) (fst x₁) (snd x) (snd x₁)
 
-_ℚ₊+_ : ℚ₊ → ℚ₊ → ℚ₊ 
+_ℚ₊+_ : ℚ₊ → ℚ₊ → ℚ₊
 _ℚ₊+_ x x₁ = ((fst x) ℚ.+ (fst x₁)) ,
   +0< (fst x) (fst x₁) (snd x) (snd x₁)
 
-0<→< : ∀ q → 0< q → 0 < q 
+0<→< : ∀ q → 0< q → 0 < q
 0<→< = elimProp (λ x → isProp→ (isProp< 0 x)) zz
  where
- 
+
  zz : ∀ a → 0< [ a ] → 0 < [ a ]
  zz (ℤ.pos (suc n) , snd₁) x = n ,
   (sym (ℤ.pos+ 1 n) ∙ sym (ℤ.·IdR (ℤ.pos (suc n))))
@@ -784,17 +784,17 @@ _ℚ₊+_ x x₁ = ((fst x) ℚ.+ (fst x₁)) ,
 0≤ℚ₊ ε = <Weaken≤ 0 (fst ε) (uncurry 0<→< ε)
 
 
-<→0< : ∀ q → 0 < q → 0< q 
-<→0< = elimProp (λ x → isProp→ (snd (0<ₚ x))) 
+<→0< : ∀ q → 0 < q → 0< q
+<→0< = elimProp (λ x → isProp→ (snd (0<ₚ x)))
  zz
  where
  zz : ∀ a → 0 < [ a ] → 0< [ a ]
- zz (ℤ.pos zero , snd₁) x = 
+ zz (ℤ.pos zero , snd₁) x =
   ℕ.snotz (ℤ.injPos (ℤ.pos+ 1 (x .fst) ∙ snd x))
  zz (ℤ.pos (suc n) , snd₁) x = tt
  zz (ℤ.negsuc n , snd₁) x =
    ℤ.posNotnegsuc _ _
-    (ℤ.pos+ 1 (x .fst) ∙  snd x ∙ ℤ.·IdR (ℤ.negsuc n))  
+    (ℤ.pos+ 1 (x .fst) ∙  snd x ∙ ℤ.·IdR (ℤ.negsuc n))
 
 0<-min : ∀ x y → 0< x → 0< y → 0< (ℚ.min x y)
 0<-min = elimProp2
@@ -803,7 +803,7 @@ _ℚ₊+_ x x₁ = ((fst x) ℚ.+ (fst x₁)) ,
    let zzz = ℤ.min-0< (a .fst ℤ.· ℕ₊₁→ℤ (b .snd)) (b .fst ℤ.· ℕ₊₁→ℤ (a .snd))
                 (ℤ.·0< (a .fst) (ℕ₊₁→ℤ (b .snd)) x _ )
                  ((ℤ.·0< (b .fst) (ℕ₊₁→ℤ (a .snd)) x₁ _ ))
-       
+
    in zzz
 
 min₊ : ℚ₊ → ℚ₊ → ℚ₊
@@ -834,18 +834,18 @@ max₊ (x , y) (x' , y') =
 <→ℚ₊ x y x<y = y - x , <→0< (y - x) (-< x y x<y)
 
 <+ℚ₊ : ∀ x y (ε : ℚ₊) → x < y → x < (y ℚ.+ fst ε)
-<+ℚ₊ x y ε x₁ = 
+<+ℚ₊ x y ε x₁ =
  subst (_< y ℚ.+ fst ε)
    (ℚ.+IdR x) (<Monotone+ x y 0 (fst ε) x₁ (0<ℚ₊ ε))
 
 <+ℚ₊' : ∀ x y (ε : ℚ₊) → x ≤ y → x < (y ℚ.+ fst ε)
-<+ℚ₊' x y ε x₁ = 
+<+ℚ₊' x y ε x₁ =
  subst (_< y ℚ.+ fst ε)
    (ℚ.+IdR x) (≤<Monotone+ x y 0 (fst ε) x₁ (0<ℚ₊ ε))
 
 
 ≤+ℚ₊ : ∀ x y (ε : ℚ₊) → x ≤ y → x ≤ (y ℚ.+ fst ε)
-≤+ℚ₊ x y ε x₁ = 
+≤+ℚ₊ x y ε x₁ =
  subst (_≤ y ℚ.+ fst ε)
    (ℚ.+IdR x) (≤Monotone+ x y 0 (fst ε) x₁ (0≤ℚ₊ ε))
 
@@ -862,28 +862,28 @@ pos[-x<x] ε = isTrans< (ℚ.- (fst ε)) 0 (fst ε) (-ℚ₊<0 ε) (0<ℚ₊ ε)
 pos[-x≤x] : (ε : ℚ₊) → ℚ.- (fst ε) ≤ (fst ε)
 pos[-x≤x] ε = isTrans≤ (ℚ.- (fst ε)) 0 (fst ε) (-ℚ₊≤0 ε) (0≤ℚ₊ ε)
 
-<-ℚ₊ : ∀ x y (ε : ℚ₊) → x < y → (x ℚ.- fst ε) < y 
-<-ℚ₊ x y ε x₁ = 
+<-ℚ₊ : ∀ x y (ε : ℚ₊) → x < y → (x ℚ.- fst ε) < y
+<-ℚ₊ x y ε x₁ =
  subst ((x ℚ.- fst ε) <_)
    (ℚ.+IdR y) (<Monotone+ x y (ℚ.- (fst ε)) 0 x₁ (-ℚ₊<0 ε))
 
 
-<-ℚ₊' : ∀ x y (ε : ℚ₊) → x ≤ y → (x ℚ.- fst ε) < y 
-<-ℚ₊' x y ε x₁ = 
+<-ℚ₊' : ∀ x y (ε : ℚ₊) → x ≤ y → (x ℚ.- fst ε) < y
+<-ℚ₊' x y ε x₁ =
  subst ((x ℚ.- fst ε) <_)
    (ℚ.+IdR y) (≤<Monotone+ x y (ℚ.- (fst ε)) 0 x₁ (-ℚ₊<0 ε))
 
 
-≤-ℚ₊ : ∀ x y (ε : ℚ₊) → x ≤ y → (x ℚ.- fst ε) ≤ y 
-≤-ℚ₊ x y ε x₁ = 
+≤-ℚ₊ : ∀ x y (ε : ℚ₊) → x ≤ y → (x ℚ.- fst ε) ≤ y
+≤-ℚ₊ x y ε x₁ =
  subst ((x ℚ.- fst ε) ≤_)
    (ℚ.+IdR y) (≤Monotone+ x y (ℚ.- (fst ε)) 0 x₁ (-ℚ₊≤0 ε))
 
 -ℚ₊<ℚ₊ : (ε ε' : ℚ₊) → (ℚ.- (fst ε)) < fst ε'
--ℚ₊<ℚ₊ ε ε' = isTrans< (ℚ.- (fst ε)) 0 (fst ε') (-ℚ₊<0 ε) (0<ℚ₊ ε') 
+-ℚ₊<ℚ₊ ε ε' = isTrans< (ℚ.- (fst ε)) 0 (fst ε') (-ℚ₊<0 ε) (0<ℚ₊ ε')
 
 -ℚ₊≤ℚ₊ : (ε ε' : ℚ₊) → ℚ.- (fst ε) ≤ fst ε'
--ℚ₊≤ℚ₊ ε ε' = isTrans≤ (ℚ.- fst ε) 0 (fst ε') (-ℚ₊≤0 ε) (0≤ℚ₊ ε') 
+-ℚ₊≤ℚ₊ ε ε' = isTrans≤ (ℚ.- fst ε) 0 (fst ε') (-ℚ₊≤0 ε) (0≤ℚ₊ ε')
 
 
 absCases : (q : ℚ) → (abs q ≡ - q) ⊎ (abs q ≡ q)
@@ -896,7 +896,7 @@ absCases q with (- q) ≟ q
 absFrom≤×≤ : ∀ ε q →
                 - ε ≤ q
                 → q ≤ ε
-                → abs q ≤ ε  
+                → abs q ≤ ε
 absFrom≤×≤ ε q x x₁ with absCases q
 ... | inl x₂ = subst2 (_≤_) (sym x₂) (-Invol ε) (minus-≤ (- ε) q x  )
 ... | inr x₂ = subst (_≤ ε) (sym x₂) x₁
@@ -904,7 +904,7 @@ absFrom≤×≤ ε q x x₁ with absCases q
 absFrom<×< : ∀ ε q →
                 - ε < q
                 → q < ε
-                → abs q < ε  
+                → abs q < ε
 absFrom<×< ε q x x₁ with absCases q
 ... | inl x₂ = subst2 (_<_) (sym x₂) (-Invol ε) (minus-< (- ε) q x  )
 ... | inr x₂ = subst (_< ε) (sym x₂) x₁
@@ -923,7 +923,7 @@ clamp d u x = ℚ.min (ℚ.max d x) u
 ... | gt x = <→0< (ℚ.abs (q ℚ.- r)) $ isTrans<≤ 0 (q ℚ.- r) (ℚ.abs (q ℚ.- r))
                  (-< r q x) (≤max (q - r) (ℚ.- (q - r)))
 
-≤→≡⊎< : ∀ q r → q ≤ r → (q ≡ r) ⊎ (q < r) 
+≤→≡⊎< : ∀ q r → q ≤ r → (q ≡ r) ⊎ (q < r)
 ≤→≡⊎< q r y with q ≟ r
 ... | lt x = inr x
 ... | eq x = inl x

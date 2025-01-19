@@ -36,7 +36,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Relation.Binary
 
 open import Cubical.HITs.PropositionalTruncation as PT
-open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_) 
+open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
 
 open import Cubical.Data.Rationals using (ℚ ; [_/_])
 open import Cubical.Data.Rationals.Order using
@@ -82,7 +82,7 @@ import Cubical.Algebra.Ring as RP
 
 Rℝ = (CR.CommRing→Ring
                (_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ))
--- module CRℝ = ? 
+-- module CRℝ = ?
 
 module 𝐑 = CR.CommRingTheory (_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ)
 module 𝐑' = RP.RingTheory Rℝ
@@ -95,10 +95,10 @@ module L𝐑 = Lems ((_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ)
 Invᵣ-restrℚ : (η : ℚ₊) →
   Σ (ℚ → ℚ) (Lipschitz-ℚ→ℚ (invℚ₊ (η ℚ₊· η)))
 
-Invᵣ-restrℚ η = f , 
-  Lipschitz-ℚ→ℚ'→Lipschitz-ℚ→ℚ _ _ w 
+Invᵣ-restrℚ η = f ,
+  Lipschitz-ℚ→ℚ'→Lipschitz-ℚ→ℚ _ _ w
  where
- 
+
  f = fst ∘ invℚ₊ ∘ ℚ.maxWithPos η
 
  w : ∀ q r → ℚ.abs (f q ℚ.- f r) ℚ.≤
@@ -124,7 +124,7 @@ Invᵣ-restrℚ η = f ,
 
 Invᵣ-restr : (η : ℚ₊) → Σ (ℝ → ℝ) (Lipschitz-ℝ→ℝ (invℚ₊ (η ℚ₊· η)))
 Invᵣ-restr η = (fromLipschitz (invℚ₊ (η ℚ₊· η)))
-                   (_ , Lipschitz-rat∘ _ _ (snd (Invᵣ-restrℚ η))) 
+                   (_ , Lipschitz-rat∘ _ _ (snd (Invᵣ-restrℚ η)))
 
 
 lowerℚBound : ∀ u → 0 <ᵣ u → ∃[ ε ∈ ℚ₊ ] (rat (fst ε) <ᵣ u)
@@ -151,9 +151,9 @@ from-abs< x y z p = isTrans≤<ᵣ _ _ _ (≤absᵣ _) p ,
    , isTrans≤<ᵣ _ _ _ (≤absᵣ _) (subst (((_<ᵣ z) ∘ absᵣ)) (+ᵣComm x (-ᵣ y)) p)
 
 open ℚ.HLP
- 
+
 ∃rationalApprox≤ : ∀ u → (ε : ℚ₊) →
-   ∃[ q ∈ ℚ ] (((rat q) +ᵣ (-ᵣ u)) ≤ᵣ rat (fst ε)) × (u ≤ᵣ rat q)     
+   ∃[ q ∈ ℚ ] (((rat q) +ᵣ (-ᵣ u)) ≤ᵣ rat (fst ε)) × (u ≤ᵣ rat q)
 ∃rationalApprox≤ = Elimℝ-Prop.go w
  where
  w : Elimℝ-Prop _
@@ -166,12 +166,12 @@ open ℚ.HLP
             (ℚ.<Weaken≤ _ _ (x/2<x (ε))) )
      in zz)
        , ≤ℚ→≤ᵣ _ _ (ℚ.≤+ℚ₊ r r (/2₊ ε) (ℚ.isRefl≤ r)) ∣₁
- w .Elimℝ-Prop.limA x y R ε = 
+ w .Elimℝ-Prop.limA x y R ε =
    let z = 𝕣-lim-dist x y (/4₊ ε)
    in PT.map (λ (q , z , z') →
         let (_ , Xzz' , Xzz) = from-abs< _ _ _
-                     (𝕣-lim-dist x y (/4₊ ε)) 
-               
+                     (𝕣-lim-dist x y (/4₊ ε))
+
             zz :  (-ᵣ (lim x y)) +ᵣ x (/2₊ (/4₊ ε))   ≤ᵣ rat (fst (/4₊ ε))
             zz = <ᵣWeaken≤ᵣ _ _ Xzz
             zz' :  (lim x y) +ᵣ (-ᵣ (x (/2₊ (/4₊ ε))))   ≤ᵣ rat (fst (/4₊ ε))
@@ -186,7 +186,7 @@ open ℚ.HLP
                         { -ᵣ lim x y} ∙ +ᵣComm (rat q) (-ᵣ lim x y))
                       ∙ sym (+ᵣAssoc (-ᵣ lim x y) (rat q)
                      (rat (fst (/2₊ ε) ℚ.+ fst (/2₊ (/4₊ ε))))) ∙
-                       +ᵣComm (-ᵣ lim x y) 
+                       +ᵣComm (-ᵣ lim x y)
                         (rat q +ᵣ rat (fst (/2₊ ε) ℚ.+ fst (/2₊ (/4₊ ε))))
                          ∙ cong (_+ᵣ (-ᵣ lim x y))
                            (+ᵣAssoc (rat q) (rat (fst (/2₊ ε)))
@@ -218,7 +218,7 @@ open ℚ.HLP
  w .Elimℝ-Prop.isPropA _ = isPropΠ λ _ → squash₁
 
 
-ℚmax-min-minus : ∀ x y → ℚ.max (ℚ.- x) (ℚ.- y) ≡ ℚ.- (ℚ.min x y) 
+ℚmax-min-minus : ∀ x y → ℚ.max (ℚ.- x) (ℚ.- y) ≡ ℚ.- (ℚ.min x y)
 ℚmax-min-minus = ℚ.elimBy≤
  (λ x y p → ℚ.maxComm _ _ ∙∙ p ∙∙ cong ℚ.-_ (ℚ.minComm _ _))
   λ x y x≤y →
@@ -238,7 +238,7 @@ open ℚ.HLP
        (ℚ.- q' , ℚ.- q) , -ᵣ≤ᵣ _ _ z'' , ((ℚ.minus-< _ _ z') , -ᵣ≤ᵣ _ _ z)
 
 ∃rationalApprox< : ∀ u → (ε : ℚ₊) →
-   ∃[ q ∈ ℚ ] (((rat q) +ᵣ (-ᵣ u)) <ᵣ rat (fst ε)) × (u <ᵣ rat q)     
+   ∃[ q ∈ ℚ ] (((rat q) +ᵣ (-ᵣ u)) <ᵣ rat (fst ε)) × (u <ᵣ rat q)
 ∃rationalApprox< u ε =
   PT.map (uncurry (λ q (x , x') →
      q ℚ.+ (fst (/4₊ ε))  ,
@@ -257,7 +257,7 @@ open ℚ.HLP
 
 ∃rationalApprox : ∀ u → (ε : ℚ₊) →
    ∃[ (q , q') ∈ (ℚ × ℚ) ] (q' ℚ.- q ℚ.< fst ε) ×
-                           ((rat q <ᵣ u) × (u <ᵣ rat q'))     
+                           ((rat q <ᵣ u) × (u <ᵣ rat q'))
 ∃rationalApprox u ε =
   PT.map2 (uncurry (λ q (x , x') → uncurry (λ q' (y , y') →
       ((ℚ.- (q ℚ.+ (fst (/4₊ ε)))) , q' ℚ.+ (fst (/4₊ ε))) ,
@@ -293,7 +293,7 @@ open ℚ.HLP
      )
      )) (∃rationalApprox≤ (-ᵣ u) (/2₊ (/4₊ ε)))
         (∃rationalApprox≤ u (/2₊ (/4₊ ε)))
-        
+
 
 
 <ᵣ-+o-pre : ∀ m n o  → m ℚ.< n  → (rat m +ᵣ o) <ᵣ (rat n +ᵣ o)
@@ -301,10 +301,10 @@ open ℚ.HLP
   PT.rec2 squash₁ (λ (q , x , x') ((q' , q'') , y , y' , y'') →
      let x* : (rat q) ≤ᵣ rat (fst (/4₊ Δ)) +ᵣ ((rat m +ᵣ o))
          x* =  subst (_≤ᵣ rat (fst (/4₊ Δ)) +ᵣ ((rat m +ᵣ o)))
-                (L𝐑.lem--00) 
+                (L𝐑.lem--00)
                  (≤ᵣ-+o _ _
                   ((rat m +ᵣ o)) (<ᵣWeaken≤ᵣ _ _ x))
-         
+
          y* : (rat (fst (/4₊ Δ)) +ᵣ (rat m +ᵣ o)) ≤ᵣ
                (-ᵣ (rat (fst (/4₊ Δ)) +ᵣ (-ᵣ (rat n +ᵣ o))))
          y* = subst2 {x = rat (fst (/2₊ Δ))
@@ -327,15 +327,15 @@ open ℚ.HLP
                        (-ᵣ rat (fst (/4₊ Δ))) i) ∙
                       sym (-ᵣDistr (rat (fst (/4₊ Δ))) ((-ᵣ (rat n +ᵣ o)))) )
               (≤ᵣ-+o _ _ (rat m +ᵣ (o +ᵣ (-ᵣ (rat (fst (/4₊ Δ))))))
-                (≤ℚ→≤ᵣ _ _ (ℚ.<Weaken≤ _ _ (x/2<x Δ)))) 
-         
+                (≤ℚ→≤ᵣ _ _ (ℚ.<Weaken≤ _ _ (x/2<x Δ))))
+
          z* : -ᵣ (rat (fst (/4₊ Δ)) +ᵣ (-ᵣ (rat n +ᵣ o)))
                ≤ᵣ ((rat q'))
          z* = subst ((-ᵣ (rat (fst (/4₊ Δ)) +ᵣ (-ᵣ (rat n +ᵣ o)))) ≤ᵣ_)
                (cong (-ᵣ_) (sym (+ᵣAssoc (rat q'') (-ᵣ rat q') _)
                    ∙ L𝐑.lem--05 {rat q''} {(-ᵣ rat q')}) ∙
                      -ᵣInvol (rat q'))
-                   
+
                     (-ᵣ≤ᵣ _ _ (≤ᵣMonotone+ᵣ _ _ _ _
                 (≤ℚ→≤ᵣ _ _ (ℚ.<Weaken≤ _ _ y))
                  (<ᵣWeaken≤ᵣ _ _ (-ᵣ<ᵣ _ _ y''))))
@@ -349,20 +349,20 @@ open ℚ.HLP
      ((∃rationalApprox (rat n +ᵣ o) (/4₊ Δ)))
 
  where
- Δ = ℚ.<→ℚ₊ m n m<n 
+ Δ = ℚ.<→ℚ₊ m n m<n
 
 <ᵣ-+o : ∀ m n o →  m <ᵣ n → (m +ᵣ o) <ᵣ (n +ᵣ o)
 <ᵣ-+o m n o = PT.rec squash₁
   λ ((q , q') , x , x' , x'') →
    let y : (m +ᵣ o) ≤ᵣ (rat q +ᵣ o)
        y = ≤ᵣ-+o m (rat q) o x
-       y'' : (rat q' +ᵣ o) ≤ᵣ (n +ᵣ o) 
+       y'' : (rat q' +ᵣ o) ≤ᵣ (n +ᵣ o)
        y'' = ≤ᵣ-+o (rat q') n o x''
-       
+
        y' : (rat q +ᵣ o) <ᵣ (rat q' +ᵣ o)
        y' = <ᵣ-+o-pre q q' o x'
-       
-    
+
+
    in isTrans<≤ᵣ _ _ _ (isTrans≤<ᵣ _ _ _ y y') y''
 
 <ᵣ-o+ : ∀ m n o →  m <ᵣ n → (o +ᵣ m) <ᵣ (o +ᵣ n)
@@ -400,22 +400,22 @@ isAsym<ᵣ x y =
 _＃_ : ℝ → ℝ → Type
 x ＃ y = (x <ᵣ y) ⊎ (y <ᵣ x)
 
-isProp＃ : ∀ x y → isProp (x ＃ y) 
+isProp＃ : ∀ x y → isProp (x ＃ y)
 isProp＃ x y (inl x₁) (inl x₂) = cong inl (squash₁ x₁ x₂)
 isProp＃ x y (inl x₁) (inr x₂) = ⊥.rec (isAsym<ᵣ _ _ x₁ x₂)
 isProp＃ x y (inr x₁) (inl x₂) = ⊥.rec (isAsym<ᵣ _ _ x₁ x₂)
 isProp＃ x y (inr x₁) (inr x₂) = cong inr (squash₁ x₁ x₂)
 
 
-rat＃ : ∀ q q' → (rat q ＃ rat q') ≃ (q ℚ.# q' )  
+rat＃ : ∀ q q' → (rat q ＃ rat q') ≃ (q ℚ.# q' )
 rat＃ q q' = propBiimpl→Equiv (isProp＃ _ _) (ℚ.isProp# _ _)
   (⊎.map (<ᵣ→<ℚ _ _) (<ᵣ→<ℚ _ _))
   (⊎.map (<ℚ→<ᵣ _ _) (<ℚ→<ᵣ _ _))
 
 
 decCut : ∀ x → 0 <ᵣ (absᵣ x) → (0 ＃ x)
-decCut x 0<absX = 
-  PT.rec (isProp＃ 0 x)    
+decCut x 0<absX =
+  PT.rec (isProp＃ 0 x)
     (λ (Δ , Δ<absX) →
       PT.rec (isProp＃ 0 x)
          (λ (q , q-x<Δ/2 , x<q) →
@@ -463,7 +463,7 @@ decCut x 0<absX =
 
 
 
-＃≃0<dist : ∀ x y → x ＃ y ≃ (0 <ᵣ (absᵣ (x +ᵣ (-ᵣ y)))) 
+＃≃0<dist : ∀ x y → x ＃ y ≃ (0 <ᵣ (absᵣ (x +ᵣ (-ᵣ y))))
 ＃≃0<dist x y = propBiimpl→Equiv (isProp＃ _ _) squash₁
   (⊎.rec ((λ x<y → subst (0 <ᵣ_) (minusComm-absᵣ y x)
                 (isTrans<≤ᵣ _ _ _ (subst (_<ᵣ (y +ᵣ (-ᵣ x)))
@@ -474,7 +474,7 @@ decCut x 0<absX =
          (inl ∘S subst2 _<ᵣ_ L𝐑.lem--05 (+IdR _) ∘S <ᵣ-o+ _ _ y)
           ∘S decCut (x +ᵣ (-ᵣ y)))
 
--- ＃≃abs< : ∀ x y → absᵣ x <ᵣ y ≃  
+-- ＃≃abs< : ∀ x y → absᵣ x <ᵣ y ≃
 -- ＃≃abs< : ?
 
 isSym＃ : BinaryRelation.isSym _＃_
@@ -491,9 +491,9 @@ isSym＃ _ _ = fst ⊎-swap-≃
 
 ≤ᵣ-o· : ∀ m n (o : ℚ₊) →  m ≤ᵣ n → (rat (fst o) ·ᵣ m ) ≤ᵣ (rat (fst o) ·ᵣ n)
 ≤ᵣ-o· m n o p =
-    cong₂ maxᵣ (·ᵣComm _ _ ) (·ᵣComm _ _ ) ∙ ≤ᵣ-·o m n o p ∙ ·ᵣComm _ _ 
+    cong₂ maxᵣ (·ᵣComm _ _ ) (·ᵣComm _ _ ) ∙ ≤ᵣ-·o m n o p ∙ ·ᵣComm _ _
 
--- max≤-lem : ∀ x x' → x <ᵣ y → x' <ᵣ y → maxᵣ x x' ≤ᵣ x 
+-- max≤-lem : ∀ x x' → x <ᵣ y → x' <ᵣ y → maxᵣ x x' ≤ᵣ x
 -- max≤-lem x x' y = {!!}
 
 <ᵣ→Δ : ∀ x y → x <ᵣ y → ∃[ δ ∈ ℚ₊ ] rat (fst δ) <ᵣ y +ᵣ (-ᵣ x)
@@ -502,10 +502,10 @@ isSym＃ _ _ = fst ⊎-swap-≃
                 let zz = isTrans<≤ᵣ _ _ _ (<ℚ→<ᵣ _ _ a') a''
                     zz' = -ᵣ≤ᵣ _ _ a
                     zz'' = ≤ᵣMonotone+ᵣ _ _ _ _ a'' zz'
-                in isTrans<≤ᵣ _ _ _ 
+                in isTrans<≤ᵣ _ _ _
                        (<ℚ→<ᵣ _ _ (x/2<x (ℚ.<→ℚ₊ q q' a')))
                        zz''
-                       
+
 a<b-c⇒c<b-a : ∀ a b c → a <ᵣ b +ᵣ (-ᵣ c) → c <ᵣ b +ᵣ (-ᵣ a)
 a<b-c⇒c<b-a a b c p =
    subst2 _<ᵣ_ (L𝐑.lem--05 {a} {c})
@@ -536,7 +536,7 @@ a-b<c⇒a-c<b a b c p =
 
 a-b<c⇒a<c+b : ∀ a b c → a +ᵣ (-ᵣ b) <ᵣ c  → a <ᵣ c +ᵣ b
 a-b<c⇒a<c+b a b c p =
-  subst (_<ᵣ (c +ᵣ b)) 
+  subst (_<ᵣ (c +ᵣ b))
     (L𝐑.lem--00 {a} {b})
      (<ᵣ-+o _ _ b p)
 
@@ -547,17 +547,17 @@ a-b<c⇒a<c+b a b c p =
 
 x≤y→0≤y-x : ∀ x y →  x ≤ᵣ y  → 0 ≤ᵣ y +ᵣ (-ᵣ x)
 x≤y→0≤y-x x y p =
-  subst (_≤ᵣ y +ᵣ (-ᵣ x)) (+-ᵣ x) (≤ᵣ-+o x y (-ᵣ x) p) 
+  subst (_≤ᵣ y +ᵣ (-ᵣ x)) (+-ᵣ x) (≤ᵣ-+o x y (-ᵣ x) p)
 
 x<y→0<y-x : ∀ x y →  x <ᵣ y  → 0 <ᵣ y +ᵣ (-ᵣ x)
 x<y→0<y-x x y p =
-  subst (_<ᵣ y +ᵣ (-ᵣ x)) (+-ᵣ x) (<ᵣ-+o x y (-ᵣ x) p) 
+  subst (_<ᵣ y +ᵣ (-ᵣ x)) (+-ᵣ x) (<ᵣ-+o x y (-ᵣ x) p)
 
-0<y-x→x<y : ∀ x y → 0 <ᵣ y +ᵣ (-ᵣ x) → x <ᵣ y 
+0<y-x→x<y : ∀ x y → 0 <ᵣ y +ᵣ (-ᵣ x) → x <ᵣ y
 0<y-x→x<y x y p =
   subst2 (_<ᵣ_)
    (+IdL x) (sym (L𝐑.lem--035 {y} {x}))
-    (<ᵣ-+o 0 (y +ᵣ (-ᵣ x)) x p) 
+    (<ᵣ-+o 0 (y +ᵣ (-ᵣ x)) x p)
 
 
 
@@ -583,12 +583,12 @@ min-lem x x' y = minᵣAssoc _ _ _ ∙ cong (flip minᵣ y) (minᵣComm _ _)
      ∙ minᵣAssoc _ _ _ ∙ cong (flip minᵣ y) (minᵣComm _ _)
 
 
-max≤-lem : ∀ x x' y → x ≤ᵣ y → x' ≤ᵣ y → maxᵣ x x' ≤ᵣ y 
+max≤-lem : ∀ x x' y → x ≤ᵣ y → x' ≤ᵣ y → maxᵣ x x' ≤ᵣ y
 max≤-lem x x' y p p' =
-  sym (max-lem _ _ _) 
+  sym (max-lem _ _ _)
    ∙∙ cong₂ maxᵣ p p' ∙∙ maxᵣIdem y
 
-max<-lem : ∀ x x' y → x <ᵣ y → x' <ᵣ y → maxᵣ x x' <ᵣ y 
+max<-lem : ∀ x x' y → x <ᵣ y → x' <ᵣ y → maxᵣ x x' <ᵣ y
 max<-lem x x' y = PT.map2
   λ ((q , q') , (a , a' , a''))
     ((r , r') , (b , b' , b'')) →
@@ -621,12 +621,12 @@ minDistMaxᵣ x y y' = ≡Continuous _ _
 ≤maxᵣ : ∀ m n →  m ≤ᵣ maxᵣ m n
 ≤maxᵣ m n = maxᵣAssoc _ _ _ ∙ cong (flip maxᵣ n) (maxᵣIdem m)
 
-≤min-lem : ∀ x y y' → x ≤ᵣ y → x ≤ᵣ y' →  x ≤ᵣ minᵣ y y' 
+≤min-lem : ∀ x y y' → x ≤ᵣ y → x ≤ᵣ y' →  x ≤ᵣ minᵣ y y'
 ≤min-lem x y y' p p' =
    minDistMaxᵣ x y y' ∙ cong₂ minᵣ p p'
 
 
-<min-lem : ∀ x x' y → y <ᵣ x → y <ᵣ x' →  y <ᵣ minᵣ x x' 
+<min-lem : ∀ x x' y → y <ᵣ x → y <ᵣ x' →  y <ᵣ minᵣ x x'
 <min-lem x x' y = PT.map2
   λ ((q , q') , (a , a' , a''))
     ((r , r') , (b , b' , b'')) →
@@ -635,7 +635,7 @@ minDistMaxᵣ x y y' = ≡Continuous _ _
             ≤min-lem (rat (ℚ.min q' r')) x x'
              (isTrans≤ᵣ _ _ _ (≤ℚ→≤ᵣ _ _ (ℚ.min≤ q' r')) a'')
              (isTrans≤ᵣ _ _ _ (≤ℚ→≤ᵣ _ _ (ℚ.min≤' q' r')) b'')
-          
+
 
 
 
@@ -646,10 +646,10 @@ minDistMaxᵣ x y y' = ≡Continuous _ _
 invℝ'' : Σ (∀ r → ∃[ σ ∈ ℚ₊ ] (rat (fst σ) <ᵣ r) → ℝ)
       λ _ → Σ (∀ r → 0 <ᵣ r → ℝ) (IsContinuousWithPred (λ r → _ , squash₁))
 invℝ'' = f , (λ r 0<r → f r (lowerℚBound r 0<r)) ,
-   ctnF  
- 
+   ctnF
+
  where
- 
+
  2co : ∀ σ σ' r
     → (rat (fst σ ) <ᵣ r)
     → (rat (fst σ') <ᵣ r)
@@ -675,45 +675,45 @@ invℝ'' = f , (λ r 0<r → f r (lowerℚBound r 0<r)) ,
 
            φ* : ℚ₊
            φ* = ℚ.min₊ (/2₊ φ*ε) φ*σ
-                         
+
 
 
            limRestr'' : rat (fst φ*)
-               ≤ᵣ (rat q +ᵣ (-ᵣ rat (fst σ⊔))) ·ᵣ rat [ 1 / 2 ]  
+               ≤ᵣ (rat q +ᵣ (-ᵣ rat (fst σ⊔))) ·ᵣ rat [ 1 / 2 ]
            limRestr'' =
              let zz = ((ℚ.min≤'
                     ((fst (/2₊ ((invℚ₊ ((invℚ₊ (σ ℚ₊· σ))
                                    ℚ₊+ (invℚ₊ (σ' ℚ₊· σ'))))
                                    ℚ₊· ε))))
                                     (fst (/2₊
-                             (ℚ.<→ℚ₊ (fst σ⊔) q (<ᵣ→<ℚ _ _ σ⊔<q)) 
+                             (ℚ.<→ℚ₊ (fst σ⊔) q (<ᵣ→<ℚ _ _ σ⊔<q))
                           ))))
              in subst (rat (fst φ*) ≤ᵣ_)
                 (rat·ᵣrat _ _)
                   (≤ℚ→≤ᵣ (fst φ*)
                     (fst (/2₊
-                             (ℚ.<→ℚ₊ (fst σ⊔) q (<ᵣ→<ℚ _ _ σ⊔<q)) 
+                             (ℚ.<→ℚ₊ (fst σ⊔) q (<ᵣ→<ℚ _ _ σ⊔<q))
                           )) zz)
-                 
+
 
            limRestr' : rat (fst φ* ℚ.+ fst φ*)
-               ≤ᵣ (lim x y +ᵣ (-ᵣ rat (fst σ⊔))) 
+               ≤ᵣ (lim x y +ᵣ (-ᵣ rat (fst σ⊔)))
            limRestr' =
              let zz : ((rat q +ᵣ (-ᵣ rat (fst σ⊔)))) ≤ᵣ
                         ((lim x y +ᵣ (-ᵣ rat (fst σ⊔))) )
                  zz = ≤ᵣ-+o (rat q) (lim x y) (-ᵣ rat (fst σ⊔))
                           (<ᵣWeaken≤ᵣ _ _ q<limX)
              in  subst2 _≤ᵣ_
-                  (sym (rat·ᵣrat _ _) ∙ 
+                  (sym (rat·ᵣrat _ _) ∙
                    cong rat (distℚ! (fst φ*) ·[ ge[ 2 ]  ≡ ge1 +ge ge1 ]))
-                    (sym (·ᵣAssoc _ _ _) ∙∙ 
+                    (sym (·ᵣAssoc _ _ _) ∙∙
                       cong ((lim x y +ᵣ (-ᵣ rat (fst σ⊔))) ·ᵣ_)
                        (sym (rat·ᵣrat _ _)
                          ∙ (cong rat (𝟚.toWitness {Q = ℚ.discreteℚ
                            ([ 1 / 2 ] ℚ.· 2) 1} tt))) ∙∙
                       ·IdR _ )
                    (≤ᵣ-·o _ _ 2 (isTrans≤ᵣ _ _ _
-                   limRestr'' (≤ᵣ-·o _ _ ([ 1 / 2 ] , _) zz)))             
+                   limRestr'' (≤ᵣ-·o _ _ ([ 1 / 2 ] , _) zz)))
 
 
            limRestr : rat (fst σ⊔)
@@ -725,14 +725,14 @@ invℝ'' = f , (λ r 0<r → f r (lowerℚBound r 0<r)) ,
              (≤ᵣ-o+ _ _
                (rat (fst σ⊔) +ᵣ (-ᵣ (rat (fst φ* ℚ.+ fst φ*))))
                  limRestr')
-           
+
            ∣x-limX∣ : (lim x y +ᵣ (-ᵣ rat (fst φ* ℚ.+ fst φ*))) <ᵣ x φ*
-   
+
            ∣x-limX∣ =
              let zz = isTrans≤<ᵣ _ _ _ (≤absᵣ _)
                   (subst (_<ᵣ rat (fst φ* ℚ.+ fst φ*))
                    (minusComm-absᵣ _ _)
-                   (fst (∼≃abs<ε _ _ (φ* ℚ₊+ φ*)) 
+                   (fst (∼≃abs<ε _ _ (φ* ℚ₊+ φ*))
                    $ 𝕣-lim-self x y φ* φ*))
              in subst2 _<ᵣ_ (L𝐑.lem--060 {lim x y} {x φ*}
                            {rat (fst φ* ℚ.+ fst φ*)})
@@ -746,7 +746,7 @@ invℝ'' = f , (λ r 0<r → f r (lowerℚBound r 0<r)) ,
            φ' : ℚ₊
            φ' = (invℚ₊ (σ' ℚ₊· σ')) ℚ₊·  φ*
            σ⊔<Xφ* : rat (fst σ⊔) <ᵣ x φ*
-           σ⊔<Xφ* = isTrans≤<ᵣ _ _ _ limRestr ∣x-limX∣ 
+           σ⊔<Xφ* = isTrans≤<ᵣ _ _ _ limRestr ∣x-limX∣
            σ<Xφ* : rat (fst σ) <ᵣ x φ*
            σ<Xφ* = isTrans≤<ᵣ _ _ _
               (≤ℚ→≤ᵣ _ _ (ℚ.≤max (fst σ) (fst σ'))) σ⊔<Xφ*
@@ -768,26 +768,26 @@ invℝ'' = f , (λ r 0<r → f r (lowerℚBound r 0<r)) ,
                               (ℚ.0≤ℚ₊ ((invℚ₊ (σ ℚ₊· σ))
                                    ℚ₊+ (invℚ₊ (σ' ℚ₊· σ'))))
                              (
-                               (ℚ.min≤ (fst (/2₊ φ*ε)) (fst φ*σ)))) 
-           
+                               (ℚ.min≤ (fst (/2₊ φ*ε)) (fst φ*σ))))
+
            ε'< : 0< (fst ε ℚ.- (fst ((invℚ₊ (σ ℚ₊· σ)) ℚ₊·  φ*)
                                    ℚ.+ fst ((invℚ₊ (σ' ℚ₊· σ')) ℚ₊·  φ*)))
            ε'< = snd (ℚ.<→ℚ₊ (fst ((invℚ₊ (σ ℚ₊· σ)) ℚ₊·  φ*)
                                    ℚ.+ fst ((invℚ₊ (σ' ℚ₊· σ')) ℚ₊·  φ*))
                                     (fst ε)
               (ℚ.isTrans≤< _ _ _ preε'< (x/2<x ε)))
-           
-         
+
+
            φ= = ℚ₊≡ {φ*} $ sym (ℚ.[y·x]/y (invℚ₊ (σ ℚ₊· σ)) (fst φ*))
 
            φ'= = ℚ₊≡ {φ*} $ sym (ℚ.[y·x]/y (invℚ₊ (σ' ℚ₊· σ')) (fst φ*))
-           
+
 
            R' : _
            R' = invEq (∼≃≡ _ _) (R φ* σ<Xφ* σ'<Xφ* )
              ((fst ε ℚ.- (fst φ ℚ.+ fst φ')) , ε'<)
-               
-           
+
+
        in (lim-lim _ _ ε φ φ' _ _ ε'<
                 (((cong ((fst (Invᵣ-restr σ)) ∘ x) (φ=))
                    subst∼[ refl ] (cong ((fst (Invᵣ-restr σ')) ∘ x)
@@ -795,11 +795,11 @@ invℝ'' = f , (λ r 0<r → f r (lowerℚBound r 0<r)) ,
       (denseℚinℝ (rat (fst σ⊔)) (lim x y) σ⊔<limX)
    where
    σ⊔ = ℚ.max₊ σ σ'
-   
+
    σ⊔<limX : rat (fst σ⊔) <ᵣ lim x y
    σ⊔<limX = max<-lem (rat (fst σ)) (rat (fst σ'))
       (lim x y) σ<limX σ'<limX
-   
+
 
   w .Elimℝ-Prop.isPropA _ = isPropΠ2 λ _ _ → isSetℝ _ _
 
@@ -808,12 +808,12 @@ invℝ'' = f , (λ r 0<r → f r (lowerℚBound r 0<r)) ,
 
  f : ∀ r → ∃[ σ ∈ ℚ₊ ] (rat (fst σ) <ᵣ r) → ℝ
  f r = PT.rec→Set {B = ℝ} isSetℝ (f' r)
-          λ (σ , σ<r) (σ' , σ'<r) → 2co σ σ' r σ<r σ'<r 
+          λ (σ , σ<r) (σ' , σ'<r) → 2co σ σ' r σ<r σ'<r
 
- 
+
  ctnF : ∀ u ε u∈ → ∃[ δ ∈ ℚ₊ ]
                  (∀ v v∈P → u ∼[ δ ] v →
-                  f u (lowerℚBound u u∈) ∼[ ε ] f v (lowerℚBound v v∈P)) 
+                  f u (lowerℚBound u u∈) ∼[ ε ] f v (lowerℚBound v v∈P))
  ctnF u ε u∈ = ctnF' (lowerℚBound u u∈)
 
   where
@@ -823,7 +823,7 @@ invℝ'' = f , (λ r 0<r → f r (lowerℚBound r 0<r)) ,
   ctnF' = PT.elim (λ _ → squash₁)
     λ (σ , σ<u) →
      let zz : ∃[ δ ∈ ℚ₊ ] ((v₁ : ℝ) →  u ∼[ δ ] v₁
-                      → f u ∣ σ , σ<u ∣₁ ∼[ ε ] Invᵣ-restr σ .fst v₁) 
+                      → f u ∣ σ , σ<u ∣₁ ∼[ ε ] Invᵣ-restr σ .fst v₁)
          zz = Lipschitz→IsContinuous (invℚ₊ (σ ℚ₊· σ))
                  (λ z → Invᵣ-restr σ .fst z)
                  (snd (Invᵣ-restr σ) ) u ε
@@ -833,18 +833,18 @@ invℝ'' = f , (λ r 0<r → f r (lowerℚBound r 0<r)) ,
                   f u ∣ σ , σ<u ∣₁ ∼[ ε ] f v (lowerℚBound v v∈))
          zz' = PT.rec2 squash₁
              (uncurry (λ δ R (η , η<u-σ)  →
-               let δ' = ℚ.min₊ δ η 
+               let δ' = ℚ.min₊ δ η
                in ∣ δ' ,
                    (λ v v∈ →
                       PT.elim {P = λ vv → u ∼[ δ' ] v →
                                f u ∣ σ , σ<u ∣₁ ∼[ ε ] f v vv}
                           (λ _ → isPropΠ λ _ → isProp∼ _ _ _)
                           (λ (σ' , σ'<v) u∼v →
-                             let zuz :  (u +ᵣ (-ᵣ v)) <ᵣ rat (fst η) 
+                             let zuz :  (u +ᵣ (-ᵣ v)) <ᵣ rat (fst η)
                                  zuz = isTrans≤<ᵣ _ _ _ (≤absᵣ (u +ᵣ (-ᵣ v)))
                                     (isTrans<≤ᵣ _ _ _ (fst (∼≃abs<ε _ _ _) u∼v)
                                        (≤ℚ→≤ᵣ _ _ (ℚ.min≤' (fst δ) (fst η))))
-                                 
+
                                  u-η≤v : u +ᵣ (-ᵣ rat (fst η)) ≤ᵣ v
                                  u-η≤v = a-b≤c⇒a-c≤b _ _ _
                                           (<ᵣWeaken≤ᵣ _ _ zuz)
@@ -870,9 +870,9 @@ invℝ'-rat : ∀ q p' p →
 invℝ'-rat q p' p = PT.elim (λ xx →
                        isSetℝ ((fst invℝ'') (rat q) xx) _)
                         (λ x → cong (rat ∘ fst ∘ invℚ₊)
-                        (ww x)) (lowerℚBound (rat q) p) 
+                        (ww x)) (lowerℚBound (rat q) p)
 
- where 
+ where
  ww : ∀ x → (ℚ.maxWithPos (fst x) q) ≡ (q , p')
  ww x = ℚ₊≡ (ℚ.≤→max (fst (fst x)) q (ℚ.<Weaken≤ _ _ (<ᵣ→<ℚ _ _ (snd x))))
 
@@ -895,7 +895,7 @@ invℝ'-pos u p = PT.rec squash₁
                  x'' : u <ᵣ rat q'
                  x'' = <min-lem _ _ _ x''* (isTrans≤<ᵣ _ _ _ (≤absᵣ u) u<n)
 
-                 
+
                  0<q' : 0 <ᵣ rat q'
                  0<q' = isTrans<ᵣ _ _ _ p x''
                  z' : rat [ 1 / n ] ≤ᵣ invℝ' .fst (rat q') 0<q'
@@ -904,7 +904,7 @@ invℝ'-pos u p = PT.rec squash₁
                             (≤ℚ→≤ᵣ _ _ (
                              ℚ.invℚ≤invℚ ([ ℚ.ℕ₊₁→ℤ n / 1 ] , _)
                                (q' , ℚ.<→0< q' (<ᵣ→<ℚ [ pos 0 / 1 ] q' 0<q'))
-                                ((ℚ.min≤' q'* [ pos (ℕ₊₁→ℕ n) / 1 ])))) 
+                                ((ℚ.min≤' q'* [ pos (ℕ₊₁→ℕ n) / 1 ]))))
                  z : ((invℝ' .fst (rat q') 0<q') +ᵣ (-ᵣ rat [ 1 / n ]))
                        <ᵣ
                        (invℝ' .fst u p)
@@ -918,7 +918,7 @@ invℝ'-pos u p = PT.rec squash₁
                                 (x≤y→0≤y-x _ _ (<ᵣWeaken≤ᵣ _ _ x''))))
                               (≤ᵣ-o+ _ _ _ (-ᵣ≤ᵣ _ _ (<ᵣWeaken≤ᵣ _ _ x'))))
                            (<ℚ→<ᵣ _ _ x))))))))
-                 
+
              in isTrans≤<ᵣ _ _ _ (x≤y→0≤y-x _ _ z') z
              )
            (∃rationalApprox u σ))
@@ -926,7 +926,7 @@ invℝ'-pos u p = PT.rec squash₁
   (getClamps u)
 
 signᵣ : ∀ r → 0 ＃ r → ℝ
-signᵣ _ = ⊎.rec (λ _ → rat 1) (λ _ → rat -1) 
+signᵣ _ = ⊎.rec (λ _ → rat 1) (λ _ → rat -1)
 
 0<signᵣ : ∀ r 0＃r → 0 <ᵣ r → 0 <ᵣ signᵣ r 0＃r
 0<signᵣ r (inl x) _ = <ℚ→<ᵣ _ _ ((𝟚.toWitness {Q = ℚ.<Dec 0 1} _))
@@ -941,10 +941,10 @@ signᵣ-rat r (inr x) = cong rat (sym (snd (snd (ℚ.<→sign r)) (<ᵣ→<ℚ _
 
 -- HoTT Theorem (11.3.47)
 invℝ : ∀ r → 0 ＃ r → ℝ
-invℝ r 0＃r = signᵣ r 0＃r ·ᵣ fst invℝ' (absᵣ r) (0＃→0<abs r 0＃r) 
+invℝ r 0＃r = signᵣ r 0＃r ·ᵣ fst invℝ' (absᵣ r) (0＃→0<abs r 0＃r)
 
 IsContinuousWithPredSignᵣ : IsContinuousWithPred 0＃ₚ signᵣ
-IsContinuousWithPredSignᵣ u ε = 
+IsContinuousWithPredSignᵣ u ε =
  ⊎.elim
   (λ 0<u → PT.map (λ (q , 0<q , q<u) →
              ((q , ℚ.<→0< q (<ᵣ→<ℚ _ _ 0<q))) ,
@@ -969,21 +969,21 @@ IsContinuousWithPredSignᵣ u ε =
                           (fst (∼≃abs<ε _ _ _) (sym∼ _ _ _ v∼u))))))))
                   (λ _ → refl∼ _ _) v∈P)
              (denseℚinℝ u 0 u<0))
-  
+
 IsContinuousWithPredInvℝ : IsContinuousWithPred (λ _ → _ , isProp＃ _ _) invℝ
 IsContinuousWithPredInvℝ =
    IsContinuousWP∘ 0＃ₚ 0＃ₚ _ _ (λ r x → x)
-   (cont₂·ᵣWP 0＃ₚ _ _ 
+   (cont₂·ᵣWP 0＃ₚ _ _
        IsContinuousWithPredSignᵣ (IsContinuousWP∘ _ _
            _ _ 0＃→0<abs (snd invℝ')
          (AsContinuousWithPred _ _ IsContinuousAbsᵣ)))
      (AsContinuousWithPred _
        _ IsContinuousId)
 
-      
-invℝ-rat : ∀ q p p' → invℝ (rat q) p ≡ rat (ℚ.invℚ q p')  
+
+invℝ-rat : ∀ q p p' → invℝ (rat q) p ≡ rat (ℚ.invℚ q p')
 invℝ-rat q p p' =
-  cong₂ _·ᵣ_ (signᵣ-rat q p) (invℝ'-rat _ _ _) ∙ sym (rat·ᵣrat _ _) 
+  cong₂ _·ᵣ_ (signᵣ-rat q p) (invℝ'-rat _ _ _) ∙ sym (rat·ᵣrat _ _)
 
 -ᵣ≡[-1·ᵣ] : ∀ x → -ᵣ x ≡ (-1) ·ᵣ x
 -ᵣ≡[-1·ᵣ] = ≡Continuous _ _
@@ -998,7 +998,7 @@ invℝ-pos x p = subst (0 <ᵣ_) (sym (·IdL _))
 
 
 invℝ-neg : ∀ x → (p : x <ᵣ 0) → invℝ x (inr p) <ᵣ 0
-invℝ-neg x p = 
+invℝ-neg x p =
      subst (_<ᵣ 0)
        (-ᵣ≡[-1·ᵣ] _)
        (-ᵣ<ᵣ 0 _ (invℝ'-pos (absᵣ x) (0＃→0<abs x (inr p))))
@@ -1008,7 +1008,7 @@ invℝ0＃ r = ⊎.elim (inl ∘ invℝ-pos r)
                    (inr ∘ invℝ-neg r)
 
 
-openPred< : ∀ x → ⟨ openPred (λ y → (x <ᵣ y) , squash₁)  ⟩ 
+openPred< : ∀ x → ⟨ openPred (λ y → (x <ᵣ y) , squash₁)  ⟩
 openPred< x y =
      PT.map (map-snd (λ {q} a<y-x v
         →   isTrans<ᵣ _ _ _
@@ -1019,7 +1019,7 @@ openPred< x y =
   ∘S lowerℚBound (y +ᵣ (-ᵣ x))
   ∘S x<y→0<y-x x y
 
-openPred> : ∀ x → ⟨ openPred (λ y → (y <ᵣ x) , squash₁)  ⟩ 
+openPred> : ∀ x → ⟨ openPred (λ y → (y <ᵣ x) , squash₁)  ⟩
 openPred> x y =
        PT.map (map-snd (λ {q} q<x-y v
         →     flip (isTrans<ᵣ _ _ _)
@@ -1032,7 +1032,7 @@ openPred> x y =
   ∘S x<y→0<y-x y x
 
 
-isOpenPred0＃ : ⟨ openPred 0＃ₚ ⟩ 
+isOpenPred0＃ : ⟨ openPred 0＃ₚ ⟩
 isOpenPred0＃ x =
  ⊎.rec
    (PT.map (map-snd ((inl ∘_) ∘_)) ∘ openPred< 0 x)
@@ -1049,7 +1049,7 @@ isOpenPred0＃ x =
         (AsContinuousWithPred _ _ (IsContinuousConst 1))
         (λ r r∈ r∈' → cong (rat r ·ᵣ_) (invℝ'-rat r _ r∈)
           ∙∙ sym (rat·ᵣrat _ _) ∙∙ cong rat (ℚ.x·invℚ₊[x]
-            (r , ℚ.<→0< _ (<ᵣ→<ℚ _ _ r∈)))) r 
+            (r , ℚ.<→0< _ (<ᵣ→<ℚ _ _ r∈)))) r
 
 
 invℝInvol : ∀ r 0＃r → invℝ (invℝ r 0＃r) (invℝ0＃ r 0＃r) ≡ r
@@ -1062,10 +1062,10 @@ invℝInvol r 0＃r = ≡ContinuousWithPred
        _ IsContinuousId)
         (λ r 0＃r 0＃r' →
           let 0#r = (fst (rat＃ 0 r) 0＃r)
-              0#InvR = ℚ.0#invℚ r 0#r 
+              0#InvR = ℚ.0#invℚ r 0#r
           in  cong₂ invℝ (invℝ-rat _ _ _)
                  (isProp→PathP (λ i → isProp＃ _ _) _ _)
-                 
+
              ∙∙ invℝ-rat ((invℚ r (fst (rat＃ [ pos 0 / 1+ 0 ] r) 0＃r)))
                    (invEq (rat＃ 0 _) 0#InvR)
                     (ℚ.0#invℚ r (fst (rat＃ [ pos 0 / 1+ 0 ] r) 0＃r))
@@ -1090,7 +1090,7 @@ sign·absᵣ r = ∘diag $
         (λ r 0＃r 0＃r' → (cong₂ _·ᵣ_ refl (signᵣ-rat r 0＃r)
           ∙ sym (rat·ᵣrat _ _))
           ∙ cong rat (cong (ℚ._· ℚ.sign r) (sym (ℚ.abs'≡abs r))
-           ∙ ℚ.sign·abs r) ) r 
+           ∙ ℚ.sign·abs r) ) r
 
 x·invℝ[x] : ∀ r 0＃r → r ·ᵣ (invℝ r 0＃r) ≡ 1
 x·invℝ[x] r 0＃r =
@@ -1101,10 +1101,10 @@ x·invℝ[x] r 0＃r =
         (sign²=1 r 0＃r) ∙ ·IdL (fst invℝ' (absᵣ r) (0＃→0<abs r 0＃r)))
    ∙ ·invℝ' (absᵣ r) (0＃→0<abs r 0＃r))
 
-_／ᵣ[_,_] : ℝ → ∀ r → 0 ＃ r  → ℝ 
+_／ᵣ[_,_] : ℝ → ∀ r → 0 ＃ r  → ℝ
 q ／ᵣ[ r , 0＃r ] = q ·ᵣ (invℝ r 0＃r)
 
-_／ᵣ₊_ : ℝ → ℝ₊  → ℝ 
+_／ᵣ₊_ : ℝ → ℝ₊  → ℝ
 q ／ᵣ₊ (r , 0<r) = q ／ᵣ[ r , inl (0<r) ]
 
 [x·y]/yᵣ : ∀ q r → (0＃r : 0 ＃ r) →
@@ -1117,7 +1117,7 @@ q ／ᵣ₊ (r , 0<r) = q ／ᵣ[ r , inl (0<r) ]
 
 [x/y]·yᵣ : ∀ q r → (0＃r : 0 ＃ r) →
                (q ／ᵣ[ r , 0＃r ]) ·ᵣ r ≡ q
-[x/y]·yᵣ q r 0＃r = 
+[x/y]·yᵣ q r 0＃r =
       sym (·ᵣAssoc _ _ _)
    ∙∙ cong (q ·ᵣ_) (·ᵣComm _ _ ∙ x·invℝ[x] r 0＃r)
    ∙∙ ·IdR q
@@ -1126,10 +1126,10 @@ x/y≡z→x≡z·y : ∀ x q r → (0＃r : 0 ＃ r)
                → (x ／ᵣ[ r , 0＃r ]) ≡ q
                → x ≡ q ·ᵣ r
 x/y≡z→x≡z·y x q r 0＃r p =
-    sym ([x/y]·yᵣ _ _ _) ∙ cong (_·ᵣ r) p 
+    sym ([x/y]·yᵣ _ _ _) ∙ cong (_·ᵣ r) p
 
 x·y≡z→x≡z/y : ∀ x q r → (0＃r : 0 ＃ r)
                → (x ·ᵣ r) ≡ q
                → x ≡ q ／ᵣ[ r , 0＃r ]
 x·y≡z→x≡z/y x q r 0＃r p =
-    sym ([x·y]/yᵣ _ _ _) ∙ cong (_／ᵣ[ r , 0＃r ]) p 
+    sym ([x·y]/yᵣ _ _ _) ∙ cong (_／ᵣ[ r , 0＃r ]) p

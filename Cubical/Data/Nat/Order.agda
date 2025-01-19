@@ -499,7 +499,7 @@ n∸l>0 (suc n) (suc l) r = n∸l>0 n l (pred-≤-pred r)
 [n-m]+m : ∀ m n → m ≤ n → (n ∸ m) + m ≡ n
 [n-m]+m zero n _ = +-zero n
 [n-m]+m (suc m) zero p = ⊥.rec (¬-<-zero p)
-[n-m]+m (suc m) (suc n) p = 
+[n-m]+m (suc m) (suc n) p =
   +-suc _ _ ∙ cong suc ([n-m]+m m n (pred-≤-pred p))
 
 -- automation
@@ -573,14 +573,14 @@ elimBy≤ : ∀ {ℓ} {A : ℕ → ℕ → Type ℓ}
   → (∀ x y → x ≤ y → A x y)
   → ∀ x y → A x y
 elimBy≤ {A = A} s f n m = ≤CaseInduction {P = A}
-  (f _ _) (s _ _ ∘ f _ _ )  
+  (f _ _) (s _ _ ∘ f _ _ )
 
 elimBy≤+ : ∀ {ℓ} {A : ℕ → ℕ → Type ℓ}
   → (∀ x y → A x y → A y x)
   → (∀ x y → A x (y + x))
   → ∀ x y → A x y
 elimBy≤+ {A = A} s f =
- elimBy≤ s λ x y (y' , p) → subst (A x) p (f x y')  
+ elimBy≤ s λ x y (y' , p) → subst (A x) p (f x y')
 
 module Minimal where
   Least : ∀{ℓ} → (ℕ → Type ℓ) → (ℕ → Type ℓ)

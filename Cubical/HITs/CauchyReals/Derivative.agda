@@ -37,7 +37,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Relation.Binary
 
 open import Cubical.HITs.PropositionalTruncation as PT
-open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_) 
+open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
 
 open import Cubical.Data.Rationals using (ℚ ; [_/_])
 open import Cubical.Data.Rationals.Order using
@@ -86,11 +86,11 @@ import Cubical.Algebra.Ring as RP
 
 -- Rℝ = (CR.CommRing→Ring
 --                (_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ))
--- -- module CRℝ = ? 
+-- -- module CRℝ = ?
 
 -- module 𝐑 = CR.CommRingTheory (_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ)
 -- module 𝐑' = RP.RingTheory Rℝ
-               
+
 
 at_limitOf_is_ : (x : ℝ) → (∀ r → x ＃ r → ℝ)  → ℝ → Type
 at x limitOf f is L =
@@ -105,12 +105,12 @@ const-lim C x ε = ∣ (1 , decℚ<ᵣ?) ,
 id-lim : ∀ x → at x limitOf (λ r _ → r) is x
 id-lim x ε = ∣ ε , (λ r x＃r p → p )  ∣₁
 
-_$[_]$_ : {x : ℝ} 
+_$[_]$_ : {x : ℝ}
         → (∀ r → x ＃ r → ℝ)
         → (ℝ → ℝ → ℝ)
         → (∀ r → x ＃ r → ℝ)
         → (∀ r → x ＃ r → ℝ)
-f $[ _op_ ]$ g = λ r x → (f r x) op (g r x) 
+f $[ _op_ ]$ g = λ r x → (f r x) op (g r x)
 
 +-lim : ∀ x f g F G
         → at x limitOf f is F
@@ -142,14 +142,14 @@ derivativeAt f x = At 0 limitOf (differenceAt f x)
 derivativeOf_at_is_ : (ℝ → ℝ) → ℝ → ℝ → Type
 derivativeOf f at x is d = at 0 limitOf (differenceAt f x) is d
 
-constDerivative : ∀ C x → derivativeOf (λ _ → C) at x is 0 
+constDerivative : ∀ C x → derivativeOf (λ _ → C) at x is 0
 constDerivative C x =
  subst (at 0 limitOf_is 0)
    (funExt₂ λ r 0＃r → sym (𝐑'.0LeftAnnihilates (invℝ r 0＃r)) ∙
      cong (_·ᵣ (invℝ r 0＃r)) (sym (+-ᵣ _)))
    (const-lim 0 0)
 
-idDerivative : ∀ x → derivativeOf (idfun ℝ) at x is 1 
+idDerivative : ∀ x → derivativeOf (idfun ℝ) at x is 1
 idDerivative x =  subst (at 0 limitOf_is 1)
    (funExt₂ λ r 0＃r → sym (x·invℝ[x] r 0＃r) ∙
     cong (_·ᵣ (invℝ r 0＃r)) (sym (L𝐑.lem--063)))
@@ -161,5 +161,4 @@ idDerivative x =  subst (at 0 limitOf_is 1)
 --    derivativeOf (_^ⁿ (suc n)) at x is (fromNat n ·ᵣ (x ^ⁿ n))
 -- derivative-^ⁿ zero x ε = {!!}
 -- derivative-^ⁿ (suc n) x ε = {!!}
-
 

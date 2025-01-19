@@ -37,7 +37,7 @@ mod< n =
               , cong (λ x → fst ind + suc x)
                      (modIndStep n x) ∙ snd ind
 
-<→mod : (n x : ℕ) → x < (suc n) → x mod (suc n) ≡ x 
+<→mod : (n x : ℕ) → x < (suc n) → x mod (suc n) ≡ x
 <→mod = modIndBase
 
 mod-rUnit : (n x : ℕ) → x mod n ≡ ((x + n) mod n)
@@ -208,7 +208,7 @@ private
 ·mod (suc k) n (suc m) = ·mod' n n ≤-refl (splitℕ-≤ (suc m) n)
 
  where
- ·mod' : ∀ N n → n ≤ N → ((suc m) ≤ n) ⊎ (n < suc m) → 
+ ·mod' : ∀ N n → n ≤ N → ((suc m) ≤ n) ⊎ (n < suc m) →
     ((suc k · n) mod (suc k · suc m)) ≡ suc k · (n mod suc m)
  ·mod' _ zero x _ = cong (modInd (m + k · suc m)) (sym (0≡m·0 (suc k)))
                   ∙ 0≡m·0 (suc k)
@@ -236,10 +236,10 @@ private
  ·mod' (suc N) n x (inr x₁) =
    modIndBase _ _ (
      subst2 _<_ (·-comm n (suc k)) (·-comm _ (suc k))
-      (<-·sk {n} {suc m} {k = k} x₁) ) 
+      (<-·sk {n} {suc m} {k = k} x₁) )
     ∙ cong ((suc k) ·_) (sym (modIndBase _ _ x₁))
 
-2≤x→1<quotient[x/2] : ∀ n → 0 < quotient (2 + n) / 2 
+2≤x→1<quotient[x/2] : ∀ n → 0 < quotient (2 + n) / 2
 2≤x→1<quotient[x/2] n =
  let z : 0 < ((quotient (2 + n) / 2) · 2)
      z = subst (0 <_) (·-comm 2 (quotient (2 + n) / 2))
@@ -270,10 +270,10 @@ private
 -- -- TODO: shoulld be easy to generalise to other nuumbers than 2
 
 -- log2ℕ : ∀ n → Σ _ (Minimal.Least (λ k → n < 2 ^ k))
--- log2ℕ n = w n n ≤-refl 
+-- log2ℕ n = w n n ≤-refl
 --  where
-   
---   w : ∀ N n → n ≤ N 
+
+--   w : ∀ N n → n ≤ N
 --           → Σ _ (Minimal.Least (λ k → n < 2 ^ k))
 --   w N zero x = 0 , (≤-refl , λ k' q → ⊥.rec (¬-<-zero q))
 --   w N (suc zero) x = 1 , (≤-refl ,

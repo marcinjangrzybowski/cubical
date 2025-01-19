@@ -360,8 +360,8 @@ record Rec {A : Type ℓ} {R : A → A → Type ℓ'} (B : Type ℓ'') :
  field
   isSetB : isSet B
   f : A → B
-  f∼ : ∀ a a' → R a a' → f a ≡ f a' 
-  
+  f∼ : ∀ a a' → R a a' → f a ≡ f a'
+
 
  go : _ / R → B
  go [ a ] = f a
@@ -376,8 +376,8 @@ record Elim {A : Type ℓ} {R : A → A → Type ℓ'} (B : A / R →  Type ℓ'
  field
   isSetB : ∀ x → isSet (B x)
   f : ∀ x → B [ x ]
-  f∼ : ∀ a a' → (r : R a a') → PathP (λ i → B (eq/ a a' r i)) (f a) (f a') 
-  
+  f∼ : ∀ a a' → (r : R a a') → PathP (λ i → B (eq/ a a' r i)) (f a) (f a')
+
 
  go : ∀ x → B x
  go [ a ] = f a
@@ -393,7 +393,7 @@ record ElimProp {A : Type ℓ} {R : A → A → Type ℓ'} (B : A / R →  Type 
  field
   isPropB : ∀ x → isProp (B x)
   f : ∀ x → B [ x ]
-  
+
  go : ∀ x → B x
  go = Elim.go w
   where
@@ -412,8 +412,8 @@ record Rec2 {A : Type ℓ} {R : A → A → Type ℓ'} (B : Type ℓ'') :
   f : A → A → B
   f∼ : ∀ x (a a' : A) → R a a' → f x a ≡ f x a'
   ∼f : ∀ (a a' : A) x → R a a' → f a x ≡ f a' x
-  
- 
+
+
 
  go : _ / R  → _ / R → B
  go = Rec.go w
@@ -424,7 +424,7 @@ record Rec2 {A : Type ℓ} {R : A → A → Type ℓ'} (B : Type ℓ'') :
      where
       w' : Rec _
       w' .Rec.isSetB = isSetB
-      w' .Rec.f x' = f x x' 
+      w' .Rec.f x' = f x x'
       w' .Rec.f∼ = f∼ x
   w .Rec.f∼ a a' r = funExt
     (ElimProp.go w')
@@ -440,12 +440,12 @@ record ElimProp2 {A : Type ℓ} {R : A → A → Type ℓ'} (B : A / R → A / R
  field
   isPropB : ∀ x y → isProp (B x y)
   f : ∀ x y → B [ x ] [ y ]
-  
+
  go : ∀ x y → B x y
  go = ElimProp.go w
   where
   w : ElimProp (λ z → (y : A / R) → B z y)
-  w .ElimProp.isPropB _ = isPropΠ λ _ → isPropB _ _ 
+  w .ElimProp.isPropB _ = isPropΠ λ _ → isPropB _ _
   w .ElimProp.f x = ElimProp.go w'
    where
    w' : ElimProp (λ z → B [ x ] z)
@@ -460,7 +460,7 @@ record ElimProp3 {A : Type ℓ} {R : A → A → Type ℓ'}
  field
   isPropB : ∀ x y z → isProp (B x y z)
   f : ∀ x y z → B [ x ] [ y ] [ z ]
-  
+
  go : ∀ x y z → B x y z
  go = ElimProp2.go w
   where

@@ -32,7 +32,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Relation.Binary
 
 open import Cubical.HITs.PropositionalTruncation as PT
-open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_) 
+open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
 
 open import Cubical.Data.Rationals as ℚ
 open import Cubical.Data.Rationals.Order as ℚ
@@ -62,7 +62,7 @@ refl∼ = Elimℝ-Prop.go w
        (minus-< 0 (fst x₁) ((0<→< (fst x₁) (snd x₁)))))
         --(minus-< 0 (fst x₁) (snd x₁)))
         ((subst ( ℚ._< (fst x₁)) (sym (+InvR x)) ((0<→< (fst x₁) (snd x₁)))))
- w .Elimℝ-Prop.limA x p _ ε = 
+ w .Elimℝ-Prop.limA x p _ ε =
   let e1 = /2₊ (/2₊ ε)
       zz = +CancelL- (fst (/2₊ ε)) (fst (/2₊ ε)) (fst ε)
             (ε/2+ε/2≡ε (fst ε))
@@ -77,7 +77,7 @@ refl∼ = Elimℝ-Prop.go w
 
 
 -- HoTT Lemma (11.3.12)
-sym∼ : ∀ r r' ε → r ∼[ ε ] r' → r' ∼[ ε ] r  
+sym∼ : ∀ r r' ε → r ∼[ ε ] r' → r' ∼[ ε ] r
 sym∼ r r' ε (rat-rat q r₁ .ε x x₁) =
  rat-rat r₁ q ε (subst ((ℚ.- fst ε) ℚ.<_)
   ((ℚ.-Distr' q r₁ ∙ ℚ.+Comm (ℚ.- q) r₁))
@@ -105,13 +105,13 @@ isSetℝ = lem722 (λ r r' → ∀ ε →  r ∼[ ε ] r')
    eqℝ
    refl∼
 
-∼≃≡ : ∀ r r' → (∀ ε → r ∼[ ε ] r') ≃  (r ≡ r') 
+∼≃≡ : ∀ r r' → (∀ ε → r ∼[ ε ] r') ≃  (r ≡ r')
 ∼≃≡ r r' = propBiimpl→Equiv (isPropΠ λ _ → isProp∼ _ _ _) (isSetℝ _ _) (eqℝ _ _)
   (J (λ r' _ → ∀ ε → r ∼[ ε ] r') (refl∼ _))
 
 ≡→∼ : ∀ {ε r r'} → r ≡ r' → r ∼[ ε ] r'
-≡→∼ {ε} {r} {r'} p = invEq (∼≃≡ r r') p ε 
-    
+≡→∼ {ε} {r} {r'} p = invEq (∼≃≡ r r') p ε
+
 
 
 
@@ -121,7 +121,7 @@ rat-rat' q ε r .snd = isProp× (ℚ.isProp< (ℚ.- fst ε) (q ℚ.- r))
                         (ℚ.isProp< (q ℚ.- r) (fst ε))
 
 
-rat-rat'-sym : ∀ q ε r → ⟨ rat-rat' q ε r ⟩ → ⟨ rat-rat' r ε q ⟩  
+rat-rat'-sym : ∀ q ε r → ⟨ rat-rat' q ε r ⟩ → ⟨ rat-rat' r ε q ⟩
 rat-rat'-sym q ε r x .fst =
   subst ((ℚ.- fst ε) ℚ.<_) (ℚ.-Distr' q r ∙ ℚ.+Comm (ℚ.- q) r)
    (minus-< (q ℚ.- r) (fst ε) (snd x))
@@ -143,8 +143,8 @@ lim-lim' ε a =
       Σ< (fst ∘ a δ η) ((fst ε) ℚ.- (fst δ ℚ.+ fst η)) ) , squash₁
 
 
-w-prop' : (ℚ₊ → hProp ℓ-zero) → Type 
-w-prop' = λ △ → ∀ ε → ⟨ 
+w-prop' : (ℚ₊ → hProp ℓ-zero) → Type
+w-prop' = λ △ → ∀ ε → ⟨
                ( △ ε ) L.⇔ (L.∃[ θ ∶ ℚ₊ ]
                   (L.∃[ v ] (△ (((fst ε) ℚ.- (fst θ)) , v)))) ⟩
 
@@ -160,23 +160,23 @@ pre-w-rel' : Σ (ℚ₊ → hProp ℓ-zero) w-prop' →
 w-rel'  : Σ (ℚ₊ → hProp ℓ-zero) w-prop' →
            Σ (ℚ₊ → hProp ℓ-zero) w-prop' → ℚ₊ → Type
 
-pre-w-rel' = λ (△ , _) (◻ , _) ε η 
+pre-w-rel' = λ (△ , _) (◻ , _) ε η
        → (⟨ △ η ⟩ →  ⟨ ◻ (ε ℚ₊+ η) ⟩)
 
 
 w-rel' = λ △ ◻ ε →
-     ∀ η → pre-w-rel' △ ◻ ε η 
+     ∀ η → pre-w-rel' △ ◻ ε η
            × pre-w-rel' ◻ △  ε η
 
 w-rel'-sym : ∀ △ ◻ ε → w-rel' △ ◻ ε → w-rel' ◻ △  ε
 w-rel'-sym △ ◻ ε x η = fst Σ-swap-≃ (x η)
 
 w-rel'⇒ : ∀ x y → (∀ ε → w-rel' x y ε) → ∀ ε
-          → ⟨ fst x ε ⟩ → ⟨ fst y ε ⟩  
+          → ⟨ fst x ε ⟩ → ⟨ fst y ε ⟩
 w-rel'⇒ x y x₁ ε x₂ =
  let z = fst (snd x ε) x₂
      z' = PT.map (λ (δ , xx) →
-              /2₊ δ , PT.map 
+              /2₊ δ , PT.map
                   (λ (xxx , xxx') →
                     substΣ< y
                       (cong (λ zz → fst (/2₊ δ) ℚ.+ (fst ε ℚ.- zz))
@@ -215,14 +215,14 @@ r-r q r .snd ε .snd =
 r-l : (a : ℚ₊ → Σ _ w-prop')
 
         → Σ _ w-prop'
-r-l a .fst ε = rat-lim' ε (fst ∘ a) 
+r-l a .fst ε = rat-lim' ε (fst ∘ a)
 r-l a .snd ε .fst =
-  PT.rec 
+  PT.rec
       squash₁
        λ (q' , v , pp) →
-          let aa = fst ((snd (a q')) ((fst ε ℚ.- fst q') , v)) pp  
+          let aa = fst ((snd (a q')) ((fst ε ℚ.- fst q') , v)) pp
           in PT.map
-              (map-snd λ {a''} → 
+              (map-snd λ {a''} →
                (PT.map
                 λ x₂ →
                   strength-lem-01 ε q' a'' (fst x₂) ,
@@ -237,7 +237,7 @@ r-l a .snd ε .fst =
               aa
 
 r-l a .snd ε .snd =
-       PT.rec 
+       PT.rec
       squash₁
         (uncurry λ q' →
            PT.rec squash₁ (uncurry λ v →
@@ -252,7 +252,7 @@ r-l a .snd ε .snd =
                       ∙∙ cong (fst ε ℚ.+_)
                             (ℚ.+Comm (ℚ.- (fst q')) (ℚ.- (fst q'')))
                       ∙∙ (ℚ.+Assoc (fst ε) (ℚ.- (fst q'')) (ℚ.- (fst q')))))
-                         zz ∣₁ ∣₁ 
+                         zz ∣₁ ∣₁
                 in q'' , _ , zzz))
 
 
@@ -269,7 +269,7 @@ l-l 𝕒 .snd ε .fst =
             subst (Σ< (fst ∘ (fst (𝕒 δ η))))
               (+AssocCommR (fst ε) (ℚ.- (fst δ ℚ.+ fst η))
                 (ℚ.- fst q'))
-                (x , x') 
+                (x , x')
             ∣₁ )))
               (fst (snd (𝕒 δ η) _) y))
 l-l 𝕒 .snd ε .snd =
@@ -277,7 +277,7 @@ l-l 𝕒 .snd ε .snd =
      (uncurry λ q' →
        PT.rec squash₁ (uncurry λ v →
          PT.map (map-snd
-           λ {(δ , η)} (x , x') → strength-lem-01 ε q' (δ ℚ₊+ η) x , 
+           λ {(δ , η)} (x , x') → strength-lem-01 ε q' (δ ℚ₊+ η) x ,
             (snd (snd (𝕒 δ η) _) ∣ q' , ∣
               subst (Σ< (fst ∘ (fst (𝕒 δ η))))
                (sym ((+AssocCommR (fst ε) (ℚ.- (fst δ ℚ.+ fst η))
@@ -332,7 +332,7 @@ rel-r-l 𝕢 q y ε p δ v₁ x η .fst xx' =
 rel-r-l 𝕢 q y ε p δ v₁ x η .snd =
    PT.rec (snd (rat-rat' 𝕢 (ε ℚ₊+ η) q))
     λ (σ* , (xx , xx')) →
-      let z = fst (p _ _ _) xx' 
+      let z = fst (p _ _ _) xx'
           z' = snd (x _) z
       in subst
               {x = (((fst ε ℚ.- fst δ) , v₁) ℚ₊+
@@ -350,9 +350,9 @@ rel-l-l' : (x y : ℚ₊ → Σ (ℚ₊ → hProp ℓ-zero) w-prop') (ε δ η :
      pre-w-rel' (r-l x) (r-l y) ε η'
 rel-l-l' x y ε δ η p p' v₁ η' x₁ =
    PT.map (λ (a , (xx , xx')) →
-       let zz = fst (p a δ _) xx' 
-           zz' = x₁ _ zz            
-       in η , 
+       let zz = fst (p a δ _) xx'
+           zz' = x₁ _ zz
+       in η ,
             subst (ℚ.0<_)
                 (lem-02  (fst ε) (fst δ) (fst η) (fst η'))
                   (+0< (fst ε ℚ.- (fst δ ℚ.+ fst η))
@@ -387,7 +387,7 @@ rel-l-l x y ε δ η p p' v₁ x₁ η₁ =
      in rel-l-l' y x ε η δ  p' p (fst zz) η₁ (snd zz)
 
 w-prop : (ℚ₊ → ℝ → hProp ℓ-zero) → Type
-w-prop = 
+w-prop =
  λ ♢ → (∀ u ε → ⟨ (♢ ε u)  L.⇔ (L.∃[ θ ∶ ℚ₊ ]
                      L.∃[ v ] ♢ (((fst ε) ℚ.- (fst θ)) , v) u)
                     ⟩ ) ×
@@ -444,7 +444,7 @@ rel-l-l-l : ∀ {𝕒 : ℚ₊ → Σ (ℚ₊ → ℝ → hProp ℓ-zero) w-prop
               (v₁ : 0< (fst ε ℚ.- (fst δ ℚ.+ fst η)))
               (r : x δ ∼[ (fst ε ℚ.- (fst δ ℚ.+ fst η)) , v₁ ] y η)
 
-    → 
+    →
               w-rel'
      (l-l
       (λ q η₁ → (λ ε₁ → fst (𝕒 q) ε₁ (x η₁)) , fst (snd (𝕒 q)) (x η₁)))
@@ -455,8 +455,8 @@ rel-l-l-l {𝕒} x y ε δ η p p' v₁ r η₁ .fst =
   PT.map
     λ ((δ* , η*) , (xx , xx')) →
      let z = snd (snd (𝕒 δ*)) (x η*) _ _ _ (p _ δ) xx'
-         z' = snd (snd (𝕒 δ*)) _ _ _ _ r z        
-     in (δ* , η) , (+₃0<' (fst η₁ ℚ.- (fst δ* ℚ.+ fst η*)) 
+         z' = snd (snd (𝕒 δ*)) _ _ _ _ r z
+     in (δ* , η) , (+₃0<' (fst η₁ ℚ.- (fst δ* ℚ.+ fst η*))
                    (fst ε ℚ.- (fst δ ℚ.+ fst η))
                     (fst δ ℚ.+ fst η*)
                    (fst (ε ℚ₊+ η₁) ℚ.- (fst δ* ℚ.+ fst η))
@@ -465,14 +465,14 @@ rel-l-l-l {𝕒} x y ε δ η p p' v₁ r η₁ .fst =
             subst (λ xx → ⟨ 𝕒 δ* .fst xx (y η)⟩)
               (ℚ₊≡ (lem-03 (fst ε) (fst η₁)
                  (fst δ) (fst η) (fst δ*) (fst η*)))
-                 z') 
+                 z')
 rel-l-l-l {𝕒}  x y ε δ η p p' v₁ r  η₁ .snd =
-  PT.map λ ((δ* , η*) , (xx , xx')) → 
+  PT.map λ ((δ* , η*) , (xx , xx')) →
      let z = snd (snd (𝕒 δ*)) (y η*) _ _ _ (p' _ η) xx'
          z' = snd (snd (𝕒 δ*)) _ _ _ _ (sym∼ _ _ _ r) z
 
      in (δ* , δ) , (
-            +₃0<' (fst η₁ ℚ.- (fst δ* ℚ.+ fst η*)) 
+            +₃0<' (fst η₁ ℚ.- (fst δ* ℚ.+ fst η*))
                    (fst ε ℚ.- (fst δ ℚ.+ fst η))
                     (fst η ℚ.+ fst η*)
                    (fst (ε ℚ₊+ η₁) ℚ.- (fst δ* ℚ.+ fst δ))
@@ -497,10 +497,10 @@ module ∼' where
       (w-rel'-sym (x δ) (r-r 𝕢 r) ((fst ε ℚ.- fst δ) , v₁) x₁))
 
  w' 𝕢 .Recℝ.lim-lim-B = rel-l-l
- w' 𝕢 .Recℝ.isPropB a a' ε = 
+ w' 𝕢 .Recℝ.isPropB a a' ε =
   isPropΠ λ x →
      isProp× (isProp→ (snd (a' .fst (ε ℚ₊+ x))))
-             (isProp→ (snd (a .fst (ε ℚ₊+ x))))          
+             (isProp→ (snd (a .fst (ε ℚ₊+ x))))
 
 
 
@@ -526,7 +526,7 @@ module ∼' where
      (uncurry λ q' →
       λ (xx , xx') →
        let z = snd (snd (𝕒 q')) _ _ _ _
-               (rat-rat q r ε x x₁) xx'  
+               (rat-rat q r ε x x₁) xx'
        in q' , (substΣ<' (𝕒 q') _
              (ℚ.+Assoc (fst ε) (fst η) (ℚ.- fst q')) (_ , z)))
  w'' 𝕒 𝕡 .Casesℝ.rat-rat-B q r ε x x₁ η .snd =
@@ -534,7 +534,7 @@ module ∼' where
      (uncurry λ q' →
       λ (xx , xx') →
        let z = snd (snd (𝕒 q')) _ _ _ _
-               (sym∼ _ _ ε (rat-rat q r ε x x₁)) xx'  
+               (sym∼ _ _ ε (rat-rat q r ε x x₁)) xx'
        in q' , (substΣ<' (𝕒 q') _ (ℚ.+Assoc (fst ε) (fst η) (ℚ.- fst q')) (_ , z)))
 
  w'' 𝕒 𝕡 .Casesℝ.rat-lim-B q y ε δ p v₁ r v' u' x η .fst =
@@ -562,11 +562,11 @@ module ∼' where
       let z = snd (snd (𝕒 _)) _ _ _ _ (sym∼ _ _ _ u) xx'
       in ((δ* , η*) , δ) , substΣ<' (𝕒 (δ* , η*)) _
             ((lem--021 {fst ε} {fst δ} {fst η}  {δ*})) (_ , z)
- w'' 𝕒 𝕡 .Casesℝ.lim-lim-B = rel-l-l-l {𝕒} 
- w'' 𝕒 𝕡 .Casesℝ.isPropB a a' ε = 
+ w'' 𝕒 𝕡 .Casesℝ.lim-lim-B = rel-l-l-l {𝕒}
+ w'' 𝕒 𝕡 .Casesℝ.isPropB a a' ε =
   isPropΠ λ x →
      isProp× (isProp→ (snd (a' .fst (ε ℚ₊+ x))))
-             (isProp→ (snd (a .fst (ε ℚ₊+ x))))          
+             (isProp→ (snd (a .fst (ε ℚ₊+ x))))
 
  isPropHlp : {P  Q  : ℝ → ℚ₊ →  Type} (P' Q' : ℝ → ℚ₊ →  hProp ℓ-zero) →
          (x₂ : ℝ) → isProp ((η₂ : ℚ₊) →
@@ -596,7 +596,7 @@ module ∼' where
       ∘S (fst (rel-r-r x q r ε u v η))
       ∘S rat-rat'-sym q η x ,
      rat-rat'-sym x (ε ℚ₊+ η) q ∘S (snd (rel-r-r  x q r ε u v η)) ∘S
-      rat-rat'-sym r η x 
+      rat-rat'-sym r η x
   www .Elimℝ-Prop.limA x p x₁ η =
        PT.map (λ (δ* , (xx , xx'))
          → δ* , substΣ< (Elimℝ.go (Recℝ.d (w' r)) (x δ*))
@@ -628,7 +628,7 @@ module ∼' where
             {y = (ε ℚ₊+ η)} (fst ∘ fst (Recℝ.go (w' q) (rat x*)))
              (ℚ₊≡ (lem--023 {fst ε} {fst δ} {fst δ*} {fst η})) zz'
 
-  www .Elimℝ-Prop.limA x* p* x₁* η* .fst = 
+  www .Elimℝ-Prop.limA x* p* x₁* η* .fst =
     PT.map λ (δ* , (xx , xx')) →
        let z = fst (x (x* δ*) (_ , xx)) xx'
 
@@ -643,7 +643,7 @@ module ∼' where
 
   www .Elimℝ-Prop.isPropA = isPropHlp
       (λ x η → fst (Casesℝ.go (w'' y p) x) (ε ℚ₊+ η))
-      λ x η → fst (Recℝ.go (w' q) x) (ε ℚ₊+ η) 
+      λ x η → fst (Recℝ.go (w' q) x) (ε ℚ₊+ η)
 
  w .Recℝ.lim-rat-B x r ε δ p v₁ x₁  = Elimℝ-Prop.go www
   where
@@ -653,7 +653,7 @@ module ∼' where
       λ (δ* , (xx , xx')) →
        let zz = snd (p δ _ (rat x') _) xx'
            zz' = fst (x₁ (rat x') _) zz
-       in subst 
+       in subst
             {x = (((fst ε ℚ.- fst δ) , v₁) ℚ₊+
              ((δ ℚ₊+ δ*) ℚ₊+ ((fst η' ℚ.- fst δ*) , xx)))}
              {(ε ℚ₊+ η')}
@@ -677,20 +677,20 @@ module ∼' where
           (lem--029 {fst ε} {fst δ} {fst η'} {fst δ*}) (_ , z)
   www .Elimℝ-Prop.isPropA = isPropHlp
       (λ x η → fst (Recℝ.go (w' r) x) (ε ℚ₊+ η))
-      λ x₂ η → fst (Casesℝ.go (w'' x p) x₂) (ε ℚ₊+ η) 
+      λ x₂ η → fst (Casesℝ.go (w'' x p) x₂) (ε ℚ₊+ η)
 
  w .Recℝ.lim-lim-B x y ε δ η p p' v₁ x₁ = Elimℝ-Prop.go www
   where
   www : Elimℝ-Prop _
   www .Elimℝ-Prop.ratA x* η' .fst =
     PT.map λ ((δ* , η*) , (xx , xx')) →
-     let z = fst ((p _ _) _ _) xx'   
+     let z = fst ((p _ _) _ _) xx'
          z' = fst (x₁ _ _) z
      in η , substΣ<' (y η) _
            (lem--030 {fst ε} {fst δ} {fst η} {δ*}  {fst η'}) (_ , z')
   www .Elimℝ-Prop.ratA x* η' .snd =
     PT.map λ ((δ* , η*) , (xx , xx')) →
-     let z = fst ((p' _ _) _ _) xx'   
+     let z = fst ((p' _ _) _ _) xx'
          z' = snd (x₁ _ _) z
      in δ , substΣ<' (x δ) _
          (lem--031 {fst ε} {fst δ} {fst η} {δ*}  {fst η'} ) (_ , z')
@@ -703,7 +703,7 @@ module ∼' where
                 ((δ* ℚ₊+ δ) ℚ₊+ ((fst η₁ ℚ.- (fst δ* ℚ.+ fst η*)) , xx)))
                (x* η*))
        z' = fst (x₁ _ _) z
-   in (η , η*) , 
+   in (η , η*) ,
           substΣ<' (y η) _
         (lem--032 {fst ε} {fst δ} {fst η} {fst δ*}  {fst η₁} {fst η*})
            (_ , z')
@@ -720,7 +720,7 @@ module ∼' where
 
  w .Recℝ.isPropB a a' ε = isPropΠ2 λ u x →
      isProp× (isProp→ (snd (a' .fst (ε ℚ₊+ x) u)))
-             (isProp→ (snd (a .fst (ε ℚ₊+ x) u)))          
+             (isProp→ (snd (a .fst (ε ℚ₊+ x) u)))
 
 
  -- pre-~' : ℝ → Σ (ℚ₊ → ℝ → (hProp ℓ-zero)) _
@@ -730,10 +730,10 @@ module ∼' where
 -- HoTT Theorem (11.3.16)
 
 _∼'[_]_ : ℝ → ℚ₊ → ℝ → Type
-x ∼'[ ε ] y = ⟨ fst (Recℝ.go ∼'.w x) ε y ⟩  
+x ∼'[ ε ] y = ⟨ fst (Recℝ.go ∼'.w x) ε y ⟩
 
 _∼'[_]ₚ_ : ℝ → ℚ₊ → ℝ → hProp ℓ-zero
-x ∼'[ ε ]ₚ y = fst (Recℝ.go ∼'.w x) ε y  
+x ∼'[ ε ]ₚ y = fst (Recℝ.go ∼'.w x) ε y
 
 
 -- (11.3.17)
@@ -744,26 +744,26 @@ _ = λ r r' ε → refl
 
 -- (11.3.18)
 _ : ∀ r x y ε → (rat r) ∼'[ ε ] (lim x y) ≡
-              (∃[ δ ∈ ℚ₊ ] Σ[ v ∈ _ ] ((rat r) ∼'[ (fst ε ℚ.- fst δ) , v ] x δ)) 
+              (∃[ δ ∈ ℚ₊ ] Σ[ v ∈ _ ] ((rat r) ∼'[ (fst ε ℚ.- fst δ) , v ] x δ))
 _ = λ r x y ε → refl
 
 -- (11.3.19)
 _ : ∀ r x y ε → (lim x y) ∼'[ ε ] (rat r) ≡
               (∃[ δ ∈ ℚ₊ ] Σ[ v ∈ _ ]
-                ((x δ) ∼'[ (fst ε ℚ.- fst δ) , v ] rat r )) 
+                ((x δ) ∼'[ (fst ε ℚ.- fst δ) , v ] rat r ))
 _ = λ r x y ε → refl
 
 -- (11.3.20)
 _ : ∀ x y x' y' ε → (lim x y) ∼'[ ε ] (lim x' y') ≡
                (∃[ (δ , η) ∈ (ℚ₊ × ℚ₊) ] Σ[ v ∈ _ ]
-                ((x δ) ∼'[ (fst ε ℚ.- (fst δ ℚ.+ fst η)) , v ] (x' η) )) 
+                ((x δ) ∼'[ (fst ε ℚ.- (fst δ ℚ.+ fst η)) , v ] (x' η) ))
 _ = λ x y x' y' ε → refl
 
 -- (11.3.23)
 triangle∼' : ∀ u v w ε η
-      → u ∼[ ε ] v  
+      → u ∼[ ε ] v
       → v ∼'[ η ] w
-      → u ∼'[ ε ℚ₊+ η ] w  
+      → u ∼'[ ε ℚ₊+ η ] w
 triangle∼' u v w ε η x =
   snd ((Recℝ.go~ ∼'.w {x = u} {v} {ε} x w η ))
 
@@ -772,11 +772,11 @@ triangle∼' u v w ε η x =
 rounded∼' : ∀ u v ε →
              ⟨ (u ∼'[ ε ]ₚ v) L.⇔
               (L.∃[ δ ]
-                L.∃[ _ ] u ∼'[ (fst ε ℚ.- fst δ) , _ ]ₚ v) ⟩ 
-rounded∼' u v ε = fst (snd (Recℝ.go ∼'.w u)) v ε 
+                L.∃[ _ ] u ∼'[ (fst ε ℚ.- fst δ) , _ ]ₚ v) ⟩
+rounded∼' u v ε = fst (snd (Recℝ.go ∼'.w u)) v ε
 
 
-∼→∼' : ∀ x y ε → x ∼[ ε ] y → x ∼'[ ε ] y     
+∼→∼' : ∀ x y ε → x ∼[ ε ] y → x ∼'[ ε ] y
 ∼→∼' x y ε (rat-rat q r .ε x₁ x₂) = x₁ , x₂
 ∼→∼' x y ε (rat-lim q y₁ .ε δ p v₁ x₁) =
  ∣ δ , v₁ , ∼→∼' (rat q) (y₁ δ) _ x₁ ∣₁
@@ -787,7 +787,7 @@ rounded∼' u v ε = fst (snd (Recℝ.go ∼'.w u)) v ε
 ∼→∼' x y ε (isProp∼ .x .ε .y x₁ x₂ i) =
   snd (x ∼'[ ε ]ₚ y) (∼→∼' x y ε x₁) (∼→∼' x y ε x₂) i
 
-∼'→∼ : ∀ x y ε → x ∼'[ ε ] y → x ∼[ ε ] y     
+∼'→∼ : ∀ x y ε → x ∼'[ ε ] y → x ∼[ ε ] y
 ∼'→∼ = Elimℝ-Prop2.go w
  where
  w : Elimℝ-Prop2 _
@@ -795,19 +795,19 @@ rounded∼' u v ε = fst (snd (Recℝ.go ∼'.w u)) v ε
    uncurry $ rat-rat r q ε
  w .Elimℝ-Prop2.rat-limA r x y x₁ ε =
     PT.rec (isProp∼ _ _ _)
-      λ (δ , (xx , xx')) → rat-lim r x ε δ y  xx (x₁ _ _ xx') 
+      λ (δ , (xx , xx')) → rat-lim r x ε δ y  xx (x₁ _ _ xx')
 
  w .Elimℝ-Prop2.lim-ratA x y r x₁ ε =
     PT.rec (isProp∼ _ _ _)
-      λ (δ , (xx , xx')) → lim-rat x r ε δ y  xx (x₁ _ _ xx') 
+      λ (δ , (xx , xx')) → lim-rat x r ε δ y  xx (x₁ _ _ xx')
  w .Elimℝ-Prop2.lim-limA x y x' y' x₁ ε =
     PT.rec (isProp∼ _ _ _)
       λ ((δ , η) , (xx , xx')) →
-        lim-lim x x' ε δ η y y' xx (x₁ _ _ _ xx')  
- w .Elimℝ-Prop2.isPropA _ _ = isPropΠ2 λ _ _ → isProp∼ _ _ _ 
+        lim-lim x x' ε δ η y y' xx (x₁ _ _ _ xx')
+ w .Elimℝ-Prop2.isPropA _ _ = isPropΠ2 λ _ _ → isProp∼ _ _ _
 
 
-sym∼' : ∀ r r' ε → r ∼'[ ε ] r' → r' ∼'[ ε ] r  
+sym∼' : ∀ r r' ε → r ∼'[ ε ] r' → r' ∼'[ ε ] r
 sym∼' r r' ε =
   ∼→∼' r' r ε ∘S sym∼ r r' ε ∘S ∼'→∼ r r' ε
 
@@ -815,15 +815,15 @@ sym∼' r r' ε =
 
 -- (11.3.22)
 triangle∼'' : ∀ u v w ε η
-      → u ∼'[ ε ] v  
+      → u ∼'[ ε ] v
       → v ∼[ η ] w
-      → u ∼'[ ε ℚ₊+ η ] w  
+      → u ∼'[ ε ℚ₊+ η ] w
 triangle∼'' u v w ε η x y =
   subst (u ∼'[_] w) (ℚ₊≡ (ℚ.+Comm (fst η) (fst ε)))
    (sym∼' w u _ (triangle∼' w v u η ε (sym∼ v w η y) (sym∼' u v ε x)))
 
 -- HoTT Theorem (11.3.32)
-∼'⇔∼ : ∀ x y ε → ⟨ x ∼'[ ε ]ₚ y L.⇔ x ∼[ ε ]ₚ y ⟩    
+∼'⇔∼ : ∀ x y ε → ⟨ x ∼'[ ε ]ₚ y L.⇔ x ∼[ ε ]ₚ y ⟩
 ∼'⇔∼ x y z = ∼'→∼ x y z , ∼→∼' x y z
 
 
@@ -846,8 +846,8 @@ sym⇔ (x , y) = y , x
 rounded∼ : ∀ u v ε →
              ⟨ (u ∼[ ε ]ₚ v) L.⇔
               (L.∃[ δ ]
-                L.∃[ p ] u ∼[ (fst ε ℚ.- fst δ) , p ]ₚ v) ⟩ 
-rounded∼ u v ε = sym⇔ 
+                L.∃[ p ] u ∼[ (fst ε ℚ.- fst δ) , p ]ₚ v) ⟩
+rounded∼ u v ε = sym⇔
       (∼'⇔∼ u v ε) ∙⇔ rounded∼' u v ε ∙⇔
      (PT.map (map-snd (PT.map (map-snd (fst (∼'⇔∼ u v _)))))
    ,  PT.map (map-snd (PT.map (map-snd (snd (∼'⇔∼ u v _))))))
@@ -855,26 +855,26 @@ rounded∼ u v ε = sym⇔
 -- HoTT (11.3.36)
 
 triangle∼ : ∀ {u v w ε η}
-      → u ∼[ ε ] v  
+      → u ∼[ ε ] v
       → v ∼[ η ] w
       → u ∼[ ε ℚ₊+ η ] w
 triangle∼ {u} {v} {w} {ε} {η} x  =
-  ∼'→∼ u w (ε ℚ₊+ η) ∘ triangle∼' u v w ε η x ∘ ∼→∼' v w _ 
+  ∼'→∼ u w (ε ℚ₊+ η) ∘ triangle∼' u v w ε η x ∘ ∼→∼' v w _
 
 
 
 -- _ : ∀ r x y ε → (rat r) ∼'[ ε ] (lim x y) ≡
---               (∃[ δ ∈ ℚ₊ ] Σ[ v ∈ _ ] ((rat r) ∼'[ (fst ε ℚ.- fst δ) , v ] x δ)) 
+--               (∃[ δ ∈ ℚ₊ ] Σ[ v ∈ _ ] ((rat r) ∼'[ (fst ε ℚ.- fst δ) , v ] x δ))
 -- _ = λ r x y ε → refl
 
 -- _ : ∀ r x y ε → (lim x y) ∼'[ ε ] (rat r) ≡
 --               (∃[ δ ∈ ℚ₊ ] Σ[ v ∈ _ ]
---                 ((x δ) ∼'[ (fst ε ℚ.- fst δ) , v ] rat r )) 
+--                 ((x δ) ∼'[ (fst ε ℚ.- fst δ) , v ] rat r ))
 -- _ = λ r x y ε → refl
 
 
 -- _ : ∀ x y x' y' ε → (lim x y) ∼'[ ε ] (lim x' y') ≡
 --                (∃[ (δ , η) ∈ (ℚ₊ × ℚ₊) ] Σ[ v ∈ _ ]
---                 ((x δ) ∼'[ (fst ε ℚ.- (fst δ ℚ.+ fst η)) , v ] (x' η) )) 
+--                 ((x δ) ∼'[ (fst ε ℚ.- (fst δ ℚ.+ fst η)) , v ] (x' η) ))
 -- _ = λ x y x' y' ε → refl
 
