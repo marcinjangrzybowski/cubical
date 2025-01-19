@@ -66,6 +66,10 @@ sumR .NonExpanding₂.cR q r s =
    ℚ.≡Weaken≤ (ℚ.abs ((q ℚ.+ r) ℚ.- (q ℚ.+ s))) (ℚ.abs (r ℚ.- s))
    (sym $ cong ℚ.abs (lem--037 {r} {s} {q}))
 
+infix  8 -ᵣ_
+infixl 6 _+ᵣ_ _-ᵣ_
+
+
 _+ᵣ_ : ℝ → ℝ → ℝ
 _+ᵣ_ = NonExpanding₂.go sumR
 
@@ -450,6 +454,9 @@ maxᵣ-lem u v r ε xx x =
 
 ℚ₊→ℝ₊ : ℚ₊ → ℝ₊
 ℚ₊→ℝ₊ (x , y) = rat x , <ℚ→<ᵣ 0 x (ℚ.0<→< x y)
+
+decℚ≡ᵣ? : ∀ {x y} → {𝟚.True (ℚ.discreteℚ x y)} →  (rat x ≡ rat y)
+decℚ≡ᵣ? {x} {y} {p} = cong rat (ℚ.decℚ? {x} {y} {p})
 
 decℚ<ᵣ? : ∀ {x y} → {𝟚.True (ℚ.<Dec x y)} →  (rat x <ᵣ rat y)
 decℚ<ᵣ? {x} {y} {p} = <ℚ→<ᵣ x y (ℚ.decℚ<? {x} {y} {p})

@@ -379,6 +379,9 @@ sqᵣ = fst sqᵣ'
 
 /2ᵣ = fst /2ᵣ-L
 
+
+infixl 7 _·ᵣ_
+
 _·ᵣ_ : ℝ → ℝ → ℝ
 u ·ᵣ v = /2ᵣ ((sqᵣ (u +ᵣ v)) +ᵣ (-ᵣ (sqᵣ u +ᵣ sqᵣ v)))
 
@@ -524,6 +527,7 @@ IsContinuous·ᵣL x = subst IsContinuous
                     cong₂ _+ᵣ_ (rat·ᵣrat _ _) (rat·ᵣrat _ _)) z)
        y)
    x
+  
 
 ·DistR+ : (x y z : ℝ) → ((x +ᵣ y) ·ᵣ z) ≡ ((x ·ᵣ z) +ᵣ (y ·ᵣ z))
 ·DistR+ x y z = ·ᵣComm _ _ ∙∙ ·DistL+ z x y
@@ -698,6 +702,10 @@ cont₂·ᵣWP P f g fC gC = IsContinuousWP∘' P _
           (λ x' → sym (rat·ᵣrat _ _) ∙∙ cong rat (·- x' y') ∙∙
               (cong -ᵣ_ (rat·ᵣrat _ _)))
           x
+
+
+·DistL- : (x y z : ℝ) → (x ·ᵣ (y -ᵣ z)) ≡ ((x ·ᵣ y) -ᵣ (x ·ᵣ z))
+·DistL- x y z = ·DistL+ x y (-ᵣ z) ∙ cong ((x ·ᵣ y) +ᵣ_) (·-ᵣ _ _)
 
 
 -ᵣ· : ∀ x y →  ((-ᵣ x) ·ᵣ y) ≡  -ᵣ (x ·ᵣ y)

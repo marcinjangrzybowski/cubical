@@ -642,6 +642,23 @@ minDistMaxᵣ x y y' = ≡Continuous _ _
 ℝ₊min : (m : ℝ₊) (n : ℝ₊) → 0 <ᵣ minᵣ (fst m) (fst n)
 ℝ₊min (m , <m) (n , <n) = <min-lem m n 0 <m <n
 
+maxAbsorbLMinᵣ : ∀ x y → maxᵣ x (minᵣ x y) ≡ x
+maxAbsorbLMinᵣ x =
+  ≡Continuous _ _
+    (IsContinuous∘ _ _
+      (IsContinuousMaxL _) (IsContinuousMinL x))
+      (IsContinuousConst _)
+     λ y' →
+       ≡Continuous _ _
+          (cont₂maxᵣ _ _ IsContinuousId (IsContinuousMinR _))
+        IsContinuousId
+         (λ x' → cong rat (ℚ.maxAbsorbLMin x' y')) x
+
+min≤ᵣ : ∀ m n → minᵣ m n ≤ᵣ m 
+min≤ᵣ m n = maxᵣComm _ _ ∙ maxAbsorbLMinᵣ _ _
+
+min≤ᵣ' : ∀ m n → minᵣ m n ≤ᵣ n 
+min≤ᵣ' m n = subst (_≤ᵣ n) (minᵣComm n m) (min≤ᵣ n m)
 
 invℝ'' : Σ (∀ r → ∃[ σ ∈ ℚ₊ ] (rat (fst σ) <ᵣ r) → ℝ)
       λ _ → Σ (∀ r → 0 <ᵣ r → ℝ) (IsContinuousWithPred (λ r → _ , squash₁))
@@ -1133,3 +1150,11 @@ x·y≡z→x≡z/y : ∀ x q r → (0＃r : 0 ＃ r)
                → x ≡ q ／ᵣ[ r , 0＃r ]
 x·y≡z→x≡z/y x q r 0＃r p =
     sym ([x·y]/yᵣ _ _ _) ∙ cong (_／ᵣ[ r , 0＃r ]) p
+
+x·rat[α]+x·rat[β]=x : ∀ x →
+    ∀ {α β : ℚ} → {𝟚.True (ℚ.discreteℚ (α ℚ.+ β) 1)} →
+                   (x ·ᵣ rat α) +ᵣ (x ·ᵣ rat β) ≡ x
+x·rat[α]+x·rat[β]=x x {α} {β} {p} =
+   sym (·DistL+ _ _ _)
+    ∙∙ cong (x ·ᵣ_) (decℚ≡ᵣ? {_} {_} {p})
+    ∙∙ ·IdR _

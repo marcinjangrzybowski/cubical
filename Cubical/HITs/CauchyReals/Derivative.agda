@@ -105,26 +105,53 @@ const-lim C x ε = ∣ (1 , decℚ<ᵣ?) ,
 id-lim : ∀ x → at x limitOf (λ r _ → r) is x
 id-lim x ε = ∣ ε , (λ r x＃r p → p )  ∣₁
 
-_$[_]$_ : {x : ℝ}
+_$[_]$_ : (ℝ → ℝ)
+        → (ℝ → ℝ → ℝ)
+        → (ℝ → ℝ)
+        → (ℝ → ℝ)
+f $[ _op_ ]$ g = λ r → (f r) op (g r)
+
+_#[_]$_ : {x : ℝ}
         → (∀ r → x ＃ r → ℝ)
         → (ℝ → ℝ → ℝ)
         → (∀ r → x ＃ r → ℝ)
         → (∀ r → x ＃ r → ℝ)
-f $[ _op_ ]$ g = λ r x → (f r x) op (g r x)
+f #[ _op_ ]$ g = λ r x → (f r x) op (g r x)
 
 +-lim : ∀ x f g F G
         → at x limitOf f is F
         → at x limitOf g is G
-        → at x limitOf (f $[ _+ᵣ_ ]$ g) is (F +ᵣ G)
+        → at x limitOf (f #[ _+ᵣ_ ]$ g) is (F +ᵣ G)
 +-lim x f g F G fL gL ε =
   PT.map2 (λ (δ , p) (δ' , p') →
        (_ , ℝ₊min δ δ') ,
         λ r x＃r x₁ →
-         let u = p r x＃r (isTrans<≤ᵣ _ _ _ x₁ {!min≤ᵣ!})
-             u' = p' r x＃r (isTrans<≤ᵣ _ _ _ x₁ {!min≤ᵣ!})
-         in {!u!})
-    (fL (ε ₊／ᵣ₊ 2))
-     (gL (ε ₊／ᵣ₊ 2))
+         let u = p r x＃r (isTrans<≤ᵣ _ _ _ x₁ (min≤ᵣ _ _))
+             u' = p' r x＃r (isTrans<≤ᵣ _ _ _ x₁ (min≤ᵣ' _ _))
+         in subst2 _<ᵣ_
+                (cong absᵣ (sym L𝐑.lem--041))
+                (x·rat[α]+x·rat[β]=x (fst ε))
+               (isTrans≤<ᵣ _ _ _
+                 (absᵣ-triangle _ _)
+                 (<ᵣMonotone+ᵣ _ _ _ _ u u')))
+    (fL (ε ₊·ᵣ (rat [ 1 / 2 ] , decℚ<ᵣ?)))
+     (gL (ε ₊·ᵣ (rat [ 1 / 2 ] , decℚ<ᵣ?)))
+
+
+·-lim : ∀ x f g F G
+        → at x limitOf f is F
+        → at x limitOf g is G
+        → at x limitOf (f #[ _·ᵣ_ ]$ g) is (F ·ᵣ G)
+·-lim x f g F G fL gL ε =
+  PT.map2 (λ (δ , p) (δ' , p') →
+       (_ , ℝ₊min δ δ') ,
+        λ r x＃r x₁ →
+         let u = p r x＃r (isTrans<≤ᵣ _ _ _ x₁ (min≤ᵣ _ _))
+             u' = p' r x＃r (isTrans<≤ᵣ _ _ _ x₁ (min≤ᵣ' _ _))
+         in {!!})
+    (fL ε)
+     (gL ε)
+
 
 At_limitOf_ : (x : ℝ) → (∀ r → x ＃ r → ℝ) → Type
 At x limitOf f = Σ _ (at x limitOf f is_)
@@ -155,10 +182,55 @@ idDerivative x =  subst (at 0 limitOf_is 1)
     cong (_·ᵣ (invℝ r 0＃r)) (sym (L𝐑.lem--063)))
    (const-lim 1 0)
 
++Derivative : ∀ x f f'x g g'x
+        → derivativeOf f at x is f'x
+        → derivativeOf g at x is g'x
+        → derivativeOf (f $[ _+ᵣ_ ]$ g) at x is (f'x +ᵣ g'x)
++Derivative x f f'x g g'x F G =
+ subst {x = (differenceAt f x) #[ _+ᵣ_ ]$ (differenceAt g x)}
+            {y = (differenceAt (f $[ _+ᵣ_ ]$ g) x)}
+      (at 0 limitOf_is (f'x +ᵣ g'x))
+       (funExt₂ λ h 0＃h →
+         sym (·DistR+ _ _ _) ∙
+          cong (_·ᵣ (invℝ h 0＃h))
+           (sym L𝐑.lem--041)) (+-lim _ _ _ _ _ F G)
 
+C·Derivative : ∀ C x f f'x 
+        → derivativeOf f at x is f'x
+        → derivativeOf ((C ·ᵣ_) ∘S f) at x is (C ·ᵣ f'x)
+C·Derivative C x f f'x F =
+   subst {x = λ h 0＃h → C ·ᵣ differenceAt f x h 0＃h}
+            {y = (differenceAt ((C ·ᵣ_) ∘S f) x)}
+      (at 0 limitOf_is (C ·ᵣ f'x))
+       (funExt₂ λ h 0＃h →
+         ·ᵣAssoc _ _ _ ∙
+           cong (_·ᵣ (invℝ h 0＃h)) (·DistL- _ _ _))
+       (·-lim _ _ _ _ _ (const-lim C 0) F)
 
--- derivative-^ⁿ : ∀ n x →
---    derivativeOf (_^ⁿ (suc n)) at x is (fromNat n ·ᵣ (x ^ⁿ n))
--- derivative-^ⁿ zero x ε = {!!}
--- derivative-^ⁿ (suc n) x ε = {!!}
+substDer : ∀ {x f' f g} → (∀ r → f r ≡ g r) 
+     → derivativeOf f at x is f'
+     → derivativeOf g at x is f'
+substDer = {!!}
+
+·Derivative : ∀ x f f'x g g'x
+        → derivativeOf f at x is f'x
+        → derivativeOf g at x is g'x
+        → derivativeOf (f $[ _·ᵣ_ ]$ g) at x is
+           (f'x ·ᵣ (g x) +ᵣ (f x) ·ᵣ g'x)
+·Derivative x f f'x g g'x F G =
+   let z = +Derivative x {!!} (f'x ·ᵣ (g x))
+                          {!!} ((f x) ·ᵣ g'x)
+                           {!substDer ?
+                              (C·Derivative (g x) x f f'x F)!}
+                           (C·Derivative (f x) x g g'x G)
+   in {!!}
+   -- let z = {!subst {x = (differenceAt f x) #[ _+ᵣ_ ]$ (differenceAt g x)}
+   --          {y = (differenceAt (f $[ _+ᵣ_ ]$ g) x)}
+   --    (at 0 limitOf_is (f'x +ᵣ g'x))!}
+   -- in {!!}
+
+-- -- derivative-^ⁿ : ∀ n x →
+-- --    derivativeOf (_^ⁿ (suc n)) at x is (fromNat n ·ᵣ (x ^ⁿ n))
+-- -- derivative-^ⁿ zero x ε = {!!}
+-- -- derivative-^ⁿ (suc n) x ε = {!!}
 
