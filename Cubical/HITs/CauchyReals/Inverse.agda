@@ -655,10 +655,10 @@ maxAbsorbLMinᵣ x =
         IsContinuousId
          (λ x' → cong rat (ℚ.maxAbsorbLMin x' y')) x
 
-min≤ᵣ : ∀ m n → minᵣ m n ≤ᵣ m 
+min≤ᵣ : ∀ m n → minᵣ m n ≤ᵣ m
 min≤ᵣ m n = maxᵣComm _ _ ∙ maxAbsorbLMinᵣ _ _
 
-min≤ᵣ' : ∀ m n → minᵣ m n ≤ᵣ n 
+min≤ᵣ' : ∀ m n → minᵣ m n ≤ᵣ n
 min≤ᵣ' m n = subst (_≤ᵣ n) (minᵣComm n m) (min≤ᵣ n m)
 
 invℝ'' : Σ (∀ r → ∃[ σ ∈ ℚ₊ ] (rat (fst σ) <ᵣ r) → ℝ)
@@ -1069,7 +1069,7 @@ abstract
              signᵣ r 0＃r ·ᵣ fst invℝ' (absᵣ r) (0＃→0<abs r 0＃r)
 
  invℝimpl r 0＃r = refl
- 
+
  invℝ≡ : ∀ r 0＃r 0＃r' →
             invℝ r 0＃r ≡ invℝ r 0＃r'
  invℝ≡ r 0＃r 0＃r' = cong (invℝ r) (isProp＃ _ _ _ _)

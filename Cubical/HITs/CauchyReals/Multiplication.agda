@@ -527,7 +527,7 @@ IsContinuous·ᵣL x = subst IsContinuous
                     cong₂ _+ᵣ_ (rat·ᵣrat _ _) (rat·ᵣrat _ _)) z)
        y)
    x
-  
+
 
 ·DistR+ : (x y z : ℝ) → ((x +ᵣ y) ·ᵣ z) ≡ ((x ·ᵣ z) +ᵣ (y ·ᵣ z))
 ·DistR+ x y z = ·ᵣComm _ _ ∙∙ ·DistL+ z x y

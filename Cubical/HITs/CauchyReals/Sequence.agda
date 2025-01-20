@@ -81,7 +81,7 @@ open import Cubical.HITs.CauchyReals.Inverse
 import Cubical.Algebra.CommRing as CR
 import Cubical.Algebra.Ring as RP
 
-·absᵣ : ∀ x y → absᵣ (x ·ᵣ y) ≡ absᵣ x ·ᵣ absᵣ y 
+·absᵣ : ∀ x y → absᵣ (x ·ᵣ y) ≡ absᵣ x ·ᵣ absᵣ y
 ·absᵣ x = ≡Continuous _ _
   ((IsContinuous∘ _ _  IsContinuousAbsᵣ (IsContinuous·ᵣL x)
                     ))
@@ -102,7 +102,7 @@ Seq = ℕ → ℝ
 
 
 ≤ᵣ-·ᵣo : ∀ m n o → 0 ≤ᵣ o  →  m ≤ᵣ n → (m ·ᵣ o ) ≤ᵣ (n ·ᵣ o)
-≤ᵣ-·ᵣo m n o 0≤o m≤n = subst (λ o → 
+≤ᵣ-·ᵣo m n o 0≤o m≤n = subst (λ o →
    (m ·ᵣ o ) ≤ᵣ (n ·ᵣ o)) 0≤o (w ∙
       cong (_·ᵣ maxᵣ (rat [ pos 0 / 1+ 0 ]) o) m≤n)
  where
@@ -134,7 +134,7 @@ Seq = ℕ → ℝ
                  (cong₂ maxᵣ (sym (rat·ᵣrat _ _)) (sym (rat·ᵣrat _ _)))
                   ∙∙ cong rat (sym (ℚ.·MaxDistrℚ' m' n' (ℚ.max 0 o')
                       (ℚ.≤max 0 o'))) ∙∙
-                  rat·ᵣrat _ _ 
+                  rat·ᵣrat _ _
                  ) n) m) o
 
 ≤ᵣ-o·ᵣ : ∀ m n o → 0 ≤ᵣ o →  m ≤ᵣ n → (o ·ᵣ m   ) ≤ᵣ (o ·ᵣ n)
@@ -164,8 +164,8 @@ Seq = ℕ → ℝ
          ≤ℚ→≤ᵣ _ _ (ℚ.0≤ℚ₊ (/2₊ qr₊)) ,
            x/2<x qr₊ ,
            subst (_≤ᵣ (m ·ᵣ n))
-             (sym (rat·ᵣrat q' r')) 
-              (≤ᵣ₊Monotone·ᵣ (rat q') 
+             (sym (rat·ᵣrat q' r'))
+              (≤ᵣ₊Monotone·ᵣ (rat q')
                 (m) (rat r') n (<ᵣWeaken≤ᵣ _ _ 0<m)
                                (<ᵣWeaken≤ᵣ _ _ (<ℚ→<ᵣ _ _ 0<r'))
                              q'≤m r'≤n) ) 0<m 0<n
@@ -202,7 +202,7 @@ _₊／ᵣ₊_ : ℝ₊ → ℝ₊  → ℝ₊
 
 
 
-<ᵣ₊Monotone·ᵣ : ∀ m n o s → (0 ≤ᵣ m) → (0 ≤ᵣ o) 
+<ᵣ₊Monotone·ᵣ : ∀ m n o s → (0 ≤ᵣ m) → (0 ≤ᵣ o)
        → m <ᵣ n → o <ᵣ s
        → (m ·ᵣ o) <ᵣ (n ·ᵣ s)
 <ᵣ₊Monotone·ᵣ m n o s 0≤m 0≤o = PT.map2
@@ -211,7 +211,7 @@ _₊／ᵣ₊_ : ℝ₊ → ℝ₊  → ℝ₊
     let 0≤q = isTrans≤ᵣ _ _ _ 0≤m m≤q
         0≤r = isTrans≤ᵣ _ _ _ 0≤o o≤r
         0≤r' = isTrans≤ᵣ _ _ _ 0≤r (≤ℚ→≤ᵣ _ _ (ℚ.<Weaken≤ _ _ r<r'))
-        0≤n = isTrans≤ᵣ _ _ _ 0≤m (<ᵣWeaken≤ᵣ _ _ ∣ m<n ∣₁) 
+        0≤n = isTrans≤ᵣ _ _ _ 0≤m (<ᵣWeaken≤ᵣ _ _ ∣ m<n ∣₁)
      in (q ℚ.· r , q' ℚ.· r') ,
            subst (m ·ᵣ o ≤ᵣ_) (sym (rat·ᵣrat _ _))
               (≤ᵣ₊Monotone·ᵣ m (rat q) o (rat r)
