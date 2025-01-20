@@ -1,4 +1,4 @@
-{-# OPTIONS --lossy-unification #-}
+{-# OPTIONS --lossy-unification #-} 
 
 module Cubical.HITs.CauchyReals.Derivative where
 
@@ -84,18 +84,35 @@ import Cubical.Algebra.Ring as RP
 
 
 
--- Rℝ = (CR.CommRing→Ring
---                (_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ))
--- -- module CRℝ = ?
-
--- module 𝐑 = CR.CommRingTheory (_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ)
--- module 𝐑' = RP.RingTheory Rℝ
-
-
 at_limitOf_is_ : (x : ℝ) → (∀ r → x ＃ r → ℝ)  → ℝ → Type
 at x limitOf f is L =
   ∀ (ε : ℝ₊) → ∃[ δ ∈ ℝ₊ ]
    (∀ r x＃r → absᵣ (x -ᵣ r) <ᵣ fst δ → absᵣ (L -ᵣ f r x＃r) <ᵣ fst ε)
+
+substLim : ∀ {x f f' L}
+  → (∀ r x＃r → f r x＃r ≡ f' r x＃r)
+  → at x limitOf f is L → at x limitOf f' is L     
+substLim {x} {L = L} p =  subst (at x limitOf_is L) (funExt₂ p)
+
+IsContinuousLim : ∀ f x → IsContinuous f →
+                    at x limitOf (λ r _ → f r) is (f x)
+IsContinuousLim f x cx = uncurry
+  λ ε → (PT.rec squash₁
+   λ (q , 0<q , q<ε) →
+     PT.map (λ (δ , X) →
+       (ℚ₊→ℝ₊ δ) ,
+         λ r x＃r x₁ → isTrans<ᵣ _ _ _
+           (fst (∼≃abs<ε _ _ _) (X r (invEq (∼≃abs<ε _ _ _) x₁)))
+            q<ε  )
+       (cx x (q , ℚ.<→0< q (<ᵣ→<ℚ 0 q 0<q)))) ∘ denseℚinℝ 0 ε  
+
+IsContinuousLimΔ : ∀ f x → IsContinuous f →
+                    at 0 limitOf (λ Δx _ → f (x +ᵣ Δx)) is (f x)
+IsContinuousLimΔ f x cx = 
+  subst (at rat [ pos 0 / 1+ 0 ] limitOf (λ Δx _ → f (x +ᵣ Δx)) is_)
+   (cong f (+IdR x)) 
+  (IsContinuousLim (λ Δx → f (x +ᵣ Δx)) 0
+    (IsContinuous∘ _ _ cx (IsContinuous+ᵣL x)))
 
 
 const-lim : ∀ C x → at x limitOf (λ _ _ → C) is C
@@ -142,21 +159,98 @@ f #[ _op_ ]$ g = λ r x → (f r x) op (g r x)
         → at x limitOf f is F
         → at x limitOf g is G
         → at x limitOf (f #[ _·ᵣ_ ]$ g) is (F ·ᵣ G)
-·-lim x f g F G fL gL ε =
-  PT.map2 (λ (δ , p) (δ' , p') →
-       (_ , ℝ₊min δ δ') ,
-        λ r x＃r x₁ →
-         let u = p r x＃r (isTrans<≤ᵣ _ _ _ x₁ (min≤ᵣ _ _))
-             u' = p' r x＃r (isTrans<≤ᵣ _ _ _ x₁ (min≤ᵣ' _ _))
-         in {!!})
-    (fL ε)
-     (gL ε)
+·-lim x f g F G fL gL ε = PT.map3 w (fL (ε'f)) (gL (ε'g)) (gL 1)
 
+ where
+
+ ε'f : ℝ₊ 
+ ε'f = (ε ₊／ᵣ₊ 2) ₊／ᵣ₊ (1 +ᵣ absᵣ G ,
+          <≤ᵣMonotone+ᵣ 0 1 0 (absᵣ G) decℚ<ᵣ? (0≤absᵣ G))
+
+ ε'g : ℝ₊ 
+ ε'g = (ε ₊／ᵣ₊ 2) ₊／ᵣ₊ (1 +ᵣ absᵣ F ,
+          <≤ᵣMonotone+ᵣ 0 1 0 (absᵣ F) decℚ<ᵣ? (0≤absᵣ F))
+
+ w : _
+ w (δ , p) (δ' , p') (δ'' , p'') = δ* , ww
+
+  where
+
+   δ* : ℝ₊
+   δ* = minᵣ (minᵣ (fst δ) (fst δ')) (fst δ'') ,
+              ℝ₊min ((minᵣ (fst δ) (fst δ')) , (ℝ₊min δ δ')) δ''
+
+   ww : (r : ℝ) (x＃r : x ＃ r) →
+          absᵣ (x -ᵣ r) <ᵣ fst δ* →
+          absᵣ (F ·ᵣ G -ᵣ (f #[ _·ᵣ_ ]$ g) r x＃r) <ᵣ fst ε
+   ww r x＃r x₁ = subst2 _<ᵣ_
+        (cong absᵣ (sym L𝐑.lem--065))
+        yy
+        (isTrans≤<ᵣ _ _ _
+          ((absᵣ-triangle _ _) )
+          (<ᵣMonotone+ᵣ _ _ _ _ 
+            (isTrans≡<ᵣ _ _ _
+              (·absᵣ _ _)
+              (<ᵣ₊Monotone·ᵣ _ _ _ _
+              (0≤absᵣ _) (0≤absᵣ _) gx< u))
+              (isTrans≡<ᵣ _ _ _ (·absᵣ _ _)
+                (<ᵣ₊Monotone·ᵣ _ _ _ _
+              ((0≤absᵣ F)) (0≤absᵣ _)
+               (subst (_<ᵣ (1 +ᵣ (absᵣ F)))
+                (+IdL _)
+                 (<ᵣ-+o (rat 0) (rat 1) (absᵣ F) decℚ<ᵣ?)) u'))))
+                 
+
+     where
+      x₁' = isTrans<≤ᵣ _ _ _ x₁
+                 (isTrans≤ᵣ _ _ _ (min≤ᵣ _ _) (min≤ᵣ _ _))
+      x₁'' = isTrans<≤ᵣ _ _ _ x₁
+                 (isTrans≤ᵣ _ _ _ (min≤ᵣ _ _) (min≤ᵣ' _ _))
+      x₁''' = isTrans<≤ᵣ _ _ _ x₁ (min≤ᵣ' _ _)             
+      u = p r x＃r x₁'
+      u' = p' r x＃r x₁''
+      u'' = p'' r x＃r x₁'''
+      gx< : absᵣ (g r x＃r) <ᵣ 1 +ᵣ absᵣ G
+      gx< = 
+         subst (_<ᵣ (1 +ᵣ absᵣ G))
+            (cong absᵣ (sym (L𝐑.lem--035)))
+
+           (isTrans≤<ᵣ _ _ _
+             (absᵣ-triangle ((g r x＃r) -ᵣ G) G)
+              (<ᵣ-+o _ 1 (absᵣ G)
+                (subst (_<ᵣ 1) (minusComm-absᵣ _ _) u'')))
+      0<1+g = <≤ᵣMonotone+ᵣ 0 1 0 (absᵣ G) decℚ<ᵣ? (0≤absᵣ G)
+      0<1+f = <≤ᵣMonotone+ᵣ 0 1 0 (absᵣ F) decℚ<ᵣ? (0≤absᵣ F)
+
+      yy : _ ≡ _          
+      yy = (cong₂ _+ᵣ_
+          (cong ((1 +ᵣ absᵣ G) ·ᵣ_)
+            (cong ((fst (ε ₊／ᵣ₊ 2)) ·ᵣ_)
+              (invℝ≡ _ _ _)
+             ∙ ·ᵣComm  (fst (ε ₊／ᵣ₊ 2))
+            (invℝ (1 +ᵣ absᵣ G)
+                (inl 0<1+g))) ∙
+            ·ᵣAssoc _ _ _)
+          (cong ((1 +ᵣ absᵣ F) ·ᵣ_)
+            (cong ((fst (ε ₊／ᵣ₊ 2)) ·ᵣ_)
+             (invℝ≡ _ _ _)
+             ∙ ·ᵣComm  (fst (ε ₊／ᵣ₊ 2))
+            (invℝ (1 +ᵣ absᵣ F)
+                (inl 0<1+f))) ∙
+             ·ᵣAssoc _ _ _) ∙
+          sym (·DistR+ _ _ (fst (ε ₊／ᵣ₊ 2))) 
+           ∙∙ cong {y = 2} (_·ᵣ (fst (ε ₊／ᵣ₊ 2)))
+                           (cong₂ _+ᵣ_
+                               (x·invℝ[x] (1 +ᵣ absᵣ G)
+                                 (inl 0<1+g))
+                               (x·invℝ[x] (1 +ᵣ absᵣ F)
+                                 (inl 0<1+f))
+                              ) 
+                      ∙∙ ·ᵣComm 2 (fst (ε ₊／ᵣ₊ 2))  ∙
+                        [x/y]·yᵣ (fst ε) _ (inl _))
 
 At_limitOf_ : (x : ℝ) → (∀ r → x ＃ r → ℝ) → Type
 At x limitOf f = Σ _ (at x limitOf f is_)
-
-
 
 
 differenceAt : (ℝ → ℝ) → ℝ → ∀ h → 0 ＃ h → ℝ
@@ -210,27 +304,67 @@ C·Derivative C x f f'x F =
 substDer : ∀ {x f' f g} → (∀ r → f r ≡ g r) 
      → derivativeOf f at x is f'
      → derivativeOf g at x is f'
-substDer = {!!}
+substDer = subst (derivativeOf_at _ is _) ∘ funExt
+
+substDer₂ : ∀ {x f' g' f g} →
+        (∀ r → f r ≡ g r) → f' ≡ g'
+     → derivativeOf f at x is f'
+     → derivativeOf g at x is g'
+substDer₂ p q = subst2 (derivativeOf_at _ is_) (funExt p) q
+
+
+C·Derivative' : ∀ C x f f'x 
+        → derivativeOf f at x is f'x
+        → derivativeOf ((_·ᵣ C) ∘S f) at x is (f'x ·ᵣ C)
+C·Derivative' C x f f'x F =
+  substDer₂ (λ _ → ·ᵣComm _ _) (·ᵣComm _ _)
+    (C·Derivative C x f f'x F)
 
 ·Derivative : ∀ x f f'x g g'x
+        → IsContinuous g
         → derivativeOf f at x is f'x
         → derivativeOf g at x is g'x
         → derivativeOf (f $[ _·ᵣ_ ]$ g) at x is
            (f'x ·ᵣ (g x) +ᵣ (f x) ·ᵣ g'x)
-·Derivative x f f'x g g'x F G =
-   let z = +Derivative x {!!} (f'x ·ᵣ (g x))
-                          {!!} ((f x) ·ᵣ g'x)
-                           {!substDer ?
-                              (C·Derivative (g x) x f f'x F)!}
-                           (C·Derivative (f x) x g g'x G)
-   in {!!}
-   -- let z = {!subst {x = (differenceAt f x) #[ _+ᵣ_ ]$ (differenceAt g x)}
-   --          {y = (differenceAt (f $[ _+ᵣ_ ]$ g) x)}
-   --    (at 0 limitOf_is (f'x +ᵣ g'x))!}
-   -- in {!!}
+·Derivative x f f'x g g'x gC F G =
+  substLim w
+    (+-lim _ _ _ _ _
+      (·-lim _ _ _ _ _
+        F (IsContinuousLimΔ g x gC))
+      (·-lim _ _ _ _ _
+         (const-lim _ _) G))
 
--- -- derivative-^ⁿ : ∀ n x →
--- --    derivativeOf (_^ⁿ (suc n)) at x is (fromNat n ·ᵣ (x ^ⁿ n))
--- -- derivative-^ⁿ zero x ε = {!!}
--- -- derivative-^ⁿ (suc n) x ε = {!!}
+ where
+ w : (r : ℝ) (x＃r : 0 ＃ r) → _
+       ≡ differenceAt (f $[ _·ᵣ_ ]$ g) x r x＃r
+ w h 0＃h =
+    cong₂ _+ᵣ_ (sym (·ᵣAssoc _ _ _) ∙
+       cong ((f (x +ᵣ h) -ᵣ f x) ·ᵣ_) (·ᵣComm _ _)
+         ∙ (·ᵣAssoc _ _ _) )
+      (·ᵣAssoc _ (g (x +ᵣ h) -ᵣ g x) (invℝ h 0＃h))
+      ∙ sym (·DistR+ _ _ _) ∙
+       cong (_·ᵣ (invℝ h 0＃h))
+         (cong₂ _+ᵣ_ (·DistR+ _ _ _ ∙
+            cong (f (x +ᵣ h) ·ᵣ g (x +ᵣ h) +ᵣ_) (-ᵣ· _ _))
+           (·DistL+ _ _ _ ∙
+             cong (f x ·ᵣ g (x +ᵣ h) +ᵣ_) (·-ᵣ _ _))
+           ∙ L𝐑.lem--060)  
 
+derivative-^ⁿ : ∀ n x →
+   derivativeOf (_^ⁿ (suc n)) at x
+            is (fromNat (suc n) ·ᵣ (x ^ⁿ n))
+derivative-^ⁿ zero x =
+ substDer₂
+   (λ _ → sym (·IdL _))
+   (sym (·IdL _))
+   (idDerivative x)
+derivative-^ⁿ (suc n) x =
+  substDer₂ (λ _ → refl)
+    (+ᵣComm _ _ ∙ cong₂ _+ᵣ_
+       (·ᵣComm _ _) (sym (·ᵣAssoc _ _ _)) ∙
+       sym (·DistR+ _ _ _) ∙
+        cong (_·ᵣ ((x ^ⁿ n) ·ᵣ idfun ℝ x))
+         (cong rat (ℚ.ℕ+→ℚ+ _ _)))
+    (·Derivative _ _ _ _ _ IsContinuousId
+       (derivative-^ⁿ n x) (idDerivative x))
+ 

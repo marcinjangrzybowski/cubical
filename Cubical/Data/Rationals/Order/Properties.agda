@@ -1235,7 +1235,12 @@ getPosRatio L₁ L₂ =
            (cong ℕ₊₁→ℤ (·₊₁-assoc a' b' c'))
 
 
-
+·MaxDistrℚ' : ∀ x y z → 0 ≤ z → (max x y) · z ≡ max (x · z) (y · z)
+·MaxDistrℚ' x y z =
+  ⊎.rec (λ p → cong ((max x y) ·_) (sym p) ∙
+        ·AnnihilR (max x y)  ∙ cong₂ max (sym (·AnnihilR x) ∙ cong (x ·_) p)
+            (sym (·AnnihilR y) ∙ cong (y ·_) p))
+    (·MaxDistrℚ x y z ∘ <→0< z) ∘ (≤→≡⊎< 0 z)
 
 ≤Monotone·-onNonNeg : ∀ x x' y y' →
   x ≤ x' →

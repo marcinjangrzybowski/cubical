@@ -81,43 +81,74 @@ open import Cubical.HITs.CauchyReals.Inverse
 import Cubical.Algebra.CommRing as CR
 import Cubical.Algebra.Ring as RP
 
+·absᵣ : ∀ x y → absᵣ (x ·ᵣ y) ≡ absᵣ x ·ᵣ absᵣ y 
+·absᵣ x = ≡Continuous _ _
+  ((IsContinuous∘ _ _  IsContinuousAbsᵣ (IsContinuous·ᵣL x)
+                    ))
+  (IsContinuous∘ _ _ (IsContinuous·ᵣL (absᵣ x))
+                    IsContinuousAbsᵣ)
+  λ y' →
+    ≡Continuous _ _
+  ((IsContinuous∘ _ _  IsContinuousAbsᵣ (IsContinuous·ᵣR (rat y'))
+                    ))
+  (IsContinuous∘ _ _ (IsContinuous·ᵣR (absᵣ (rat y')))
+                    IsContinuousAbsᵣ)
+                     (λ x' →
+                       cong absᵣ (sym (rat·ᵣrat _ _)) ∙∙
+                        cong rat (sym (ℚ.abs'·abs' _ _)) ∙∙ rat·ᵣrat _ _) x
 
 Seq : Type
 Seq = ℕ → ℝ
 
 
+≤ᵣ-·ᵣo : ∀ m n o → 0 ≤ᵣ o  →  m ≤ᵣ n → (m ·ᵣ o ) ≤ᵣ (n ·ᵣ o)
+≤ᵣ-·ᵣo m n o 0≤o m≤n = subst (λ o → 
+   (m ·ᵣ o ) ≤ᵣ (n ·ᵣ o)) 0≤o (w ∙
+      cong (_·ᵣ maxᵣ (rat [ pos 0 / 1+ 0 ]) o) m≤n)
+ where
+ w : maxᵣ (m ·ᵣ maxᵣ 0 o ) (n ·ᵣ maxᵣ 0 o) ≡  (maxᵣ m n ·ᵣ maxᵣ 0 o)
+ w = ≡Continuous _ _
+     (cont₂maxᵣ _ _
+       ((IsContinuous∘ _ _
+         (IsContinuous·ᵣL m) (IsContinuousMaxL 0)  ))
+       ((IsContinuous∘ _ _
+         (IsContinuous·ᵣL n) (IsContinuousMaxL 0)  )))
+     (IsContinuous∘ _ _
+         (IsContinuous·ᵣL _) (IsContinuousMaxL 0)  )
+      (λ o' →
+        ≡Continuous _ _
+          (IsContinuous∘ _ _ (IsContinuousMaxR ((n ·ᵣ maxᵣ 0 (rat o'))))
+                (IsContinuous·ᵣR (maxᵣ 0 (rat o'))) )
+          (IsContinuous∘ _ _  (IsContinuous·ᵣR (maxᵣ 0 (rat o')))
+                                (IsContinuousMaxR n))
+          (λ m' →
+            ≡Continuous
+              (λ n → maxᵣ (rat m' ·ᵣ maxᵣ 0 (rat o') ) (n ·ᵣ maxᵣ 0 (rat o')))
+              (λ n →  maxᵣ (rat m') n ·ᵣ maxᵣ 0 (rat o'))
+              ((IsContinuous∘ _ _
+                (IsContinuousMaxL (((rat m') ·ᵣ maxᵣ 0 (rat o'))))
+                (IsContinuous·ᵣR (maxᵣ 0 (rat o'))) ))
+              (IsContinuous∘ _ _ ((IsContinuous·ᵣR (maxᵣ 0 (rat o'))))
+                  (IsContinuousMaxL (rat m')))
+              (λ n' →
+                 (cong₂ maxᵣ (sym (rat·ᵣrat _ _)) (sym (rat·ᵣrat _ _)))
+                  ∙∙ cong rat (sym (ℚ.·MaxDistrℚ' m' n' (ℚ.max 0 o')
+                      (ℚ.≤max 0 o'))) ∙∙
+                  rat·ᵣrat _ _ 
+                 ) n) m) o
 
-
-≤ᵣ-·ᵣo : ∀ m n (o : ℝ₊) →  m ≤ᵣ n → (m ·ᵣ (fst o) ) ≤ᵣ (n ·ᵣ (fst o))
-≤ᵣ-·ᵣo m n o p =
-  ≡ContinuousWithPred _ _
-     (openPred< 0) (openPred< 0)
-     (λ o _ → maxᵣ (m ·ᵣ o) (n ·ᵣ o) )
-     (λ o _ → n ·ᵣ o)
-     (contDiagNE₂WP maxR _
-        _ _
-       (cont₂·ᵣWP _ _ _ ((AsContinuousWithPred _ _ (IsContinuousConst _)))
-          (AsContinuousWithPred _ _ (IsContinuousId)))
-       ((cont₂·ᵣWP _ _ _ (AsContinuousWithPred _ _ (IsContinuousConst _))
-         (AsContinuousWithPred _ _ (IsContinuousId)))))
-     ((cont₂·ᵣWP _ _ _ (AsContinuousWithPred _ _ (IsContinuousConst _))
-       (AsContinuousWithPred _ _ (IsContinuousId))))
-     (λ r 0<r _ → ≤ᵣ-·o m n (r , ℚ.<→0< _ (<ᵣ→<ℚ _ _ 0<r)) p)
-       (fst o) (snd o) (snd o)
-
-
-≤ᵣ-o·ᵣ : ∀ m n (o : ℝ₊) →  m ≤ᵣ n → ((fst o) ·ᵣ m   ) ≤ᵣ ((fst o) ·ᵣ n)
-≤ᵣ-o·ᵣ m n o p = subst2 _≤ᵣ_
+≤ᵣ-o·ᵣ : ∀ m n o → 0 ≤ᵣ o →  m ≤ᵣ n → (o ·ᵣ m   ) ≤ᵣ (o ·ᵣ n)
+≤ᵣ-o·ᵣ m n o 0≤o p = subst2 _≤ᵣ_
   (·ᵣComm _ _)
   (·ᵣComm _ _)
-  (≤ᵣ-·ᵣo m n o p)
+  (≤ᵣ-·ᵣo m n o 0≤o p)
 
-≤ᵣ₊Monotone·ᵣ : ∀ m (n : ℝ₊) (o : ℝ₊) s
-       → m ≤ᵣ (fst n) → fst o ≤ᵣ s
-       → (m ·ᵣ fst o) ≤ᵣ (fst n ·ᵣ s)
-≤ᵣ₊Monotone·ᵣ m (n , 0<n) (o , 0<o) s m≤n o≤s =
-  isTrans≤ᵣ _ _ _ (≤ᵣ-·ᵣo m n (o , 0<o) m≤n)
-    (≤ᵣ-o·ᵣ o s (n , 0<n) o≤s)
+≤ᵣ₊Monotone·ᵣ : ∀ m n o s → 0 ≤ᵣ n → 0 ≤ᵣ o
+       → m ≤ᵣ n → o ≤ᵣ s
+       → (m ·ᵣ o) ≤ᵣ (n ·ᵣ s)
+≤ᵣ₊Monotone·ᵣ m n o s 0≤n 0≤o m≤n o≤s =
+  isTrans≤ᵣ _ _ _ (≤ᵣ-·ᵣo m n o 0≤o m≤n)
+    (≤ᵣ-o·ᵣ o s n 0≤n o≤s)
 
 
 
@@ -133,10 +164,14 @@ Seq = ℕ → ℝ
          ≤ℚ→≤ᵣ _ _ (ℚ.0≤ℚ₊ (/2₊ qr₊)) ,
            x/2<x qr₊ ,
            subst (_≤ᵣ (m ·ᵣ n))
-             (sym (rat·ᵣrat q' r'))
-              (≤ᵣ₊Monotone·ᵣ (rat q')
-                (m , 0<m) (rat r' , <ℚ→<ᵣ _ _ 0<r') n
+             (sym (rat·ᵣrat q' r')) 
+              (≤ᵣ₊Monotone·ᵣ (rat q') 
+                (m) (rat r') n (<ᵣWeaken≤ᵣ _ _ 0<m)
+                               (<ᵣWeaken≤ᵣ _ _ (<ℚ→<ᵣ _ _ 0<r'))
                              q'≤m r'≤n) ) 0<m 0<n
+
+_₊+ᵣ_ : ℝ₊ → ℝ₊ → ℝ₊
+(m , 0<m) ₊+ᵣ (n , 0<n) = m +ᵣ n , <ᵣMonotone+ᵣ 0 m 0 n 0<m 0<n
 
 _₊·ᵣ_ : ℝ₊ → ℝ₊  → ℝ₊
 (m , 0<m) ₊·ᵣ (n , 0<n) = _ , ℝ₊· (m , 0<m) (n , 0<n)
@@ -149,9 +184,9 @@ _₊／ᵣ₊_ : ℝ₊ → ℝ₊  → ℝ₊
 
 
 0<1/x : ∀ x 0＃x → 0 <ᵣ x → 0 <ᵣ invℝ x 0＃x
-0<1/x x 0＃x 0<x = ℝ₊·
+0<1/x x 0＃x 0<x = subst (0 <ᵣ_)  (sym (invℝimpl x 0＃x)) (ℝ₊·
   (_ , 0<signᵣ x 0＃x 0<x)
-  (_ , invℝ'-pos (absᵣ x) (0＃→0<abs x 0＃x))
+  (_ , invℝ'-pos (absᵣ x) (0＃→0<abs x 0＃x)))
 
 <ᵣ-·ᵣo : ∀ m n (o : ℝ₊) →  m <ᵣ n → (m ·ᵣ (fst o)) <ᵣ (n ·ᵣ (fst o))
 <ᵣ-·ᵣo m n (o , 0<o) p =
@@ -164,6 +199,30 @@ _₊／ᵣ₊_ : ℝ₊ → ℝ₊  → ℝ₊
 <ᵣ-o·ᵣ m n (o , 0<o) p =
   subst2 (_<ᵣ_)
     (·ᵣComm _ _) (·ᵣComm _ _) (<ᵣ-·ᵣo m n (o , 0<o) p)
+
+
+
+<ᵣ₊Monotone·ᵣ : ∀ m n o s → (0 ≤ᵣ m) → (0 ≤ᵣ o) 
+       → m <ᵣ n → o <ᵣ s
+       → (m ·ᵣ o) <ᵣ (n ·ᵣ s)
+<ᵣ₊Monotone·ᵣ m n o s 0≤m 0≤o = PT.map2
+   (λ m<n@((q , q') , m≤q , q<q' , q'≤n) →
+        λ ((r , r') , o≤r , r<r' , r'≤s) →
+    let 0≤q = isTrans≤ᵣ _ _ _ 0≤m m≤q
+        0≤r = isTrans≤ᵣ _ _ _ 0≤o o≤r
+        0≤r' = isTrans≤ᵣ _ _ _ 0≤r (≤ℚ→≤ᵣ _ _ (ℚ.<Weaken≤ _ _ r<r'))
+        0≤n = isTrans≤ᵣ _ _ _ 0≤m (<ᵣWeaken≤ᵣ _ _ ∣ m<n ∣₁) 
+     in (q ℚ.· r , q' ℚ.· r') ,
+           subst (m ·ᵣ o ≤ᵣ_) (sym (rat·ᵣrat _ _))
+              (≤ᵣ₊Monotone·ᵣ m (rat q) o (rat r)
+               (0≤q) 0≤o m≤q o≤r) ,
+                ℚ.<Monotone·-onPos _ _ _ _
+                  q<q' r<r' (≤ᵣ→≤ℚ _ _ 0≤q)
+                            (≤ᵣ→≤ℚ _ _ 0≤r) ,
+                (subst (_≤ᵣ n ·ᵣ s ) (sym (rat·ᵣrat _ _))
+                  (≤ᵣ₊Monotone·ᵣ (rat q') n (rat r') s
+                    0≤n 0≤r'
+                    q'≤n r'≤s)))
 
 
 

@@ -326,6 +326,19 @@ isTrans<≤ᵣ x y z = flip λ u →
  PT.map $ map-snd λ (v , v' , v'')
    → v  , v' , isTrans≤ᵣ _ y z v'' u
 
+isTrans≤≡ᵣ : ∀ x y z → x ≤ᵣ y → y ≡ z → x ≤ᵣ z
+isTrans≤≡ᵣ x y z p q = subst (x ≤ᵣ_) q p
+
+isTrans≡≤ᵣ : ∀ x y z → x ≡ y → y ≤ᵣ z → x ≤ᵣ z
+isTrans≡≤ᵣ x y z p q = subst (_≤ᵣ z) (sym p) q
+
+isTrans<≡ᵣ : ∀ x y z → x <ᵣ y → y ≡ z → x <ᵣ z
+isTrans<≡ᵣ x y z p q = subst (x <ᵣ_) q p
+
+isTrans≡<ᵣ : ∀ x y z → x ≡ y → y <ᵣ z → x <ᵣ z
+isTrans≡<ᵣ x y z p q = subst (_<ᵣ z) (sym p) q
+
+
 -ᵣR : Σ (ℝ → ℝ) (Lipschitz-ℝ→ℝ (1 , tt))
 -ᵣR = fromLipschitz (1 , _)
   ((rat ∘ ℚ.-_ ) , λ q r ε x x₁ →

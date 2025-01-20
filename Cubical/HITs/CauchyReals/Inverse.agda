@@ -485,13 +485,14 @@ isSym＃ _ _ = fst ⊎-swap-≃
   subst (rat 0 <ᵣ_) (cong absᵣ (+IdR r))
     (fst (＃≃0<dist r 0) (isSym＃ 0 r 0＃r))
 
-≤ᵣ-·o : ∀ m n (o : ℚ₊) →  m ≤ᵣ n → (m ·ᵣ rat (fst o) ) ≤ᵣ (n ·ᵣ rat (fst o))
-≤ᵣ-·o m n o p = sym (·ᵣMaxDistrPos m n (fst o) (snd o)) ∙
-  cong (_·ᵣ rat (fst o)) p
+≤ᵣ-·o : ∀ m n o → 0 ℚ.≤ o  →  m ≤ᵣ n → (m ·ᵣ rat o ) ≤ᵣ (n ·ᵣ rat o)
+≤ᵣ-·o m n o 0≤o p = sym (·ᵣMaxDistrPos m n o 0≤o) ∙
+  cong (_·ᵣ rat o) p
 
-≤ᵣ-o· : ∀ m n (o : ℚ₊) →  m ≤ᵣ n → (rat (fst o) ·ᵣ m ) ≤ᵣ (rat (fst o) ·ᵣ n)
-≤ᵣ-o· m n o p =
-    cong₂ maxᵣ (·ᵣComm _ _ ) (·ᵣComm _ _ ) ∙ ≤ᵣ-·o m n o p ∙ ·ᵣComm _ _
+
+≤ᵣ-o· : ∀ m n o → 0 ℚ.≤ o →  m ≤ᵣ n → (rat o ·ᵣ m ) ≤ᵣ (rat o ·ᵣ n)
+≤ᵣ-o· m n o q p =
+    cong₂ maxᵣ (·ᵣComm _ _ ) (·ᵣComm _ _ ) ∙ ≤ᵣ-·o m n o q p ∙ ·ᵣComm _ _
 
 -- max≤-lem : ∀ x x' → x <ᵣ y → x' <ᵣ y → maxᵣ x x' ≤ᵣ x
 -- max≤-lem x x' y = {!!}
@@ -729,8 +730,9 @@ invℝ'' = f , (λ r 0<r → f r (lowerℚBound r 0<r)) ,
                          ∙ (cong rat (𝟚.toWitness {Q = ℚ.discreteℚ
                            ([ 1 / 2 ] ℚ.· 2) 1} tt))) ∙∙
                       ·IdR _ )
-                   (≤ᵣ-·o _ _ 2 (isTrans≤ᵣ _ _ _
-                   limRestr'' (≤ᵣ-·o _ _ ([ 1 / 2 ] , _) zz)))
+                   (≤ᵣ-·o _ _ 2 (ℚ.decℚ≤? {0} {2}) (isTrans≤ᵣ _ _ _
+                   limRestr'' (≤ᵣ-·o _ _ [ 1 / 2 ] (ℚ.decℚ≤? {0} {[ 1 / 2 ]})
+                         zz)))
 
 
            limRestr : rat (fst σ⊔)
@@ -957,8 +959,6 @@ signᵣ-rat r (inr x) = cong rat (sym (snd (snd (ℚ.<→sign r)) (<ᵣ→<ℚ _
 0＃ₚ r = 0 ＃ r , isProp＃ _ _
 
 -- HoTT Theorem (11.3.47)
-invℝ : ∀ r → 0 ＃ r → ℝ
-invℝ r 0＃r = signᵣ r 0＃r ·ᵣ fst invℝ' (absᵣ r) (0＃→0<abs r 0＃r)
 
 IsContinuousWithPredSignᵣ : IsContinuousWithPred 0＃ₚ signᵣ
 IsContinuousWithPredSignᵣ u ε =
@@ -987,42 +987,13 @@ IsContinuousWithPredSignᵣ u ε =
                   (λ _ → refl∼ _ _) v∈P)
              (denseℚinℝ u 0 u<0))
 
-IsContinuousWithPredInvℝ : IsContinuousWithPred (λ _ → _ , isProp＃ _ _) invℝ
-IsContinuousWithPredInvℝ =
-   IsContinuousWP∘ 0＃ₚ 0＃ₚ _ _ (λ r x → x)
-   (cont₂·ᵣWP 0＃ₚ _ _
-       IsContinuousWithPredSignᵣ (IsContinuousWP∘ _ _
-           _ _ 0＃→0<abs (snd invℝ')
-         (AsContinuousWithPred _ _ IsContinuousAbsᵣ)))
-     (AsContinuousWithPred _
-       _ IsContinuousId)
 
-
-invℝ-rat : ∀ q p p' → invℝ (rat q) p ≡ rat (ℚ.invℚ q p')
-invℝ-rat q p p' =
-  cong₂ _·ᵣ_ (signᵣ-rat q p) (invℝ'-rat _ _ _) ∙ sym (rat·ᵣrat _ _)
 
 -ᵣ≡[-1·ᵣ] : ∀ x → -ᵣ x ≡ (-1) ·ᵣ x
 -ᵣ≡[-1·ᵣ] = ≡Continuous _ _
    IsContinuous-ᵣ
    (IsContinuous·ᵣL -1)
    λ r → rat·ᵣrat _ _
-
-
-invℝ-pos : ∀ x → (p : 0 <ᵣ x) → 0 <ᵣ invℝ x (inl p)
-invℝ-pos x p = subst (0 <ᵣ_) (sym (·IdL _))
-    (invℝ'-pos (absᵣ x) (0＃→0<abs x (inl p)))
-
-
-invℝ-neg : ∀ x → (p : x <ᵣ 0) → invℝ x (inr p) <ᵣ 0
-invℝ-neg x p =
-     subst (_<ᵣ 0)
-       (-ᵣ≡[-1·ᵣ] _)
-       (-ᵣ<ᵣ 0 _ (invℝ'-pos (absᵣ x) (0＃→0<abs x (inr p))))
-
-invℝ0＃ : ∀ r 0＃r → 0 ＃ (invℝ r 0＃r)
-invℝ0＃ r = ⊎.elim (inl ∘ invℝ-pos r)
-                   (inr ∘ invℝ-neg r)
 
 
 openPred< : ∀ x → ⟨ openPred (λ y → (x <ᵣ y) , squash₁)  ⟩
@@ -1069,27 +1040,6 @@ isOpenPred0＃ x =
             (r , ℚ.<→0< _ (<ᵣ→<ℚ _ _ r∈)))) r
 
 
-invℝInvol : ∀ r 0＃r → invℝ (invℝ r 0＃r) (invℝ0＃ r 0＃r) ≡ r
-invℝInvol r 0＃r = ≡ContinuousWithPred
-  0＃ₚ 0＃ₚ isOpenPred0＃ isOpenPred0＃
-   (λ r 0＃r → invℝ (invℝ r 0＃r) (invℝ0＃ r 0＃r)) (λ x _ → x)
-    (IsContinuousWP∘ _ _ _ _ invℝ0＃
-      IsContinuousWithPredInvℝ IsContinuousWithPredInvℝ)
-    (AsContinuousWithPred _
-       _ IsContinuousId)
-        (λ r 0＃r 0＃r' →
-          let 0#r = (fst (rat＃ 0 r) 0＃r)
-              0#InvR = ℚ.0#invℚ r 0#r
-          in  cong₂ invℝ (invℝ-rat _ _ _)
-                 (isProp→PathP (λ i → isProp＃ _ _) _ _)
-
-             ∙∙ invℝ-rat ((invℚ r (fst (rat＃ [ pos 0 / 1+ 0 ] r) 0＃r)))
-                   (invEq (rat＃ 0 _) 0#InvR)
-                    (ℚ.0#invℚ r (fst (rat＃ [ pos 0 / 1+ 0 ] r) 0＃r))
-               ∙∙ cong rat (ℚ.invℚInvol r 0#r 0#InvR)
-            )
-   r 0＃r 0＃r
-
 sign²=1 :  ∀ r 0＃r → (signᵣ r 0＃r) ·ᵣ (signᵣ r 0＃r) ≡ 1
 sign²=1 r = ⊎.elim
     (λ _ → sym (rat·ᵣrat _ _))
@@ -1109,14 +1059,83 @@ sign·absᵣ r = ∘diag $
           ∙ cong rat (cong (ℚ._· ℚ.sign r) (sym (ℚ.abs'≡abs r))
            ∙ ℚ.sign·abs r) ) r
 
-x·invℝ[x] : ∀ r 0＃r → r ·ᵣ (invℝ r 0＃r) ≡ 1
-x·invℝ[x] r 0＃r =
-  cong (_·ᵣ (invℝ r 0＃r)) (sym (sign·absᵣ r 0＃r))
-   ∙∙ sym (·ᵣAssoc _ _ _)
-   ∙∙ (cong (absᵣ r ·ᵣ_) (·ᵣAssoc _ _ _
-     ∙ cong (_·ᵣ (fst invℝ' (absᵣ r) (0＃→0<abs r 0＃r)))
-        (sign²=1 r 0＃r) ∙ ·IdL (fst invℝ' (absᵣ r) (0＃→0<abs r 0＃r)))
-   ∙ ·invℝ' (absᵣ r) (0＃→0<abs r 0＃r))
+
+abstract
+ invℝ : ∀ r → 0 ＃ r → ℝ
+ invℝ r 0＃r = signᵣ r 0＃r ·ᵣ fst invℝ' (absᵣ r) (0＃→0<abs r 0＃r)
+
+
+ invℝimpl : ∀ r 0＃r → invℝ r 0＃r ≡
+             signᵣ r 0＃r ·ᵣ fst invℝ' (absᵣ r) (0＃→0<abs r 0＃r)
+
+ invℝimpl r 0＃r = refl
+ 
+ invℝ≡ : ∀ r 0＃r 0＃r' →
+            invℝ r 0＃r ≡ invℝ r 0＃r'
+ invℝ≡ r 0＃r 0＃r' = cong (invℝ r) (isProp＃ _ _ _ _)
+
+ IsContinuousWithPredInvℝ : IsContinuousWithPred (λ _ → _ , isProp＃ _ _) invℝ
+ IsContinuousWithPredInvℝ =
+    IsContinuousWP∘ 0＃ₚ 0＃ₚ _ _ (λ r x → x)
+    (cont₂·ᵣWP 0＃ₚ _ _
+        IsContinuousWithPredSignᵣ (IsContinuousWP∘ _ _
+            _ _ 0＃→0<abs (snd invℝ')
+          (AsContinuousWithPred _ _ IsContinuousAbsᵣ)))
+      (AsContinuousWithPred _
+        _ IsContinuousId)
+
+
+ invℝ-rat : ∀ q p p' → invℝ (rat q) p ≡ rat (ℚ.invℚ q p')
+ invℝ-rat q p p' =
+   cong₂ _·ᵣ_ (signᵣ-rat q p) (invℝ'-rat _ _ _) ∙ sym (rat·ᵣrat _ _)
+
+
+ invℝ-pos : ∀ x → (p : 0 <ᵣ x) → 0 <ᵣ invℝ x (inl p)
+ invℝ-pos x p = subst (0 <ᵣ_) (sym (·IdL _))
+     (invℝ'-pos (absᵣ x) (0＃→0<abs x (inl p)))
+
+
+ invℝ-neg : ∀ x → (p : x <ᵣ 0) → invℝ x (inr p) <ᵣ 0
+ invℝ-neg x p =
+      subst (_<ᵣ 0)
+        (-ᵣ≡[-1·ᵣ] _)
+        (-ᵣ<ᵣ 0 _ (invℝ'-pos (absᵣ x) (0＃→0<abs x (inr p))))
+
+ invℝ0＃ : ∀ r 0＃r → 0 ＃ (invℝ r 0＃r)
+ invℝ0＃ r = ⊎.elim (inl ∘ invℝ-pos r)
+                    (inr ∘ invℝ-neg r)
+
+
+
+ invℝInvol : ∀ r 0＃r → invℝ (invℝ r 0＃r) (invℝ0＃ r 0＃r) ≡ r
+ invℝInvol r 0＃r = ≡ContinuousWithPred
+   0＃ₚ 0＃ₚ isOpenPred0＃ isOpenPred0＃
+    (λ r 0＃r → invℝ (invℝ r 0＃r) (invℝ0＃ r 0＃r)) (λ x _ → x)
+     (IsContinuousWP∘ _ _ _ _ invℝ0＃
+       IsContinuousWithPredInvℝ IsContinuousWithPredInvℝ)
+     (AsContinuousWithPred _
+        _ IsContinuousId)
+         (λ r 0＃r 0＃r' →
+           let 0#r = (fst (rat＃ 0 r) 0＃r)
+               0#InvR = ℚ.0#invℚ r 0#r
+           in  cong₂ invℝ (invℝ-rat _ _ _)
+                  (isProp→PathP (λ i → isProp＃ _ _) _ _)
+
+              ∙∙ invℝ-rat ((invℚ r (fst (rat＃ [ pos 0 / 1+ 0 ] r) 0＃r)))
+                    (invEq (rat＃ 0 _) 0#InvR)
+                     (ℚ.0#invℚ r (fst (rat＃ [ pos 0 / 1+ 0 ] r) 0＃r))
+                ∙∙ cong rat (ℚ.invℚInvol r 0#r 0#InvR)
+             )
+    r 0＃r 0＃r
+
+ x·invℝ[x] : ∀ r 0＃r → r ·ᵣ (invℝ r 0＃r) ≡ 1
+ x·invℝ[x] r 0＃r =
+   cong (_·ᵣ (invℝ r 0＃r)) (sym (sign·absᵣ r 0＃r))
+    ∙∙ sym (·ᵣAssoc _ _ _)
+    ∙∙ (cong (absᵣ r ·ᵣ_) (·ᵣAssoc _ _ _
+      ∙ cong (_·ᵣ (fst invℝ' (absᵣ r) (0＃→0<abs r 0＃r)))
+         (sign²=1 r 0＃r) ∙ ·IdL (fst invℝ' (absᵣ r) (0＃→0<abs r 0＃r)))
+    ∙ ·invℝ' (absᵣ r) (0＃→0<abs r 0＃r))
 
 _／ᵣ[_,_] : ℝ → ∀ r → 0 ＃ r  → ℝ
 q ／ᵣ[ r , 0＃r ] = q ·ᵣ (invℝ r 0＃r)

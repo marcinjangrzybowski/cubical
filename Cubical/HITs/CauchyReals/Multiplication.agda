@@ -541,7 +541,7 @@ IsCommRingℝ = CR.makeIsCommRing
 
 
 
-·ᵣMaxDistrPos : ∀ x y z → ℚ.0< z →  (maxᵣ x y) ·ᵣ (rat z) ≡ maxᵣ (x ·ᵣ rat z) (y ·ᵣ rat z)
+·ᵣMaxDistrPos : ∀ x y z → 0 ℚ.≤ z →  (maxᵣ x y) ·ᵣ (rat z) ≡ maxᵣ (x ·ᵣ rat z) (y ·ᵣ rat z)
 ·ᵣMaxDistrPos x y z 0<z =
   ≡Continuous _ _
      (IsContinuous∘ _ _ (IsContinuous·ᵣR (rat z)) (IsContinuousMaxR y))
@@ -553,7 +553,7 @@ IsCommRingℝ = CR.makeIsCommRing
          ((IsContinuous∘ _ _ (IsContinuousMaxL (rat x' ·ᵣ (rat z)))
                                 (IsContinuous·ᵣR (rat z))))
          (λ y' → sym (rat·ᵣrat _ _)
-             ∙∙ cong rat (ℚ.·MaxDistrℚ x' y' z 0<z) ∙∙
+             ∙∙ cong rat (ℚ.·MaxDistrℚ' x' y' z 0<z) ∙∙
               (cong₂ maxᵣ (rat·ᵣrat x' z) (rat·ᵣrat y' z)))
          y)
      x
@@ -702,7 +702,6 @@ cont₂·ᵣWP P f g fC gC = IsContinuousWP∘' P _
           (λ x' → sym (rat·ᵣrat _ _) ∙∙ cong rat (·- x' y') ∙∙
               (cong -ᵣ_ (rat·ᵣrat _ _)))
           x
-
 
 ·DistL- : (x y z : ℝ) → (x ·ᵣ (y -ᵣ z)) ≡ ((x ·ᵣ y) -ᵣ (x ·ᵣ z))
 ·DistL- x y z = ·DistL+ x y (-ᵣ z) ∙ cong ((x ·ᵣ y) +ᵣ_) (·-ᵣ _ _)
