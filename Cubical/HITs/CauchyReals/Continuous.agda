@@ -5,56 +5,26 @@ module Cubical.HITs.CauchyReals.Continuous where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Function
-open import Cubical.Foundations.Equiv hiding (_■)
-open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.GroupoidLaws
+open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.HLevels
-open import Cubical.Foundations.Univalence
-open import Cubical.Functions.FunExtEquiv
-
-import Cubical.Functions.Logic as L
-
-open import Cubical.Algebra.CommRing.Instances.Int
 
 open import Cubical.Data.Bool as 𝟚 hiding (_≤_)
-open import Cubical.Data.Bool.Base using () renaming (Bool to 𝟚 ; true to 1̂ ; false to 0̂)
 open import Cubical.Data.Nat as ℕ hiding (_·_;_+_)
-open import Cubical.Data.Nat.Order.Recursive as OR
-import Cubical.Data.Nat.Order as ℕ
-open import Cubical.Data.Empty as ⊥
-open import Cubical.Data.Sum as ⊎
-open import Cubical.Data.Unit
 open import Cubical.Data.Int as ℤ using (pos)
 import Cubical.Data.Int.Order as ℤ
-open import Cubical.Data.Maybe as Mb
-open import Cubical.Data.Sigma hiding (Path)
-open import Cubical.Data.List as L
-open import Cubical.Data.List using () renaming (List to ⟦_⟧)
-open import Cubical.Foundations.Interpolate
-open import Cubical.Relation.Nullary
-open import Cubical.Relation.Binary
+open import Cubical.Data.Sigma
 
 open import Cubical.HITs.PropositionalTruncation as PT
 open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
 
-open import Cubical.Data.Rationals using (ℚ ; [_/_])
-open import Cubical.Data.Rationals.Order using
-  ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡)
 
-import Cubical.Data.Rationals as ℚ
-import Cubical.Data.Rationals.Order as ℚ
-open import Cubical.Data.Rationals.Order.Properties as ℚ using (invℚ₊)
+open import Cubical.Data.Rationals as ℚ using (ℚ ; [_/_])
+open import Cubical.Data.Rationals.Order as ℚ using
+  ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡)
+open import Cubical.Data.Rationals.Order.Properties as ℚ
+ using (invℚ₊;/2₊;/3₊;/4₊)
 
 open import Cubical.Data.NatPlusOne
-open import Cubical.Foundations.Path
-open import Cubical.Foundations.CartesianKanOps
-
-
-import Agda.Builtin.Reflection as R
-open import Cubical.Reflection.Base
-
-
-import Cubical.Algebra.CommRing as CR
 
 open import Cubical.HITs.CauchyReals.Base
 open import Cubical.HITs.CauchyReals.Lems
@@ -76,7 +46,7 @@ open import Cubical.HITs.CauchyReals.Order
 
       zz = sym (congLim' _ _ _
                 λ q →
-                   sym $ x₁ (ℚ.invℚ₊ (_//_.[ pos 1 , (1+ 0) ] , tt) ℚ₊· q))
+                   sym $ x₁ (ℚ.invℚ₊ ([ pos 1 / (1+ 0) ] , tt) ℚ₊· q))
   in _∙_ {x = maxᵣ 0 (lim (λ q → (absᵣ (x (ℚ.invℚ₊ 1 ℚ₊· q)))) y0)}
        zz0 zz
 
@@ -319,31 +289,6 @@ denseℚinℝ u v =
             u<q
 
 
-
-
--- x+[y-x]n/k≡y-[y-x]m/k : ∀ x y n m k → (n ℕ.+ m ≡ ℕ₊₁→ℕ k) →
---   x ℚ.+ (y ℚ.- x) ℚ.· [ pos n / k ]
---    ≡ y ℚ.- ((y ℚ.- x) ℚ.· [ pos m / k ])
--- x+[y-x]n/k≡y-[y-x]m/k u v n m k p =
---   ((cong (u ℚ.+_) (ℚ.·DistR+ _ _ _ ∙ ℚ.+Comm _ _)
---         ∙ ℚ.+Assoc _ _ _) ∙∙
---           cong₂ ℚ._+_
---              {!!}
---              {!!}
---            --  distℚ! u ·[
---            --   (ge1 +ge ((neg-ge ge1) ·ge
---            --            ge[ [ pos 1 / 1+ 1 ] ]))
---            --         ≡ (neg-ge ((neg-ge ge1) ·ge
---            --            ge[ [ pos 1 / 1+ 1 ] ]))   ]
---            -- distℚ! v ·[ (( ge[ [ pos 1 / 1+ 1 ] ]))
---            --         ≡ (ge1 +ge neg-ge (
---            --            ge[ [ pos 1 / 1+ 1 ] ]))   ]
---           ∙∙ (ℚ.+Comm _ _ ∙ sym (ℚ.+Assoc v
---                  (ℚ.- (v ℚ.· [ pos m / k ]))
---                   (ℚ.- ((ℚ.- u) ℚ.· [ pos m / k ])))
---             ∙ cong (ℚ._+_ v)
---                 (sym (ℚ.·DistL+ -1 _ _)) ∙ cong (ℚ._-_ v)
---            (sym (ℚ.·DistR+ v (ℚ.- u) [ pos m / k ])) ))
 
 
 x+[y-x]/2≡y-[y-x]/2 : ∀ x y →
@@ -617,14 +562,14 @@ restrSq n q r x x₁ ε x₂ =
       zz x₂ (ℚ.0≤abs (q ℚ.+ r)) ((ℚ.0≤abs (q ℚ.- r)))
 
 
-0<ℕ₊₁ : ∀ n m → 0 ℚ.< (_//_.[ ℚ.ℕ₊₁→ℤ n , m ])
-0<ℕ₊₁ n m = ℚ.0<→< (_//_.[ ℚ.ℕ₊₁→ℤ n , m ]) tt
+0<ℕ₊₁ : ∀ n m → 0 ℚ.< ([ ℚ.ℕ₊₁→ℤ n / m ])
+0<ℕ₊₁ n m = ℚ.0<→< ([ ℚ.ℕ₊₁→ℤ n / m ]) tt
 
-1/n<sucK : ∀ m n → ℚ.[ 1 / (suc₊₁ m) ] ℚ.< (_//_.[ ℚ.ℕ₊₁→ℤ n , 1 ])
+1/n<sucK : ∀ m n → ℚ.[ 1 / (suc₊₁ m) ] ℚ.< ([ ℚ.ℕ₊₁→ℤ n / 1 ])
 1/n<sucK m n =
  subst (1 ℤ.<_) (ℤ.pos·pos _ _) (ℤ.suc-≤-suc (ℤ.suc-≤-suc ℤ.zero-≤pos ))
 
-<Δ : ∀ n → _//_.[ 1 , 4 ] ℚ.< (_//_.[ pos (suc n) , 1 ])
+<Δ : ∀ n → [ 1 / 4 ] ℚ.< ([ pos (suc n) / 1 ])
 <Δ n = 1/n<sucK 3 (1+ n)
 
 

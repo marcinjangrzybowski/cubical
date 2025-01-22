@@ -4,69 +4,33 @@ module Cubical.HITs.CauchyReals.Inverse where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure
-open import Cubical.Foundations.Function
-open import Cubical.Foundations.Equiv hiding (_■)
-open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.GroupoidLaws
+open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.HLevels
-open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Function
-open import Cubical.Functions.FunExtEquiv
-
-import Cubical.Functions.Logic as L
-
-open import Cubical.Algebra.CommRing.Instances.Int
 
 open import Cubical.Data.Bool as 𝟚 hiding (_≤_)
-open import Cubical.Data.Bool.Base using () renaming (Bool to 𝟚 ; true to 1̂ ; false to 0̂)
-open import Cubical.Data.Nat as ℕ hiding (_·_;_+_)
-open import Cubical.Data.Nat.Order.Recursive as OR
-import Cubical.Data.Nat.Order as ℕ
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sum as ⊎
 open import Cubical.Data.Unit
 open import Cubical.Data.Int as ℤ using (pos)
-import Cubical.Data.Int.Order as ℤ
-open import Cubical.Data.Maybe as Mb
-open import Cubical.Data.Sigma hiding (Path)
-open import Cubical.Data.List as L
-open import Cubical.Data.List using () renaming (List to ⟦_⟧)
-open import Cubical.Foundations.Interpolate
-open import Cubical.Relation.Nullary
-open import Cubical.Relation.Binary
-
-open import Cubical.HITs.PropositionalTruncation as PT
-open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
-
-open import Cubical.Data.Rationals using (ℚ ; [_/_])
-open import Cubical.Data.Rationals.Order using
-  ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡)
-
-import Cubical.Data.Rationals as ℚ
-import Cubical.Data.Rationals.Order as ℚ
-
+open import Cubical.Data.Sigma
 open import Cubical.Data.NatPlusOne
-open import Cubical.Foundations.Path
-open import Cubical.Foundations.CartesianKanOps
-
-open import Cubical.Data.Rationals using (ℚ ; [_/_])
-open import Cubical.Data.Rationals.Order using
-  ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡)
-
-import Cubical.Data.Rationals as ℚ
-import Cubical.Data.Rationals.Order as ℚ
-open import Cubical.Data.Rationals.Order.Properties as ℚ using (invℚ₊;/2₊;x/2<x;/4₊;invℚ)
-
-open import Cubical.Data.NatPlusOne
-open import Cubical.Foundations.Path
-open import Cubical.Foundations.CartesianKanOps
-
-
-import Agda.Builtin.Reflection as R
-open import Cubical.Reflection.Base
 
 
 import Cubical.Algebra.CommRing as CR
+import Cubical.Algebra.Ring as RP
+
+
+open import Cubical.Relation.Binary
+
+open import Cubical.HITs.PropositionalTruncation as PT
+
+open import Cubical.Data.Rationals as ℚ using (ℚ ; [_/_])
+open import Cubical.Data.Rationals.Order as ℚ using
+  ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡)
+open import Cubical.Data.Rationals.Order.Properties as ℚ
+ using (invℚ₊;/2₊;/3₊;/4₊;x/2<x;invℚ)
+
 
 open import Cubical.HITs.CauchyReals.Base
 open import Cubical.HITs.CauchyReals.Lems
@@ -76,13 +40,10 @@ open import Cubical.HITs.CauchyReals.Order
 open import Cubical.HITs.CauchyReals.Continuous
 open import Cubical.HITs.CauchyReals.Multiplication
 
-import Cubical.Algebra.CommRing as CR
-import Cubical.Algebra.Ring as RP
-
 
 Rℝ = (CR.CommRing→Ring
                (_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ))
--- module CRℝ = ?
+
 
 module 𝐑 = CR.CommRingTheory (_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ)
 module 𝐑' = RP.RingTheory Rℝ
@@ -163,7 +124,7 @@ open ℚ.HLP
      let zzz : r ℚ.+ (fst (/2₊ ε) ℚ.+ (ℚ.- r)) ≡ fst (/2₊ ε)
          zzz = (lem--05 {r} {fst (/2₊ ε)})
          zz = (subst (ℚ._≤ fst ε) (sym (sym (ℚ.+Assoc _ _ _) ∙ zzz))
-            (ℚ.<Weaken≤ _ _ (x/2<x (ε))) )
+            (ℚ.<Weaken≤ _ _ (ℚ.x/2<x (ε))) )
      in zz)
        , ≤ℚ→≤ᵣ _ _ (ℚ.≤+ℚ₊ r r (/2₊ ε) (ℚ.isRefl≤ r)) ∣₁
  w .Elimℝ-Prop.limA x y R ε =

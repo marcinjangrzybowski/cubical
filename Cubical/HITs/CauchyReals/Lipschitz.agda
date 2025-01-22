@@ -5,50 +5,21 @@ module Cubical.HITs.CauchyReals.Lipschitz where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Function
-open import Cubical.Foundations.Equiv hiding (_■)
-open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.HLevels
-open import Cubical.Foundations.Univalence
-open import Cubical.Functions.FunExtEquiv
 
-import Cubical.Functions.Logic as L
-
-open import Cubical.Algebra.CommRing.Instances.Int
-
-open import Cubical.Data.Bool as 𝟚 hiding (_≤_)
-open import Cubical.Data.Bool.Base using () renaming (Bool to 𝟚 ; true to 1̂ ; false to 0̂)
-open import Cubical.Data.Nat as ℕ hiding (_·_;_+_)
-open import Cubical.Data.Nat.Order.Recursive as OR
-open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sum as ⊎
-open import Cubical.Data.Unit
 open import Cubical.Data.Int as ℤ
-import Cubical.Data.Int.Order as ℤ
-open import Cubical.Data.Maybe as Mb
-open import Cubical.Data.Sigma hiding (Path)
-open import Cubical.Data.List as L
-open import Cubical.Data.List using () renaming (List to ⟦_⟧)
-open import Cubical.Foundations.Interpolate
-open import Cubical.Relation.Nullary
-open import Cubical.Relation.Binary
+open import Cubical.Data.Sigma
 
 open import Cubical.HITs.PropositionalTruncation as PT
-open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
 
-open import Cubical.Data.Rationals using (ℚ ; [_/_])
-open import Cubical.Data.Rationals.Order using
+open import Cubical.Data.Rationals as ℚ using (ℚ ; [_/_])
+open import Cubical.Data.Rationals.Order as ℚ using
   ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡)
-
-import Cubical.Data.Rationals as ℚ
-open import Cubical.Data.Rationals.Order as ℚ
+open import Cubical.Data.Rationals.Order.Properties as ℚ
+ using (invℚ₊;/2₊;/3₊;/4₊ ; /4₊+/4₊≡/2₊ ; ε/2+ε/2≡ε)
 
 open import Cubical.Data.NatPlusOne
-open import Cubical.Foundations.Path
-open import Cubical.Foundations.CartesianKanOps
-
-
-open import Cubical.Data.Rationals.Order.Properties as ℚ
 
 open import Cubical.HITs.CauchyReals.Base
 open import Cubical.HITs.CauchyReals.Lems
@@ -169,16 +140,16 @@ Lipschitz-ℚ→ℚ-extend Δ L f δ δ<Δ x q r ε v =
                      (ℚ.+IdR _) (ℚ.+Comm _ _
                       ∙ (sym $ ℚ.-[x-y]≡y-x (fst Δ) (fst δ)))
                      ((ℚ.<-o+ 0 (fst δ) (ℚ.- (fst Δ)) (ℚ.0<ℚ₊ δ))))
-                 ((≤clamp (ℚ.- (fst Δ ℚ.- fst δ)) (fst Δ ℚ.- fst δ) u
+                 ((ℚ.≤clamp (ℚ.- (fst Δ ℚ.- fst δ)) (fst Δ ℚ.- fst δ) u
                     (( ℚ.pos[-x≤x] (ℚ.<→ℚ₊ (fst δ) (fst Δ) δ<Δ))))) )
-               (ℚ.isTrans≤< _ _ _ (clamp≤ _ _ _)
+               (ℚ.isTrans≤< _ _ _ (ℚ.clamp≤ _ _ _)
                 (ℚ.<-ℚ₊' (fst Δ) (fst Δ) δ (ℚ.isRefl≤ (fst Δ)) ))
 
  in x (ℚ.clamp (ℚ.- (fst Δ ℚ.- fst δ)) (fst Δ ℚ.- fst δ) q)
             (ℚ.clamp (ℚ.- (fst Δ ℚ.- fst δ)) (fst Δ ℚ.- fst δ) r)
             (z q) (z r) ε
              (ℚ.isTrans≤< _ _ _
-               (clampDist (ℚ.- (fst Δ ℚ.- fst δ)) (fst Δ ℚ.- fst δ) r q)
+               (ℚ.clampDist (ℚ.- (fst Δ ℚ.- fst δ)) (fst Δ ℚ.- fst δ) r q)
                v)
 
 
@@ -225,7 +196,7 @@ fromLipschitz L (f , fL) = f' ,
            ((λ i →
                fst L ℚ.· ℚ.·DistL+ (fst (invℚ₊ L)) (fst δ₁) (fst ε₁) (~ i))
             ∙∙ ℚ.·Assoc (fst L) (fst (invℚ₊ L)) (fst δ₁ ℚ.+ fst ε₁) ∙∙
-            ((λ i → x·invℚ₊[x] L i ℚ.· fst (δ₁ ℚ₊+ ε₁)) ∙
+            ((λ i → ℚ.x·invℚ₊[x] L i ℚ.· fst (δ₁ ℚ₊+ ε₁)) ∙
              ℚ.·IdL (fst (δ₁ ℚ₊+ ε₁)))))
           (u' (invℚ₊ L ℚ₊· δ₁) (invℚ₊ L ℚ₊· ε₁)))
           (subst {x = fst L ℚ.· (fst ε ℚ.+ (ℚ.- fst δ))}
@@ -233,7 +204,7 @@ fromLipschitz L (f , fL) = f' ,
                 0<_ ( lem--046 )
             (ℚ.·0< (fst L) (fst ε ℚ.- fst δ) (snd L) v) )
               (subst2 (f q ∼[_]_) (ℚ₊≡ lem--046)
-                 (cong v' (ℚ₊≡ (sym $ [y·x]/y L (fst δ)))) z)
+                 (cong v' (ℚ₊≡ (sym $ ℚ.[y·x]/y L (fst δ)))) z)
 
  w : Elimℝ (λ _ → ℝ) λ u v ε _ → u ∼[ L ℚ₊· ε  ] v
  w .Elimℝ.ratA = f
@@ -246,7 +217,7 @@ fromLipschitz L (f , fL) = f' ,
                  ∙∙ ℚ.·Assoc (fst L) (fst (invℚ₊ L))
                       ((fst δ) ℚ.+ (fst ε)) ∙∙
                        (cong (ℚ._· fst (δ ℚ₊+ ε))
-                        (x·invℚ₊[x] L) ∙ ℚ.·IdL (fst (δ ℚ₊+ ε)))))
+                        (ℚ.x·invℚ₊[x] L) ∙ ℚ.·IdL (fst (δ ℚ₊+ ε)))))
 
           v'
  w .Elimℝ.eqA p a a' x y =
@@ -255,7 +226,7 @@ fromLipschitz L (f , fL) = f' ,
         (ℚ₊≡ $
           ℚ.·Assoc (fst L) (fst (invℚ₊ L)) (fst ε) ∙
             (cong (ℚ._· fst (ε))
-                        (x·invℚ₊[x] L) ∙ ℚ.·IdL (fst (ε))))
+                        (ℚ.x·invℚ₊[x] L) ∙ ℚ.·IdL (fst (ε))))
                         (y (invℚ₊ L ℚ₊· ε))
  w .Elimℝ.rat-rat-B q r ε x x₁ = fL q r ε x x₁
  w .Elimℝ.rat-lim-B = rl
@@ -268,9 +239,9 @@ fromLipschitz L (f , fL) = f' ,
          $ ℚ.·0< (fst L) (fst ε ℚ.- (fst δ ℚ.+ fst η))
               (snd L) v₁)
 
-        ((cong v' (ℚ₊≡ $ sym ([y·x]/y L (fst δ)))
+        ((cong v' (ℚ₊≡ $ sym (ℚ.[y·x]/y L (fst δ)))
           subst∼[ ℚ₊≡ e ]
-           cong v'' (ℚ₊≡ $ sym ([y·x]/y L (fst η)))) x₁)
+           cong v'' (ℚ₊≡ $ sym (ℚ.[y·x]/y L (fst η)))) x₁)
  w .Elimℝ.isPropB _ _ _ _ = isProp∼ _ _ _
 
 
@@ -282,13 +253,13 @@ fromLipschitz L (f , fL) = f' ,
 ∼-monotone< : ∀ {u v ε ε'} → fst ε ℚ.< fst ε' → u ∼[ ε ] v → u ∼[ ε' ] v
 ∼-monotone< {u} {v} {ε} {ε'} x x₁ =
   subst∼ (lem--05 {fst ε} {fst ε'})
-   (triangle∼ x₁ (refl∼ v (<→ℚ₊ (fst ε) (fst ε') x)))
+   (triangle∼ x₁ (refl∼ v (ℚ.<→ℚ₊ (fst ε) (fst ε') x)))
 
 ∼-monotone≤ : ∀ {u v ε ε'} → fst ε ℚ.≤ fst ε' → u ∼[ ε ] v → u ∼[ ε' ] v
 ∼-monotone≤ {u} {v} {ε} {ε'} x x₁ =
    ⊎.rec (flip subst∼ x₁ )
          (flip ∼-monotone< x₁ )
-     $ ≤→<⊎≡ (fst ε) (fst ε') x
+     $ ℚ.≤→<⊎≡ (fst ε) (fst ε') x
 
 
 lipschConstIrrel : ∀ L₁ L₂ (x : ℚ₊ → ℝ) → ∀  p₁ p₂ →
@@ -296,7 +267,7 @@ lipschConstIrrel : ∀ L₁ L₂ (x : ℚ₊ → ℝ) → ∀  p₁ p₂ →
        ≡ lim (λ q → x (L₂ ℚ₊· q)) p₂
 lipschConstIrrel L₁ L₂ =
    ⊎.rec (w L₁ L₂) (λ x x₁ p₁ p₂ →
-     sym (w L₂ L₁ x x₁ p₂ p₁)) (getPosRatio L₁ L₂)
+     sym (w L₂ L₁ x x₁ p₂ p₁)) (ℚ.getPosRatio L₁ L₂)
 
 
  where
@@ -317,7 +288,7 @@ lipschConstIrrel L₁ L₂ =
                 cong (ℚ._· (fst (/4₊ ε)))
                   (ℚ.·Assoc _ _ _ ∙
                    cong (ℚ._· (fst L₂))
-                     (x·invℚ₊[x] L₁) ∙ ℚ.·IdL (fst (L₂))) ))) $
+                     (ℚ.x·invℚ₊[x] L₁) ∙ ℚ.·IdL (fst (L₂))) ))) $
             (∼-monotone≤ {ε' = (/4₊ ε) ℚ₊+ (1 ℚ₊· (/4₊ ε))}
                (ℚ.≤-o+ _ (1 ℚ.· (fst (/4₊ ε))) (fst (/4₊ ε))
                  (ℚ.≤-·o (fst (invℚ₊ L₁ ℚ₊· L₂)) 1 (fst (/4₊ ε))
@@ -345,6 +316,8 @@ congLim x y x' y' p =
           (Σ≡Prop (λ _ → isPropΠ2 λ _ _ → isProp∼ _ _ _)
            (funExt p))
 
+
+open ℚ.HLP
 
 congLim' : ∀ x y x' → (p : ∀ q → x q ≡ x' q) →
  lim x y ≡ lim x' (subst (λ x' → (δ ε : ℚ₊) → x' δ ∼[ δ ℚ₊+ ε ] x' ε)
@@ -422,7 +395,7 @@ record NonExpanding₂ (g : ℚ → ℚ → ℚ ) : Type where
         (cL q r qq) (ℚ.absFrom<×< (fst ε) (q ℚ.- r) x₁ x₂))
 
   rr .Elimℝ-Prop.limA x p x₁ ε x₂ x₃ =
-    let ((θ , θ<) , (x₂' , x₃'))  = getθ ε ((q ℚ.- r)) (x₂ , x₃)
+    let ((θ , θ<) , (x₂' , x₃'))  = ℚ.getθ ε ((q ℚ.- r)) (x₂ , x₃)
         θ/2 = /2₊ (θ , θ<)
         zzz : fst (zz q) (x θ/2) ∼[ (fst ε ℚ.- θ) , x₂' ]
                fst (zz r) (x θ/2)
@@ -531,7 +504,7 @@ record NonExpanding₂ (g : ℚ → ℚ → ℚ ) : Type where
                           ((∼-monotone< {ε = /2₊ ε/4 ℚ₊+ /2₊ ε/4}
                                {(fst ε ℚ.- ((((fst ε) ℚ.· [ 1 / 4 ])
                                   ℚ.· ℚ.[ 1 / 2 ]) ℚ.+ fst ε/4))
-                                , _} (((-<⁻¹ _ _ v)))
+                                , _} (((ℚ.-<⁻¹ _ _ v)))
                                    $ sym∼ _ _ _ (𝕣-lim-self x' y'
                              (/2₊ ε/4) (/2₊ ε/4)))))))
    in _ , zz

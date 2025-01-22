@@ -204,6 +204,14 @@ floor-frac x with 0 ≟ x
         p , e'
 
 
+ceilℚ₊ : (q : ℚ₊) → Σ[ k ∈ ℕ ] (fst q) < fromNat k
+ceilℚ₊ q = suc (fst (fst (floor-fracℚ₊ q))) ,
+   subst2 (_<_) --  (fromNat (suc (fst (fst (floor-fracℚ₊ q)))))
+      (ℚ.+Comm _ _ ∙ fst (snd (floor-fracℚ₊ q)))
+      (ℚ.ℕ+→ℚ+ _ _)
+       (<-+o _ _ (fromNat (fst (fst (floor-fracℚ₊ q))))
+         (snd (snd (snd (floor-fracℚ₊ q)))))
+
 
 
 sign : ℚ → ℚ

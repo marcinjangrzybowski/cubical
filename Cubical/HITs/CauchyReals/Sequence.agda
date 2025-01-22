@@ -3,71 +3,31 @@
 module Cubical.HITs.CauchyReals.Sequence where
 
 open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.Structure
-open import Cubical.Foundations.Function
-open import Cubical.Foundations.Equiv hiding (_■)
+open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.HLevels
-open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Function
-open import Cubical.Functions.FunExtEquiv
-
-import Cubical.Functions.Logic as L
-
-open import Cubical.Algebra.CommRing.Instances.Int
 
 open import Cubical.Data.Bool as 𝟚 hiding (_≤_)
-open import Cubical.Data.Bool.Base using () renaming (Bool to 𝟚 ; true to 1̂ ; false to 0̂)
 open import Cubical.Data.Nat as ℕ hiding (_·_;_+_)
 import Cubical.Data.Nat.Mod as ℕ
-open import Cubical.Data.Nat.Order.Recursive as OR
 import Cubical.Data.Nat.Order as ℕ
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sum as ⊎
-open import Cubical.Data.Unit
 open import Cubical.Data.Int as ℤ using (pos)
 import Cubical.Data.Int.Order as ℤ
-open import Cubical.Data.Maybe as Mb
-open import Cubical.Data.Sigma hiding (Path)
-open import Cubical.Data.List as L
-open import Cubical.Data.List using () renaming (List to ⟦_⟧)
-open import Cubical.Foundations.Interpolate
-open import Cubical.Relation.Nullary
-open import Cubical.Relation.Binary
+open import Cubical.Data.Sigma
 
 open import Cubical.HITs.PropositionalTruncation as PT
-open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
-
-open import Cubical.Data.Rationals using (ℚ ; [_/_])
-open import Cubical.Data.Rationals.Order using
-  ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡)
-
-import Cubical.Data.Rationals as ℚ
-import Cubical.Data.Rationals.Order as ℚ
 
 open import Cubical.Data.NatPlusOne
-open import Cubical.Foundations.Path
-open import Cubical.Foundations.CartesianKanOps
 
-open import Cubical.Data.Rationals using (ℚ ; [_/_])
-open import Cubical.Data.Rationals.Order using
+open import Cubical.Data.Rationals as ℚ using (ℚ ; [_/_])
+open import Cubical.Data.Rationals.Order as ℚ using
   ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡)
+open import Cubical.Data.Rationals.Order.Properties as ℚ
+ using (invℚ₊;/2₊;/3₊;/4₊;x/2<x;invℚ;_ℚ^ⁿ_;_ℚ₊^ⁿ_)
 
-import Cubical.Data.Rationals as ℚ
-import Cubical.Data.Rationals.Order as ℚ
-open import Cubical.Data.Rationals.Order.Properties as ℚ using (invℚ₊;/2₊;x/2<x;/4₊;invℚ)
-
-open import Cubical.Data.NatPlusOne
-open import Cubical.Foundations.Path
-open import Cubical.Foundations.CartesianKanOps
-
-
-import Agda.Builtin.Reflection as R
-open import Cubical.Reflection.Base
-
-
-import Cubical.Algebra.CommRing as CR
 
 open import Cubical.HITs.CauchyReals.Base
 open import Cubical.HITs.CauchyReals.Lems
@@ -77,9 +37,6 @@ open import Cubical.HITs.CauchyReals.Order
 open import Cubical.HITs.CauchyReals.Continuous
 open import Cubical.HITs.CauchyReals.Multiplication
 open import Cubical.HITs.CauchyReals.Inverse
-
-import Cubical.Algebra.CommRing as CR
-import Cubical.Algebra.Ring as RP
 
 ·absᵣ : ∀ x y → absᵣ (x ·ᵣ y) ≡ absᵣ x ·ᵣ absᵣ y
 ·absᵣ x = ≡Continuous _ _
@@ -226,8 +183,8 @@ _₊／ᵣ₊_ : ℝ₊ → ℝ₊  → ℝ₊
 
 
 
-/nᵣ : ℕ₊₁ → ℝ → ℝ
-/nᵣ n = fst (fromLipschitz ([ 1 / n ] , _)
+/nᵣ-L : (n : ℕ₊₁) → Σ _ (Lipschitz-ℝ→ℝ _)
+/nᵣ-L n = (fromLipschitz ([ 1 / n ] , _)
   (_ , Lipschitz-rat∘ ([ 1 / n ] , _) (ℚ._· [ 1 / n ])
    λ q r ε x →
      subst (ℚ._< ([ 1 / n ]) ℚ.· (fst ε))
@@ -241,6 +198,22 @@ _₊／ᵣ₊_ : ℝ₊ → ℝ₊  → ℝ₊
        ((ℚ.0<→< [ 1 / n ] _))
        x)))
 
+/nᵣ : ℕ₊₁ → ℝ → ℝ
+/nᵣ = fst ∘ /nᵣ-L
+
+/nᵣ-／ᵣ : ∀ n x (p : 0 ＃ fromNat (ℕ₊₁→ℕ n))
+            → /nᵣ n x ≡ (x ／ᵣ[ fromNat (ℕ₊₁→ℕ n) , p ] )
+/nᵣ-／ᵣ n x p = ≡Continuous _ _
+  (Lipschitz→IsContinuous _ (fst (/nᵣ-L n)) (snd (/nᵣ-L n)))
+   (IsContinuous·ᵣR _)
+  (λ r → cong rat (cong (r ℚ.·_) (cong [ 1 /_] (sym (·₊₁-identityˡ _))))
+    ∙ rat·ᵣrat _ _ ∙
+      cong (rat r ·ᵣ_) (sym (invℝ-rat _ _ (fst (rat＃ _ _) p)) )) x
+
+/nᵣ-pos : ∀ n x → 0 <ᵣ x → 0 <ᵣ /nᵣ n x
+/nᵣ-pos n x 0<x = subst (0 <ᵣ_) (sym (/nᵣ-／ᵣ _ _ _))
+                     (ℝ₊· (_ , 0<x) (_ , invℝ-pos _
+                         (<ℚ→<ᵣ _ _ (ℚ.0<→< _ tt))))
 
 seqSumUpTo : (ℕ → ℝ) → ℕ →  ℝ
 seqSumUpTo s zero = 0
@@ -572,3 +545,163 @@ limₙ→∞ s is x =
 
 Limₙ→∞ : Seq → Type
 Limₙ→∞ s = Σ _ (limₙ→∞ s is_)
+
+
+ε<2ⁿ : (ε : ℚ₊) → Σ[ n ∈ ℕ ] fst ε ℚ.< 2 ℚ^ⁿ n 
+ε<2ⁿ ε = let n = fst (log2ℕ (fst (ℚ.ceilℚ₊ ε))) in n ,
+         subst (fst ε ℚ.<_) (sym (ℚ.fromNat-^ _ _))
+          (ℚ.isTrans< _ _ (fromNat (2 ^ n))
+                  ((snd (ℚ.ceilℚ₊ ε)))
+                   (ℚ.<ℤ→<ℚ (ℤ.pos ((fst (ℚ.ceilℚ₊ ε))))
+                     _ (ℤ.ℕ≤→pos-≤-pos  _ _
+                    (fst (snd (log2ℕ (fst (ℚ.ceilℚ₊ ε))))))))
+
+
+1/2ⁿ<ε : (ε : ℚ₊) → Σ[ n ∈ ℕ ] [ 1 / 2 ] ℚ^ⁿ n ℚ.< fst ε
+1/2ⁿ<ε ε =
+ let (n , 1/ε<n) = ε<2ⁿ (invℚ₊ ε)
+ in n , invEq (ℚ.invℚ₊-<-invℚ₊ (([ 1 / 2 ] , _) ℚ₊^ⁿ n) ε)
+         (subst (fst (invℚ₊ ε) ℚ.<_)
+           (sym (ℚ.invℚ₊-ℚ^ⁿ ([ 1 / 2 ] , _) n)) 1/ε<n)
+
+
+-- TODO : generalize properly 
+ratioTest₊ : ∀ (s : Seq) → (sPos : ∀ n → rat 0 <ᵣ (s n))
+     → limₙ→∞ s is 0
+     → (limₙ→∞ (λ n →  s (suc n) ／ᵣ[ s n , inl ((sPos n)) ]) is 0)     
+     → IsConvSeries s
+ratioTest₊ s sPos l' l ε₊@(ε , 0<ε) =
+  N , ww
+
+ where
+ ½ᵣ = (ℚ₊→ℝ₊ ([ 1 / 2 ] , _))
+ N½ = l ½ᵣ
+ ε/2 : ℝ₊
+ ε/2 = (ε ·ᵣ rat [ 1 / 2 ]) , ℝ₊· ε₊ ½ᵣ 
+ Nε = (l' (ε/2))
+
+ N : ℕ
+ N = suc (ℕ.max (suc (fst N½)) (fst Nε))
+
+ ww : ∀ m n → absᵣ (seqΣ (λ x → s (x ℕ.+ (m ℕ.+ suc N))) n) <ᵣ ε
+ ww m n = isTrans≤<ᵣ _ _ _
+   (≡ᵣWeaken≤ᵣ _ _
+     (absᵣNonNeg (seqΣ (λ x → s (x ℕ.+ (m ℕ.+ suc N))) n)
+     (0≤seqΣ _ (λ n → <ᵣWeaken≤ᵣ _ _ (sPos (n ℕ.+ (m ℕ.+ suc N)))) _))) pp
+
+  where
+  s' : Seq
+  s' = s ∘ (ℕ._+ (suc (m ℕ.+ N)))
+
+
+  f' : ((n : ℕ) →  N ℕ.≤ n →
+         (s (suc n)) ≤ᵣ
+         s n ·ᵣ rat [ 1 / 2 ])
+  f' n n< =
+     subst2 {x = ((s (suc n) ／ᵣ[ s n , inl (sPos n) ])
+                    +ᵣ 0 ) ·ᵣ s n }
+        _≤ᵣ_ (congS (_·ᵣ s n) (+IdR _) ∙
+          [x/y]·yᵣ _ _ _) (·ᵣComm _ _)
+       ((<ᵣWeaken≤ᵣ _ _
+          (<ᵣ-·ᵣo _ _ (s n , sPos _)
+           (isTrans≤<ᵣ _ _ _ (≤absᵣ _)
+             (snd N½ n (
+              ℕ.<-trans (ℕ.left-≤-max {suc (fst N½)} {fst Nε})
+               n<)))))) 
+
+
+  p : ∀ n → s' n ≤ᵣ geometricProgression (s (m ℕ.+ N)) (fst ½ᵣ) n 
+  p zero =
+     isTrans≤ᵣ _ _ _ ((f' (m ℕ.+ N) (ℕ.≤SumRight {N} {m}) ))
+             (subst ((s (m ℕ.+ N) ·ᵣ rat [ ℤ.pos 1 / 1+ 1 ]) ≤ᵣ_)
+                (·IdR _)
+                 (≤ᵣ-o·ᵣ (fst ½ᵣ) 1 (s (m ℕ.+ N))
+                   (<ᵣWeaken≤ᵣ _ _ (sPos _))
+                  (≤ℚ→≤ᵣ _ _ ((𝟚.toWitness {Q = ℚ.≤Dec ([ 1 / 2 ]) 1} _))))) 
+
+  p (suc n) = 
+    isTrans≤ᵣ _ _ _ (f' _
+      (subst (N ℕ.≤_) (sym (ℕ.+-assoc n (1 ℕ.+ m) N))
+        ℕ.≤SumRight))
+      (≤ᵣ-·o _ _ ([ 1 / 2 ]) ((𝟚.toWitness {Q = ℚ.≤Dec 0 ([ 1 / 2 ])} _)) (p n))
+
+  p' = Seq'≤→Σ≤ s' (geometricProgression (s (m ℕ.+ N)) (fst ½ᵣ))
+        p 
+
+  s<ε : (s (m ℕ.+ N)) <ᵣ fst ε/2
+  s<ε = subst (_<ᵣ fst ε/2) (+IdR _) (isTrans≤<ᵣ _ _ _
+          (≤absᵣ ((s (m ℕ.+ N)) +ᵣ (-ᵣ 0))) (snd Nε _
+           (ℕ.≤<-trans ℕ.right-≤-max ℕ.≤SumRight)))
+
+  pp : (seqΣ (λ x → s (x ℕ.+ (m ℕ.+ suc N))) n) <ᵣ ε
+  pp =
+      subst {x = ℕ._+ suc (m ℕ.+ N) } {y = λ z → z ℕ.+ (m ℕ.+ suc N)}
+           (λ h → seqΣ (s ∘S h) n <ᵣ ε)
+         
+          (funExt (λ x → cong (x ℕ.+_) (sym (ℕ.+-suc _ _)) ))
+          (isTrans≤<ᵣ _ _ _ (p' n)
+            (isTrans≤<ᵣ _ _ _
+              (≡ᵣWeaken≤ᵣ _ _ (seqSumUpTo≡seqSumUpTo' _ _))
+                (isTrans<≤ᵣ _ _ _
+                 (Sₙ-sup (s (m ℕ.+ N)) (fst ½ᵣ)
+                   n (sPos _) (snd ½ᵣ)
+                    (<ℚ→<ᵣ _ _ ((𝟚.toWitness {Q = ℚ.<Dec [ 1 / 2 ] 1} tt))))
+                (isTrans≤ᵣ _ _ _
+                  (≤ᵣ₊Monotone·ᵣ _ _ _ 2
+                        (<ᵣWeaken≤ᵣ _ _ (snd ε/2))
+                          (<ᵣWeaken≤ᵣ _ _
+                             ((0<1/x _ _ (
+                       <ℚ→<ᵣ _ _
+                       (𝟚.toWitness {Q = ℚ.<Dec 0 [ 1 / 2 ]} tt)))))
+                         
+                    (<ᵣWeaken≤ᵣ _ _ s<ε)
+                    (≡ᵣWeaken≤ᵣ _ _
+                       (invℝ-rat _ _
+                        (inl ((𝟚.toWitness {Q = ℚ.<Dec 0 [ 1 / 2 ]} tt))))))
+                  (≡ᵣWeaken≤ᵣ _ _
+                     (sym (·ᵣAssoc _ _ _) ∙∙
+                       cong (ε ·ᵣ_) (sym (rat·ᵣrat _ _)
+                         ∙ cong rat (𝟚.toWitness {Q = ℚ.discreteℚ
+                           ([ 1 / 2 ] ℚ.· 2) 1} tt))
+                        ∙∙ ·IdR ε))))))
+
+
+expSeq : ℝ → Seq
+expSeq x zero = 1
+expSeq x (suc n) = /nᵣ (1+ n) (expSeq x n ·ᵣ x)
+
+expSeqPos : ∀ x → 0 <ᵣ x → ∀ n → 0 <ᵣ expSeq x n
+expSeqPos x 0<x zero = decℚ<ᵣ?
+expSeqPos x 0<x (suc n) =
+ /nᵣ-pos (1+ n) _ (ℝ₊· (_ , expSeqPos x 0<x n) (_ , 0<x)) 
+
+limₙ→∞[expSeq]=0 : ∀ x → limₙ→∞ expSeq (rat x) is 0
+limₙ→∞[expSeq]=0 = {!!}
+
+limₙ→∞[expSeqRatio]=0 : ∀ x → ∀ (0<x : 0 ℚ.< x)  → limₙ→∞
+      (λ n →
+         expSeq (rat x) (suc n) ／ᵣ[ expSeq (rat x) n ,
+         inl (expSeqPos (rat x) (<ℚ→<ᵣ 0 x 0<x) n) ])
+      is 0
+limₙ→∞[expSeqRatio]=0 x 0<x =
+  subst (limₙ→∞_is 0)
+    (funExt w)
+    w'
+
+ where
+ 0<ᵣx = <ℚ→<ᵣ 0 x 0<x
+ w : ∀ n → /nᵣ (1+ (suc n)) (rat x) ≡ (expSeq (rat x) (suc n) ／ᵣ[ expSeq (rat x) n ,
+                    inl (expSeqPos (rat x) 0<ᵣx n) ])
+ w = {!!}
+
+ w' : limₙ→∞ (λ x₁ → /nᵣ (2+ x₁) (rat x)) is 0
+ w' ε =
+  let cN = ℚ.ceilℚ₊
+  in {!!} , (λ n' <n' → isTrans≡<ᵣ _ _ _
+      (cong absᵣ (+IdR _) ∙ absᵣPos _ (/nᵣ-pos _ _ 0<ᵣx))
+       {!!} )
+
+expSeriesConvergesAtℚ : ∀ x → 0 ℚ.< x → IsConvSeries (expSeq (rat x))
+expSeriesConvergesAtℚ x 0<x =
+ ratioTest₊ (expSeq (rat x)) (expSeqPos (rat x) (<ℚ→<ᵣ _ _ 0<x))
+      (limₙ→∞[expSeq]=0 x) (limₙ→∞[expSeqRatio]=0 x 0<x)

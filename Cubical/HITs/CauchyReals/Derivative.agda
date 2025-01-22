@@ -3,71 +3,25 @@
 module Cubical.HITs.CauchyReals.Derivative where
 
 open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Function
-open import Cubical.Foundations.Equiv hiding (_■)
-open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.GroupoidLaws
+open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.HLevels
-open import Cubical.Foundations.Univalence
-open import Cubical.Foundations.Function
 open import Cubical.Functions.FunExtEquiv
 
-import Cubical.Functions.Logic as L
-
-open import Cubical.Algebra.CommRing.Instances.Int
-
-open import Cubical.Data.Bool as 𝟚 hiding (_≤_)
-open import Cubical.Data.Bool.Base using () renaming (Bool to 𝟚 ; true to 1̂ ; false to 0̂)
-open import Cubical.Data.Nat as ℕ hiding (_·_;_+_)
-import Cubical.Data.Nat.Mod as ℕ
-open import Cubical.Data.Nat.Order.Recursive as OR
-import Cubical.Data.Nat.Order as ℕ
-open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sum as ⊎
-open import Cubical.Data.Unit
 open import Cubical.Data.Int as ℤ using (pos)
-import Cubical.Data.Int.Order as ℤ
-open import Cubical.Data.Maybe as Mb
-open import Cubical.Data.Sigma hiding (Path)
-open import Cubical.Data.List as L
-open import Cubical.Data.List using () renaming (List to ⟦_⟧)
-open import Cubical.Foundations.Interpolate
-open import Cubical.Relation.Nullary
-open import Cubical.Relation.Binary
+open import Cubical.Data.Sigma
 
 open import Cubical.HITs.PropositionalTruncation as PT
-open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
-
-open import Cubical.Data.Rationals using (ℚ ; [_/_])
-open import Cubical.Data.Rationals.Order using
-  ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡)
-
-import Cubical.Data.Rationals as ℚ
-import Cubical.Data.Rationals.Order as ℚ
-
 open import Cubical.Data.NatPlusOne
-open import Cubical.Foundations.Path
-open import Cubical.Foundations.CartesianKanOps
 
-open import Cubical.Data.Rationals using (ℚ ; [_/_])
-open import Cubical.Data.Rationals.Order using
+
+open import Cubical.Data.Rationals as ℚ using (ℚ ; [_/_])
+open import Cubical.Data.Rationals.Order as ℚ using
   ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡)
+open import Cubical.Data.Rationals.Order.Properties as ℚ
+ using (invℚ₊;/2₊;/3₊;/4₊;x/2<x;invℚ)
 
-import Cubical.Data.Rationals as ℚ
-import Cubical.Data.Rationals.Order as ℚ
-open import Cubical.Data.Rationals.Order.Properties as ℚ using (invℚ₊;/2₊;x/2<x;/4₊;invℚ)
-
-open import Cubical.Data.NatPlusOne
-open import Cubical.Foundations.Path
-open import Cubical.Foundations.CartesianKanOps
-
-
-import Agda.Builtin.Reflection as R
-open import Cubical.Reflection.Base
-
-
-import Cubical.Algebra.CommRing as CR
 
 open import Cubical.HITs.CauchyReals.Base
 open import Cubical.HITs.CauchyReals.Lems
@@ -79,8 +33,6 @@ open import Cubical.HITs.CauchyReals.Multiplication
 open import Cubical.HITs.CauchyReals.Inverse
 open import Cubical.HITs.CauchyReals.Sequence
 
-import Cubical.Algebra.CommRing as CR
-import Cubical.Algebra.Ring as RP
 
 
 
@@ -89,22 +41,63 @@ at x limitOf f is L =
   ∀ (ε : ℝ₊) → ∃[ δ ∈ ℝ₊ ]
    (∀ r x＃r → absᵣ (x -ᵣ r) <ᵣ fst δ → absᵣ (L -ᵣ f r x＃r) <ᵣ fst ε)
 
+at_inclLimitOf_is_ : (x : ℝ) → (∀ r → ℝ)  → ℝ → Type
+at x inclLimitOf f is L =
+  ∀ (ε : ℝ₊) → ∃[ δ ∈ ℝ₊ ]
+   (∀ r → absᵣ (x -ᵣ r) <ᵣ fst δ → absᵣ (L -ᵣ f r) <ᵣ fst ε)
+
+inclLimit→Limit : ∀ f x L → at x inclLimitOf f is L
+                          → at x limitOf (λ r _ → f r)  is L
+inclLimit→Limit f x L = PT.map (map-snd (const ∘_)) ∘_
+
 substLim : ∀ {x f f' L}
   → (∀ r x＃r → f r x＃r ≡ f' r x＃r)
   → at x limitOf f is L → at x limitOf f' is L
 substLim {x} {L = L} p =  subst (at x limitOf_is L) (funExt₂ p)
 
-IsContinuousLim : ∀ f x → IsContinuous f →
-                    at x limitOf (λ r _ → f r) is (f x)
-IsContinuousLim f x cx = uncurry
+IsContinuousInclLim : ∀ f x → IsContinuous f →
+                    at x inclLimitOf f is (f x)
+IsContinuousInclLim f x cx = uncurry
   λ ε → (PT.rec squash₁
    λ (q , 0<q , q<ε) →
      PT.map (λ (δ , X) →
        (ℚ₊→ℝ₊ δ) ,
-         λ r x＃r x₁ → isTrans<ᵣ _ _ _
+         λ r x₁ → isTrans<ᵣ _ _ _
            (fst (∼≃abs<ε _ _ _) (X r (invEq (∼≃abs<ε _ _ _) x₁)))
             q<ε  )
        (cx x (q , ℚ.<→0< q (<ᵣ→<ℚ 0 q 0<q)))) ∘ denseℚinℝ 0 ε
+
+IsContinuousLim : ∀ f x → IsContinuous f →
+                    at x limitOf (λ r _ → f r) is (f x)
+IsContinuousLim f x cx = inclLimit→Limit _ _ _ (IsContinuousInclLim f x cx)
+
+IsContinuousInclLim→IsContinuous : ∀ f  →
+                    (∀ x → at x inclLimitOf f is (f x))
+                    → IsContinuous f
+IsContinuousInclLim→IsContinuous f xc x (ε , 0<ε) =
+  PT.rec squash₁ w z
+
+ where
+  z = xc x (rat ε , <ℚ→<ᵣ 0 ε (ℚ.0<→< _ 0<ε) )
+  w : Σ ℝ₊
+        (λ δ →
+           (r : ℝ) →
+           absᵣ (x -ᵣ r) <ᵣ fst δ → absᵣ (f x -ᵣ f r) <ᵣ rat ε) →
+        ∃-syntax ℚ₊ (λ δ → (v₁ : ℝ) → x ∼[ δ ] v₁ → f x ∼[ ε , 0<ε ] f v₁)
+  w ((δ , 0<δ) , X) =
+      PT.map (λ (q , 0<q , q<δ) →
+        ((q , ℚ.<→0< q (<ᵣ→<ℚ 0 q 0<q))) ,
+          λ r x∼r → invEq (∼≃abs<ε _ _ _) (X r
+            (isTrans<ᵣ _ _ _ (fst (∼≃abs<ε _ _ _) x∼r) q<δ)))
+       (denseℚinℝ 0 δ 0<δ)
+
+IsContinuousInclLim≃IsContinuous : ∀ f  →
+                    (∀ x → at x inclLimitOf f is (f x))
+                    ≃ (IsContinuous f)
+IsContinuousInclLim≃IsContinuous f =
+  propBiimpl→Equiv (isPropΠ2 λ _ _ → squash₁) (isPropIsContinuous f)
+    (IsContinuousInclLim→IsContinuous f)
+     λ fc x → IsContinuousInclLim f x fc   
 
 IsContinuousLimΔ : ∀ f x → IsContinuous f →
                     at 0 limitOf (λ Δx _ → f (x +ᵣ Δx)) is (f x)
@@ -113,6 +106,7 @@ IsContinuousLimΔ f x cx =
    (cong f (+IdR x))
   (IsContinuousLim (λ Δx → f (x +ᵣ Δx)) 0
     (IsContinuous∘ _ _ cx (IsContinuous+ᵣL x)))
+
 
 
 const-lim : ∀ C x → at x limitOf (λ _ _ → C) is C
@@ -350,21 +344,36 @@ C·Derivative' C x f f'x F =
              cong (f x ·ᵣ g (x +ᵣ h) +ᵣ_) (·-ᵣ _ _))
            ∙ L𝐑.lem--060)
 
-derivative-^ⁿ : ∀ n x →
-   derivativeOf (_^ⁿ (suc n)) at x
-            is (fromNat (suc n) ·ᵣ (x ^ⁿ n))
-derivative-^ⁿ zero x =
- substDer₂
-   (λ _ → sym (·IdL _))
-   (sym (·IdL _))
-   (idDerivative x)
-derivative-^ⁿ (suc n) x =
-  substDer₂ (λ _ → refl)
-    (+ᵣComm _ _ ∙ cong₂ _+ᵣ_
-       (·ᵣComm _ _) (sym (·ᵣAssoc _ _ _)) ∙
-       sym (·DistR+ _ _ _) ∙
-        cong (_·ᵣ ((x ^ⁿ n) ·ᵣ idfun ℝ x))
-         (cong rat (ℚ.ℕ+→ℚ+ _ _)))
-    (·Derivative _ _ _ _ _ IsContinuousId
-       (derivative-^ⁿ n x) (idDerivative x))
+-- LimEverywhere→LimIncl : ∀ f → (∀ x → at x limitOf (λ x _ → f x) is (f x))
+--                            → (∀ x → at x inclLimitOf f is (f x))
+-- LimEverywhere→LimIncl = {!!}
 
+
+-- hasDer→isCont : ∀ f (f' : ℝ → ℝ) →
+--   (∀ x → derivativeOf f at x is f' x )
+--   → IsContinuous f
+-- hasDer→isCont f f' df ε = {!df!}
+
+-- -- derivative-^ⁿ : ∀ n x →
+-- --    derivativeOf (_^ⁿ (suc n)) at x
+-- --             is (fromNat (suc n) ·ᵣ (x ^ⁿ n))
+-- -- derivative-^ⁿ zero x =
+-- --  substDer₂
+-- --    (λ _ → sym (·IdL _))
+-- --    (sym (·IdL _))
+-- --    (idDerivative x)
+-- -- derivative-^ⁿ (suc n) x =
+-- --   substDer₂ (λ _ → refl)
+-- --     (+ᵣComm _ _ ∙ cong₂ _+ᵣ_
+-- --        (·ᵣComm _ _) (sym (·ᵣAssoc _ _ _)) ∙
+-- --        sym (·DistR+ _ _ _) ∙
+-- --         cong (_·ᵣ ((x ^ⁿ n) ·ᵣ idfun ℝ x))
+-- --          (cong rat (ℚ.ℕ+→ℚ+ _ _)))
+-- --     (·Derivative _ _ _ _ _ IsContinuousId
+-- --        (derivative-^ⁿ n x) (idDerivative x))
+
+-- -- -- chainRule : ∀ x f f'gx g g'x
+-- -- --         → derivativeOf g at x is g'x
+-- -- --          → derivativeOf f at (g x) is f'gx
+-- -- --         → derivativeOf (f ∘ g) at x is (f'gx ·ᵣ g'x)
+-- -- -- chainRule = {!!}
