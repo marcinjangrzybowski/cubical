@@ -1289,6 +1289,9 @@ invℚ₊≡invℚ q p = cong₂ _·_ (fst (<→sign (fst q)) (0<ℚ₊ q)
     ) (cong (fst ∘ invℚ₊) (ℚ₊≡ (sym (abs'≡abs (fst q)) ∙
      absPos (fst q) ((0<ℚ₊ q))))) ∙ ·IdL (fst (invℚ₊ q))
 
+fromNat-invℚ : ∀ n p → invℚ [ pos (suc n) / 1 ] p ≡ [ 1 / 1+ n ]
+fromNat-invℚ n p = invℚ₊≡invℚ _ _
+
 
 invℚ-pos : ∀ x y → 0 < x → 0 < invℚ x y
 invℚ-pos x y z =
@@ -1358,12 +1361,28 @@ q ／ℚ[ r , 0＃r ] = q · (invℚ r 0＃r)
 ℚ-[x·y]/y x r 0#r = sym (·Assoc _ _ _) ∙∙
   cong (x ·_) (ℚ-y/y r 0#r) ∙∙ ·IdR x
 
+ℚ-[x/y]·y : ∀ x r → (0＃r : 0 # r) → ((x ／ℚ[ r , 0＃r ]) · r) ≡ x
+ℚ-[x/y]·y x r 0#r = sym (·Assoc _ _ _) ∙∙
+  cong (x ·_) (·Comm _ _ ∙ ℚ-y/y r 0#r) ∙∙ ·IdR x
+
+
 ℚ-x·y≡z→x≡z/y : ∀ x q r → (0＃r : 0 # r)
                → (x · r) ≡ q
                → x ≡ q ／ℚ[ r , 0＃r ]
 ℚ-x·y≡z→x≡z/y x q r 0＃r p =
     sym (ℚ-[x·y]/y x r 0＃r ) ∙ cong (_／ℚ[ r , 0＃r ]) p
 
+ℚ-x/y<z→x/z<y : ∀ x q r  → (0<x : 0 < x) → (0<q : 0 < q) → (0<r : 0 < r)
+               → (x ／ℚ[ r , inl 0<r ]) < q
+               → (x ／ℚ[ q , inl 0<q ]) < r 
+ℚ-x/y<z→x/z<y x q r 0<x 0<q 0<r p =
+ subst2 _<_ (sym (·Assoc _ _ _)
+   ∙  cong (x ·_) ((·Comm _ _) ∙
+     cong (_· invℚ r (inl 0<r)) (·Comm _ _) ∙
+      ℚ-[x·y]/y _ _ _ ) )
+   ((·Comm _ _) ∙ ℚ-[x/y]·y _ _ _)
+   (<-·o (x ／ℚ[ r , (inl 0<r) ]) q (r ／ℚ[ q , (inl 0<q) ])
+     (0<-m·n _ _ 0<r (invℚ-pos q (inl 0<q)  0<q)) p) 
 
 invℚ≤invℚ : ∀ (p q : ℚ₊) → fst q ≤ fst p → fst (invℚ₊ p) ≤ fst (invℚ₊ q)
 invℚ≤invℚ p q x =
