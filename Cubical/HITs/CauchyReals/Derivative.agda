@@ -14,7 +14,7 @@ open import Cubical.Data.Sigma
 
 open import Cubical.HITs.PropositionalTruncation as PT
 open import Cubical.Data.NatPlusOne
-
+open import Cubical.Data.Nat as ℕ hiding (_·_;_+_)
 
 open import Cubical.Data.Rationals as ℚ using (ℚ ; [_/_])
 open import Cubical.Data.Rationals.Order as ℚ using
@@ -354,23 +354,23 @@ C·Derivative' C x f f'x F =
 --   → IsContinuous f
 -- hasDer→isCont f f' df ε = {!df!}
 
--- -- derivative-^ⁿ : ∀ n x →
--- --    derivativeOf (_^ⁿ (suc n)) at x
--- --             is (fromNat (suc n) ·ᵣ (x ^ⁿ n))
--- -- derivative-^ⁿ zero x =
--- --  substDer₂
--- --    (λ _ → sym (·IdL _))
--- --    (sym (·IdL _))
--- --    (idDerivative x)
--- -- derivative-^ⁿ (suc n) x =
--- --   substDer₂ (λ _ → refl)
--- --     (+ᵣComm _ _ ∙ cong₂ _+ᵣ_
--- --        (·ᵣComm _ _) (sym (·ᵣAssoc _ _ _)) ∙
--- --        sym (·DistR+ _ _ _) ∙
--- --         cong (_·ᵣ ((x ^ⁿ n) ·ᵣ idfun ℝ x))
--- --          (cong rat (ℚ.ℕ+→ℚ+ _ _)))
--- --     (·Derivative _ _ _ _ _ IsContinuousId
--- --        (derivative-^ⁿ n x) (idDerivative x))
+derivative-^ⁿ : ∀ n x →
+   derivativeOf (_^ⁿ (suc n)) at x
+            is (fromNat (suc n) ·ᵣ (x ^ⁿ n))
+derivative-^ⁿ zero x =
+ substDer₂
+   (λ _ → sym (·IdL _))
+   (sym (·IdL _))
+   (idDerivative x)
+derivative-^ⁿ (suc n) x =
+  substDer₂ (λ _ → refl)
+    (+ᵣComm _ _ ∙ cong₂ _+ᵣ_
+       (·ᵣComm _ _) (sym (·ᵣAssoc _ _ _)) ∙
+       sym (·DistR+ _ _ _) ∙
+        cong (_·ᵣ ((x ^ⁿ n) ·ᵣ idfun ℝ x))
+         (cong rat (ℚ.ℕ+→ℚ+ _ _)))
+    (·Derivative _ _ _ _ _ IsContinuousId
+       (derivative-^ⁿ n x) (idDerivative x))
 
 -- -- -- chainRule : ∀ x f f'gx g g'x
 -- -- --         → derivativeOf g at x is g'x
