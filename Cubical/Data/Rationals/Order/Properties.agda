@@ -1374,7 +1374,7 @@ q ／ℚ[ r , 0＃r ] = q · (invℚ r 0＃r)
 
 ℚ-x/y<z→x/z<y : ∀ x q r  → (0<x : 0 < x) → (0<q : 0 < q) → (0<r : 0 < r)
                → (x ／ℚ[ r , inl 0<r ]) < q
-               → (x ／ℚ[ q , inl 0<q ]) < r 
+               → (x ／ℚ[ q , inl 0<q ]) < r
 ℚ-x/y<z→x/z<y x q r 0<x 0<q 0<r p =
  subst2 _<_ (sym (·Assoc _ _ _)
    ∙  cong (x ·_) ((·Comm _ _) ∙
@@ -1382,7 +1382,7 @@ q ／ℚ[ r , 0＃r ] = q · (invℚ r 0＃r)
       ℚ-[x·y]/y _ _ _ ) )
    ((·Comm _ _) ∙ ℚ-[x/y]·y _ _ _)
    (<-·o (x ／ℚ[ r , (inl 0<r) ]) q (r ／ℚ[ q , (inl 0<q) ])
-     (0<-m·n _ _ 0<r (invℚ-pos q (inl 0<q)  0<q)) p) 
+     (0<-m·n _ _ 0<r (invℚ-pos q (inl 0<q)  0<q)) p)
 
 invℚ≤invℚ : ∀ (p q : ℚ₊) → fst q ≤ fst p → fst (invℚ₊ p) ≤ fst (invℚ₊ q)
 invℚ≤invℚ p q x =

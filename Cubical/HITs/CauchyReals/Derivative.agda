@@ -97,7 +97,7 @@ IsContinuousInclLim≃IsContinuous : ∀ f  →
 IsContinuousInclLim≃IsContinuous f =
   propBiimpl→Equiv (isPropΠ2 λ _ _ → squash₁) (isPropIsContinuous f)
     (IsContinuousInclLim→IsContinuous f)
-     λ fc x → IsContinuousInclLim f x fc   
+     λ fc x → IsContinuousInclLim f x fc
 
 IsContinuousLimΔ : ∀ f x → IsContinuous f →
                     at 0 limitOf (λ Δx _ → f (x +ᵣ Δx)) is (f x)
