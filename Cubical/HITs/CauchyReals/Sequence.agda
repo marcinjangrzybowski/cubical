@@ -1,4 +1,4 @@
-{-# OPTIONS --lossy-unification #-}
+{-# OPTIONS --safe --lossy-unification #-}
 
 module Cubical.HITs.CauchyReals.Sequence where
 
@@ -41,22 +41,6 @@ open import Cubical.HITs.CauchyReals.Inverse
 
 
 
-
-·absᵣ : ∀ x y → absᵣ (x ·ᵣ y) ≡ absᵣ x ·ᵣ absᵣ y
-·absᵣ x = ≡Continuous _ _
-  ((IsContinuous∘ _ _  IsContinuousAbsᵣ (IsContinuous·ᵣL x)
-                    ))
-  (IsContinuous∘ _ _ (IsContinuous·ᵣL (absᵣ x))
-                    IsContinuousAbsᵣ)
-  λ y' →
-    ≡Continuous _ _
-  ((IsContinuous∘ _ _  IsContinuousAbsᵣ (IsContinuous·ᵣR (rat y'))
-                    ))
-  (IsContinuous∘ _ _ (IsContinuous·ᵣR (absᵣ (rat y')))
-                    IsContinuousAbsᵣ)
-                     (λ x' →
-                       cong absᵣ (sym (rat·ᵣrat _ _)) ∙∙
-                        cong rat (sym (ℚ.abs'·abs' _ _)) ∙∙ rat·ᵣrat _ _) x
 
 Seq : Type
 Seq = ℕ → ℝ
@@ -554,6 +538,7 @@ isCauchyAprox f = (δ ε : ℚ₊) →
 lim' : ∀ x → isCauchyAprox x → ℝ
 lim' x y = lim x λ δ ε  → (invEq (∼≃abs<ε _ _ _)) (y δ ε)
 
+-- HoTT 11.3.49
 
 fromCauchySequence : ∀ s → IsCauchySequence s → ℝ
 fromCauchySequence s ics =
@@ -585,6 +570,9 @@ fromCauchySequence s ics =
            z ((<ℚ→<ᵣ _ _
                (subst ((fst ε) ℚ.<_) (ℚ.+Comm _ _)
                (ℚ.<+ℚ₊' (fst ε) (fst ε) δ (ℚ.isRefl≤ (fst ε))))))
+
+
+-- TODO HoTT 11.3.50.
 
 fromCauchySequence' : ∀ s → IsCauchySequence' s → ℝ
 fromCauchySequence' s ics =

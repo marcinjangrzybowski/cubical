@@ -1,4 +1,4 @@
-{-# OPTIONS --lossy-unification #-}
+{-# OPTIONS --safe --lossy-unification #-}
 
 module Cubical.HITs.CauchyReals.Lipschitz where
 
@@ -98,6 +98,13 @@ lim-surj = PT.map (map-snd (eqℝ _ _)) ∘ (Elimℝ-Prop.go w)
 
 -- TODO : (Lemma 11.3.11)
 
+-- HoTT-11-3-11 : ∀ {ℓ} (A : Type ℓ) (isSetA : isSet A) →
+--        (f : (Σ[ x ∈  (ℚ₊ → ℝ) ] (∀ ( δ ε : ℚ₊) → x δ ∼[ δ ℚ₊+ ε ] x ε))
+--          → A) →
+--       (∀ u v → uncurry lim u ≡ uncurry lim v → f u ≡ f v)
+--       → ∃![ g ∈ (ℝ → A) ] f ≡ g ∘ uncurry lim
+-- HoTT-11-3-11 A isSetA f p =
+--
 
 Lipschitz-ℚ→ℚ : ℚ₊ → (ℚ → ℚ) → Type
 Lipschitz-ℚ→ℚ L f =

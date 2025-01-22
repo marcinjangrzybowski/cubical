@@ -1,4 +1,4 @@
-{-# OPTIONS --lossy-unification #-}
+{-# OPTIONS --safe --lossy-unification #-}
 
 module Cubical.HITs.CauchyReals.Derivative where
 

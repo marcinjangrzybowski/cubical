@@ -1,4 +1,4 @@
-{-# OPTIONS --lossy-unification #-}
+{-# OPTIONS --safe --lossy-unification #-}
 
 module Cubical.HITs.CauchyReals.Multiplication where
 
@@ -686,3 +686,20 @@ cont₂·ᵣWP P f g fC gC = IsContinuousWP∘' P _
 _^ⁿ_ : ℝ → ℕ → ℝ
 x ^ⁿ zero = 1
 x ^ⁿ suc n = (x ^ⁿ n) ·ᵣ x
+
+
+·absᵣ : ∀ x y → absᵣ (x ·ᵣ y) ≡ absᵣ x ·ᵣ absᵣ y
+·absᵣ x = ≡Continuous _ _
+  ((IsContinuous∘ _ _  IsContinuousAbsᵣ (IsContinuous·ᵣL x)
+                    ))
+  (IsContinuous∘ _ _ (IsContinuous·ᵣL (absᵣ x))
+                    IsContinuousAbsᵣ)
+  λ y' →
+    ≡Continuous _ _
+  ((IsContinuous∘ _ _  IsContinuousAbsᵣ (IsContinuous·ᵣR (rat y'))
+                    ))
+  (IsContinuous∘ _ _ (IsContinuous·ᵣR (absᵣ (rat y')))
+                    IsContinuousAbsᵣ)
+                     (λ x' →
+                       cong absᵣ (sym (rat·ᵣrat _ _)) ∙∙
+                        cong rat (sym (ℚ.abs'·abs' _ _)) ∙∙ rat·ᵣrat _ _) x

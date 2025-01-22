@@ -1,4 +1,4 @@
-{-# OPTIONS --lossy-unification #-}
+{-# OPTIONS --lossy-unification --safe #-}
 
 module Cubical.HITs.CauchyReals.Inverse where
 
@@ -43,7 +43,7 @@ open import Cubical.HITs.CauchyReals.Multiplication
 
 Rℝ = (CR.CommRing→Ring
                (_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ))
-
+-- module CRℝ = ?
 
 module 𝐑 = CR.CommRingTheory (_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ)
 module 𝐑' = RP.RingTheory Rℝ
@@ -1020,6 +1020,7 @@ sign·absᵣ r = ∘diag $
           ∙ cong rat (cong (ℚ._· ℚ.sign r) (sym (ℚ.abs'≡abs r))
            ∙ ℚ.sign·abs r) ) r
 
+-- HoTT Theorem (11.3.47)
 
 abstract
  invℝ : ∀ r → 0 ＃ r → ℝ
