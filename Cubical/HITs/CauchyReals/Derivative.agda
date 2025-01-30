@@ -250,7 +250,6 @@ At x limitOf f = Σ _ (at x limitOf f is_)
 differenceAt : (ℝ → ℝ) → ℝ → ∀ h → 0 ＃ h → ℝ
 differenceAt f x h 0＃h = (f (x +ᵣ h) -ᵣ f x) ／ᵣ[ h , 0＃h ]
 
-
 derivativeAt : (ℝ → ℝ) → ℝ → Type
 derivativeAt f x = At 0 limitOf (differenceAt f x)
 
@@ -371,6 +370,57 @@ derivative-^ⁿ (suc n) x =
          (cong rat (ℚ.ℕ+→ℚ+ _ _)))
     (·Derivative _ _ _ _ _ IsContinuousId
        (derivative-^ⁿ n x) (idDerivative x))
+
+-- isPropIsIncrasing
+
+
+-- easy to prove, but with narrow assumptin
+
+chainRuleIncr : ∀ x f f'gx g g'x
+        → isIncrasing g
+        → IsContinuous g
+        → derivativeOf g at x is g'x
+         → derivativeOf f at (g x) is f'gx
+        → derivativeOf (f ∘ g) at x is (f'gx ·ᵣ g'x)
+chainRuleIncr x f f'gx g g'x incrG cg dg df =
+  let z = ·-lim _ _ _ _ _ w dg
+  in substLim (λ h 0#h → sym (x/y=x/z·z/y _ _ _ _ _)) z
+
+ where
+ 0#g : ∀ h → (0＃h : 0 ＃ h) → 0 ＃ (g (x +ᵣ h) -ᵣ g x) 
+ 0#g h = ⊎.map ((x<y→0<y-x _ _ ∘S incrG _ _)
+           ∘S subst (_<ᵣ (x +ᵣ h)) (+IdR x) ∘S <ᵣ-o+ _ _ x)
+            (((x<y→x-y<0 _ _ ∘S incrG _ _)
+           ∘S subst ((x +ᵣ h) <ᵣ_) (+IdR x) ∘S <ᵣ-o+ _ _ x))
+
+ w' :   ∀ (ε : ℝ₊) → ∃[ δ ∈ ℝ₊ ]
+        (∀ h 0＃h →
+           absᵣ (0 -ᵣ h) <ᵣ fst δ →
+             absᵣ (f'gx -ᵣ ((f (g (x)  +ᵣ h) -ᵣ f (g x))
+           ／ᵣ[ (h) , 0＃h ])) <ᵣ fst ε)
+
+ w' = df
+
+ w : at 0 limitOf
+        (λ h 0＃h → (f (g (x +ᵣ h)) -ᵣ f (g x))
+           ／ᵣ[ (g (x +ᵣ h) -ᵣ g x) , 0#g h 0＃h ]) is f'gx
+ w ε =
+   PT.rec squash₁
+     (λ (δ , X) →
+       PT.map 
+        (map-snd (λ X* → 
+          (λ h 0＃h ∣h∣<δ' →
+           let Δg<δ = isTrans≡<ᵣ _ _ _
+                     (cong absᵣ (+IdL _ ∙ -[x-y]≡y-x _ _))
+                    (X* h 0＃h ∣h∣<δ')  
+               z = X (g (x +ᵣ h) -ᵣ g x) (0#g h 0＃h) Δg<δ
+           in isTrans≡<ᵣ _ _ _
+             (cong (absᵣ ∘ (λ x → f'gx -ᵣ x)
+               ∘ _／ᵣ[ (g (x +ᵣ h) -ᵣ g x) , 0#g h 0＃h ] ∘
+                  (_-ᵣ f (g x)) ∘ f)
+               (sym L𝐑.lem--05 ) ) z )))
+                (IsContinuousLimΔ _ x cg δ))
+     (w' ε)
 
 -- -- -- chainRule : ∀ x f f'gx g g'x
 -- -- --         → derivativeOf g at x is g'x

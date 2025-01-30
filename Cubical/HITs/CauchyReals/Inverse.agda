@@ -515,6 +515,10 @@ x<y→0<y-x : ∀ x y →  x <ᵣ y  → 0 <ᵣ y +ᵣ (-ᵣ x)
 x<y→0<y-x x y p =
   subst (_<ᵣ y +ᵣ (-ᵣ x)) (+-ᵣ x) (<ᵣ-+o x y (-ᵣ x) p)
 
+x<y→x-y<0 : ∀ x y →  x <ᵣ y  → x -ᵣ y <ᵣ 0
+x<y→x-y<0 x y p =
+  subst (x -ᵣ y <ᵣ_) (+-ᵣ y) (<ᵣ-+o x y (-ᵣ y) p)
+
 0<y-x→x<y : ∀ x y → 0 <ᵣ y +ᵣ (-ᵣ x) → x <ᵣ y
 0<y-x→x<y x y p =
   subst2 (_<ᵣ_)
@@ -1022,7 +1026,7 @@ sign·absᵣ r = ∘diag $
 
 -- HoTT Theorem (11.3.47)
 
-abstract
+opaque
  invℝ : ∀ r → 0 ＃ r → ℝ
  invℝ r 0＃r = signᵣ r 0＃r ·ᵣ fst invℝ' (absᵣ r) (0＃→0<abs r 0＃r)
 
@@ -1139,3 +1143,10 @@ x·rat[α]+x·rat[β]=x x {α} {β} {p} =
    sym (·DistL+ _ _ _)
     ∙∙ cong (x ·ᵣ_) (decℚ≡ᵣ? {_} {_} {p})
     ∙∙ ·IdR _
+
+x/y=x/z·z/y : ∀ x q r → (0＃q : 0 ＃ q) → (0＃r : 0 ＃ r)
+              → x ／ᵣ[ q , 0＃q ] ≡
+                  (x ／ᵣ[ r , 0＃r ]) ·ᵣ (r ／ᵣ[ q , 0＃q ])
+x/y=x/z·z/y x q r 0＃q 0＃r =
+  cong (_／ᵣ[ q , 0＃q ]) (sym ([x/y]·yᵣ x r 0＃r) )
+    ∙  sym (·ᵣAssoc _ _ _)

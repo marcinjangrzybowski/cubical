@@ -450,6 +450,11 @@ IsCauchySequence' s =
   ∀ (ε : ℚ₊) → Σ[ N ∈ ℕ ] (∀ m n → N ℕ.< n → N ℕ.< m →
     absᵣ ((s n) +ᵣ (-ᵣ (s m))) <ᵣ rat (fst ε)   )
 
+IsCauchySequence'ℚ : (ℕ → ℚ) → Type
+IsCauchySequence'ℚ s =
+  ∀ (ε : ℚ₊) → Σ[ N ∈ ℕ ] (∀ m n → N ℕ.< n → N ℕ.< m →
+    ℚ.abs ((s n) ℚ.- (s m)) ℚ.< (fst ε)   )
+
 
 IsConvSeries : Seq → Type
 IsConvSeries s =
@@ -640,6 +645,7 @@ Limₙ→∞ s = Σ _ (limₙ→∞ s is_)
  in n , invEq (ℚ.invℚ₊-<-invℚ₊ (([ 1 / 2 ] , _) ℚ₊^ⁿ n) ε)
          (subst (fst (invℚ₊ ε) ℚ.<_)
            (sym (ℚ.invℚ₊-ℚ^ⁿ ([ 1 / 2 ] , _) n)) 1/ε<n)
+
 
 
 

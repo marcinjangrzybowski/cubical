@@ -7,10 +7,13 @@ open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Powerset
 
 open import Cubical.Data.Bool as 𝟚 hiding (_≤_)
 open import Cubical.Data.Nat as ℕ hiding (_·_;_+_)
+open import Cubical.Data.Nat.Order as ℕ
 open import Cubical.Data.Unit
+open import Cubical.Data.Sum as ⊎
 open import Cubical.Data.Int as ℤ using (pos)
 import Cubical.Data.Int.Order as ℤ
 open import Cubical.Data.Sigma
@@ -28,6 +31,7 @@ open import Cubical.Data.Rationals.Order as ℚ using
 open import Cubical.Data.Rationals.Order.Properties as ℚ
  using (invℚ₊;/2₊;/3₊;/4₊)
 
+
 open import Cubical.HITs.CauchyReals.Base
 open import Cubical.HITs.CauchyReals.Lems
 open import Cubical.HITs.CauchyReals.Closeness
@@ -35,6 +39,48 @@ open import Cubical.HITs.CauchyReals.Lipschitz
 open import Cubical.HITs.CauchyReals.Order
 open import Cubical.HITs.CauchyReals.Continuous
 
+
+private
+  variable
+    ℓ : Level
+
+record Seq⊆ : Type₁ where
+ field
+  𝕡 : ℕ → ℙ ℝ
+  𝕡⊆ : ∀ n → 𝕡 n ⊆ 𝕡 (suc n)
+
+
+ _s⊆_ : ℙ ℝ → Type₀
+ _s⊆_ P = ∀ x → x ∈ P → ∃[ n ∈ ℕ ] x ∈ 𝕡 n
+
+open Seq⊆
+
+record Seq⊆→ (A : Type ℓ) (s : Seq⊆) : Type ℓ where
+ field
+  fun : ∀ x n → x ∈ 𝕡 s n → A
+  fun⊆ : ∀ x n m x∈ x∈' → n ℕ.< m → fun x n x∈ ≡ fun x m x∈' 
+
+
+seq⊆→$ : ∀ A → (isSet A)  → ∀ s
+          → Seq⊆→ {ℓ = ℓ} A s → ∀ P → s s⊆ P  → ∀ x → x ∈ P  → A
+seq⊆→$ A isSetA s s→ P s⊆P x x∈ = 
+  PT.rec→Set isSetA (λ (n , n∈) → fun x n n∈)
+     (λ (n , n∈) (n' , n'∈) → 2c n n' n∈ n'∈) (s⊆P x x∈)
+  where
+  open Seq⊆→ s→
+  2c : ∀ n n' n∈ n∈' → fun x n n∈ ≡ fun x n' n∈'  
+  2c = ℕ.elimBy≤ (λ n n' X n∈ n'∈  → sym (X n'∈ n∈))
+        λ n n' → ⊎.rec (λ n<n' _ _ → fun⊆ _ _ _ _ _ n<n')
+          (λ p _ _ → cong (uncurry (fun x))
+          (Σ≡Prop (λ n → ∈-isProp (𝕡 s n) x) p)) ∘ ≤-split
+ℝU : ℙ ℝ
+ℝU x .fst = Unit
+ℝU x .snd = isPropUnit
+
+seq⊆→$' : ∀ A → (isSet A) → ∀ s → Seq⊆→ {ℓ = ℓ} A s → s s⊆ ℝU → ℝ → A
+seq⊆→$' A isSetA s f s' r  = seq⊆→$ A isSetA s f ℝU s' r _    
+
+  
 -- HoTT (11.3.46)
 sqᵣ' : Σ (ℝ → ℝ) IsContinuous
 sqᵣ'  = (λ r → f r (getClamps r))
@@ -352,12 +398,6 @@ sqᵣ = fst sqᵣ'
 /2ᵣ = fst /2ᵣ-L
 
 
-infixl 7 _·ᵣ_
-
-_·ᵣ_ : ℝ → ℝ → ℝ
-u ·ᵣ v = /2ᵣ ((sqᵣ (u +ᵣ v)) +ᵣ (-ᵣ (sqᵣ u +ᵣ sqᵣ v)))
-
-
 sqᵣ-rat : ∀ r → sqᵣ (rat r) ≡ rat (r ℚ.· r)
 sqᵣ-rat = ElimProp.go w
  where
@@ -402,38 +442,69 @@ sqᵣ-rat = ElimProp.go w
     x<c = ℚ.isTrans≤ x' (ℚ.abs' x') c (ℚ.≤abs' x') <c
 
 
+IsContinuous/2ᵣ : IsContinuous /2ᵣ
+IsContinuous/2ᵣ = Lipschitz→IsContinuous _ (fst /2ᵣ-L) (snd /2ᵣ-L)
+
+
+infixl 7 _·ᵣ_
+
+
+
 open ℚ.HLP
 
-
-rat·ᵣrat : ∀ r q → rat (r ℚ.· q) ≡ rat r ·ᵣ rat q
-rat·ᵣrat r q =
-  cong rat (
-     distℚ! (r ℚ.· q) ·[ ge1 ≡ (ge1 +ge ge1) ·ge ge[ [ 1 / 2 ] ] ]
-       ∙ cong (ℚ._· [ 1 / 2 ]) (lem--058 {r} {q})) ∙
-   λ i → /2ᵣ ((sqᵣ-rat (r ℚ.+ q) (~ i))
-    +ᵣ (-ᵣ (sqᵣ-rat r (~ i) +ᵣ sqᵣ-rat q (~ i))))
-
-
-·ᵣComm : ∀ x y → x ·ᵣ y ≡ y ·ᵣ x
-·ᵣComm u v i =
-  /2ᵣ ((sqᵣ (+ᵣComm u v i)) +ᵣ (-ᵣ (+ᵣComm (sqᵣ u) (sqᵣ v) i)))
 
 IsContinuousSqᵣ : IsContinuous sqᵣ
 IsContinuousSqᵣ = snd sqᵣ'
 
-IsContinuous/2ᵣ : IsContinuous /2ᵣ
-IsContinuous/2ᵣ = Lipschitz→IsContinuous _ (fst /2ᵣ-L) (snd /2ᵣ-L)
 
-IsContinuous·ᵣR : ∀ x → IsContinuous (_·ᵣ x)
-IsContinuous·ᵣR x =
-  IsContinuous∘ _
-   (λ u → (sqᵣ (u +ᵣ x)) +ᵣ (-ᵣ ((sqᵣ u) +ᵣ (sqᵣ x))))
-    IsContinuous/2ᵣ
-      (cont₂+ᵣ (λ u → (sqᵣ (u +ᵣ x)))
-        (λ u → (-ᵣ ((sqᵣ u) +ᵣ (sqᵣ x))))
-         (IsContinuous∘ _ _ IsContinuousSqᵣ (IsContinuous+ᵣR x))
-          (IsContinuous∘ _ _ IsContinuous-ᵣ
-             (IsContinuous∘ _ _ (IsContinuous+ᵣR (sqᵣ x)) IsContinuousSqᵣ)))
+opaque
+ _·ᵣ_ : ℝ → ℝ → ℝ
+ u ·ᵣ v = /2ᵣ ((sqᵣ (u +ᵣ v)) +ᵣ (-ᵣ (sqᵣ u +ᵣ sqᵣ v)))
+
+
+
+
+
+ rat·ᵣrat : ∀ r q → rat (r ℚ.· q) ≡ rat r ·ᵣ rat q
+ rat·ᵣrat r q =
+   cong rat (
+      distℚ! (r ℚ.· q) ·[ ge1 ≡ (ge1 +ge ge1) ·ge ge[ [ 1 / 2 ] ] ]
+        ∙ cong (ℚ._· [ 1 / 2 ]) (lem--058 {r} {q})) ∙
+    λ i → /2ᵣ ((sqᵣ-rat (r ℚ.+ q) (~ i))
+     +ᵣ (-ᵣ (sqᵣ-rat r (~ i) +ᵣ sqᵣ-rat q (~ i))))
+
+
+ ·ᵣComm : ∀ x y → x ·ᵣ y ≡ y ·ᵣ x
+ ·ᵣComm u v i =
+   /2ᵣ ((sqᵣ (+ᵣComm u v i)) +ᵣ (-ᵣ (+ᵣComm (sqᵣ u) (sqᵣ v) i)))
+
+
+ IsContinuous·ᵣR : ∀ x → IsContinuous (_·ᵣ x)
+ IsContinuous·ᵣR x =
+   IsContinuous∘ _
+    (λ u → (sqᵣ (u +ᵣ x)) +ᵣ (-ᵣ ((sqᵣ u) +ᵣ (sqᵣ x))))
+     IsContinuous/2ᵣ
+       (cont₂+ᵣ (λ u → (sqᵣ (u +ᵣ x)))
+         (λ u → (-ᵣ ((sqᵣ u) +ᵣ (sqᵣ x))))
+          (IsContinuous∘ _ _ IsContinuousSqᵣ (IsContinuous+ᵣR x))
+           (IsContinuous∘ _ _ IsContinuous-ᵣ
+              (IsContinuous∘ _ _ (IsContinuous+ᵣR (sqᵣ x)) IsContinuousSqᵣ)))
+
+ cont₂·ᵣ : ∀ f g → (IsContinuous f) → (IsContinuous g)
+   → IsContinuous (λ x → f x ·ᵣ g x)
+ cont₂·ᵣ f g fC gC = IsContinuous∘ _
+    (λ u → (sqᵣ (f u +ᵣ g u)) +ᵣ (-ᵣ ((sqᵣ (f u)) +ᵣ (sqᵣ (g u)))))
+     IsContinuous/2ᵣ
+      (cont₂+ᵣ _ _
+        (IsContinuous∘ _ _
+          IsContinuousSqᵣ
+           (cont₂+ᵣ _ _ fC gC))
+        (IsContinuous∘ _ _
+           IsContinuous-ᵣ
+           (cont₂+ᵣ _ _
+             (IsContinuous∘ _ _ IsContinuousSqᵣ fC)
+             ((IsContinuous∘ _ _ IsContinuousSqᵣ gC)))))
+
 
 IsContinuous·ᵣL : ∀ x → IsContinuous (x ·ᵣ_)
 IsContinuous·ᵣL x = subst IsContinuous
@@ -610,20 +681,6 @@ IsCommRingℝ = CR.makeIsCommRing
 
 
 
-cont₂·ᵣ : ∀ f g → (IsContinuous f) → (IsContinuous g)
-  → IsContinuous (λ x → f x ·ᵣ g x)
-cont₂·ᵣ f g fC gC = IsContinuous∘ _
-   (λ u → (sqᵣ (f u +ᵣ g u)) +ᵣ (-ᵣ ((sqᵣ (f u)) +ᵣ (sqᵣ (g u)))))
-    IsContinuous/2ᵣ
-     (cont₂+ᵣ _ _
-       (IsContinuous∘ _ _
-         IsContinuousSqᵣ
-          (cont₂+ᵣ _ _ fC gC))
-       (IsContinuous∘ _ _
-          IsContinuous-ᵣ
-          (cont₂+ᵣ _ _
-            (IsContinuous∘ _ _ IsContinuousSqᵣ fC)
-            ((IsContinuous∘ _ _ IsContinuousSqᵣ gC)))))
 
 ⊤Pred : ℝ → hProp ℓ-zero
 ⊤Pred = (λ _ → Unit , isPropUnit )
@@ -642,26 +699,29 @@ IsContinuousWP∘' P f g fC gC u ε u∈P =
     ((fC (g u u∈P) ε))
 
 
+opaque
 
-cont₂·ᵣWP : ∀ P f g
-  → (IsContinuousWithPred P f)
-  → (IsContinuousWithPred P g)
-  → IsContinuousWithPred P (λ x x∈ → f x x∈ ·ᵣ g x x∈)
-cont₂·ᵣWP P f g fC gC = IsContinuousWP∘' P _
-   (λ u x∈ → (sqᵣ (f u x∈ +ᵣ g u x∈)) +ᵣ
-    (-ᵣ ((sqᵣ (f u x∈)) +ᵣ (sqᵣ (g u x∈)))))
-    IsContinuous/2ᵣ
-    (contDiagNE₂WP sumR P _ _
-      ((IsContinuousWP∘' P _ _
-         IsContinuousSqᵣ
-          (contDiagNE₂WP sumR P _ _ fC gC)))
-      ((IsContinuousWP∘' P _ _
-          IsContinuous-ᵣ
-          (contDiagNE₂WP sumR P _ _
-            (IsContinuousWP∘' P _ _ IsContinuousSqᵣ fC)
-            ((IsContinuousWP∘' P _ _ IsContinuousSqᵣ gC))))))
+ unfolding _·ᵣ_
 
+ cont₂·ᵣWP : ∀ P f g
+   → (IsContinuousWithPred P f)
+   → (IsContinuousWithPred P g)
+   → IsContinuousWithPred P (λ x x∈ → f x x∈ ·ᵣ g x x∈)
+ cont₂·ᵣWP P f g fC gC = IsContinuousWP∘' P _
+    (λ u x∈ → (sqᵣ (f u x∈ +ᵣ g u x∈)) +ᵣ
+     (-ᵣ ((sqᵣ (f u x∈)) +ᵣ (sqᵣ (g u x∈)))))
+     IsContinuous/2ᵣ
+     (contDiagNE₂WP sumR P _ _
+       ((IsContinuousWP∘' P _ _
+          IsContinuousSqᵣ
+           (contDiagNE₂WP sumR P _ _ fC gC)))
+       ((IsContinuousWP∘' P _ _
+           IsContinuous-ᵣ
+           (contDiagNE₂WP sumR P _ _
+             (IsContinuousWP∘' P _ _ IsContinuousSqᵣ fC)
+             ((IsContinuousWP∘' P _ _ IsContinuousSqᵣ gC))))))
 
+  
 ·-ᵣ : ∀ x y → x ·ᵣ (-ᵣ y) ≡ -ᵣ (x ·ᵣ y)
 ·-ᵣ x =
   ≡Continuous _ _ (IsContinuous∘ _ _

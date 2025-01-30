@@ -467,3 +467,9 @@ instance
    ; fromNat = λ { zero {{()}}  ; (suc n) →
      (rat [ pos (suc n) / 1 ]) , <ℚ→<ᵣ _ _
        (ℚ.<ℤ→<ℚ _ _ (ℤ.suc-≤-suc ℤ.zero-≤pos)) }}
+
+isIncrasing : (ℝ → ℝ) → Type₀
+isIncrasing f = ∀ x y → x <ᵣ y → f x <ᵣ f y
+
+isPropIsIncrasing : ∀ f → isProp (isIncrasing f)
+isPropIsIncrasing f = isPropΠ3 λ _ _ _ → squash₁ 
