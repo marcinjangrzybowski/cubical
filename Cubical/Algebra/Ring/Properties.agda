@@ -152,6 +152,19 @@ module RingTheory (R' : Ring ℓ) where
   ·-assoc2 : (x y z w : R) → (x · y) · (z · w) ≡ x · (y · z) · w
   ·-assoc2 x y z w = ·Assoc (x · y) z w ∙ congL _·_ (sym (·Assoc x y z))
 
+  +IdR' : ∀ x y → y ≡ 0r → x + y ≡ x
+  +IdR' x y y=0 = cong (x +_) y=0 ∙ +IdR x
+
+  +IdL' : ∀ x y → x ≡ 0r → x + y ≡ y
+  +IdL' x y x=0 = cong (_+ y) x=0 ∙ +IdL y
+
+  +InvL' : ∀ x y → x ≡ y → - x + y ≡ 0r
+  +InvL' x y x=y = cong (- x +_) (sym x=y) ∙ (+InvL x)
+  
+  +InvR' : ∀ x y → x ≡ y → x + - y ≡ 0r
+  +InvR' x y x=y = cong (_+ - y) x=y ∙ (+InvR y)
+
+
 Ring→Semiring : Ring ℓ → Semiring ℓ
 Ring→Semiring R =
   let open RingStr (snd R)

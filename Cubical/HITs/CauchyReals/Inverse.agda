@@ -43,7 +43,7 @@ open import Cubical.HITs.CauchyReals.Multiplication
 
 Rℝ = (CR.CommRing→Ring
                (_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ))
--- module CRℝ = ?
+module CRℝ = RP.RingStr (snd Rℝ)
 
 module 𝐑 = CR.CommRingTheory (_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ)
 module 𝐑' = RP.RingTheory Rℝ
@@ -502,6 +502,15 @@ a-b<c⇒a<c+b a b c p =
     (L𝐑.lem--00 {a} {b})
      (<ᵣ-+o _ _ b p)
 
+a<c+b⇒a-c<b : ∀ a b c → a <ᵣ c +ᵣ b  → a -ᵣ c <ᵣ b
+a<c+b⇒a-c<b a b c p =
+  subst ((a -ᵣ c) <ᵣ_) (+ᵣComm _ _ ∙ L𝐑.lem--04 {c} {b}) (<ᵣ-+o _ _ (-ᵣ c) p)
+
+a≤c+b⇒a-c≤b : ∀ a b c → a ≤ᵣ c +ᵣ b  → a -ᵣ c ≤ᵣ b
+a≤c+b⇒a-c≤b a b c p =
+  subst ((a -ᵣ c) ≤ᵣ_) (+ᵣComm _ _ ∙ L𝐑.lem--04 {c} {b}) (≤ᵣ-+o _ _ (-ᵣ c) p)
+
+
 ≤-o+-cancel : ∀ m n o →  o +ᵣ m ≤ᵣ o +ᵣ n → m ≤ᵣ n
 ≤-o+-cancel m n o p =
      subst2 (_≤ᵣ_) L𝐑.lem--04 L𝐑.lem--04
@@ -515,15 +524,40 @@ x<y→0<y-x : ∀ x y →  x <ᵣ y  → 0 <ᵣ y +ᵣ (-ᵣ x)
 x<y→0<y-x x y p =
   subst (_<ᵣ y +ᵣ (-ᵣ x)) (+-ᵣ x) (<ᵣ-+o x y (-ᵣ x) p)
 
-x<y→x-y<0 : ∀ x y →  x <ᵣ y  → x -ᵣ y <ᵣ 0
-x<y→x-y<0 x y p =
-  subst (x -ᵣ y <ᵣ_) (+-ᵣ y) (<ᵣ-+o x y (-ᵣ y) p)
 
 0<y-x→x<y : ∀ x y → 0 <ᵣ y +ᵣ (-ᵣ x) → x <ᵣ y
 0<y-x→x<y x y p =
   subst2 (_<ᵣ_)
    (+IdL x) (sym (L𝐑.lem--035 {y} {x}))
     (<ᵣ-+o 0 (y +ᵣ (-ᵣ x)) x p)
+
+x≤y≃0≤y-x : ∀ x y → (x ≤ᵣ y) ≃ (0 ≤ᵣ y -ᵣ x)
+x≤y≃0≤y-x x y =   propBiimpl→Equiv (isSetℝ _ _) (isSetℝ _ _)
+   (x≤y→0≤y-x x y)
+    λ p →  subst2 (_≤ᵣ_)
+   (+IdL x) (sym (L𝐑.lem--035 {y} {x}))
+    (≤ᵣ-+o 0 (y +ᵣ (-ᵣ x)) x p)
+
+
+x<y≃0<y-x : ∀ x y → (x <ᵣ y) ≃ (0 <ᵣ y -ᵣ x)
+x<y≃0<y-x x y =   propBiimpl→Equiv squash₁ squash₁
+   (x<y→0<y-x x y) (0<y-x→x<y x y)
+
+
+
+x<y→x-y<0 : ∀ x y →  x <ᵣ y  → x -ᵣ y <ᵣ 0
+x<y→x-y<0 x y p =
+  subst (x -ᵣ y <ᵣ_) (+-ᵣ y) (<ᵣ-+o x y (-ᵣ y) p)
+
+x-y<0→x<y : ∀ x y → x -ᵣ y <ᵣ 0 →  x <ᵣ y  
+x-y<0→x<y x y p =
+  
+   (0<y-x→x<y _  _ (subst (0 <ᵣ_) (-[x-y]≡y-x _ _) (-ᵣ<ᵣ (x -ᵣ y) 0 p)))
+
+
+x<y≃x-y<0 : ∀ x y → (x <ᵣ y) ≃ (x -ᵣ y <ᵣ 0)
+x<y≃x-y<0 x y =   propBiimpl→Equiv squash₁ squash₁
+   (x<y→x-y<0 x y) (x-y<0→x<y x y)
 
 
 
@@ -562,7 +596,7 @@ max<-lem x x' y = PT.map2
        (max≤-lem _ _ (rat (ℚ.max q r))
          (isTrans≤ᵣ _ _ _ a (≤ℚ→≤ᵣ _ _ (ℚ.≤max q r)))
          ((isTrans≤ᵣ _ _ _ b (≤ℚ→≤ᵣ _ _ (ℚ.≤max' q r)))) ,
-          (ℚ.<MonotoneMaxℚ _ _ _ _ a' b' , max≤-lem _ _ _ a'' b''))
+          (ℚ.<MonotoneMax _ _ _ _ a' b' , max≤-lem _ _ _ a'' b''))
 
 minDistMaxᵣ : ∀ x y y' →
   maxᵣ x (minᵣ y y') ≡ minᵣ (maxᵣ x y) (maxᵣ x y')
@@ -597,7 +631,7 @@ minDistMaxᵣ x y y' = ≡Continuous _ _
   λ ((q , q') , (a , a' , a''))
     ((r , r') , (b , b' , b'')) →
      (ℚ.min q r , ℚ.min q' r') , ≤min-lem _ _ _ a b
-        , ℚ.<MonotoneMinℚ _ _ _ _ a' b' ,
+        , ℚ.<MonotoneMin _ _ _ _ a' b' ,
             ≤min-lem (rat (ℚ.min q' r')) x x'
              (isTrans≤ᵣ _ _ _ (≤ℚ→≤ᵣ _ _ (ℚ.min≤ q' r')) a'')
              (isTrans≤ᵣ _ _ _ (≤ℚ→≤ᵣ _ _ (ℚ.min≤' q' r')) b'')
@@ -620,11 +654,41 @@ maxAbsorbLMinᵣ x =
         IsContinuousId
          (λ x' → cong rat (ℚ.maxAbsorbLMin x' y')) x
 
+maxDistMin : ∀ x y z → minᵣ x (maxᵣ y z) ≡ maxᵣ (minᵣ x y) (minᵣ x z)
+
+maxDistMin x y y' =
+  ≡Continuous _ _
+   (IsContinuousMinR _)
+   (cont₂maxᵣ _ _ (IsContinuousMinR _) (IsContinuousMinR _))
+   (λ xR →
+     ≡Continuous _ _
+       (IsContinuous∘ _ _ (IsContinuousMinL (rat xR)) ((IsContinuousMaxR y')))
+       (IsContinuous∘ _ _ (IsContinuousMaxR _) (IsContinuousMinL (rat xR)))
+       (λ yR →
+         ≡Continuous _ _
+           (IsContinuous∘ _ _ (IsContinuousMinL (rat xR))
+             ((IsContinuousMaxL (rat yR))))
+           (IsContinuous∘ _ _ (IsContinuousMaxL (minᵣ (rat xR) (rat yR)))
+             (IsContinuousMinL (rat xR)))
+           (λ r →
+             cong rat (ℚ.minComm _ _  ∙∙
+              ℚ.maxDistMin _ _ _ ∙∙
+               cong₂ ℚ.max (ℚ.minComm _ _) (ℚ.minComm _ _))) y')
+       y)
+   x
+
 min≤ᵣ : ∀ m n → minᵣ m n ≤ᵣ m
 min≤ᵣ m n = maxᵣComm _ _ ∙ maxAbsorbLMinᵣ _ _
 
 min≤ᵣ' : ∀ m n → minᵣ m n ≤ᵣ n
 min≤ᵣ' m n = subst (_≤ᵣ n) (minᵣComm n m) (min≤ᵣ n m)
+
+
+≤→minᵣ : ∀ m n → m ≤ᵣ n → minᵣ m n ≡ m
+≤→minᵣ m n p = cong₂ minᵣ (sym (maxᵣIdem m)) (sym p) ∙
+  sym (minDistMaxᵣ _ _ _) ∙ maxAbsorbLMinᵣ _ _ 
+
+
 
 invℝ'' : Σ (∀ r → ∃[ σ ∈ ℚ₊ ] (rat (fst σ) <ᵣ r) → ℝ)
       λ _ → Σ (∀ r → 0 <ᵣ r → ℝ) (IsContinuousWithPred (λ r → _ , squash₁))
@@ -909,6 +973,11 @@ invℝ'-pos u p = PT.rec squash₁
       (snd invℝ' u ([ 1 / n ]  , _) p))
   (getClamps u)
 
+
+
+invℝ₊ : ℝ₊ → ℝ₊
+invℝ₊ (y , 0<y) = fst invℝ' y 0<y , invℝ'-pos y 0<y
+
 signᵣ : ∀ r → 0 ＃ r → ℝ
 signᵣ _ = ⊎.rec (λ _ → rat 1) (λ _ → rat -1)
 
@@ -1103,6 +1172,16 @@ opaque
          (sign²=1 r 0＃r) ∙ ·IdL (fst invℝ' (absᵣ r) (0＃→0<abs r 0＃r)))
     ∙ ·invℝ' (absᵣ r) (0＃→0<abs r 0＃r))
 
+ invℝ₊≡invℝ : ∀ x 0＃x → fst (invℝ₊ x) ≡ invℝ (fst x) 0＃x 
+ invℝ₊≡invℝ x (inl x₁) = (cong (uncurry (fst invℝ'))
+   (Σ≡Prop (λ _ → squash₁) (sym (absᵣPos _ x₁)))
+  ∙ sym (·IdL _)) ∙ sym (invℝimpl _ _)
+ invℝ₊≡invℝ x (inr x₁) = ⊥.rec (isAsym<ᵣ _ _ x₁ (snd x))
+ 
+ x·invℝ₊[x] : ∀ x → (fst x) ·ᵣ fst (invℝ₊ x) ≡ 1
+ x·invℝ₊[x] x = cong ((fst x) ·ᵣ_) (invℝ₊≡invℝ x _)
+   ∙ x·invℝ[x] (fst x) (inl (snd x))
+
 _／ᵣ[_,_] : ℝ → ∀ r → 0 ＃ r  → ℝ
 q ／ᵣ[ r , 0＃r ] = q ·ᵣ (invℝ r 0＃r)
 
@@ -1136,6 +1215,7 @@ x·y≡z→x≡z/y : ∀ x q r → (0＃r : 0 ＃ r)
 x·y≡z→x≡z/y x q r 0＃r p =
     sym ([x·y]/yᵣ _ _ _) ∙ cong (_／ᵣ[ r , 0＃r ]) p
 
+
 x·rat[α]+x·rat[β]=x : ∀ x →
     ∀ {α β : ℚ} → {𝟚.True (ℚ.discreteℚ (α ℚ.+ β) 1)} →
                    (x ·ᵣ rat α) +ᵣ (x ·ᵣ rat β) ≡ x
@@ -1150,3 +1230,20 @@ x/y=x/z·z/y : ∀ x q r → (0＃q : 0 ＃ q) → (0＃r : 0 ＃ r)
 x/y=x/z·z/y x q r 0＃q 0＃r =
   cong (_／ᵣ[ q , 0＃q ]) (sym ([x/y]·yᵣ x r 0＃r) )
     ∙  sym (·ᵣAssoc _ _ _)
+
+invℝ1 : (0＃1 : 0 ＃ 1) → invℝ 1 0＃1 ≡ 1
+invℝ1 0＃1 = 
+   sym (·IdL _) ∙ x·invℝ[x] (rat 1) 0＃1
+
+
+invℝ· : ∀ x y 0＃x 0＃y 0＃x·y →
+          invℝ (x ·ᵣ y) 0＃x·y ≡
+            (invℝ x 0＃x) ·ᵣ (invℝ y 0＃y)
+invℝ· x y 0＃x 0＃y 0＃x·y = sym (·IdL _) ∙ 
+  sym (x·y≡z→x≡z/y _ _ _ _
+    (·ᵣComm _ _
+     ∙∙    sym (·ᵣAssoc _ _ _)
+        ∙∙ cong (x ·ᵣ_) (·ᵣAssoc _ _ _ ∙ ·ᵣComm _ _)
+        ∙∙ (·ᵣAssoc _ _ _)
+     ∙∙ cong₂ _·ᵣ_ (x·invℝ[x] x 0＃x) (x·invℝ[x] y 0＃y) ∙ ·IdL _ ))
+   ∙ ·ᵣComm _ _

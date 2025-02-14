@@ -619,12 +619,27 @@ min≤' m n = subst (_≤ n) (ℚ.minComm n m) (min≤ n m)
 <Dec = elimProp2 (λ x y → isPropDec (isProp< x y))
        λ { (a , b) (c , d) → ℤ.<Dec (a ℤ.· ℕ₊₁→ℤ d) (c ℤ.· ℕ₊₁→ℤ b) }
 
+
 _≟_ : (m n : ℚ) → Trichotomy m n
 m ≟ n with discreteℚ m n
 ... | yes m≡n = eq m≡n
 ... | no m≢n with inequalityImplies# m n m≢n
 ...             | inl m<n = lt m<n
 ...             | inr n<m = gt n<m
+
+
+#Dec : ∀ m n → Dec (m # n)
+#Dec m n with m ≟ n 
+... | lt x = yes (inl x)
+... | gt x = yes (inr x)
+... | eq x = no (isIrrefl# n ∘ subst (_# n) x)
+
+≡⊎# : ∀ m n → (m ≡ n) ⊎ (m # n)
+≡⊎# m n with m ≟ n 
+... | lt x = inr (inl x)
+... | gt x = inr (inr x)
+... | eq x = inl x
+
 
 ≤MonotoneMin : ∀ m n o s → m ≤ n → o ≤ s → ℚ.min m o ≤ ℚ.min n s
 ≤MonotoneMin m n o s m≤n o≤s
@@ -699,6 +714,17 @@ minus-≤ m n p =
 
 <→<minus : ∀ m n → m < n → 0 < n - m
 <→<minus m n x = subst (_< n - m) (+InvR m) (<-+o m n (- m) x)
+
+≤→<minus : ∀ m n → m ≤ n → 0 ≤ n - m
+≤→<minus m n x = subst (_≤ n - m) (+InvR m) (≤-+o m n (- m) x)
+
+<minus→< : ∀ m n → 0 < n - m → m < n
+<minus→< m n x = subst2 _<_ (+IdL m)
+  (sym (+Assoc n (- m) m) ∙∙ cong (n ℚ.+_) (+InvL m) ∙∙ +IdR n) (<-+o 0 (n - m) m x)
+
+≤minus→≤ : ∀ m n → 0 ≤ n - m → m ≤ n
+≤minus→≤ m n x = subst2 _≤_ (+IdL m)
+  (sym (+Assoc n (- m) m) ∙∙ cong (n ℚ.+_) (+InvL m) ∙∙ +IdR n) (≤-+o 0 (n - m) m x)
 
 
 minus-<' : ∀ n m → - n < - m → m < n
@@ -928,6 +954,12 @@ clamp d u x = ℚ.min (ℚ.max d x) u
 ... | lt x = inr x
 ... | eq x = inl x
 ... | gt x = ⊥.rec (≤→≯ q r y x)
+
+≤≃≡⊎< : ∀ q r → (q ≤ r) ≃ ((q ≡ r) ⊎ (q < r))
+≤≃≡⊎< q r = propBiimpl→Equiv
+  (isProp≤ q r)
+  (⊎.isProp⊎ (isSetℚ _ _) ((isProp< q r)) λ u v → ≤→≯ r q (≡Weaken≤ _ _ (sym u)) v)
+    (≤→≡⊎< q r) (⊎.rec (≡Weaken≤ _ _) (<Weaken≤ q r))
 
 ≤ℤ→≤ℚ : ∀ m n → m ℤ.≤ n → [ m , 1 ] ≤ [ n , 1 ]
 ≤ℤ→≤ℚ m n = subst2 ℤ._≤_ (sym (ℤ.·IdR m)) (sym (ℤ.·IdR n))

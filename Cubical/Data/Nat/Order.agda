@@ -589,3 +589,17 @@ module Minimal where
   isPropLeast : {P : ℕ → Type ℓ} → (∀ m → isProp (P m)) → ∀ m → isProp (Least P m)
   isPropLeast pP m
     = isPropΣ (pP m) (λ _ → isPropΠ3 λ _ _ _ → isProp⊥)
+
+
+^-monotone' : ∀ x n m → x ^ (suc n) ≤ x ^ (suc (m + n))
+^-monotone' x n zero = ≤-refl
+^-monotone' zero n (suc m) = ≤-refl
+^-monotone' (suc x) n (suc m) =
+ ≤-trans (^-monotone' (suc x) n m)
+   (subst (_≤ ((suc x) · (suc x ^ suc (m + n)))) (·-identityˡ _)
+    (≤-·k {1} {suc x} {k = (suc x ^ suc (m + n))} (suc-≤-suc zero-≤)))
+
+
+^-monotone : ∀ x n m → n ≤ m → x ^ (suc n) ≤ x ^ (suc m)
+^-monotone x n m (k , p) =
+  subst (λ z → x ^ (suc n) ≤ x ^ suc z) p (^-monotone' x n k)

@@ -259,6 +259,32 @@ module Lems (R : CR.CommRing ℓ-zero) where
  lem--065 : (x' · y') - (x · y)
               ≡ y · (x' - x) + x' · (y' - y)
  lem--065 = solve! R
+ 
+ lem--066 : (x' - y') + (x - y)
+              ≡ (x' - y) + (x - y')
+ lem--066 = solve! R
+
+ lem--067 : (x' - y') - (y - x)
+              ≡ (x' - y) + (x - y')
+ lem--067 = solve! R
+
+ lem--068 : (x' - y') - (y - x)
+              ≡ (x' - y) - (y' - x)
+ lem--068 = solve! R
+
+ lem--069 : (((a · ((q + q') - δ)) - (a · (x - δ))) + y)
+             - (((a · (q - δ)) - (a · (x' - δ))) + y') ≡
+                (a · (q' - (x - x')) + (y - y'))
+ lem--069 = solve! R
+
+ lem--070 : - (a · b) ≡ a · (- b) 
+ lem--070 = solve! R
+
+ lem--071 : x' - (y - ((x + y) - x)) ≡ x'
+ lem--071 = solve! R
+
+ lem--072 : x - (x + y) ≡ - y
+ lem--072 = solve! R
 
 open import Cubical.Data.Rationals as ℚ
 

@@ -44,8 +44,8 @@ FSeq : Type
 FSeq = ℕ → ℝ → ℝ
 
 
-IsUConvSeries' : FSeq → Type
-IsUConvSeries' s =
-    ∀ (ε : ℚ₊) →
-     Σ[ N ∈ ℕ ] ∀ n m →
-       absᵣ (seqΣ (s ∘ (ℕ._+ (n ℕ.+ (suc N)))) m) <ᵣ rat (fst ε)
+-- IsUConvSeries' : FSeq → Type
+-- IsUConvSeries' s =
+--     ∀ (ε : ℚ₊) →
+--      Σ[ N ∈ ℕ ] ∀ n m →
+--        absᵣ (seqΣ (s ∘ (ℕ._+ (n ℕ.+ (suc N)))) m) <ᵣ rat (fst ε)

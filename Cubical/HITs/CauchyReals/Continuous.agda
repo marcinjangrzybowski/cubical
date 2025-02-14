@@ -748,6 +748,11 @@ IsContinuousMinL : ∀ x → IsContinuous (minᵣ x)
 IsContinuousMinL x u ε =
  ∣ ε , (λ v → NonExpanding₂.go∼R minR _ _ _ ε) ∣₁
 
+IsContinuousClamp : ∀ a b → IsContinuous (clampᵣ a b)
+IsContinuousClamp a b =
+ IsContinuous∘ _ _
+   (IsContinuousMinR _)
+   (IsContinuousMaxL _)
 
 
 IsContinuous-ᵣ : IsContinuous (-ᵣ_)
@@ -913,3 +918,17 @@ absᵣNonNeg x p = abs-max x ∙∙ maxᵣComm _ _ ∙∙ z
 
 absᵣPos : ∀ x → 0 <ᵣ x → absᵣ x ≡ x
 absᵣPos x = absᵣNonNeg x ∘ <ᵣWeaken≤ᵣ _ _
+
+
+≤lim : ∀ r x y → (∀ δ → rat r ≤ᵣ x δ) → rat r ≤ᵣ lim x y 
+≤lim r x y p = snd (NonExpanding₂.β-rat-lim' maxR r x y) ∙
+       congLim _ _ _ _ p
+
+limConstRat : ∀ x y → lim (λ _ → (rat x)) y ≡ rat x 
+limConstRat x y = eqℝ _ _ λ ε → lim-rat _ _ _ (/2₊ ε) _
+  (ℚ.<→0< _ (ℚ.<→<minus _ _ (ℚ.x/2<x ε))) (refl∼  _ _)
+
+lim≤ : ∀ r x y → (∀ δ → x δ ≤ᵣ rat r ) → lim x y ≤ᵣ rat r 
+lim≤ r x y p = maxᵣComm _ _ ∙ snd (NonExpanding₂.β-rat-lim' maxR r x y) ∙
+   congLim' _ _ _ (λ δ → maxᵣComm _ _ ∙ p δ)
+    ∙ limConstRat _ _ 

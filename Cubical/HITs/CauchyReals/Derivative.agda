@@ -41,6 +41,11 @@ at x limitOf f is L =
   ∀ (ε : ℝ₊) → ∃[ δ ∈ ℝ₊ ]
    (∀ r x＃r → absᵣ (x -ᵣ r) <ᵣ fst δ → absᵣ (L -ᵣ f r x＃r) <ᵣ fst ε)
 
+at_limitOf_is'_ : (x : ℝ) → (∀ r → x ＃ r → ℝ)  → ℝ → Type
+at x limitOf f is' L =
+  ∀ (ε : ℚ₊) → ∃[ δ ∈ ℚ₊ ]
+   (∀ r x＃r → absᵣ (x -ᵣ r) <ᵣ rat (fst δ) → absᵣ (L -ᵣ f r x＃r) <ᵣ rat (fst ε))
+
 at_inclLimitOf_is_ : (x : ℝ) → (∀ r → ℝ)  → ℝ → Type
 at x inclLimitOf f is L =
   ∀ (ε : ℝ₊) → ∃[ δ ∈ ℝ₊ ]
@@ -253,8 +258,13 @@ differenceAt f x h 0＃h = (f (x +ᵣ h) -ᵣ f x) ／ᵣ[ h , 0＃h ]
 derivativeAt : (ℝ → ℝ) → ℝ → Type
 derivativeAt f x = At 0 limitOf (differenceAt f x)
 
+
 derivativeOf_at_is_ : (ℝ → ℝ) → ℝ → ℝ → Type
 derivativeOf f at x is d = at 0 limitOf (differenceAt f x) is d
+
+
+derivativeOf_at_is'_ : (ℝ → ℝ) → ℝ → ℝ → Type
+derivativeOf f at x is' d = at 0 limitOf (differenceAt f x) is' d
 
 constDerivative : ∀ C x → derivativeOf (λ _ → C) at x is 0
 constDerivative C x =

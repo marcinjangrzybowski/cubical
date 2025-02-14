@@ -651,3 +651,9 @@ fromLipshitzNEβ : ∀ f (fl : Lipschitz-ℚ→ℝ 1 f) x y →
      _
 fromLipshitzNEβ f fl x y = congLim' _ _ _
  λ q → cong (Elimℝ.go _ ∘ x) (ℚ₊≡ $ ℚ.·IdL _)
+
+fromLipshitzβLim : ∀ L f (fl : Lipschitz-ℚ→ℝ L f) x y →
+  fst (fromLipschitz L (f , fl)) (lim x y) ≡
+    lim (λ x₁ → Elimℝ.go _ (x (invℚ₊ L ℚ₊· x₁)))
+     _
+fromLipshitzβLim L f fl x y = refl

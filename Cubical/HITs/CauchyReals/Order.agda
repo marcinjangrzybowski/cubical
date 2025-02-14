@@ -124,6 +124,10 @@ maxR = w
 minᵣ = NonExpanding₂.go minR
 maxᵣ = NonExpanding₂.go maxR
 
+clampᵣ : ℝ → ℝ → ℝ → ℝ
+clampᵣ d u x = minᵣ (maxᵣ d x) u
+
+
 _≤ᵣ_ : ℝ → ℝ → Type
 u ≤ᵣ v = maxᵣ u v ≡ v
 
