@@ -152,6 +152,12 @@ minᵣComm x y =
      (NonExpanding₂-flip ℚ.min minR) x y )
 
 
+
+clamp-lim : ∀ d u x y →
+         clampᵣ d u (lim x y) ≡ lim (λ ε → clampᵣ d u (x ε)) _
+clamp-lim d u x y = cong (flip minᵣ u) (maxᵣComm _ _) 
+  ∙ congLim' _ _ _ λ _ → cong (flip minᵣ u) (maxᵣComm _ _)
+
 +ᵣComm : ∀ x y → NonExpanding₂.go sumR x y ≡ NonExpanding₂.go sumR y x
 +ᵣComm x y =
   nonExpanding₂Ext ℚ._+_ (flip ℚ._+_)
@@ -438,6 +444,8 @@ lim≤rat→∼ x y r =
       propBiimpl→Equiv (isProp∼ _ _ _) squash₁ (∼→∼' _ _ _) (∼'→∼ _ _ _)
 
 
+
+
 maxᵣ-lem : ∀ u v r ε → u ∼[ ε ] v →
                    (((ε₁ : ℚ₊) →
                       maxᵣ v (rat r) ∼[ ε₁ ] rat r)) →
@@ -450,6 +458,22 @@ maxᵣ-lem u v r ε xx x =
 
 
 ℝ₊ = Σ _ λ r → 0 <ᵣ r
+
+ℝ₀₊ = Σ _ λ r → 0 ≤ᵣ r
+
+isSetℝ₊ : isSet ℝ₊
+isSetℝ₊ = isSetΣ isSetℝ (λ _ → isProp→isSet squash₁)
+
+isSetℝ₀₊ : isSet ℝ₊
+isSetℝ₀₊ = isSetΣ isSetℝ (λ _ → isProp→isSet squash₁)
+
+
+ℝ₊≡ : {x y : ℝ₊} → fst x ≡ fst y → x ≡ y
+ℝ₊≡ = Σ≡Prop λ _ → squash₁
+
+
+ℝ₀₊≡ : {x y : ℝ₀₊} → fst x ≡ fst y → x ≡ y
+ℝ₀₊≡ = Σ≡Prop λ _ → isSetℝ _ _
 
 
 ℚ₊→ℝ₊ : ℚ₊ → ℝ₊

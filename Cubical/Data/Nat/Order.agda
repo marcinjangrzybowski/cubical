@@ -58,6 +58,9 @@ isProp≤ {m} {n} (k , p) (l , q)
 zero-≤ : 0 ≤ n
 zero-≤ {n} = n , +-zero n
 
+zero-<-suc : 0 < suc n
+zero-<-suc {n} = n , +-comm n 1
+
 suc-≤-suc : m ≤ n → suc m ≤ suc n
 suc-≤-suc (k , p) = k , (+-suc k _) ∙ (cong suc p)
 
@@ -147,6 +150,10 @@ suc-< p = pred-≤-pred (≤-suc p)
   subst2 _≤_ (·-comm m k) (·-comm n k)
     (≤-·k p)
 
+≤monotone· : ∀ {m n k l} → m ≤ n → k ≤ l → m · k ≤ n · l
+≤monotone· {m} {n} {k} {l} m≤n k≤l =
+  ≤-trans (≤-k· {k = m} k≤l) (≤-·k m≤n)
+  
 <-k+-cancel : k + m < k + n → m < n
 <-k+-cancel {k} {m} {n} = ≤-k+-cancel ∘ subst (_≤ k + n) (sym (+-suc k m))
 
@@ -590,6 +597,19 @@ module Minimal where
   isPropLeast pP m
     = isPropΣ (pP m) (λ _ → isPropΠ3 λ _ _ _ → isProp⊥)
 
+<monotone· : ∀ {m n k l} → m < n → k < l → m · k < n · l
+<monotone· {n = zero} {l = l} m<n k<l = ⊥.rec (¬-<-zero m<n)
+<monotone· {n = suc n} {l = zero} m<n k<l = ⊥.rec (¬-<-zero k<l)
+<monotone· {zero} {n = suc n} {l = suc l} m<n k<l = zero-<-suc
+<monotone· {suc m} {n = suc n} {zero} {l = suc l} m<n k<l =
+  subst (_< suc n · suc l) (·-comm 0 m) zero-<-suc
+<monotone· {suc m} {n = suc n} {suc k} {l = suc l} m<n k<l =
+  suc-≤-suc (<-+-< (predℕ-≤-predℕ k<l) (<monotone· (predℕ-≤-predℕ m<n) k<l))
+
+monotone-^ : ∀ x y n → x < y → x ^ (suc n) < y ^ (suc n)
+monotone-^ x y zero x<y = subst2 _<_ (sym (·-identityʳ _)) (sym (·-identityʳ _)) x<y
+monotone-^ x y (suc n) x<y =
+  <monotone· x<y (monotone-^ x y n x<y)
 
 ^-monotone' : ∀ x n m → x ^ (suc n) ≤ x ^ (suc (m + n))
 ^-monotone' x n zero = ≤-refl
@@ -603,3 +623,66 @@ module Minimal where
 ^-monotone : ∀ x n m → n ≤ m → x ^ (suc n) ≤ x ^ (suc m)
 ^-monotone x n m (k , p) =
   subst (λ z → x ^ (suc n) ≤ x ^ suc z) p (^-monotone' x n k)
+
+sn<ssm^sn : ∀ n m → suc n < (suc (suc m)) ^ suc n
+sn<ssm^sn zero m = suc-≤-suc (suc-≤-suc zero-≤)
+sn<ssm^sn (suc n) m =
+ <-trans (suc-≤-suc (sn<ssm^sn n m))
+   (subst (suc (suc (suc m) ^ suc n) <_)
+     (  (λ i → +-comm (·-comm (suc m) (suc (suc m) ^ suc n) i) (suc (suc m) ^ suc n) i)
+         ∙ sym (·-suc (suc (suc m) ^ suc n) (suc m))
+       ∙ ·-comm (suc (suc m) ^ (suc n)) (suc (suc m)))
+       (<-+k {1} {(suc m) · (suc (suc m) ^ suc n)} {suc (suc m) ^ suc n}
+         (<≤-trans (suc-≤-suc (suc-≤-suc (zero-≤ {m})))
+           (≤-trans ((subst2 (_≤_)
+                 (cong (suc ∘ suc) (·-identityʳ _) )
+                  (sym (·-identityˡ _))
+                  (^-monotone (suc (suc m)) 0 n zero-≤)))
+             (≤-·k {1} {suc m} {(suc (suc m) ^ suc n)} (suc-≤-suc zero-≤))))))
+
+
+infix 4 _≤ᵖ_ _<ᵖ_ _≤ᵉ_ _<ᵉ_ _≲_ _≺_ _≲ᵉ_ _≺ᵉ_
+
+_≤ᵖ_ : (ℕ → ℕ) → (ℕ → ℕ) → Type
+f ≤ᵖ g = ∀ n → f n ≤ g n
+
+_≤ᵉ_ : (ℕ → ℕ) → (ℕ → ℕ) → Type₀
+f ≤ᵉ g = Σ[ N ∈ ℕ ] (∀ m → N ≤ m → f m ≤ g m)
+
+_<ᵖ_ : (ℕ → ℕ) → (ℕ → ℕ) → Type₀
+f <ᵖ g = ∀ n → f n < g n
+
+_<ᵉ_ : (ℕ → ℕ) → (ℕ → ℕ) → Type₀
+f <ᵉ g = Σ[ N ∈ ℕ ] (∀ m → N ≤ m → f m < g m)
+
+_≲_ : (ℕ → ℕ) → (ℕ → ℕ) → Type₀
+a ≲ b = ∀ n → a (suc n) + b n ≤ b (suc n) + a n
+
+_≺_ : (ℕ → ℕ) → (ℕ → ℕ) → Type₀
+a ≺ b = ∀ n → a (suc n) + b n < b (suc  n) + a n
+
+_≲ᵉ_ : (ℕ → ℕ) → (ℕ → ℕ) → Type₀
+a ≲ᵉ b = Σ[ N ∈ ℕ ] (∀ n → N ≤ n → a (suc n) + b n ≤ b (suc n) + a n)
+
+_≺ᵉ_ : (ℕ → ℕ) → (ℕ → ℕ) → Type₀
+a ≺ᵉ b = Σ[ N ∈ ℕ ] (∀ n → N ≤ n → a (suc n) + b n < b (suc n) + a n)
+
+-- eventualGrowth⇒eventualLarger :
+--   ∀ {a b : ℕ → ℕ} →
+--   a ≺ᵉ b →
+--   Σ[ N ∈ ℕ ] (∀ n → N ≤ n → a n < b n)
+-- eventualGrowth⇒eventualLarger = {!!}
+
+-- ℕε<kⁿ : ∀ p q r s → 0 < q →  s < r → Σ[ n ∈ ℕ ]
+--            p · s ^ n < q · r ^ n
+-- ℕε<kⁿ p q zero s 0<q s<r = ⊥.rec (¬-<-zero s<r)
+-- ℕε<kⁿ p zero (suc r) zero 0<q s<r = ⊥.rec (¬-<-zero 0<q)
+-- ℕε<kⁿ p (suc q) (suc r) zero 0<q s<r = {!!}
+-- ℕε<kⁿ p q (suc r) (suc s) 0<q s<r = {!!}
+
+--  where
+--   ΔLHS : ℕ → ℕ 
+--   ΔLHS n = (p · s) · ((suc s) ^ n) 
+
+--   ΔRHS : ℕ → ℕ 
+--   ΔRHS n = (q · r) · ((suc r) ^ n) 

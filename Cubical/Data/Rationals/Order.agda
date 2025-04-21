@@ -927,6 +927,7 @@ absFrom≤×≤ ε q x x₁ with absCases q
 ... | inl x₂ = subst2 (_≤_) (sym x₂) (-Invol ε) (minus-≤ (- ε) q x  )
 ... | inr x₂ = subst (_≤ ε) (sym x₂) x₁
 
+
 absFrom<×< : ∀ ε q →
                 - ε < q
                 → q < ε

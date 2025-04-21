@@ -7,12 +7,15 @@ open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Powerset
+open import Cubical.Foundations.Isomorphism
 
 open import Cubical.Data.Bool as 𝟚 hiding (_≤_)
 open import Cubical.Data.Nat as ℕ hiding (_·_;_+_)
 open import Cubical.Data.Int as ℤ using (pos)
 import Cubical.Data.Int.Order as ℤ
 open import Cubical.Data.Sigma
+open import Cubical.Data.Unit
 
 open import Cubical.HITs.PropositionalTruncation as PT
 open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
@@ -539,6 +542,16 @@ getClamps = Elimℝ-Prop.go w
    in (suc₊₁ (1+ n)) , subst ((absᵣ (lim x p) <ᵣ_) ∘ rat) (eq/ _ _ uu) z) $ x₁ (ℚ./4₊ 1)
   w .Elimℝ-Prop.isPropA _ = squash₁
 
+
+
+lim≡≃∼ : ∀ x y a → (lim x y ≡ a)
+                    ≃ (∀ ε → absᵣ (lim x y -ᵣ a) <ᵣ rat (fst ε) )
+lim≡≃∼ x y r = 
+  invEquiv (∼≃≡ _ _ ) ∙ₑ
+    equivΠCod λ ε →
+      ∼≃abs<ε _ _ _
+
+
 restrSq : ∀ n → Lipschitz-ℚ→ℚ-restr (fromNat (suc n))
                   ((2 ℚ₊· fromNat (suc n)))
                   λ x → x ℚ.· x
@@ -906,6 +919,7 @@ abs-max = ≡Continuous _ _
    (cont₂maxᵣ _ _ IsContinuousId IsContinuous-ᵣ)
     λ r → cong rat (sym (ℚ.abs'≡abs r))
 
+
 absᵣNonNeg : ∀ x → 0 ≤ᵣ x → absᵣ x ≡ x
 absᵣNonNeg x p = abs-max x ∙∙ maxᵣComm _ _ ∙∙ z
  where
@@ -915,6 +929,7 @@ absᵣNonNeg x p = abs-max x ∙∙ maxᵣComm _ _ ∙∙ z
      (sym (+ᵣAssoc _ _ _) ∙∙ cong (x +ᵣ_) (+-ᵣ x) ∙∙ +IdR x)
      (≤ᵣ-+o 0 (x +ᵣ x) (-ᵣ x)
       (≤ᵣMonotone+ᵣ 0 x 0 x p p))
+
 
 absᵣPos : ∀ x → 0 <ᵣ x → absᵣ x ≡ x
 absᵣPos x = absᵣNonNeg x ∘ <ᵣWeaken≤ᵣ _ _
@@ -932,3 +947,562 @@ lim≤ : ∀ r x y → (∀ δ → x δ ≤ᵣ rat r ) → lim x y ≤ᵣ rat r
 lim≤ r x y p = maxᵣComm _ _ ∙ snd (NonExpanding₂.β-rat-lim' maxR r x y) ∙
    congLim' _ _ _ (λ δ → maxᵣComm _ _ ∙ p δ)
     ∙ limConstRat _ _ 
+
+
+IsContinuousWithPred∘IsContinuous : ∀ P f g
+ → (g∈ : ∀ x → g x ∈ P) 
+ → IsContinuousWithPred P f 
+ → IsContinuous g
+ → IsContinuous λ x → f (g x) (g∈ x)
+IsContinuousWithPred∘IsContinuous P f g g∈ fc gc u ε =
+  PT.rec squash₁
+         (λ (δ , δ∼) →
+      PT.map (map-snd λ x v u∼v →
+         δ∼ (g v) (g∈ v) (x v u∼v)
+          ) (gc u δ) )
+      (fc (g u) ε (g∈ u))
+
+
+
+⊤Pred : ℝ → hProp ℓ-zero
+⊤Pred = (λ _ → Unit , isPropUnit )
+
+
+IsContinuousWP∘' : ∀ P f g
+   → (IsContinuous f)
+   → (IsContinuousWithPred P g )
+   → IsContinuousWithPred P
+     (λ r x → f (g r x))
+IsContinuousWP∘' P f g fC gC u ε u∈P =
+  PT.rec squash₁
+    (λ (δ , δ∼) →
+      PT.map (map-snd λ x v v∈P →
+          δ∼ (g v v∈P) ∘ (x _ v∈P)) (gC u δ u∈P))
+    ((fC (g u u∈P) ε))
+
+
+contDropPred : ∀ f → IsContinuousWithPred ⊤Pred (λ x _ → f x)
+                → IsContinuous f
+contDropPred f =
+ flip (IsContinuousWithPred∘IsContinuous  ⊤Pred (λ x _ → f x)
+   (idfun _) _) IsContinuousId
+
+
+∩-openPred : ∀ P Q → ⟨ openPred P ⟩ → ⟨ openPred Q ⟩ →
+              ⟨ openPred (λ x → _ , isProp× (snd (P x)) (snd (Q x))) ⟩ 
+∩-openPred _ _ oP oQ x (x∈P , x∈Q) =
+  PT.map2 (λ (δ , Δ) (δ' , Δ') →
+     (ℚ.min₊ δ δ') , λ y x∼y →
+       (Δ y (∼-monotone≤ (ℚ.min≤ _ _) x∼y))
+      , Δ' y (∼-monotone≤ (ℚ.min≤' _ _) x∼y))
+   (oP x x∈P) (oQ x x∈Q)
+
+
+
+
+
+max-lem : ∀ x x' y → maxᵣ (maxᵣ x y) (maxᵣ x' y) ≡ (maxᵣ (maxᵣ x x') y)
+max-lem x x' y = maxᵣAssoc _ _ _ ∙ cong (flip maxᵣ y) (maxᵣComm _ _)
+  ∙ sym (maxᵣAssoc _ _ _) ∙
+    cong (maxᵣ x') (sym (maxᵣAssoc _ _ _) ∙ cong (maxᵣ x) (maxᵣIdem y))
+     ∙ maxᵣAssoc _ _ _ ∙ cong (flip maxᵣ y) (maxᵣComm _ _)
+
+
+
+minᵣIdem : ∀ x → minᵣ x x ≡ x
+minᵣIdem = ≡Continuous _ _
+  (cont₂minᵣ _ _ IsContinuousId IsContinuousId)
+  IsContinuousId
+  (cong rat ∘ ℚ.minIdem)
+
+
+min-lem : ∀ x x' y → minᵣ (minᵣ x y) (minᵣ x' y) ≡ (minᵣ (minᵣ x x') y)
+min-lem x x' y = minᵣAssoc _ _ _ ∙ cong (flip minᵣ y) (minᵣComm _ _)
+  ∙ sym (minᵣAssoc _ _ _) ∙
+    cong (minᵣ x') (sym (minᵣAssoc _ _ _) ∙ cong (minᵣ x) (minᵣIdem y))
+     ∙ minᵣAssoc _ _ _ ∙ cong (flip minᵣ y) (minᵣComm _ _)
+
+
+max≤-lem : ∀ x x' y → x ≤ᵣ y → x' ≤ᵣ y → maxᵣ x x' ≤ᵣ y
+max≤-lem x x' y p p' =
+  sym (max-lem _ _ _)
+   ∙∙ cong₂ maxᵣ p p' ∙∙ maxᵣIdem y
+
+max<-lem : ∀ x x' y → x <ᵣ y → x' <ᵣ y → maxᵣ x x' <ᵣ y
+max<-lem x x' y = PT.map2
+  λ ((q , q') , (a , a' , a''))
+    ((r , r') , (b , b' , b'')) →
+     (ℚ.max q r , ℚ.max q' r') ,
+       (max≤-lem _ _ (rat (ℚ.max q r))
+         (isTrans≤ᵣ _ _ _ a (≤ℚ→≤ᵣ _ _ (ℚ.≤max q r)))
+         ((isTrans≤ᵣ _ _ _ b (≤ℚ→≤ᵣ _ _ (ℚ.≤max' q r)))) ,
+          (ℚ.<MonotoneMax _ _ _ _ a' b' , max≤-lem _ _ _ a'' b''))
+
+minDistMaxᵣ : ∀ x y y' →
+  maxᵣ x (minᵣ y y') ≡ minᵣ (maxᵣ x y) (maxᵣ x y')
+minDistMaxᵣ x y y' = ≡Continuous _ _
+   (IsContinuousMaxR _)
+   (cont₂minᵣ _ _ (IsContinuousMaxR _) (IsContinuousMaxR _))
+   (λ xR →
+     ≡Continuous _ _
+       (IsContinuous∘ _ _ (IsContinuousMaxL (rat xR)) ((IsContinuousMinR y')))
+       (IsContinuous∘ _ _ (IsContinuousMinR _) (IsContinuousMaxL (rat xR)))
+       (λ yR →
+         ≡Continuous _ _
+           (IsContinuous∘ _ _ (IsContinuousMaxL (rat xR))
+             ((IsContinuousMinL (rat yR))))
+           (IsContinuous∘ _ _ (IsContinuousMinL (maxᵣ (rat xR) (rat yR)))
+             (IsContinuousMaxL (rat xR)))
+           (cong rat ∘ ℚ.minDistMax xR yR ) y')
+       y)
+   x
+
+
+≤maxᵣ : ∀ m n →  m ≤ᵣ maxᵣ m n
+≤maxᵣ m n = maxᵣAssoc _ _ _ ∙ cong (flip maxᵣ n) (maxᵣIdem m)
+
+≤min-lem : ∀ x y y' → x ≤ᵣ y → x ≤ᵣ y' →  x ≤ᵣ minᵣ y y'
+≤min-lem x y y' p p' =
+   minDistMaxᵣ x y y' ∙ cong₂ minᵣ p p'
+
+
+<min-lem : ∀ x x' y → y <ᵣ x → y <ᵣ x' →  y <ᵣ minᵣ x x'
+<min-lem x x' y = PT.map2
+  λ ((q , q') , (a , a' , a''))
+    ((r , r') , (b , b' , b'')) →
+     (ℚ.min q r , ℚ.min q' r') , ≤min-lem _ _ _ a b
+        , ℚ.<MonotoneMin _ _ _ _ a' b' ,
+            ≤min-lem (rat (ℚ.min q' r')) x x'
+             (isTrans≤ᵣ _ _ _ (≤ℚ→≤ᵣ _ _ (ℚ.min≤ q' r')) a'')
+             (isTrans≤ᵣ _ _ _ (≤ℚ→≤ᵣ _ _ (ℚ.min≤' q' r')) b'')
+
+
+
+maxᵣ₊ : ℝ₊ → ℝ₊ → ℝ₊  
+maxᵣ₊ (x , 0<x) (y , 0<y) =
+ maxᵣ x y , isTrans<≤ᵣ _ _ _ 0<x (≤maxᵣ _ _)
+
+
+minᵣ₊ : ℝ₊ → ℝ₊ → ℝ₊  
+minᵣ₊ (x , 0<x) (y , 0<y) =
+  minᵣ x y , <min-lem _ _ _ 0<x 0<y
+
+maxAbsorbLMinᵣ : ∀ x y → maxᵣ x (minᵣ x y) ≡ x
+maxAbsorbLMinᵣ x =
+  ≡Continuous _ _
+    (IsContinuous∘ _ _
+      (IsContinuousMaxL _) (IsContinuousMinL x))
+      (IsContinuousConst _)
+     λ y' →
+       ≡Continuous _ _
+          (cont₂maxᵣ _ _ IsContinuousId (IsContinuousMinR _))
+        IsContinuousId
+         (λ x' → cong rat (ℚ.maxAbsorbLMin x' y')) x
+
+maxDistMin : ∀ x y z → minᵣ x (maxᵣ y z) ≡ maxᵣ (minᵣ x y) (minᵣ x z)
+
+maxDistMin x y y' =
+  ≡Continuous _ _
+   (IsContinuousMinR _)
+   (cont₂maxᵣ _ _ (IsContinuousMinR _) (IsContinuousMinR _))
+   (λ xR →
+     ≡Continuous _ _
+       (IsContinuous∘ _ _ (IsContinuousMinL (rat xR)) ((IsContinuousMaxR y')))
+       (IsContinuous∘ _ _ (IsContinuousMaxR _) (IsContinuousMinL (rat xR)))
+       (λ yR →
+         ≡Continuous _ _
+           (IsContinuous∘ _ _ (IsContinuousMinL (rat xR))
+             ((IsContinuousMaxL (rat yR))))
+           (IsContinuous∘ _ _ (IsContinuousMaxL (minᵣ (rat xR) (rat yR)))
+             (IsContinuousMinL (rat xR)))
+           (λ r →
+             cong rat (ℚ.minComm _ _  ∙∙
+              ℚ.maxDistMin _ _ _ ∙∙
+               cong₂ ℚ.max (ℚ.minComm _ _) (ℚ.minComm _ _))) y')
+       y)
+   x
+
+min≤ᵣ : ∀ m n → minᵣ m n ≤ᵣ m
+min≤ᵣ m n = maxᵣComm _ _ ∙ maxAbsorbLMinᵣ _ _
+
+min≤ᵣ' : ∀ m n → minᵣ m n ≤ᵣ n
+min≤ᵣ' m n = subst (_≤ᵣ n) (minᵣComm n m) (min≤ᵣ n m)
+
+
+≤→minᵣ : ∀ m n → m ≤ᵣ n → minᵣ m n ≡ m
+≤→minᵣ m n p = cong₂ minᵣ (sym (maxᵣIdem m)) (sym p) ∙
+  sym (minDistMaxᵣ _ _ _) ∙ maxAbsorbLMinᵣ _ _ 
+
+
+≤→maxᵣ : ∀ m n → m ≤ᵣ n → maxᵣ m n ≡ n
+≤→maxᵣ m n p = p
+
+
+
+IsContinuous₂ : (ℝ → ℝ → ℝ) → Type
+IsContinuous₂ f =
+ (∀ x → IsContinuous (f x)) × (∀ x → IsContinuous (flip f x))
+
+
+
+≡Cont₂ : {f₀ f₁ : ℝ → ℝ → ℝ}
+         → IsContinuous₂ f₀
+         → IsContinuous₂ f₁
+         → (∀ u u' → f₀ (rat u) (rat u') ≡ f₁ (rat u) (rat u'))
+             → ∀ x x' → f₀ x x' ≡ f₁ x x'
+≡Cont₂ {f₀} {f₁} (f₀C , f₀C') (f₁C , f₁C') p x =
+  ≡Continuous _ _ (f₀C x) (f₁C x)
+    (λ q → ≡Continuous _ _ (f₀C' (rat q)) (f₁C' (rat q))
+       (λ r → p r q) x)
+
+
+contNE₂∘ : ∀ {h} → (ne : NonExpanding₂ h)
+  {f₀ f₁ : ℝ → ℝ → ℝ}
+   → IsContinuous₂ f₀
+   → IsContinuous₂ f₁
+  → IsContinuous₂ (λ x x' → NonExpanding₂.go ne (f₀ x x') (f₁ x x'))
+contNE₂∘ ne x x₁ =
+  (λ x₂ → contDiagNE₂ ne _ _ (x .fst x₂) (x₁ .fst x₂)) ,
+   λ x₂ → contDiagNE₂ ne _ _ (x .snd x₂) (x₁ .snd x₂)
+
+cont∘₂ : ∀ {g} 
+  {f : ℝ → ℝ → ℝ}
+   → IsContinuous g
+   → IsContinuous₂ f
+  → IsContinuous₂ (λ x x' → g (f x x'))
+cont∘₂ cG (cF , _) .fst x = IsContinuous∘ _ _ cG (cF x)
+cont∘₂ cG (_ , cF) .snd x = IsContinuous∘ _ _ cG (cF x)
+
+cont₂∘ :  
+  {g : ℝ → ℝ → ℝ}
+  → ∀ {f f'}
+   → IsContinuous₂ g
+   → IsContinuous f
+   → IsContinuous f'
+  → IsContinuous₂ (λ x x' → g (f x) (f' x'))
+cont₂∘ (cG , _) _ cF .fst x = IsContinuous∘ _ _ (cG _) cF
+cont₂∘ (_ , cG) cF _ .snd x = IsContinuous∘ _ _ (cG _) cF
+  
+
+contNE₂ : ∀ {h} → (ne : NonExpanding₂ h)
+  → IsContinuous₂ (NonExpanding₂.go ne)
+contNE₂ ne =
+  contNE₂∘ ne
+   ((λ _ → IsContinuousConst _) , (λ _ → IsContinuousId))
+   ((λ _ → IsContinuousId) , (λ _ → IsContinuousConst _))
+
+
+
+
+
+≤Cont₂ : {f₀ f₁ : ℝ → ℝ → ℝ}
+         → IsContinuous₂ f₀
+         → IsContinuous₂ f₁
+         → (∀ u u' → f₀ (rat u) (rat u') ≤ᵣ f₁ (rat u) (rat u'))
+             → ∀ x x' → f₀ x x' ≤ᵣ f₁ x x'
+≤Cont₂ f₀C f₁C =
+  ≡Cont₂ (contNE₂∘ maxR f₀C f₁C) f₁C
+
+
+
+
+≤Cont : {f₀ f₁ : ℝ → ℝ}
+         → IsContinuous f₀
+         → IsContinuous f₁
+         → (∀ u → f₀ (rat u) ≤ᵣ f₁ (rat u))
+             → ∀ x → f₀ x ≤ᵣ f₁ x
+≤Cont f₀C f₁C =
+  ≡Continuous _ _ (contDiagNE₂ maxR _ _ f₀C f₁C ) f₁C
+
+
+
+
+
+
+≤Cont₂Pos : {f₀ f₁ : ℝ → ℝ → ℝ}
+         → IsContinuous₂ f₀
+         → IsContinuous₂ f₁
+         → (∀ u u' → 0 ℚ.≤ u → 0 ℚ.≤ u' → f₀ (rat u) (rat u') ≤ᵣ f₁ (rat u) (rat u'))
+             → ∀ x x' → 0 ≤ᵣ x → 0 ≤ᵣ x' → f₀ x x' ≤ᵣ f₁ x x'
+≤Cont₂Pos {f₀} {f₁} f₀C f₁C X x x' 0≤x 0≤x' =
+  subst2 (λ x x' → f₀ x x' ≤ᵣ f₁ x x') 0≤x 0≤x'
+    (≤Cont₂
+      (cont₂∘ f₀C (IsContinuousMaxL 0) (IsContinuousMaxL 0))
+      (cont₂∘ f₁C (IsContinuousMaxL 0) (IsContinuousMaxL 0))
+        (λ u u' → (X _ _ (ℚ.≤max 0 u) (ℚ.≤max 0 u')))
+         x x')
+
+
+
+≤ContPos' : {x₀ : ℚ} {f₀ f₁ : ℝ → ℝ} 
+         → IsContinuous f₀
+         → IsContinuous f₁
+         → (∀ u → x₀ ℚ.≤ u → f₀ (rat u) ≤ᵣ f₁ (rat u) )
+             → ∀ x → rat x₀ ≤ᵣ x → f₀ x ≤ᵣ f₁ x
+≤ContPos' {x₀} {f₀} {f₁} f₀C f₁C X x 0≤x =
+  subst (λ x → f₀ x  ≤ᵣ f₁ x) 0≤x
+    (≤Cont
+      (IsContinuous∘ _ _  f₀C (IsContinuousMaxL (rat x₀)))
+      (IsContinuous∘ _ _ f₁C (IsContinuousMaxL (rat x₀)))
+        (λ u  → (X _ (ℚ.≤max x₀ u)))
+         x)
+
+
+
+
+≤ContPos'pred : {x₀ : ℚ} {f₀ f₁ : ∀ x → (rat x₀ ≤ᵣ x) → ℝ} 
+         → IsContinuousWithPred (λ _ → _ , isSetℝ _ _) f₀
+         → IsContinuousWithPred (λ _ → _ , isSetℝ _ _) f₁
+         → (∀ u x₀<u → f₀ (rat u) (≤ℚ→≤ᵣ _ _ x₀<u)
+                ≤ᵣ f₁ (rat u) (≤ℚ→≤ᵣ _ _ x₀<u) )
+             → ∀ x x₀≤x → f₀ x x₀≤x ≤ᵣ f₁ x x₀≤x
+≤ContPos'pred {x₀} {f₀} {f₁} f₀C f₁C X x 0≤x = 
+  subst (λ (x , x₀≤x) → f₀ x x₀≤x  ≤ᵣ f₁ x x₀≤x)
+     (Σ≡Prop (λ _ → isSetℝ _ _) 0≤x)
+    (≤Cont
+      (IsContinuousWithPred∘IsContinuous _ _ _
+         (λ _ → ≤maxᵣ _ _) f₀C (IsContinuousMaxL (rat x₀))) 
+      (IsContinuousWithPred∘IsContinuous _ _ _
+         (λ _ → ≤maxᵣ _ _) f₁C (IsContinuousMaxL (rat x₀)))
+         (λ u  → 
+             subst (λ qq → f₀ (maxᵣ (rat x₀) (rat u)) qq
+                     ≤ᵣ f₁ (maxᵣ (rat x₀) (rat u)) qq)
+                (isSetℝ _ _ _ _) (X (ℚ.max x₀ u) (ℚ.≤max _ _))) x)
+
+
+
+<→≤ContPos' : {x₀ : ℚ} {f₀ f₁ : ℝ → ℝ} 
+         → IsContinuous f₀
+         → IsContinuous f₁
+         → (∀ u → x₀ ℚ.< u → f₀ (rat u) ≤ᵣ f₁ (rat u) )
+             → ∀ x → rat x₀ <ᵣ x → f₀ x ≤ᵣ f₁ x
+<→≤ContPos' {x₀} {f₀} {f₁} f₀C f₁C X x =
+   PT.rec (isSetℝ _ _)
+     λ ((q , q') , (x₀≤q , q<q' , q'≤x)) →
+       ≤ContPos' {q'} f₀C f₁C
+             ((_∘ ℚ.isTrans<≤ _ _ _
+               (ℚ.isTrans≤< _ _ _ (≤ᵣ→≤ℚ _ _ x₀≤q) q<q'))
+               ∘ X ) x q'≤x
+
+
+IsContinuousWithPred⊆ : ∀ (P P' : ℝ → hProp ℓ-zero) f 
+                       → (P'⊆P : P' ⊆ P)                       
+                       → IsContinuousWithPred P f
+                       → IsContinuousWithPred P' ((_∘ P'⊆P _) ∘ f )
+IsContinuousWithPred⊆ P P' f P'⊆P X u ε u∈P =
+  PT.map (map-snd ((_∘ P'⊆P _) ∘_))
+   (X u ε (P'⊆P _ u∈P))
+
+<→≤ContPos'pred : {x₀ : ℚ} {f₀ f₁ : ∀ x → (rat x₀ <ᵣ x) → ℝ} 
+         → IsContinuousWithPred (λ _ → _ , squash₁) f₀
+         → IsContinuousWithPred (λ _ → _ , squash₁) f₁
+         → (∀ u x₀<u → f₀ (rat u) x₀<u
+                    ≤ᵣ f₁ (rat u) x₀<u )
+             → ∀ x x₀<x → f₀ x x₀<x ≤ᵣ f₁ x x₀<x
+<→≤ContPos'pred {x₀} {f₀} {f₁} f₀C f₁C X x = 
+   PT.elim (λ _ → isSetℝ _ _)
+     λ ((q , q') , (x₀≤q , q<q' , q'≤x)) →
+      let z = ≤ContPos'pred {q'}
+               (IsContinuousWithPred⊆ _ _ f₀
+                  (λ  _ → isTrans<≤ᵣ _ _ _
+                 ((<ℚ→<ᵣ _ _ (ℚ.isTrans≤< _ _ _ (≤ᵣ→≤ℚ x₀ q x₀≤q) q<q'))))
+                  f₀C)
+                (IsContinuousWithPred⊆ _ _ f₁
+                  (λ  _ → isTrans<≤ᵣ _ _ _
+                 ((<ℚ→<ᵣ _ _ (ℚ.isTrans≤< _ _ _ (≤ᵣ→≤ℚ x₀ q x₀≤q) q<q'))))
+                  f₁C)
+                (λ u _ → X u _)
+                      x q'≤x
+     in subst (λ x₀<x → f₀ x x₀<x  ≤ᵣ f₁ x x₀<x)
+            (squash₁ _ _) z
+  
+≤ContPos : {f₀ f₁ : ℝ → ℝ}
+         → IsContinuous f₀
+         → IsContinuous f₁
+         → (∀ u → 0 ℚ.≤ u → f₀ (rat u) ≤ᵣ f₁ (rat u) )
+             → ∀ x → 0 ≤ᵣ x → f₀ x ≤ᵣ f₁ x
+≤ContPos = ≤ContPos' {0}
+
+
+ℚabs-min-max : ∀ u v →
+      ℚ.abs (ℚ.max u v ℚ.- ℚ.min u v) ≡ ℚ.abs (u ℚ.- v)
+ℚabs-min-max = ℚ.elimBy≤
+  (λ x y X →
+    (cong ℚ.abs (cong₂ ℚ._-_ (ℚ.maxComm _ _) (ℚ.minComm _ _)))
+       ∙∙ X ∙∙
+      ℚ.absComm- _ _)
+  λ x y x≤y →
+    cong ℚ.abs
+      (cong₂ ℚ._-_
+        (ℚ.≤→max _ _ x≤y) (ℚ.≤→min _ _ x≤y))
+     ∙ ℚ.absComm- _ _
+
+absᵣ-min-max : ∀ u v →
+      absᵣ (maxᵣ u v -ᵣ minᵣ u v) ≡ absᵣ (u -ᵣ v)
+absᵣ-min-max =
+ ≡Cont₂
+   (cont∘₂ IsContinuousAbsᵣ
+    (contNE₂∘ sumR
+      (contNE₂ maxR)
+      (cont∘₂ IsContinuous-ᵣ (contNE₂ minR) )))
+   (cont∘₂ IsContinuousAbsᵣ
+    (cont₂∘ (contNE₂ sumR)
+      IsContinuousId IsContinuous-ᵣ))
+   λ u v →
+      cong rat (sym (ℚ.abs'≡abs _) ∙∙ ℚabs-min-max u v ∙∙ ℚ.abs'≡abs _)
+
+maxMonotoneᵣ : ∀ m n o s → m ≤ᵣ n → o ≤ᵣ s → maxᵣ m o ≤ᵣ maxᵣ n s
+maxMonotoneᵣ _ _ _ _ m≤n o≤s =
+  max≤-lem _ _ _
+    (isTrans≤ᵣ _ _ _ m≤n (≤maxᵣ _ _))
+    (isTrans≤ᵣ _ _ _ o≤s
+      (isTrans≤≡ᵣ _ _ _  (≤maxᵣ _ _) (maxᵣComm _ _) ))
+
+minMonotoneᵣ : ∀ m n o s → m ≤ᵣ n → o ≤ᵣ s → minᵣ m o ≤ᵣ minᵣ n s
+minMonotoneᵣ m n o s m≤n o≤s =
+  ≤min-lem _ _ _
+    (isTrans≤ᵣ _ _ _
+     (min≤ᵣ _ _) m≤n)
+    (isTrans≤ᵣ _ _ _
+     (isTrans≡≤ᵣ _ _ _ (minᵣComm _ _) (min≤ᵣ _ _)) o≤s)
+
+incr→max≤ : (f : ∀ x → 0 <ᵣ x → ℝ)
+       → (∀ x 0<x y 0<y → x ≤ᵣ y → f x 0<x ≤ᵣ f y 0<y)
+      → ∀ u v 0<u 0<v →
+         maxᵣ (f u 0<u) (f v 0<v) 
+           ≤ᵣ  (f (maxᵣ u v) (snd (maxᵣ₊ (u , 0<u) (v , 0<v))))  
+incr→max≤ f incr u v 0<u 0<v =
+  isTrans≤≡ᵣ _ _ _
+    (maxMonotoneᵣ _ _ _ _
+      (incr u 0<u (maxᵣ u v) (snd (maxᵣ₊ (u , 0<u) (v , 0<v)))
+       (≤maxᵣ _ _))
+      (incr v 0<v (maxᵣ u v) (snd (maxᵣ₊ (u , 0<u) (v , 0<v)))
+       (isTrans≤≡ᵣ _ _ _  (≤maxᵣ _ _) (maxᵣComm _ _))))
+    (maxᵣIdem _)
+     
+incr→≤min : (f : ∀ x → 0 <ᵣ x → ℝ)
+       → (∀ x 0<x y 0<y → x ≤ᵣ y → f x 0<x ≤ᵣ f y 0<y)
+      → ∀ u v 0<u 0<v →
+           (f (minᵣ u v) (snd (minᵣ₊ (u , 0<u) (v , 0<v))))
+            ≤ᵣ  minᵣ (f u 0<u) (f v 0<v) 
+incr→≤min f incr u v 0<u 0<v =
+  isTrans≡≤ᵣ _ _ _
+    (sym (minᵣIdem _))
+     (minMonotoneᵣ _ _ _ _
+       (incr (minᵣ u v) (snd (minᵣ₊ (u , 0<u) (v , 0<v)))
+           u 0<u
+          (min≤ᵣ _ _))
+       (incr (minᵣ u v) (snd (minᵣ₊ (u , 0<u) (v , 0<v)))
+           v 0<v
+          (isTrans≡≤ᵣ _ _ _  (minᵣComm _ _) (min≤ᵣ _ _))))
+
+absᵣ-monotoneOnNonNeg : (x y : ℝ₀₊) →
+ fst x ≤ᵣ fst y → absᵣ (fst x) ≤ᵣ absᵣ (fst y)
+absᵣ-monotoneOnNonNeg x y x≤y =
+  subst2 _≤ᵣ_
+    (sym (absᵣNonNeg (fst x) (snd x)))
+    (sym (absᵣNonNeg (fst y) (snd y)))
+    x≤y
+
+
+
+ℚApproxℙ : (P : ℙ ℝ) (Q : ℙ ℝ) (f : ∀ x → x ∈ P → Σ ℝ (_∈ Q)) → Type
+ℚApproxℙ P Q f = 
+   Σ[ f' ∈ (∀ q → rat q ∈ P → ℚ₊ → ℚ) ]
+    (((∀ q q∈ ε  → rat (f' q q∈ ε) ∈ Q)) × (Σ[ f'-cauchy ∈ (∀ q q∈P → _) ]
+      (∀ q q∈P → lim (rat ∘ f' q q∈P) (f'-cauchy q q∈P)
+                ≡ fst (f (rat q) q∈P))))
+
+ℚApprox : (f : ℝ → ℝ) → Type
+ℚApprox f = 
+   Σ[ f' ∈ (ℚ → ℚ₊ → ℚ) ]
+    Σ[ f'-cauchy ∈ (∀ q → _) ]
+      (∀ q → lim (rat ∘ f' q) (f'-cauchy q)
+                ≡ f (rat q))
+
+
+ℚApproxℙ'Num : (P Q : ℙ ℝ) (f : ∀ x → x ∈ P → Σ ℝ (_∈ Q)) → 
+   ∀ q → (q∈P : rat q ∈ P) → Type
+        
+ℚApproxℙ'Num P Q f q q∈P =
+     Σ[ f' ∈ (ℚ₊ → ℚ) ]
+    ((∀ ε  → rat (f' ε) ∈ Q) × (Σ[ f'-cauchy ∈ (_) ]
+      (lim (rat ∘ f') (f'-cauchy) ≡ fst (f (rat q) q∈P))))
+
+
+ℚApproxℙ' : (P Q : ℙ ℝ) (f : ∀ x → x ∈ P → Σ ℝ (_∈ Q)) → Type
+ℚApproxℙ' P Q f =
+ ∀ q → (q∈P : rat q ∈ P) → 
+   ℚApproxℙ'Num P Q f q q∈P
+
+Iso-ℚApproxℙ'-ℚApproxℙ : (P Q : ℙ ℝ) → ∀ f →
+  Iso (ℚApproxℙ' P Q f) (ℚApproxℙ P Q f)  
+Iso-ℚApproxℙ'-ℚApproxℙ P Q f .Iso.fun x =
+  (λ q → fst ∘ x q) ,
+   (λ q → fst ∘ snd ∘ x q) ,
+    ((λ q → fst ∘ snd ∘ snd ∘ x q) ,
+    (λ q → snd ∘ snd ∘ snd ∘ x q))
+Iso-ℚApproxℙ'-ℚApproxℙ P Q f .Iso.inv = _
+Iso-ℚApproxℙ'-ℚApproxℙ P Q f .Iso.rightInv _ = refl
+Iso-ℚApproxℙ'-ℚApproxℙ P Q f .Iso.leftInv _ = refl
+
+
+ℚApproxℙ'≃ℚApproxℙ : (P Q : ℙ ℝ) → ∀ f →
+  ℚApproxℙ' P Q f ≃ ℚApproxℙ P Q f  
+ℚApproxℙ'≃ℚApproxℙ P Q f =
+ isoToEquiv (Iso-ℚApproxℙ'-ℚApproxℙ P Q f)
+
+
+
+IsUContinuousℚℙ : (P : ℙ ℝ) → (∀ q → rat q ∈ P → ℝ) → Type
+IsUContinuousℚℙ P f =
+  ∀ (ε : ℚ₊) → Σ[ δ ∈ ℚ₊ ]
+     (∀ u v u∈ v∈ → ℚ.abs (u ℚ.- v) ℚ.< fst δ  → f u u∈ ∼[ ε ] f v v∈)
+
+IsUContinuousℙ : (P : ℙ ℝ) → (∀ x → x ∈ P → ℝ) → Type
+IsUContinuousℙ P f =
+  ∀ (ε : ℚ₊) → Σ[ δ ∈ ℚ₊ ]
+     (∀ u v u∈ v∈ → u ∼[ δ ] v  → f u u∈ ∼[ ε ] f v v∈)
+
+
+ℚApproxℙ'' : (P Q : ℙ ℝ) (f : ∀ x → x ∈ P → Σ ℝ (_∈ Q)) → Type
+ℚApproxℙ'' P Q f =
+ ∀ x → (x∈P : rat x ∈ P) (ε : ℚ₊) → 
+    Σ[ r ∈ ℚ ] ((rat r ∈ Q) × (rat r ∼[ ε ] fst (f (rat x) x∈P)))
+
+ℚApproxℙ'→ℚApproxℙ'' : (P Q : ℙ ℝ) → ∀ f →
+  (ℚApproxℙ' P Q f) → (ℚApproxℙ'' P Q f)  
+ℚApproxℙ'→ℚApproxℙ'' P Q f X x x∈P ε = 
+   fst (X x x∈P) (/2₊ ε) , fst (snd (X x x∈P)) (/2₊ ε) ,
+     subst (rat (fst (X x x∈P) (/2₊ ε)) ∼[ ε ]_)
+    (snd (snd (snd ( ((X x x∈P))) )))
+      ((rat-lim _ _ _ (/2₊ ε) _ (snd (ℚ.<→ℚ₊ _ _ (ℚ.x/2<x ε)))
+        (refl∼ _ _)))
+
+
+ℚApproxℙ∘ : ∀ P Q R g f
+          → IsUContinuousℙ Q ((fst ∘_) ∘ g)
+          → ℚApproxℙ'' Q R g
+          → ℚApproxℙ'' P Q f
+          → ℚApproxℙ'' P R (curry (uncurry g ∘ uncurry f)) 
+ℚApproxℙ∘ P Q R  g f gC gA fA q q∈ ε =  
+  let (δ' , Δ) = gC (/2₊ ε)
+      δ = ℚ.min₊ δ' (/2₊ ε)
+      
+      uu' : rat (fst (fA q q∈ δ)) ∈ Q
+      uu' = (fst (snd (fA q q∈ δ)))
+      
+      zz : rat (fst (gA (fst (fA q q∈ δ)) uu' δ))
+             ∼[ /2₊ ε ℚ₊+ /2₊ ε ]
+              fst (g (fst (f (rat q) q∈)) (snd (f (rat q) q∈)))     
+      zz = triangle∼
+               ((∼-monotone≤ (ℚ.min≤' _ _)
+                 ((snd (snd (gA (fst (fA q q∈ δ)) uu' δ))))))
+                             
+                   (Δ _ _ uu' _ (
+                     ∼-monotone≤ (ℚ.min≤ _ _)
+                       (snd (snd (fA q q∈ δ)))))
+
+  in fst (gA (fst (fA q q∈ δ)) uu' δ)
+        , fst (snd (gA (fst (fA q q∈ δ)) uu' δ))
+         , subst∼ (ℚ.ε/2+ε/2≡ε (fst ε)) zz

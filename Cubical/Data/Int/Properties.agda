@@ -1526,3 +1526,11 @@ sign : ℤ → ℤ
 sign (pos zero) = 0
 sign (pos (suc n)) = 1
 sign (negsuc n) = -1
+
+sign·abs : ∀ m → sign m · pos (abs m) ≡ m
+sign·abs (pos zero) = refl
+sign·abs (pos (suc n)) = refl
+sign·abs (negsuc n) = refl
+
+-- abs[sign[m]·pos[n]]≡n : ∀ m n → abs (sign m · pos n) ≡ n
+-- abs[sign[m]·pos[n]]≡n m n = {!!}

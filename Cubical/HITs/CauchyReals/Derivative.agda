@@ -3,9 +3,11 @@
 module Cubical.HITs.CauchyReals.Derivative where
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Powerset
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Isomorphism
 open import Cubical.Functions.FunExtEquiv
 
 open import Cubical.Data.Sum as ⊎
@@ -33,6 +35,84 @@ open import Cubical.HITs.CauchyReals.Multiplication
 open import Cubical.HITs.CauchyReals.Inverse
 open import Cubical.HITs.CauchyReals.Sequence
 
+
+
+
+IsUContinuous : (ℝ → ℝ) → Type
+IsUContinuous f =
+  ∀ (ε : ℚ₊) → Σ[ δ ∈ ℚ₊ ]
+     (∀ u v → u ∼[ δ ] v → f u ∼[ ε ] f v)
+
+IsUContinuousℚ : (ℚ → ℝ) → Type
+IsUContinuousℚ f =
+  ∀ (ε : ℚ₊) → Σ[ δ ∈ ℚ₊ ]
+     (∀ u v → ℚ.abs (u ℚ.- v) ℚ.< fst ε  → f u ∼[ ε ] f v)
+
+
+Lipschitiz→IsUContinuous : ∀ L f →
+     Lipschitz-ℝ→ℝ L f → IsUContinuous f 
+Lipschitiz→IsUContinuous L f X ε =
+   (invℚ₊ L) ℚ₊· ε ,
+    ( λ u v → subst∼ (ℚ.y·[x/y] _ _)
+      ∘ X u v ((invℚ₊ L) ℚ₊· ε)) 
+
+-- IsUContinuousℙ : (P : ℙ ℝ) → (∀ x → x ∈ P → ℝ) → Type
+-- IsUContinuousℙ P f =
+--   ∀ (ε : ℚ₊) → ∃[ δ ∈ ℚ₊ ]
+--      (∀ u u∈ v v∈ → u ∼[ δ ] v → f u u∈ ∼[ ε ] f v v∈)
+
+
+
+
+
+-- fromUContinuous : Σ _ (λ f → (IsUContinuousℚ f)) →
+--   Σ _ (λ f' → IsUContinuous f')
+-- fromUContinuous (f , uC) = f' , Iso.inv Σ-Π-Iso (cMod , rl)
+--  where
+
+--  cMod : (a : ℚ₊) → ℚ₊
+--  cMod = fst ∘ uC
+
+--  cMod' : (a : ℚ₊) → ℚ₊
+--  cMod' = fst ∘ uC
+
+--  isCMode : {!!}
+--  isCMode = {!!}
+ 
+--  cMod≤ : ∀ δ ε → fst (cMod' (cMod δ ℚ₊+ cMod ε)) ℚ.≤ fst (δ ℚ₊+ ε)
+--  cMod≤ = {!!}
+
+--  cMod≤' : ∀ ε → fst (cMod' (cMod ε)) ℚ.≤ fst (ε)
+--  cMod≤' = {!!}
+--  w : Elimℝ (λ _ → ℝ) λ u v ε z → u ∼[ cMod' ε  ] v
+ 
+
+--  w .Elimℝ.ratA = f
+--  w .Elimℝ.limA x p a v = lim (a ∘ cMod)
+--    λ δ ε → 
+--     let v' = v ((cMod δ)) ((cMod ε))
+--     in ∼-monotone≤ (cMod≤ δ ε) v'
+--  w .Elimℝ.eqA p a a' x y =
+--    eqℝ a a' λ ε →
+--      ∼-monotone≤  (cMod≤' ε) (y (cMod ε))
+
+
+--  w .Elimℝ.rat-rat-B q r ε x x₁ = {!snd (uC ε) q r !}
+--  w .Elimℝ.rat-lim-B = {!!}
+--  w .Elimℝ.lim-rat-B x r ε δ p v₁ u v' u' x₁ =
+--   {!!}
+--  w .Elimℝ.lim-lim-B x y ε δ η p p' v₁ r v' u' v'' u'' x₁ =
+--   let z = {!!}
+--   in ?
+--     -- lim-lim _ _ _ (cMod' δ) (cMod' η)  _ _
+--     --      {!!} {!!}
+--  w .Elimℝ.isPropB _ _ _ _ = isProp∼ _ _ _
+
+--  f' : ℝ → ℝ
+--  f' = Elimℝ.go w
+
+--  rl : (ε : ℚ₊) (u v : ℝ) → u ∼[ cMod ε ] v → f' u ∼[ ε ] f' v
+--  rl ε u v u∼v = ∼-monotone≤  (cMod≤' ε) (Elimℝ.go∼ w u∼v)
 
 
 
@@ -140,7 +220,7 @@ f #[ _op_ ]$ g = λ r x → (f r x) op (g r x)
         → at x limitOf (f #[ _+ᵣ_ ]$ g) is (F +ᵣ G)
 +-lim x f g F G fL gL ε =
   PT.map2 (λ (δ , p) (δ' , p') →
-       (_ , ℝ₊min δ δ') ,
+       (minᵣ₊ δ δ') ,
         λ r x＃r x₁ →
          let u = p r x＃r (isTrans<≤ᵣ _ _ _ x₁ (min≤ᵣ _ _))
              u' = p' r x＃r (isTrans<≤ᵣ _ _ _ x₁ (min≤ᵣ' _ _))
@@ -176,8 +256,7 @@ f #[ _op_ ]$ g = λ r x → (f r x) op (g r x)
   where
 
    δ* : ℝ₊
-   δ* = minᵣ (minᵣ (fst δ) (fst δ')) (fst δ'') ,
-              ℝ₊min ((minᵣ (fst δ) (fst δ')) , (ℝ₊min δ δ')) δ''
+   δ* = minᵣ₊ (minᵣ₊ δ δ') δ'' 
 
    ww : (r : ℝ) (x＃r : x ＃ r) →
           absᵣ (x -ᵣ r) <ᵣ fst δ* →

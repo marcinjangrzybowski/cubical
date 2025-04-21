@@ -5,9 +5,9 @@ module Cubical.HITs.CauchyReals.Sequence where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.Transport
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Function
+open import Cubical.Foundations.Transport
 
 open import Cubical.Data.Bool as 𝟚 hiding (_≤_)
 open import Cubical.Data.Nat as ℕ hiding (_·_;_+_)
@@ -43,149 +43,6 @@ open import Cubical.HITs.CauchyReals.Inverse
 
 Seq : Type
 Seq = ℕ → ℝ
-
-
-≤ᵣ-·ᵣo : ∀ m n o → 0 ≤ᵣ o  →  m ≤ᵣ n → (m ·ᵣ o ) ≤ᵣ (n ·ᵣ o)
-≤ᵣ-·ᵣo m n o 0≤o m≤n = subst (λ o →
-   (m ·ᵣ o ) ≤ᵣ (n ·ᵣ o)) 0≤o (w ∙
-      cong (_·ᵣ maxᵣ (rat [ pos 0 / 1+ 0 ]) o) m≤n)
- where
- w : maxᵣ (m ·ᵣ maxᵣ 0 o ) (n ·ᵣ maxᵣ 0 o) ≡  (maxᵣ m n ·ᵣ maxᵣ 0 o)
- w = ≡Continuous _ _
-     (cont₂maxᵣ _ _
-       ((IsContinuous∘ _ _
-         (IsContinuous·ᵣL m) (IsContinuousMaxL 0)  ))
-       ((IsContinuous∘ _ _
-         (IsContinuous·ᵣL n) (IsContinuousMaxL 0)  )))
-     (IsContinuous∘ _ _
-         (IsContinuous·ᵣL _) (IsContinuousMaxL 0)  )
-      (λ o' →
-        ≡Continuous _ _
-          (IsContinuous∘ _ _ (IsContinuousMaxR ((n ·ᵣ maxᵣ 0 (rat o'))))
-                (IsContinuous·ᵣR (maxᵣ 0 (rat o'))) )
-          (IsContinuous∘ _ _  (IsContinuous·ᵣR (maxᵣ 0 (rat o')))
-                                (IsContinuousMaxR n))
-          (λ m' →
-            ≡Continuous
-              (λ n → maxᵣ (rat m' ·ᵣ maxᵣ 0 (rat o') ) (n ·ᵣ maxᵣ 0 (rat o')))
-              (λ n →  maxᵣ (rat m') n ·ᵣ maxᵣ 0 (rat o'))
-              ((IsContinuous∘ _ _
-                (IsContinuousMaxL (((rat m') ·ᵣ maxᵣ 0 (rat o'))))
-                (IsContinuous·ᵣR (maxᵣ 0 (rat o'))) ))
-              (IsContinuous∘ _ _ ((IsContinuous·ᵣR (maxᵣ 0 (rat o'))))
-                  (IsContinuousMaxL (rat m')))
-              (λ n' →
-                 (cong₂ maxᵣ (sym (rat·ᵣrat _ _)) (sym (rat·ᵣrat _ _)))
-                  ∙∙ cong rat (sym (ℚ.·MaxDistrℚ' m' n' (ℚ.max 0 o')
-                      (ℚ.≤max 0 o'))) ∙∙
-                  rat·ᵣrat _ _
-                 ) n) m) o
-
-≤ᵣ-o·ᵣ : ∀ m n o → 0 ≤ᵣ o →  m ≤ᵣ n → (o ·ᵣ m   ) ≤ᵣ (o ·ᵣ n)
-≤ᵣ-o·ᵣ m n o 0≤o p = subst2 _≤ᵣ_
-  (·ᵣComm _ _)
-  (·ᵣComm _ _)
-  (≤ᵣ-·ᵣo m n o 0≤o p)
-
-≤ᵣ₊Monotone·ᵣ : ∀ m n o s → 0 ≤ᵣ n → 0 ≤ᵣ o
-       → m ≤ᵣ n → o ≤ᵣ s
-       → (m ·ᵣ o) ≤ᵣ (n ·ᵣ s)
-≤ᵣ₊Monotone·ᵣ m n o s 0≤n 0≤o m≤n o≤s =
-  isTrans≤ᵣ _ _ _ (≤ᵣ-·ᵣo m n o 0≤o m≤n)
-    (≤ᵣ-o·ᵣ o s n 0≤n o≤s)
-
-
-
-
-ℝ₊· : (m : ℝ₊) (n : ℝ₊) → 0 <ᵣ (fst m) ·ᵣ (fst n)
-ℝ₊· (m , 0<m) (n , 0<n) = PT.map2
-  (λ ((q , q') , 0≤q , q<q' , q'≤m) →
-   λ ((r , r') , 0≤r , r<r' , r'≤n) →
-    let 0<r' = ℚ.isTrans≤< _ _ _ (≤ᵣ→≤ℚ 0 r 0≤r) r<r'
-        qr₊ = (q' , ℚ.<→0< _ (ℚ.isTrans≤< _ _ _ (≤ᵣ→≤ℚ 0 q 0≤q) q<q'))
-               ℚ₊· (r' , ℚ.<→0< _ 0<r')
-    in (fst (/2₊ qr₊) , fst qr₊) ,
-         ≤ℚ→≤ᵣ _ _ (ℚ.0≤ℚ₊ (/2₊ qr₊)) ,
-           x/2<x qr₊ ,
-           subst (_≤ᵣ (m ·ᵣ n))
-             (sym (rat·ᵣrat q' r'))
-              (≤ᵣ₊Monotone·ᵣ (rat q')
-                (m) (rat r') n (<ᵣWeaken≤ᵣ _ _ 0<m)
-                               (<ᵣWeaken≤ᵣ _ _ (<ℚ→<ᵣ _ _ 0<r'))
-                             q'≤m r'≤n) ) 0<m 0<n
-
-_₊+ᵣ_ : ℝ₊ → ℝ₊ → ℝ₊
-(m , 0<m) ₊+ᵣ (n , 0<n) = m +ᵣ n , <ᵣMonotone+ᵣ 0 m 0 n 0<m 0<n
-
-_₊·ᵣ_ : ℝ₊ → ℝ₊  → ℝ₊
-(m , 0<m) ₊·ᵣ (n , 0<n) = _ , ℝ₊· (m , 0<m) (n , 0<n)
-
-_₊／ᵣ₊_ : ℝ₊ → ℝ₊  → ℝ₊
-(q , 0<q) ₊／ᵣ₊ (r , 0<r) = (q ／ᵣ[ r , inl (0<r) ] ,
-  ℝ₊· (q , 0<q) (_ , invℝ-pos r 0<r) )
-
-
-
-
-0<1/x : ∀ x 0＃x → 0 <ᵣ x → 0 <ᵣ invℝ x 0＃x
-0<1/x x 0＃x 0<x = subst (0 <ᵣ_)  (sym (invℝimpl x 0＃x)) (ℝ₊·
-  (_ , 0<signᵣ x 0＃x 0<x)
-  (_ , invℝ'-pos (absᵣ x) (0＃→0<abs x 0＃x)))
-
-<ᵣ-·ᵣo : ∀ m n (o : ℝ₊) →  m <ᵣ n → (m ·ᵣ (fst o)) <ᵣ (n ·ᵣ (fst o))
-<ᵣ-·ᵣo m n (o , 0<o) p =
-  let z = subst (0 <ᵣ_) (·DistR+ n (-ᵣ m) o ∙
-                   cong ((n ·ᵣ o) +ᵣ_) (-ᵣ· m o))
-           (ℝ₊· (_ , x<y→0<y-x _ _ p) (o , 0<o))
-  in 0<y-x→x<y _ _ z
-
-<ᵣ-o·ᵣ : ∀ m n (o : ℝ₊) →  m <ᵣ n → ((fst o) ·ᵣ m) <ᵣ ((fst o) ·ᵣ n )
-<ᵣ-o·ᵣ m n (o , 0<o) p =
-  subst2 (_<ᵣ_)
-    (·ᵣComm _ _) (·ᵣComm _ _) (<ᵣ-·ᵣo m n (o , 0<o) p)
-
-
-
-<ᵣ₊Monotone·ᵣ : ∀ m n o s → (0 ≤ᵣ m) → (0 ≤ᵣ o)
-       → m <ᵣ n → o <ᵣ s
-       → (m ·ᵣ o) <ᵣ (n ·ᵣ s)
-<ᵣ₊Monotone·ᵣ m n o s 0≤m 0≤o = PT.map2
-   (λ m<n@((q , q') , m≤q , q<q' , q'≤n) →
-        λ ((r , r') , o≤r , r<r' , r'≤s) →
-    let 0≤q = isTrans≤ᵣ _ _ _ 0≤m m≤q
-        0≤r = isTrans≤ᵣ _ _ _ 0≤o o≤r
-        0≤r' = isTrans≤ᵣ _ _ _ 0≤r (≤ℚ→≤ᵣ _ _ (ℚ.<Weaken≤ _ _ r<r'))
-        0≤n = isTrans≤ᵣ _ _ _ 0≤m (<ᵣWeaken≤ᵣ _ _ ∣ m<n ∣₁)
-     in (q ℚ.· r , q' ℚ.· r') ,
-           subst (m ·ᵣ o ≤ᵣ_) (sym (rat·ᵣrat _ _))
-              (≤ᵣ₊Monotone·ᵣ m (rat q) o (rat r)
-               (0≤q) 0≤o m≤q o≤r) ,
-                ℚ.<Monotone·-onPos _ _ _ _
-                  q<q' r<r' (≤ᵣ→≤ℚ _ _ 0≤q)
-                            (≤ᵣ→≤ℚ _ _ 0≤r) ,
-                (subst (_≤ᵣ n ·ᵣ s ) (sym (rat·ᵣrat _ _))
-                  (≤ᵣ₊Monotone·ᵣ (rat q') n (rat r') s
-                    0≤n 0≤r'
-                    q'≤n r'≤s)))
-
-
-z<x≃y₊·z<y₊·x : ∀ x z (y : ℝ₊) → (z <ᵣ x) ≃ ((fst y) ·ᵣ z <ᵣ (fst y) ·ᵣ x)
-z<x≃y₊·z<y₊·x x z y =  propBiimpl→Equiv squash₁ squash₁
- (<ᵣ-o·ᵣ _ _ y) (subst2 _<ᵣ_
-  (·ᵣAssoc _ _ _ ∙ cong (_·ᵣ z) (·ᵣComm _ _ ∙ x·invℝ₊[x] y) ∙ ·IdL z)
-  (·ᵣAssoc _ _ _ ∙ cong (_·ᵣ x) (·ᵣComm _ _ ∙ x·invℝ₊[x] y) ∙ ·IdL x)
-  ∘S (<ᵣ-o·ᵣ _ _ (invℝ₊ y)))
-
-0<x≃0<y₊·x : ∀ x (y : ℝ₊) → (0 <ᵣ x) ≃ (0 <ᵣ (fst y) ·ᵣ x)
-0<x≃0<y₊·x x y =   propBiimpl→Equiv squash₁ squash₁
-   (λ 0<x → isTrans≡<ᵣ _ _ _ (sym (𝐑'.0RightAnnihilates  (fst y))) 
-      (<ᵣ-o·ᵣ 0 x y 0<x))
-   λ 0<y·x →
-     isTrans<≡ᵣ _ _ x (isTrans≡<ᵣ _ _ _ (sym (𝐑'.0RightAnnihilates
-       (fst (invℝ₊ y)))) 
-      (<ᵣ-o·ᵣ 0 ((fst y) ·ᵣ x) (invℝ₊ y) 0<y·x))
-        (·ᵣAssoc _ _ _ ∙ cong (_·ᵣ x) (·ᵣComm _ _ ∙ x·invℝ₊[x] _) ∙ ·IdL x)
-
 
 /nᵣ-L : (n : ℕ₊₁) → Σ _ (Lipschitz-ℝ→ℝ _)
 /nᵣ-L n = (fromLipschitz ([ 1 / n ] , _)
@@ -489,20 +346,24 @@ Sₙ-sup a r n a<0 0<r r<1  =
                (≡ᵣWeaken≤ᵣ _ _ (+IdR _)) ))
           (≡ᵣWeaken≤ᵣ _ _ (·IdL _ ) )))
 
-Seq<→Σ< : (s s' : Seq) →
-  (∀ n → s n <ᵣ s' n) →
-   ∀ n → seqSumUpTo s (suc n) <ᵣ seqSumUpTo s' (suc n)
-Seq<→Σ< s s' x zero = subst2 _<ᵣ_
-  (sym (+IdR _)) (sym (+IdR _)) (x 0)
-Seq<→Σ< s s' x (suc n) = <ᵣMonotone+ᵣ _ _ _ _
- (x 0) (Seq<→Σ< (s ∘ suc) (s' ∘ suc) (x ∘ suc) n)
+Seq<→Σ< : (s s' : Seq) → ∀ n →
+  (∀ m → m ℕ.≤ n  → s m <ᵣ s' m) →
+   seqSumUpTo s (suc n) <ᵣ seqSumUpTo s' (suc n)
+Seq<→Σ< s s' zero x = subst2 _<ᵣ_
+  (sym (+IdR _)) (sym (+IdR _)) (x 0 ℕ.≤-refl)
+Seq<→Σ< s s' (suc n) x =
+ <ᵣMonotone+ᵣ _ _ _ _
+  (x 0 ℕ.zero-≤) (Seq<→Σ< (s ∘ suc) (s' ∘ suc) n
+   (λ m x₁ → x (suc m) (ℕ.suc-≤-suc x₁ )))
+
+
 
 Seq<→Σ<-+1 : (s s' : Seq) →
   (s 0 ≤ᵣ s' 0) →
   (∀ n → s (suc n) <ᵣ s' (suc n)) →
    ∀ n → seqSumUpTo s (suc (suc n)) <ᵣ seqSumUpTo s' (suc (suc n))
 Seq<→Σ<-+1 s s' x0 x n = ≤<ᵣMonotone+ᵣ _ _ _ _
-  x0 (Seq<→Σ< (s ∘ suc) (s' ∘ suc) x n)
+  x0 (Seq<→Σ< (s ∘ suc) (s' ∘ suc) n (const ∘ x))
 
 Seq≤→Σ≤ : (s s' : Seq) →
   (∀ n → s n ≤ᵣ s' n) →
@@ -530,6 +391,12 @@ Seq'≤→Σ≤ s s' x (suc n) =
 0≤seqΣ' s x zero = ≤ᵣ-refl _
 0≤seqΣ' s x (suc n) =
   ≤ᵣMonotone+ᵣ _ _ _ _ (x 0) (0≤seqΣ' (s ∘ suc) (x ∘ suc) n) 
+
+0<seqΣ' : ∀ s → (∀ n → 0 <ᵣ s n)
+            → ∀ n → 0 <ᵣ seqΣ' s (suc n)
+0<seqΣ' s x zero = isTrans<≡ᵣ _ _ _ (x 0) (sym (+IdR (s 0)))
+0<seqΣ' s x (suc n) =
+  <ᵣMonotone+ᵣ _ _ _ _ (x 0) (0<seqΣ' (s ∘ suc) (x ∘ suc) n)
 
 
 seriesDiff : (s : Seq)  →
@@ -606,7 +473,24 @@ x/y<1 x y 0<x 0<y =
     substEquiv' (_<ᵣ (y ·ᵣ 1))
      (sym ([x/y]·yᵣ _ _ (inl 0<y)) ∙ ·ᵣComm _ _ ))
     ∙ₑ invEquiv (z<x≃y₊·z<y₊·x 1 (x ／ᵣ[ y , inl 0<y ]) (y , 0<y)))
-    
+
+-- x/y≤z : ∀ x y z → (0 ≤ᵣ x) → (0<y : 0 <ᵣ y)  →
+--   (x ≤ᵣ z ·ᵣ y) ≃ ((x ／ᵣ[ y , inl 0<y ]) ≤ᵣ z)   
+-- x/y≤z x y z 0≤x 0<y = {!!}
+--   -- (((substEquiv' (x <ᵣ_) (sym (·IdR y))) ∙ₑ
+--   --   substEquiv' (_<ᵣ (y ·ᵣ 1))
+--   --    (sym ([x/y]·yᵣ _ _ (inl 0<y)) ∙ ·ᵣComm _ _ ))
+--   --   ∙ₑ invEquiv (z<x≃y₊·z<y₊·x 1 (x ／ᵣ[ y , inl 0<y ]) (y , 0<y)))
+
+-- x≤z/y : ∀ x y z → (0 ≤ᵣ x) → (0<y : 0 <ᵣ y)  →
+--   (x ·ᵣ y ≤ᵣ z) ≃ (x ≤ᵣ (z  ／ᵣ[ y , inl 0<y ]))   
+-- x≤z/y x y z 0≤x 0<y = {!!}
+--   -- (((substEquiv' (x <ᵣ_) (sym (·IdR y))) ∙ₑ
+--   --   substEquiv' (_<ᵣ (y ·ᵣ 1))
+--   --    (sym ([x/y]·yᵣ _ _ (inl 0<y)) ∙ ·ᵣComm _ _ ))
+--   --   ∙ₑ invEquiv (z<x≃y₊·z<y₊·x 1 (x ／ᵣ[ y , inl 0<y ]) (y , 0<y)))
+
+
 1＃x/y : ∀ x y → (0 <ᵣ x) → (0<y : 0 <ᵣ y)  →
   (y ＃ x) ≃ 1 ＃ (x ／ᵣ[ y , inl 0<y ])   
 1＃x/y x y 0<x 0<y =
@@ -631,6 +515,7 @@ x/y<1 x y 0<x 0<y =
      (0≤x^ⁿ _ _ 0≤x) 0≤x (^<1 x 0≤x n x<1) x<1)
    (·IdR _)
 
+
 ^≤1 : ∀ x → 0 ≤ᵣ x  → ∀ n → (x ≤ᵣ 1) → ((x ^ⁿ n) ≤ᵣ 1)
 ^≤1 x _  zero _ = ≤ᵣ-refl 1
 ^≤1 x 0≤x (suc n) x≤1 = 
@@ -640,11 +525,13 @@ x/y<1 x y 0<x 0<y =
    (·IdR _)
 
 
+
+
 1＃^ : ∀ x → 0 ≤ᵣ x → ∀ n → (1 ＃ x) → (1 ＃ (x ^ⁿ (suc n)))   
 1＃^ x 0≤x n = ⊎.map (1<^ x n) (^<1 x 0≤x n)
 
-bⁿ-aⁿ : ℝ → ℝ → ℕ → ℝ
-bⁿ-aⁿ a b n = (b -ᵣ a) ·ᵣ seqΣ (λ k → b ^ⁿ k ·ᵣ (a ^ⁿ (n ∸ suc k))) n
+-- bⁿ-aⁿ : ℝ → ℝ → ℕ → ℝ
+-- bⁿ-aⁿ a b n = (b -ᵣ a) ·ᵣ seqΣ (λ k → b ^ⁿ k ·ᵣ (a ^ⁿ (n ∸ suc k))) n
 
 
 ^ⁿ-StrictMonotone : ∀ {x y : ℝ} (n : ℕ) → (0 ℕ.< n)
@@ -669,7 +556,48 @@ bⁿ-aⁿ a b n = (b -ᵣ a) ·ᵣ seqΣ (λ k → b ^ⁿ k ·ᵣ (a ^ⁿ (n ∸
 
 
 
-module _ n' A B (0<A : 0 <ᵣ A) (0<B : 0 <ᵣ B) (A<B : A <ᵣ B) where
+ℚ^ⁿ-Monotone : ∀ {x y : ℚ} (n : ℕ) → 0 ℚ.≤ x → 0 ℚ.≤ y → x ℚ.≤ y
+ → (x ℚ^ⁿ n) ℚ.≤ (y ℚ^ⁿ n)
+ℚ^ⁿ-Monotone zero 0≤x 0≤y x≤y = ℚ.isRefl≤ 1
+ℚ^ⁿ-Monotone {x} {y} (suc n) 0≤x 0≤y x≤y =
+  ℚ.≤Monotone·-onNonNeg _ _ _ _
+    (ℚ^ⁿ-Monotone n 0≤x 0≤y x≤y)
+    x≤y
+    (ℚ.0≤ℚ^ⁿ x 0≤x n)
+    0≤x
+
+ℚ^ⁿ-StrictMonotone : ∀ {x y : ℚ} (n : ℕ) → (0 ℕ.< n) → 0 ℚ.≤ x → 0 ℚ.≤ y → x ℚ.< y → (x ℚ.ℚ^ⁿ n) ℚ.< (y ℚ.ℚ^ⁿ n)
+ℚ^ⁿ-StrictMonotone {x} {y} 0 0<n 0≤x 0≤y x<y = ⊥.rec (ℕ.¬-<-zero 0<n)
+ℚ^ⁿ-StrictMonotone {x} {y} 1 0<n 0≤x 0≤y x<y = 
+  subst2 ℚ._<_ (sym (ℚ.·IdL _)) (sym (ℚ.·IdL _)) x<y
+ℚ^ⁿ-StrictMonotone {x} {y} (suc (suc n)) 0<n 0≤x 0≤y x<y =
+  ℚ.<Monotone·-onPos _ _ _ _
+    (ℚ^ⁿ-StrictMonotone (suc n) (ℕ.suc-≤-suc (ℕ.zero-≤ {n})) 0≤x 0≤y x<y)
+    x<y
+    (ℚ.0≤ℚ^ⁿ x 0≤x (suc n))
+    0≤x
+
+
+ℚ^ⁿ-Monotone⁻¹ : ∀ {x y : ℚ} (n : ℕ) → (0 ℕ.< n) → 0 ℚ.≤ x → 0 ℚ.≤ y 
+ → (x ℚ^ⁿ n) ℚ.≤ (y ℚ^ⁿ n) → x ℚ.≤ y
+ℚ^ⁿ-Monotone⁻¹ n 0<n 0≤x 0≤y xⁿ≤yⁿ =
+ ℚ.≮→≥ _ _ (ℚ.≤→≯ _ _ xⁿ≤yⁿ ∘ ℚ^ⁿ-StrictMonotone n 0<n 0≤y 0≤x  )
+
+^ⁿ-StrictMonotoneR : ∀ {x : ℝ} (m n : ℕ) 
+ → 1 <ᵣ x → m ℕ.< n → (x ^ⁿ m) <ᵣ (x ^ⁿ n)
+^ⁿ-StrictMonotoneR m zero x x₁ = ⊥.rec (ℕ.¬-<-zero x₁)
+^ⁿ-StrictMonotoneR {x} zero (suc n) 1<x m<n = 1<^ x n 1<x
+^ⁿ-StrictMonotoneR (suc m) (suc n) 1<x sm<sn =
+ <ᵣ-·ᵣo _ _ (_ , isTrans<ᵣ 0 1 _ (<ℚ→<ᵣ _ _ ℚ.decℚ<?) 1<x)
+  (^ⁿ-StrictMonotoneR m n 1<x (ℕ.predℕ-≤-predℕ sm<sn))
+
+IsContinuous^ⁿ : ∀ n → IsContinuous (_^ⁿ n)
+IsContinuous^ⁿ zero = IsContinuousConst _
+IsContinuous^ⁿ (suc n) = cont₂·ᵣ _ _ (IsContinuous^ⁿ n) IsContinuousId
+
+
+
+module bⁿ-aⁿ n'  where
 
  n = suc (suc n')
 
@@ -677,54 +605,41 @@ module _ n' A B (0<A : 0 <ᵣ A) (0<B : 0 <ᵣ B) (A<B : A <ᵣ B) where
  nᵣ₊ = fromNat n
 
 
- bⁿ-aⁿ' : 
-    ∀ a b → A ≤ᵣ a → b ≤ᵣ B →  a <ᵣ b →
-     Σ[ S ∈ ℝ ]
-       ((((b ^ⁿ (suc (suc n'))) -ᵣ (a ^ⁿ (suc (suc n')))) ≡ (b -ᵣ a) ·ᵣ S)
-        × (S ≤ᵣ ((B ^ⁿ (suc n')) ·ᵣ (fromNat n)))
-        × (A ^ⁿ (suc n') ≤ᵣ S))
+ module factor a b (0<a : 0 <ᵣ a) (0<b : 0 <ᵣ b) where
+
  
- bⁿ-aⁿ' a b A≤a b≤B a<b =
-   Sₙ (b ^ⁿ (suc n')) r n 
-   , sym w 
-   , ubIneq 
 
-   , lbIneq
-
-  where
-  a＃b = inl a<b
-
-  0<a = isTrans<≤ᵣ _ _ _ 0<A A≤a
-  0<b = isTrans<ᵣ _ _ _ 0<a a<b 
-  A<b = isTrans≤<ᵣ _ _ _ A≤a a<b
-
-
+  0＃b : 0 ＃ b
   0＃b = inl 0<b
   r = (a ／ᵣ[ b , 0＃b ])
 
+  S = Sₙ (b ^ⁿ (suc n')) r n
+
+  
   0<r : 0 <ᵣ r
   0<r = isTrans<≡ᵣ _ _ _ 
    (  (fst (0<x≃0<y₊·x a (invℝ₊ (b , 0<b))) 0<a))
       (·ᵣComm _ _ ∙
         cong (a ·ᵣ_) (invℝ₊≡invℝ _ _ ))
 
+
+  0<S : 0 <ᵣ S
+  0<S = 0<seqΣ' (geometricProgression (b ^ⁿ (suc n')) r)
+        (λ n → subst (0 <ᵣ_)
+           (sym (geometricProgressionClosed (b ^ⁿ (suc n')) r n))
+            (ℝ₊· (_ , (0<x^ⁿ b (suc n') 0<b)) (_ , (0<x^ⁿ r n 0<r))))
+        (suc n')
+
+  S₊ : ℝ₊
+  S₊ = S , 0<S
+
   0≤r : 0 ≤ᵣ r
   0≤r = <ᵣWeaken≤ᵣ _ _ 0<r
 
-  r<1 : r <ᵣ 1
-  r<1 = fst (x/y<1 a b 0<a 0<b) a<b
-
-  p : 0 ＃ ((1 -ᵣ (r ^ⁿ n)) ·ᵣ b )
-  p = 0＃· _ _ (invEq (＃Δ _ _)
-    (isSym＃ _ _ (1＃^ _ (
-      <ᵣWeaken≤ᵣ _ _ (isTrans<≡ᵣ _ _ _
-       (fst (0<x≃0<y₊·x a (invℝ₊ (b , 0<b))) 0<a) (·ᵣComm _ _ ∙
-          cong (a ·ᵣ_) (invℝ₊≡invℝ _ _))))
-      _ ((fst (1＃x/y _ _ 0<a 0<b) (isSym＃ _ _ (a＃b))))))) 0＃b
 
 
-  w : (b -ᵣ a) ·ᵣ Sₙ ((b ^ⁿ (suc n'))) r n ≡ (b ^ⁿ n) -ᵣ (a ^ⁿ n)
-  w = 
+  [b-a]·S≡bⁿ-aⁿ : (b -ᵣ a) ·ᵣ Sₙ ((b ^ⁿ (suc n'))) r n ≡ (b ^ⁿ n) -ᵣ (a ^ⁿ n)
+  [b-a]·S≡bⁿ-aⁿ = 
      ·ᵣComm _ _ ∙ cong ((Sₙ ((b ^ⁿ (suc n'))) r n) ·ᵣ_)
         (cong₂ _+ᵣ_ (sym (·IdL b)) (cong (-ᵣ_) (sym ([x/y]·yᵣ a b 0＃b))
          ∙ sym (-ᵣ· _ _)) ∙ sym (·DistR+ _ _ _))
@@ -736,47 +651,101 @@ module _ n' A B (0<A : 0 <ᵣ A) (0<B : 0 <ᵣ B) (A<B : A <ᵣ B) where
           (-ᵣ· _ _ ∙ cong (-ᵣ_)
            (sym (x/y≡z→x≡z·y _ _ _ _ (／^ⁿ n _ _ _ (inl (0<x^ⁿ b n 0<b))))) )
 
+  module _ A B (0<A : 0 <ᵣ A) (A<b : A <ᵣ b)
+    (0<B : 0 <ᵣ B) (A<B : A <ᵣ B) (b≤B : b ≤ᵣ B) (a<b : a <ᵣ b) where
+
+   a＃b : a ＃ b
+   a＃b = inl a<b
+
+
+   p : 0 ＃ ((1 -ᵣ (r ^ⁿ n)) ·ᵣ b )
+   p = 0＃· _ _ (invEq (＃Δ _ _)
+     (isSym＃ _ _ (1＃^ _ (
+       <ᵣWeaken≤ᵣ _ _ (isTrans<≡ᵣ _ _ _
+        (fst (0<x≃0<y₊·x a (invℝ₊ (b , 0<b))) 0<a) (·ᵣComm _ _ ∙
+           cong (a ·ᵣ_) (invℝ₊≡invℝ _ _))))
+       _ ((fst (1＃x/y _ _ 0<a 0<b) (isSym＃ _ _ (a＃b))))))) 0＃b
+
+
+   r<1 : r <ᵣ 1
+   r<1 = fst (x/y<1 a b 0<a 0<b) a<b
+
+
+   S≤Bⁿ·n : S ≤ᵣ ((B ^ⁿ (suc n')) ·ᵣ (fromNat n))
+   S≤Bⁿ·n =
+       (isTrans≤≡ᵣ _ _ _ (Seq≤→Σ≤ (geometricProgression (b ^ⁿ (suc n')) r)
+      (const (B ^ⁿ (suc n')))
+       (λ m →
+         isTrans≡≤ᵣ _ _ _
+           (geometricProgressionClosed _ _ _)
+            (isTrans≤≡ᵣ _ _ _ (
+             isTrans≤ᵣ _ _ _
+              (≤ᵣ-·ᵣo _ _ _  (0≤x^ⁿ _ _ 0≤r) (
+                ^ⁿ-Monotone (suc n')
+                 (<ᵣWeaken≤ᵣ _ _ 0<b) b≤B))
+                 (≤ᵣ-o·ᵣ (r ^ⁿ m) 1 (B ^ⁿ (suc n'))
+                  (0≤x^ⁿ _ _ (<ᵣWeaken≤ᵣ _ _ 0<B))
+                    (^≤1 _ 0≤r m (<ᵣWeaken≤ᵣ _ _  r<1))))
+                (·IdR _)))
+       (suc (suc n')))
+       ((seqSumUpToConst (B ^ⁿ (suc n')) n)))
+
+
+
+   Aⁿ≤S : (A ^ⁿ suc n') ≤ᵣ S
+   Aⁿ≤S = <ᵣWeaken≤ᵣ _ _ $
+     isTrans<≤ᵣ _ _ _
+      (^ⁿ-StrictMonotone (suc n') (ℕ.suc-≤-suc (ℕ.zero-≤ {n'}))
+          (<ᵣWeaken≤ᵣ _ _ 0<A) (<ᵣWeaken≤ᵣ _ _ 0<b) A<b)
+           (isTrans≡≤ᵣ _ _ _  (sym (+IdR _)) (≤ᵣ-o+ 0 _ _
+                  (0≤seqΣ' (λ x → geometricProgression ((b ^ⁿ n') ·ᵣ b) r (suc x))
+                       (λ n → isTrans≤≡ᵣ _ _ _
+                          (<ᵣWeaken≤ᵣ _ _ (ℝ₊· (_ , 0<x^ⁿ _ _ 0<b)
+                               (_ , 0<x^ⁿ _ _ 0<r)))
+                           ((sym (geometricProgressionClosed
+                           ((b ^ⁿ n') ·ᵣ b) r (suc n)))))
+                        (suc n'))))
+ open factor public
 
   
+^ⁿMonotone⁻¹ : ∀ {x y : ℝ} (n : ℕ) → (0 ℕ.< n) → 0 <ᵣ x → 0 <ᵣ y 
+ → (x ^ⁿ n) ≤ᵣ (y ^ⁿ n) → x ≤ᵣ y
+^ⁿMonotone⁻¹ zero 0<n 0≤x 0≤y xⁿ≤yⁿ = ⊥.rec (ℕ.¬-<-zero 0<n)
+^ⁿMonotone⁻¹ (suc zero) 0<n 0≤x 0≤y xⁿ≤yⁿ =
+  subst2 _≤ᵣ_ (·IdL _) (·IdL _) xⁿ≤yⁿ
+^ⁿMonotone⁻¹ {x} {y} (suc (suc n)) 0<n 0<x 0<y xⁿ<yⁿ =  
+ let z = isTrans≤≡ᵣ _ _ _ (x≤y→0≤y-x _ _ xⁿ<yⁿ)
+          (sym $ bⁿ-aⁿ.[b-a]·S≡bⁿ-aⁿ n x y 0<x 0<y)
+ in invEq (x≤y≃0≤y-x x y)
+      ((invEq (z≤x≃y₊·z≤y₊·x (y -ᵣ x) 0
+          ((bⁿ-aⁿ.S n x y 0<x 0<y ,
+                  bⁿ-aⁿ.0<S n x y 0<x 0<y)))
+         (subst2 _≤ᵣ_
+           (sym (𝐑'.0RightAnnihilates (bⁿ-aⁿ.S n x y 0<x 0<y)))
+            (·ᵣComm (y -ᵣ x) _) z)))
 
-  ubIneq : Sₙ (b ^ⁿ (suc n')) r n ≤ᵣ (B ^ⁿ (suc n'))  ·ᵣ (fst nᵣ₊)
-  ubIneq = 
-   (isTrans≤≡ᵣ _ _ _ (Seq≤→Σ≤ (geometricProgression (b ^ⁿ (suc n')) r)
-    (const (B ^ⁿ (suc n')))
-     (λ m →
-       isTrans≡≤ᵣ _ _ _
-         (geometricProgressionClosed _ _ _)
-          (isTrans≤≡ᵣ _ _ _ (
-           isTrans≤ᵣ _ _ _
-            (≤ᵣ-·ᵣo _ _ _  (0≤x^ⁿ _ _ 0≤r) (
-              ^ⁿ-Monotone (suc n')
-               (<ᵣWeaken≤ᵣ _ _ 0<b) b≤B))
-               (≤ᵣ-o·ᵣ (r ^ⁿ m) 1 (B ^ⁿ (suc n'))
-                (0≤x^ⁿ _ _ (<ᵣWeaken≤ᵣ _ _ 0<B))
-                  (^≤1 _ 0≤r m (<ᵣWeaken≤ᵣ _ _  r<1))))
-              (·IdR _)))
-     (suc (suc n')))
-     ((seqSumUpToConst (B ^ⁿ (suc n')) n)))
-  
 
-  lbIneq : (A ^ⁿ suc n') ≤ᵣ Sₙ ((b ^ⁿ suc n')) r n
-  lbIneq = <ᵣWeaken≤ᵣ _ _ $
-    isTrans<≤ᵣ _ _ _
-     (^ⁿ-StrictMonotone (suc n') (ℕ.suc-≤-suc (ℕ.zero-≤ {n'}))
-         (<ᵣWeaken≤ᵣ _ _ 0<A) (<ᵣWeaken≤ᵣ _ _ 0<b) A<b)
-          (isTrans≡≤ᵣ _ _ _  (sym (+IdR _)) (≤ᵣ-o+ 0 _ _
-                 (0≤seqΣ' (λ x → geometricProgression ((b ^ⁿ n') ·ᵣ b) r (suc x))
-                      (λ n → isTrans≤≡ᵣ _ _ _
-                         (<ᵣWeaken≤ᵣ _ _ (ℝ₊· (_ , 0<x^ⁿ _ _ 0<b)
-                              (_ , 0<x^ⁿ _ _ 0<r)))
-                          ((sym (geometricProgressionClosed
-                          ((b ^ⁿ n') ·ᵣ b) r (suc n)))))
-                       (suc n'))))
+^ⁿStrictMonotone⁻¹ : ∀ {x y : ℝ} (n : ℕ) → (0 ℕ.< n) → 0 <ᵣ x → 0 <ᵣ y 
+ → (x ^ⁿ n) <ᵣ (y ^ⁿ n) → x <ᵣ y
+^ⁿStrictMonotone⁻¹ zero 0<n 0≤x 0≤y xⁿ<yⁿ = ⊥.rec (ℕ.¬-<-zero 0<n)
+^ⁿStrictMonotone⁻¹ (suc zero) 0<n 0≤x 0≤y xⁿ<yⁿ =
+  subst2 _<ᵣ_ (·IdL _) (·IdL _) xⁿ<yⁿ
+^ⁿStrictMonotone⁻¹ {x} {y} (suc (suc n)) 0<n 0<x 0<y xⁿ<yⁿ = 
+ let z = isTrans<≡ᵣ _ _ _ (x<y→0<y-x _ _ xⁿ<yⁿ)
+          (sym $ bⁿ-aⁿ.[b-a]·S≡bⁿ-aⁿ n x y 0<x 0<y)
+ in 0<y-x→x<y _ _
+      (invEq (z<x≃y₊·z<y₊·x (y -ᵣ x) 0
+          ((bⁿ-aⁿ.S n x y 0<x 0<y ,
+                  bⁿ-aⁿ.0<S n x y 0<x 0<y)))
+         (subst2 _<ᵣ_
+           (sym (𝐑'.0RightAnnihilates (bⁿ-aⁿ.S n x y 0<x 0<y)))
+            (·ᵣComm (y -ᵣ x) _) z))
+
 
 IsCauchySequence : Seq → Type
 IsCauchySequence s =
   ∀ (ε : ℝ₊) → Σ[ N ∈ ℕ ] (∀ m n → N ℕ.< n → N ℕ.< m →
-    absᵣ ((s n) +ᵣ (-ᵣ (s m))) <ᵣ fst ε   )
+    absᵣ ((s n) +ᵣ (-ᵣ (s m))) <ᵣ fst ε)
 
 IsCauchySequence' : Seq → Type
 IsCauchySequence' s =
@@ -972,6 +941,7 @@ fromCauchySequence'≡ s ics x p =
 
 
 
+
 limₙ→∞_is_ : Seq → ℝ → Type
 limₙ→∞ s is x =
   ∀ (ε : ℝ₊) → Σ[ N ∈ ℕ ]
@@ -991,13 +961,13 @@ Limₙ→∞ s = Σ _ (limₙ→∞ s is_)
 
 
 ε<2ⁿ : (ε : ℚ₊) → Σ[ n ∈ ℕ ] fst ε ℚ.< 2 ℚ^ⁿ n
-ε<2ⁿ ε = let n = fst (log2ℕ (fst (ℚ.ceilℚ₊ ε))) in n ,
+ε<2ⁿ ε = let n = fst (log2ℕ (ℕ₊₁→ℕ  (fst (ℚ.ceilℚ₊ ε)))) in n ,
          subst (fst ε ℚ.<_) (sym (ℚ.fromNat-^ _ _))
           (ℚ.isTrans< _ _ (fromNat (2 ^ n))
                   ((snd (ℚ.ceilℚ₊ ε)))
-                   (ℚ.<ℤ→<ℚ (ℤ.pos ((fst (ℚ.ceilℚ₊ ε))))
+                   (ℚ.<ℤ→<ℚ (ℤ.pos (ℕ₊₁→ℕ (fst (ℚ.ceilℚ₊ ε))))
                      _ (ℤ.ℕ≤→pos-≤-pos  _ _
-                    (fst (snd (log2ℕ (fst (ℚ.ceilℚ₊ ε))))))))
+                    (fst (snd (log2ℕ (ℕ₊₁→ℕ (fst (ℚ.ceilℚ₊ ε)))))))))
 
 
 1/2ⁿ<ε : (ε : ℚ₊) → Σ[ n ∈ ℕ ] [ 1 / 2 ] ℚ^ⁿ n ℚ.< fst ε
@@ -1280,19 +1250,19 @@ limₙ→∞[expSeqRatio]=0 x 0<x =
  w' ε =
   let (cN , X) = ℚ.ceilℚ₊ (x₊ ℚ₊· (invℚ₊ ε))
 
-      X'' = subst (ℚ._< [ pos cN / 1+ 0 ])
+      X'' = subst (ℚ._< [ pos (ℕ₊₁→ℕ cN) / 1+ 0 ])
                (cong (x ℚ.·_) (sym (ℚ.invℚ₊≡invℚ ε _) ))
              X
-      X' : x ℚ.· [ pos 1 / 1+ cN ] ℚ.< fst ε
+      X' : x ℚ.· [ pos 1 / 1+ (ℕ₊₁→ℕ cN) ] ℚ.< fst ε
 
       X' = subst (ℚ._< fst ε)
              ((cong (x ℚ.·_) (ℚ.fromNat-invℚ _ _)))
-            (ℚ.ℚ-x/y<z→x/z<y x [ pos (suc cN) / 1 ] (fst ε)
+            (ℚ.ℚ-x/y<z→x/z<y x [ pos (suc (ℕ₊₁→ℕ cN)) / 1 ] (fst ε)
                         0<x (ℚ.<ℤ→<ℚ _ _ (ℤ.suc-≤-suc ℤ.zero-≤pos))
                          (ℚ.0<→< _ (snd ε))
-                         (ℚ.isTrans< _ [ pos (cN) / 1+ 0 ] _
+                         (ℚ.isTrans< _ [ pos ((ℕ₊₁→ℕ cN)) / 1+ 0 ] _
                            X'' (ℚ.<ℤ→<ℚ _ _ ℤ.isRefl≤ )))
-  in (suc cN) , (λ n' <n' →
+  in (suc (ℕ₊₁→ℕ cN)) , (λ n' <n' →
       let 0<n' = ℚ.<ℤ→<ℚ _ _
              (ℤ.ℕ≤→pos-≤-pos _ _ (ℕ.suc-≤-suc ℕ.zero-≤))
       in isTrans≡<ᵣ _ _ _
@@ -1305,7 +1275,7 @@ limₙ→∞[expSeqRatio]=0 x 0<x =
                              ∙ sym (rat·ᵣrat _ _))
            (<ℚ→<ᵣ _ _ (ℚ.isTrans< _ _ _
              (ℚ.<-o· [ 1 / 1+ n' ]
-                     [ 1 / 1+ cN ] x 0<x
+                     [ 1 / 1+ (ℕ₊₁→ℕ cN) ] x 0<x
                       ((ℤ.ℕ≤→pos-≤-pos _ _ (ℕ.≤-suc <n'))))
                           X')))
 

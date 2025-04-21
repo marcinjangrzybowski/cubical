@@ -15,11 +15,13 @@ import Cubical.Data.Nat.Mod as ℕ
 import Cubical.Data.Nat.Order as ℕ
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sum as ⊎
-open import Cubical.Data.Int as ℤ using (pos)
+open import Cubical.Data.Int as ℤ using (pos; ℤ)
 import Cubical.Data.Int.Order as ℤ
 open import Cubical.Data.Sigma
 
 open import Cubical.HITs.PropositionalTruncation as PT
+
+open import Cubical.HITs.SetQuotients as SQ hiding ([_])
 
 open import Cubical.Data.NatPlusOne
 
@@ -42,32 +44,6 @@ open import Cubical.HITs.CauchyReals.Sequence
 open import Cubical.HITs.CauchyReals.Bisect
 
 
-^ⁿ-ℚ^ⁿ : ∀ n q → ((rat q) ^ⁿ n) ≡ rat (q ℚ^ⁿ n)
-^ⁿ-ℚ^ⁿ zero _ = refl
-^ⁿ-ℚ^ⁿ (suc n) a =
-  cong (_·ᵣ rat a) (^ⁿ-ℚ^ⁿ n a) ∙
-          sym (rat·ᵣrat _ _)
-
-ℚ^ⁿ-Monotone : ∀ {x y : ℚ} (n : ℕ) → 0 ℚ.≤ x → 0 ℚ.≤ y → x ℚ.≤ y
- → (x ℚ^ⁿ n) ℚ.≤ (y ℚ^ⁿ n)
-ℚ^ⁿ-Monotone zero 0≤x 0≤y x≤y = ℚ.isRefl≤ 1
-ℚ^ⁿ-Monotone {x} {y} (suc n) 0≤x 0≤y x≤y =
-  ℚ.≤Monotone·-onNonNeg _ _ _ _
-    (ℚ^ⁿ-Monotone n 0≤x 0≤y x≤y)
-    x≤y
-    (ℚ.0≤ℚ^ⁿ x 0≤x n)
-    0≤x
-
-ℚ^ⁿ-StrictMonotone : ∀ {x y : ℚ} (n : ℕ) → (0 ℕ.< n) → 0 ℚ.≤ x → 0 ℚ.≤ y → x ℚ.< y → (x ℚ.ℚ^ⁿ n) ℚ.< (y ℚ.ℚ^ⁿ n)
-ℚ^ⁿ-StrictMonotone {x} {y} 0 0<n 0≤x 0≤y x<y = ⊥.rec (ℕ.¬-<-zero 0<n)
-ℚ^ⁿ-StrictMonotone {x} {y} 1 0<n 0≤x 0≤y x<y = 
-  subst2 ℚ._<_ (sym (ℚ.·IdL _)) (sym (ℚ.·IdL _)) x<y
-ℚ^ⁿ-StrictMonotone {x} {y} (suc (suc n)) 0<n 0≤x 0≤y x<y =
-  ℚ.<Monotone·-onPos _ _ _ _
-    (ℚ^ⁿ-StrictMonotone (suc n) (ℕ.suc-≤-suc (ℕ.zero-≤ {n})) 0≤x 0≤y x<y)
-    x<y
-    (ℚ.0≤ℚ^ⁿ x 0≤x (suc n))
-    0≤x
 
 
 sqrRestr< : ∀ n → (fst (invℚ₊ (fromNat (2 ℕ.+ n)))) ℚ.< (fromNat (2 ℕ.+ n))
@@ -83,12 +59,19 @@ module NthRoot (m : ℕ) where
 
  module _ (n : ℕ) where
 
-  bounds = bⁿ-aⁿ' m
-    (rat (fst (invℚ₊ (fromNat (2 ℕ.+ n)))))
-    (fromNat (2 ℕ.+ n))
-      (snd (ℚ₊→ℝ₊ (invℚ₊ (fromNat (2 ℕ.+ n)))) )
-      (snd (ℚ₊→ℝ₊ (fromNat (2 ℕ.+ n))))
-      (<ℚ→<ᵣ _ _ (sqrRestr< n))
+  
+  open bⁿ-aⁿ m hiding (n)
+
+  
+  A B : ℝ
+  A = rat (fst (invℚ₊ (fromNat (2 ℕ.+ n))))
+  B = (fromNat (2 ℕ.+ n))
+  0<A = (snd (ℚ₊→ℝ₊ (invℚ₊ (fromNat (2 ℕ.+ n)))))
+  0<B = (snd (ℚ₊→ℝ₊ (fromNat (2 ℕ.+ n))))
+  A<B : A <ᵣ B
+  A<B = <ℚ→<ᵣ _ _ (sqrRestr< n)
+
+   
 
   L = (((fromNat (2 ℕ.+ n)) ℚ₊^ⁿ (suc m))
       ℚ₊· (fromNat (2 ℕ.+ m)))
@@ -138,16 +121,26 @@ module NthRoot (m : ℕ) where
   rootRest .IsBilipschitz.lipF =
     Lipschitz-ℚ→ℝℙ<→Lipschitz-ℚ→ℝℙ _ _ _
       λ q q∈ r r∈ r<q  →
-       let bb = bounds (rat r) (rat q) (fst r∈) (snd q∈) (<ℚ→<ᵣ _ _ r<q)
-
-
+       let 0<r : 0 <ᵣ (rat r)
+           0<r = isTrans<≤ᵣ 0 A (rat r) 0<A (fst r∈) 
+           0<q : 0 <ᵣ (rat q)
+           0<q = isTrans<ᵣ 0 (rat r) (rat q) 0<r (<ℚ→<ᵣ _ _ r<q) 
+           
            ineqL : (rat q ^ⁿ suc (suc m)) -ᵣ (rat r ^ⁿ suc (suc m))
                       ≤ᵣ rat ((fst L) ℚ.· (q ℚ.- r))
+                      
            ineqL =
-             isTrans≡≤ᵣ _ _ _ (fst (snd bb))
+             isTrans≡≤ᵣ _ _ _ (sym $
+                  [b-a]·S≡bⁿ-aⁿ (rat r) (rat q)
+                     0<r 0<q)
                (isTrans≤≡ᵣ _ _ _ (≤ᵣ-o·ᵣ _ _ _
                       (≤ℚ→≤ᵣ _ _  $ ℚ.<Weaken≤ _ _ (ℚ.<→<minus _ _ r<q))
-                    (isTrans≤≡ᵣ _ _ _ (fst (snd (snd bb)))
+                    (isTrans≤≡ᵣ _ _ _
+               (S≤Bⁿ·n (rat r) (rat q) 0<r 0<q A B 0<A
+                     (isTrans≤<ᵣ _ _ _
+                       (fst r∈ ) (<ℚ→<ᵣ _ _ r<q)) 0<B A<B
+                  (snd q∈)
+                  (<ℚ→<ᵣ _ _ r<q))
                       (sym ((rat·ᵣrat _ _
                         ∙ cong (_·ᵣ (rat ((fromNat (2 ℕ.+ m)))))
                           (sym (^ⁿ-ℚ^ⁿ _ _)))))
@@ -171,9 +164,11 @@ module NthRoot (m : ℕ) where
           let r∈' = (∈ℚintervalℙ→∈intervalℙ _ _ _ r∈)
               q∈' = (∈ℚintervalℙ→∈intervalℙ
                       (fst (invℚ₊ (fromNat (2 ℕ.+ n)))) _ _ q∈)
-              bb = bounds (rat r) (rat q) (fst r∈') (snd q∈')
-                    (<ℚ→<ᵣ _ _ r<q)
-
+              0<r : 0 <ᵣ (rat r)
+              0<r = isTrans<≤ᵣ 0 A (rat r) 0<A (fst r∈') 
+              0<q : 0 <ᵣ (rat q)
+              0<q = isTrans<ᵣ 0 (rat r) (rat q) 0<r (<ℚ→<ᵣ _ _ r<q) 
+           
           in ℚ.x·invℚ₊y≤z→x≤y·z _ _ _ (≤ᵣ→≤ℚ _ _
                 $ isTrans≡≤ᵣ _ _ _ (cong rat
                   (cong ((q ℚ.+ ℚ.- r) ℚ.·_)
@@ -184,12 +179,21 @@ module NthRoot (m : ℕ) where
                         (≤ℚ→≤ᵣ _ _  $ ℚ.<Weaken≤ _ _ (ℚ.<→<minus _ _ r<q))
                   (isTrans≡≤ᵣ _ _ _
                      (sym (^ⁿ-ℚ^ⁿ _ _))
-                             (snd (snd (snd bb)))))
-                    (sym (fst (snd bb)) ∙
+                             (Aⁿ≤S (rat r) (rat q) 0<r 0<q
+                              A B 0<A
+                              (isTrans≤<ᵣ _ _ _
+                                (fst r∈' ) (<ℚ→<ᵣ _ _ r<q))
+                              0<B A<B
+                             (snd q∈')
+                             (<ℚ→<ᵣ _ _ r<q))
+                             ))
+                    ([b-a]·S≡bⁿ-aⁿ (rat r) (rat q) 0<r 0<q 
+                       ∙
                       cong₂ _-ᵣ_ (^ⁿ-ℚ^ⁿ _ _) (^ⁿ-ℚ^ⁿ _ _)
                       ∙ cong rat (sym (ℚ.absPos _
                       (ℚ.<→<minus _ _ (incrF r r∈ q q∈ r<q))) ∙
-                       ℚ.abs'≡abs _)))
+                       ℚ.abs'≡abs _))
+                       )
 
 
 
@@ -197,23 +201,27 @@ module NthRoot (m : ℕ) where
  loB hiB : ∀ n → ℚ
  loB n = (((fst (invℚ₊ (fromNat (2 ℕ.+ n))))) ℚ^ⁿ (2 ℕ.+ m))
  hiB n = ((fromNat (2 ℕ.+ n)) ℚ^ⁿ (2 ℕ.+ m))
+
+ loB-mon : ∀ n → loB (suc n) ℚ.< loB n
+ loB-mon n = (
+     (ℚ^ⁿ-StrictMonotone (2 ℕ.+ m) (ℕ.suc-≤-suc ℕ.zero-≤)
+      (ℚ.0≤ℚ₊ _) (ℚ.0≤ℚ₊ _)         
+      (fst (ℚ.invℚ₊-<-invℚ₊
+    (fromNat (2 ℕ.+ n)) (fromNat (3 ℕ.+ n)))
+      (ℚ.<ℤ→<ℚ _ _ ℤ.isRefl≤))))
+
+ hiB-mon : ∀ n → hiB n ℚ.< hiB (suc n)
+ hiB-mon n = ℚ^ⁿ-StrictMonotone (2 ℕ.+ m)
+        (ℕ.suc-≤-suc ℕ.zero-≤) (ℚ.0≤ℚ₊ _) (ℚ.0≤ℚ₊ _)         
+      ((ℚ.<ℤ→<ℚ _ _ (ℤ.suc-≤-suc ℤ.isRefl≤)))
  
  rootSeq⊆ : Seq⊆
  rootSeq⊆ .Seq⊆.𝕡 n = intervalℙ
    (rat (loB n))
    (rat (hiB n))
- rootSeq⊆ .Seq⊆.𝕡⊆ n x (≤x , x≤) =
-  
-   isTrans≤ᵣ _ _ _ (≤ℚ→≤ᵣ _ _
-     (ℚ^ⁿ-Monotone (2 ℕ.+ m) (ℚ.0≤ℚ₊ _) (ℚ.0≤ℚ₊ _)         
-      (fst (ℚ.invℚ₊-≤-invℚ₊
-    (fromNat (2 ℕ.+ n)) (fromNat (3 ℕ.+ n)))
-      (ℚ.≤ℤ→≤ℚ _ _ (ℤ.≤-suc ℤ.isRefl≤)))
-      )) ≤x ,
-   isTrans≤ᵣ _ _ _ x≤ (≤ℚ→≤ᵣ _ _
-     (ℚ^ⁿ-Monotone (2 ℕ.+ m) (ℚ.0≤ℚ₊ _) (ℚ.0≤ℚ₊ _)         
-      ((ℚ.≤ℤ→≤ℚ _ _ (ℤ.≤-suc ℤ.isRefl≤)))
-      ))
+ rootSeq⊆ .Seq⊆.𝕡⊆ n x (≤x , x≤) =  
+   isTrans≤ᵣ _ _ _ (≤ℚ→≤ᵣ _ _ (ℚ.<Weaken≤ _ _ (loB-mon n))) ≤x ,
+   isTrans≤ᵣ _ _ _ x≤ (≤ℚ→≤ᵣ _ _ (ℚ.<Weaken≤ _ _ (hiB-mon n)))
 
 
 
@@ -391,88 +399,166 @@ module NthRoot (m : ℕ) where
      (getBounds x 0<x)
       (denseℚinℝ _ _ 0<x)
       (getClamps x)
+
+
+ 0<root : (x : ℝ) (n : ℕ)
+     (x∈ : x ∈ intervalℙ (rat (loB n)) (rat (hiB n))) →
+     rat [ pos 0 / 1+ 0 ] <ᵣ IsBilipschitz.𝒇⁻¹ (rootRest n) x
+ 0<root x n x∈ = 
+   isTrans<≤ᵣ _ _ _
+     (<ℚ→<ᵣ _ _ (ℚ.0<ℚ₊ (invℚ₊ (ℚ.[ pos (suc (suc n)) , (1+ 0) ] , tt))))
+     (fst (IsBilipschitz.𝒇⁻¹∈ (rootRest n) x x∈))
+
+
+ open Seq⊆→.FromIntersection rootSeq⊆→ isSetℝ (λ x → (0 <ᵣ x ) , squash₁) ℝ₊⊆rootSeq public
+           
+        
+ 𝒇=f : ∀ n x → x ∈ intervalℙ
+                     (rat (fst (invℚ₊ (ℚ.[ pos (suc (suc n)) , (1+ 0) ] , tt))))
+                     (rat (fromNat (2 ℕ.+ n)))  →
+          (x ^ⁿ (suc (suc m))) ≡ fst (IsBilipschitz.fl-ebl (rootRest n)) x
+ 𝒇=f n = elimInClampsᵣ (rat (fst (invℚ₊ (ℚ.[ pos (suc (suc n)) , (1+ 0) ] , tt)))) (rat _)
+  (≡Continuous _ _
+       (IsContinuous∘ _ _ (IsContinuous^ⁿ (suc (suc m)) ) (IsContinuousClamp (rat _) (rat _)))
+       (IsContinuous∘ _ _ (IsBilipschitz.isCont𝒇 (rootRest n)) (IsContinuousClamp (rat _) (rat _)))
+      λ r → ^ⁿ-ℚ^ⁿ (suc (suc m)) _ ∙ cong rat (sym (IsBilipschitz.ebl (rootRest n) .snd .snd .snd
+              (ℚ.clamp _ _ r) (clam∈ℚintervalℙ _ _
+               (ℚ.<Weaken≤ _ _ (sqrRestr< n)) r))))
+         
+
+
+ bounds⊂ : (n : ℕ) (x : ℝ) →
+      x ∈ (λ z → Seq⊆.𝕡 rootSeq⊆ n z) →
+      ∃-syntax ℚ₊
+      (λ δ →
+         (y : ℝ) → x ∼[ δ ] y → y ∈ (λ z → Seq⊆.𝕡 rootSeq⊆ (suc n) z))
+ bounds⊂ n x (lo<x , x<hi)  = ∣ δ
+         , (λ y → (λ abs< →
+             let u = isTrans≤ᵣ (x -ᵣ y) _
+                        (rat (loB n ℚ.- loB (suc n) )) (≤absᵣ (x -ᵣ y))
+                        (<ᵣWeaken≤ᵣ (absᵣ (x -ᵣ y)) _
+                           (isTrans<≤ᵣ _ (rat (fst δ)) _ abs<
+                       (≤ℚ→≤ᵣ _ _ (ℚ.min≤ _ _))))
+                 v =
+                   isTrans≤ᵣ (y -ᵣ x) _
+                        (rat (hiB (suc n) ℚ.- hiB n )) (≤absᵣ (y -ᵣ x))
+                      (isTrans≡≤ᵣ _ _ _ (minusComm-absᵣ _ _)
+                        (<ᵣWeaken≤ᵣ (absᵣ (x -ᵣ y)) _ (isTrans<≤ᵣ _ _ _ abs<
+                       (≤ℚ→≤ᵣ _ _ (ℚ.min≤' _ _)))))
+             in  subst2 _≤ᵣ_
+                    (L𝐑.lem--079 {rat (loB n)})
+                     L𝐑.lem--079
+                    (≤ᵣMonotone+ᵣ _ _ _ _
+                       lo<x (-ᵣ≤ᵣ _ _ u))
+                    , subst2 _≤ᵣ_
+                          (𝐑'.minusPlus _ _)
+                          (𝐑'.minusPlus (rat (hiB (suc n))) (rat (hiB n)))
+                          (≤ᵣMonotone+ᵣ _ _ _ _
+                             v x<hi))
+             ∘ fst (∼≃abs<ε _ _ _)) ∣₁
+  where
+  δ = ℚ.min₊ (ℚ.<→ℚ₊ _ _ (loB-mon n))
+                        (ℚ.<→ℚ₊ _ _ (hiB-mon n))
+ opaque
+  nth-root : ℝ₊ → ℝ₊
+  nth-root (x , 0<x) = 
+      ∩$ x 0<x
+    , ∩$-elimProp x 0<x {B = λ y → 0 <ᵣ y} (λ _ → squash₁)
+       (0<root x)
+
+  ^ⁿ∘ⁿ√ : ∀ x 0<x → (fst (nth-root (x , 0<x)) ^ⁿ (2 ℕ.+ m)) ≡ x
+  ^ⁿ∘ⁿ√ x 0<x = ∩$-elimProp x 0<x
+    {B = λ a → (a ^ⁿ (2 ℕ.+ m)) ≡ x}
+    (λ _ → isSetℝ _ _)
+      λ n x∈ →
+           𝒇=f _ _ (IsBilipschitz.𝒇⁻¹∈ (rootRest n) x x∈)
+        ∙ IsBilipschitz.𝒇∘𝒇⁻¹ (rootRest n) x x∈
+
+  ⁿ√∘^ⁿ : ∀ x 0<x → fst (nth-root (x  ^ⁿ (2 ℕ.+ m) , 0<x^ⁿ x (2 ℕ.+ m) 0<x)) ≡ x
+  ⁿ√∘^ⁿ x 0<x = ∩$-elimProp (x  ^ⁿ (2 ℕ.+ m)) (0<x^ⁿ x (2 ℕ.+ m) 0<x)
+    {B = λ a → a ≡ x}
+    (λ _ → isSetℝ _ _)
+     λ n x∈' →
+      let 0<n = ℕ.suc-≤-suc ℕ.zero-≤ 
+          x∈ =  (^ⁿMonotone⁻¹ (suc (suc m)) 0<n
+                 (0<A n) 0<x (isTrans≡≤ᵣ _ _ _ (^ⁿ-ℚ^ⁿ _ _) (fst x∈'))) ,
+                   ^ⁿMonotone⁻¹ (suc (suc m)) 0<n 0<x (0<B n)
+                     (isTrans≤≡ᵣ _ _ _ (snd x∈') (sym (^ⁿ-ℚ^ⁿ _ _)))
+
+      in cong (fst (IsBilipschitz.f⁻¹R-L (rootRest n)))
+                 (𝒇=f n x x∈)
+                ∙ IsBilipschitz.𝒇⁻¹∘𝒇 (rootRest n) x x∈
+
+
+  nth-root-cont : IsContinuousWithPred
+          (λ x → _ , squash₁) (curry (fst ∘ nth-root))
+  nth-root-cont = ∩$-cont' _ _
+     bounds⊂ _ _
+      λ n → AsContinuousWithPred _ _
+               (IsBilipschitz.isCont𝒇⁻¹ (rootRest n))
  
- nth-root : ℝ₊ → ℝ₊
- nth-root (x , 0<x) =
-   seq⊆→$ _ isSetℝ _ rootSeq⊆→ (λ x → (0 <ᵣ x ) , squash₁)
-      ℝ₊⊆rootSeq x 0<x
-     , {!!}
+  ℚApproxℙ-nth-root : ℚApproxℙ'
+                          (λ x → (0 <ᵣ x) , squash₁)
+                          (λ x → (0 <ᵣ x) , squash₁)
+                          (curry (nth-root))
+  ℚApproxℙ-nth-root q q∈ =
+   let q₊ = (q , ℚ.<→0< _ (<ᵣ→<ℚ _ _ q∈))
+       (m , q<m) = ℚ.ceilℚ₊ q₊
+       (n' , q∈') = getBounds (rat q) q∈
+          (fst (/2₊ q₊) ,
+            snd (ℚ₊→ℝ₊ (/2₊ q₊))
+              , <ℚ→<ᵣ _ _ (x/2<x q₊))
+               (1+ (ℕ₊₁→ℕ m) , isTrans<ᵣ _ _ _
+                   (isTrans≡<ᵣ _ _ _
+                     (absᵣPos _ (snd (ℚ₊→ℝ₊ q₊)))
+                     (<ℚ→<ᵣ _ _ q<m))
+                   (<ℚ→<ᵣ _ _ (ℚ.<ℤ→<ℚ _ _
+                     ℤ.isRefl≤)))
+       (a , b , c , d) =
+          ( (IsBilipschitz.ℚApproxℙ-𝒇⁻¹ (rootRest n')))
+   in a q q∈' , (λ ε → 
+      isTrans<≤ᵣ _ _ _ (snd (ℚ₊→ℝ₊ (invℚ₊ (fromNat (2 ℕ.+ _)))))
+         (fst (b q q∈' ε))) , c q q∈' ,
+      d q q∈'
+      ∙ sym (∩$-∈ₙ (rat q) q∈ n' q∈')
 
--- -- sqrt2 : {!!}
--- -- sqrt2 = {!!}
 
--- --  -- x n n' x∈ x∈' _ =
--- --  --    {!!}
-     
--- --  --   -- elimInClampsᵣ {P = λ x → 𝒇⁻¹ (rootRest n m) x ≡ 𝒇⁻¹ (rootRest n' m) x}
--- --  --   --    (rat (loB n))
--- --  --   --    (rat (hiB n))
--- --  --   --   {!h!}
--- --  --   --   x x∈
+ nth-pow-root-iso₊₂ : Iso ℝ₊ ℝ₊
+ nth-pow-root-iso₊₂ .Iso.fun (x , 0<x) =
+   (x ^ⁿ (2 ℕ.+ m)) , 0<x^ⁿ _ _ 0<x
+ nth-pow-root-iso₊₂ .Iso.inv = nth-root
+ nth-pow-root-iso₊₂ .Iso.rightInv =
+   Σ≡Prop (λ _ → squash₁) ∘ uncurry ^ⁿ∘ⁿ√
+ nth-pow-root-iso₊₂ .Iso.leftInv =
+   Σ≡Prop (λ _ → squash₁) ∘ uncurry ⁿ√∘^ⁿ
 
-      
--- --  --   where
--- --  --   open IsBilipschitz
--- --  --   ib = rootRest n m
--- --  --   ib' = rootRest n' m
+  
+root : ℕ₊₁ → ℝ₊ →  ℝ₊
+root one x = x
+root (2+ n) x = NthRoot.nth-root n x
 
--- --  --   h : {!!}
--- --  --   h = {!   cong fst (isoFunInjective (isoF ib)
--- --  --     (_ , x⁻¹∈)
--- --  --     (_ , {!!}) {!!})         !}
+ℚApproxℙ-root : ∀ n → ℚApproxℙ'
+                        (λ x → (0 <ᵣ x) , squash₁)
+                        (λ x → (0 <ᵣ x) , squash₁)
+                        (curry ((root n)))
+ℚApproxℙ-root one q q∈ = (λ _ → q) , (λ _ → q∈) , (λ _ _ → refl∼ _ _) , limConstRat _ _
 
--- --  --   w : {!!}
--- --    -- w =  ≡Continuous _ _
--- --    --        (IsContinuous∘ _ _
--- --    --           (Lipschitz→IsContinuous _ _ (snd (fl-ebl ib)))
--- --    --           ((Lipschitz→IsContinuous _ _ (snd (f⁻¹R-L ib)))))
--- --  --          (IsContinuous∘ _ _
--- --  --             (Lipschitz→IsContinuous _ _ (snd (fl-ebl ib')))
--- --  --             ((Lipschitz→IsContinuous _ _ (snd (f⁻¹R-L ib')))))
--- --  --             {!λ r → ?!} {!!}
-             
+ℚApproxℙ-root (2+ n) = NthRoot.ℚApproxℙ-nth-root n
+ 
+IsContinuousRoot : ∀ n → IsContinuousWithPred
+         (λ x → _ , squash₁)
+         λ x 0<x → fst (root n (x , 0<x))
+IsContinuousRoot one =
+  AsContinuousWithPred _ _ IsContinuousId
+IsContinuousRoot (2+ n) = NthRoot.nth-root-cont n
 
--- --    -- IsBilipschitz.inj𝒇 (rootRest n m)
--- --    -- ((Lipschitz→IsContinuous _
--- --    --  {!!} {!
--- --    --   IsContinuous∘ _ _
--- --    --    ?
--- --    --    ?!}))
--- --       -- {!!} {!!} x
--- --   --  z ∙ {!!} 
--- --   -- where
--- --   --  z : {!!}
--- --   --  z = IsBilipschitz.inj𝒇 (rootRest n m) _ _
--- --   --   {!!}
--- --  -- bisect
--- --  --   (2 ℚ₊· fromNat (2 ℕ.+ n))
--- --  --   (2 ℚ₊· fromNat (2 ℕ.+ n))
--- --  --   {!!}
--- --  --   (fst (invℚ₊ (fromNat (suc n))))
--- --  --   ((fromNat (suc n)))
--- --  --   {!!}
--- --  --   (λ x _ → x ℚ.· x)
--- --  --   (λ x x∈ y y∈ x₁ → {!!})
--- --  --   (λ q q∈ r r∈ ε x → 
--- --  --     let z = {!!}
--- --  --           -- restrSq (suc n) q r --(≤ᵣ→≤ℚ _ _ (snd r∈))
--- --  --           --      {!snd q∈!}
--- --  --           --      {!!}
--- --  --           --     -- (ℚ.isTrans≤< _ _ _ {!snd q∈!} {!!} )
--- --  --           --     -- (ℚ.isTrans≤< _ _ _ {!!} {!!})
--- --  --           --     -- (ℚ.isTrans≤< _ _ _ (≤ᵣ→≤ℚ _ _ (snd q∈))
--- --  --           --     --  {!!})
--- --  --           --     -- ((ℚ.isTrans<≤ _ _ _ {!!} (≤ᵣ→≤ℚ _ _ (fst q∈))
--- --  --           --     --  {!!}))
--- --  --           --     ε x
--- --  --     in {!z!}
--- --  --     )
--- --  --   λ q q∈ r r∈ ε x →
--- --  --     let x' = subst (λ x → ℚ.abs' x ℚ.< fst ε)
--- --  --                 (sym lem--040) x
--- --  --         uu = (((ℚ.[ pos 2 , (1+ 0) ] , tt) ℚ₊·
--- --  --            (ℚ.[ pos (suc (suc n)) , (1+ 0) ] , tt)))
--- --  --     in ℚ.isTrans≤< (ℚ.abs' (q ℚ.- r))
--- --  --         (fst uu ℚ.·  ℚ.abs' ((q ℚ.+ r) ℚ.· (q ℚ.- r))) _
--- --  --           {!!} (ℚ.<-o· _ _ (fst uu) (ℚ.0<ℚ₊ uu) x')
 
+nth-pow-root-iso : ℕ₊₁ → Iso ℝ₊ ℝ₊
+nth-pow-root-iso k .Iso.fun (x , 0<x) = (x ^ⁿ ℕ₊₁→ℕ k) , 0<x^ⁿ _ _ 0<x
+nth-pow-root-iso k .Iso.inv = root k 
+nth-pow-root-iso one .Iso.rightInv _ = ℝ₊≡ (·IdL _)
+nth-pow-root-iso (2+ n) .Iso.rightInv = Iso.rightInv
+  (NthRoot.nth-pow-root-iso₊₂ n)
+nth-pow-root-iso one .Iso.leftInv _ = ℝ₊≡ (·IdL _)
+nth-pow-root-iso (2+ n) .Iso.leftInv = Iso.leftInv
+  (NthRoot.nth-pow-root-iso₊₂ n)

@@ -8,6 +8,7 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Powerset
+open import Cubical.Foundations.Structure
 
 open import Cubical.Data.Bool as 𝟚 hiding (_≤_)
 open import Cubical.Data.Nat as ℕ hiding (_·_;_+_)
@@ -58,7 +59,6 @@ open import Cubical.HITs.CauchyReals.Sequence
 
 
 
-
 Lipschitz-ℚ→ℝℙ : ℚ₊ → (P : ℙ ℝ) → (∀ x → rat x ∈ P  → ℝ) → Type
 Lipschitz-ℚ→ℝℙ L P f =
   (∀ q q∈ r r∈ → (ε : ℚ₊) →
@@ -92,6 +92,35 @@ Lipschitz-ℝ→ℝℙ L P f =
         u ∼[ ε  ] v → f u u∈ ∼[ L ℚ₊· ε  ] f v v∈)
 
 
+Lipschitz-ℚ→ℝ' : ℚ₊ → (ℚ → ℝ) → Type
+Lipschitz-ℚ→ℝ' L f =
+  ∀ q r →  absᵣ (f q -ᵣ f r) ≤ᵣ rat (fst L ℚ.· ℚ.abs (q ℚ.- r))
+
+
+-- TODO, relevant is propably lim≤rat→∼
+-- ≤≃∀< : ∀ a b → (a ≤ᵣ b) ≃ (∀ x → x <ᵣ a → x <ᵣ b )
+-- ≤≃∀< a b = propBiimpl→Equiv (isSetℝ _ _) (isPropΠ2 λ _ _ → squash₁)
+--   (λ a≤b x x<a → isTrans<≤ᵣ _ _ _ x<a a≤b)
+--     λ X → {!!}
+
+
+Lipschitz-ℚ→ℝ'→Lipschitz-ℚ→ℝ : ∀ L f →
+      Lipschitz-ℚ→ℝ' L f → Lipschitz-ℚ→ℝ L f  
+Lipschitz-ℚ→ℝ'→Lipschitz-ℚ→ℝ L f lf q r ε -ε<q-r q-r<ε =
+  invEq (∼≃abs<ε _ _ _)
+   (isTrans≤<ᵣ _ _ _ (lf q r)
+     (<ℚ→<ᵣ _ _ (ℚ.<-o· _ _ _ (ℚ.0<ℚ₊ L) (
+       (ℚ.absFrom<×< (fst ε) (q ℚ.- r) -ε<q-r q-r<ε)))))
+
+
+Lipschitz-ℝ→ℝ' : ℚ₊ → (ℝ → ℝ) → Type
+Lipschitz-ℝ→ℝ' L f =
+  ∀ u v → 
+    absᵣ (f u -ᵣ f v) ≤ᵣ rat (fst L) ·ᵣ absᵣ (u -ᵣ v)
+
+-- Lipschitz-ℝ→ℝ→Lipschitz-ℝ→ℝ' : ∀ L f →
+--       Lipschitz-ℝ→ℝ L f → Lipschitz-ℝ→ℝ' L f  
+-- Lipschitz-ℝ→ℝ→Lipschitz-ℝ→ℝ' = {!!}
 
 Invlipschitz-ℚ→ℚℙ : ℚ₊ → (P : ℙ ℚ) → (∀ x → x ∈ P  → ℚ) → Type
 Invlipschitz-ℚ→ℚℙ K P f =
@@ -206,6 +235,19 @@ intervalℙ : ℝ → ℝ → ℙ ℝ
 intervalℙ a b x = ((a ≤ᵣ x) × (x ≤ᵣ b)) ,
   isProp× (isSetℝ _ _)  (isSetℝ _ _)
 
+
+
+ointervalℙ : ℝ → ℝ → ℙ ℝ 
+ointervalℙ a b x = ((a <ᵣ x) × (x <ᵣ b)) ,
+  isProp× squash₁ squash₁
+
+ointervalℙ⊆intervalℙ : ∀ a b → ointervalℙ a b ⊆ intervalℙ a b
+ointervalℙ⊆intervalℙ a b x (<x  , x<) = <ᵣWeaken≤ᵣ _ _ <x , <ᵣWeaken≤ᵣ _ _ x<
+
+
+openIintervalℙ : ∀ a b → ⟨ openPred (ointervalℙ a b)  ⟩
+openIintervalℙ a b = ∩-openPred _ _ (openPred< a) (openPred> b) 
+
 clam∈ℚintervalℙ : ∀ a b → (a ℚ.≤ b) → ∀ x →
   ℚ.clamp a b x ∈ ℚintervalℙ a b 
 clam∈ℚintervalℙ a b a≤b x = ℚ.≤clamp _ _ _ a≤b , (ℚ.clamp≤ _ _ _)
@@ -236,7 +278,13 @@ clamp-contained-agree a b a' b' x a≤a' b'≤b x∈ =
     (cong₂ maxᵣ (sym (≤→minᵣ _ _ y) ∙ minᵣComm _ _) (minᵣComm _ _)
      ∙∙ sym (maxDistMin L' L x) ∙∙
      minᵣComm _ _ )
-     
+
+
+clamp≤ᵣ : ∀ L L' x →  clampᵣ L L' x ≤ᵣ L'
+clamp≤ᵣ L L' x = min≤ᵣ' _ _
+  
+
+
 clampᵣ∈ℚintervalℙ : ∀ a b → (a ≤ᵣ b) → ∀ x →
   clampᵣ a b x ∈ intervalℙ a b 
 clampᵣ∈ℚintervalℙ a b a≤b x =
@@ -336,6 +384,12 @@ elimInClamps2 : ∀ {ℓ} {P : ℚ → ℚ → Type ℓ} → ∀ L L' → L ℚ.
 elimInClamps2 L L' L≤L' X x y =
   X _ _ (clam∈ℚintervalℙ L L' L≤L' x) (clam∈ℚintervalℙ L L' L≤L' y)
 
+elimInClamps2ᵣ : ∀ {ℓ} {P : ℝ → ℝ → Type ℓ} → ∀ L L' → L ≤ᵣ L' →
+     (∀ x y → x ∈ intervalℙ L L' → y ∈ intervalℙ L L' → P x y) → 
+     ∀ x y → P (clampᵣ L L' x) (clampᵣ L L' y)
+elimInClamps2ᵣ L L' L≤L' X x y = 
+  X _ _ (clampᵣ∈ℚintervalℙ L L' L≤L' x) (clampᵣ∈ℚintervalℙ L L' L≤L' y)
+
 
 cont-f∈ : ∀ (f : ℝ → ℝ) → IsContinuous f
           → ∀ a b → (a ℚ.≤ b) → ∀ a' b' → a' ≤ᵣ b'    
@@ -355,7 +409,8 @@ cont-f∈ f fc a b a≤b a' b' a'≤b' X = elimInClampsᵣ (rat a) (rat b)
                  ∘S X r
                  ∘S ∈ℚintervalℙ→∈intervalℙ a b r  )
          ) _)
-  
+
+
 extend-Lipshitzℚ→ℝ : ∀ L →  ∀ a b → (a ℚ.≤ b) → ∀ f →  
         Lipschitz-ℚ→ℝℙ L (intervalℙ (rat a) (rat b)) f →
         Σ[ f' ∈ (ℚ → ℝ) ]
@@ -379,66 +434,37 @@ extend-Lipshitzℚ→ℝ L a b a≤b f li =
    _ _ ε (ℚ.isTrans≤< _ _ _
     (ℚ.clampDist _ _ _ _) (ℚ.absFrom<×< (fst ε) (q ℚ.- r) u v))) 
 
-IsContinuous₂ : (ℝ → ℝ → ℝ) → Type
-IsContinuous₂ f =
- (∀ x → IsContinuous (f x)) × (∀ x → IsContinuous (flip f x))
+
+-- pre-^ⁿ-Monotone⁻¹ : ∀ {x y : ℝ} (n : ℕ) 
+--  → 0 ≤ᵣ x → 0 ≤ᵣ y →
+--   x -ᵣ (x ^ⁿ (suc n)) ≤ᵣ y -ᵣ (y ^ⁿ (suc n))
+-- pre-^ⁿ-Monotone⁻¹ {x} {y} n =
+--   ≤Cont₂Pos {λ x y → x -ᵣ (x ^ⁿ (suc n))} {λ x y → y -ᵣ (y ^ⁿ (suc n))}
+--    {!!} {!!}
+--     (ℚ.elimBy≤
+--       z
+--       {!!}
+--      )
+--      -- (λ u u' 0≤u 0≤u' → {!ℚ^ⁿ-Monotone⁻¹ {u} {u'} (suc n) ? 0≤u 0≤u' !} )
+--     x y
+--  where
+--  z : (x₁ y₁ : ℚ) →
+--        (0 ℚ.≤ x₁ →
+--         0 ℚ.≤ y₁ →
+--         rat x₁ -ᵣ (rat x₁ ^ⁿ suc n) ≤ᵣ rat y₁ -ᵣ (rat y₁ ^ⁿ suc n)) →
+--        0 ℚ.≤ y₁ →
+--        0 ℚ.≤ x₁ →
+--        rat y₁ -ᵣ (rat y₁ ^ⁿ suc n) ≤ᵣ rat x₁ -ᵣ (rat x₁ ^ⁿ suc n)
+--  z = {!!}
 
 
-≡Cont₂ : {f₀ f₁ : ℝ → ℝ → ℝ}
-         → IsContinuous₂ f₀
-         → IsContinuous₂ f₁
-         → (∀ u u' → f₀ (rat u) (rat u') ≡ f₁ (rat u) (rat u'))
-             → ∀ x x' → f₀ x x' ≡ f₁ x x'
-≡Cont₂ {f₀} {f₁} (f₀C , f₀C') (f₁C , f₁C') p x =
-  ≡Continuous _ _ (f₀C x) (f₁C x)
-    (λ q → ≡Continuous _ _ (f₀C' (rat q)) (f₁C' (rat q))
-       (λ r → p r q) x)
+-- -- ^ⁿ-Monotone⁻¹ : ∀ {x y : ℝ} (n : ℕ) 
+-- --  → 0 ≤ᵣ x → 0 ≤ᵣ y  → (x ^ⁿ (suc n)) ≤ᵣ (y ^ⁿ (suc n)) → x ≤ᵣ y
+-- -- ^ⁿ-Monotone⁻¹ n 0≤x 0≤y xⁿ≤yⁿ = {!!}
+     
+-- -- --  in {!zz!}
+-- -- --  -- ^ⁿ-Monotone⁻¹ n 0≤x 0<y z
 
-
-contNE₂∘ : ∀ {h} → (ne : NonExpanding₂ h)
-  {f₀ f₁ : ℝ → ℝ → ℝ}
-   → IsContinuous₂ f₀
-   → IsContinuous₂ f₁
-  → IsContinuous₂ (λ x x' → NonExpanding₂.go ne (f₀ x x') (f₁ x x'))
-contNE₂∘ ne x x₁ =
-  (λ x₂ → contDiagNE₂ ne _ _ (x .fst x₂) (x₁ .fst x₂)) ,
-   λ x₂ → contDiagNE₂ ne _ _ (x .snd x₂) (x₁ .snd x₂)
-
-cont∘₂ : ∀ {g} 
-  {f : ℝ → ℝ → ℝ}
-   → IsContinuous g
-   → IsContinuous₂ f
-  → IsContinuous₂ (λ x x' → g (f x x'))
-cont∘₂ cG (cF , _) .fst x = IsContinuous∘ _ _ cG (cF x)
-cont∘₂ cG (_ , cF) .snd x = IsContinuous∘ _ _ cG (cF x)
-
-cont₂∘ :  
-  {g : ℝ → ℝ → ℝ}
-  → ∀ {f f'}
-   → IsContinuous₂ g
-   → IsContinuous f
-   → IsContinuous f'
-  → IsContinuous₂ (λ x x' → g (f x) (f' x'))
-cont₂∘ (cG , _) _ cF .fst x = IsContinuous∘ _ _ (cG _) cF
-cont₂∘ (_ , cG) cF _ .snd x = IsContinuous∘ _ _ (cG _) cF
-
-
-contNE₂ : ∀ {h} → (ne : NonExpanding₂ h)
-  → IsContinuous₂ (NonExpanding₂.go ne)
-contNE₂ ne =
-  contNE₂∘ ne
-   ((λ _ → IsContinuousConst _) , (λ _ → IsContinuousId))
-   ((λ _ → IsContinuousId) , (λ _ → IsContinuousConst _))
-
-
-
-≤Cont₂ : {f₀ f₁ : ℝ → ℝ → ℝ}
-         → IsContinuous₂ f₀
-         → IsContinuous₂ f₁
-         → (∀ u u' → f₀ (rat u) (rat u') ≤ᵣ f₁ (rat u) (rat u'))
-             → ∀ x x' → f₀ x x' ≤ᵣ f₁ x x'
-≤Cont₂ f₀C f₁C =
-  ≡Cont₂ (contNE₂∘ maxR f₀C f₁C) f₁C
 
 fromLipInvLip' : ∀ K L (f : ℚ → ℚ)
                  → (fl : Lipschitz-ℚ→ℝ L (rat ∘ f))
@@ -962,6 +988,8 @@ map-fromCauchySequence' L s ics f lf =
                 (triangle∼ z' (lf _ _ _ zzzz')))) ∣₁
 
 
+
+
 record IsBilipschitz a b  (a<b : a ℚ.< b) f : Type where
  field
   incrF : isIncrasingℙ (ℚintervalℙ a b) f
@@ -1190,6 +1218,7 @@ record IsBilipschitz a b  (a<b : a ℚ.< b) f : Type where
   f⁻¹ = fromCauchySequence' (rat ∘ s)
         λ ε → www {ε} (1/2ⁿ<ε (ε ℚ₊· invℚ₊ (ℚ.<→ℚ₊ a b a<b)))
 
+  -- Approx-f⁻¹ : 
 
 
   s~y : (ε : ℚ₊) →
@@ -1296,13 +1325,17 @@ record IsBilipschitz a b  (a<b : a ℚ.< b) f : Type where
  𝒇⁻¹ = fst f⁻¹R-L
  𝒇 = fst fl-ebl
 
+ 
+ isCont𝒇 = (Lipschitz→IsContinuous L (fst fl-ebl) (snd fl-ebl))
+ isCont𝒇⁻¹ = (Lipschitz→IsContinuous K (fst f⁻¹R-L) (snd f⁻¹R-L))
+
  𝒇∘𝒇⁻¹' : ∀ y 
             → fst fl-ebl (fst f⁻¹R-L (clampᵣ (rat fa) (rat fb) y)) ≡
                (clampᵣ (rat fa) (rat fb) y)
  𝒇∘𝒇⁻¹' = ≡Continuous _ _ (IsContinuous∘ _ _
         (IsContinuous∘ _ _
-          (Lipschitz→IsContinuous L (fst fl-ebl) (snd fl-ebl))
-          (Lipschitz→IsContinuous K (fst f⁻¹R-L) (snd f⁻¹R-L)))
+          isCont𝒇
+          isCont𝒇⁻¹)
        (IsContinuousClamp (rat fa) (rat fb)))
   (IsContinuousClamp (rat fa) (rat fb))
     λ r → (cong (fst fl-ebl) (snd (snd ext-f⁻¹) _
@@ -1330,6 +1363,7 @@ record IsBilipschitz a b  (a<b : a ℚ.< b) f : Type where
           (≤ℚ→≤ᵣ fa fb (ℚ.<Weaken≤ fa fb fa<fb))
          λ x → fl-ebl∈ x ∘S ∈intervalℙ→∈ℚintervalℙ _ _ x
 
+
  𝒇⁻¹∘𝒇' : ∀ y 
             → fst f⁻¹R-L (fst fl-ebl  (clampᵣ (rat a) (rat b) y)) ≡
                (clampᵣ (rat a) (rat b) y)
@@ -1356,6 +1390,18 @@ record IsBilipschitz a b  (a<b : a ℚ.< b) f : Type where
                  ∘ f⁻¹∈ r 
 
  
+
+ ℚApproxℙ-𝒇⁻¹ : ℚApproxℙ (intervalℙ (rat fa) (rat fb))
+                        (intervalℙ (rat a) (rat b)) λ x x∈  →
+                          (𝒇⁻¹ x , 𝒇⁻¹∈ x x∈)
+ ℚApproxℙ-𝒇⁻¹ = _ , (λ q q∈ ε →
+      let z =
+             Step.a'∈
+               (ww q q∈ (suc (1/2ⁿ<ε (ε ℚ₊· invℚ₊ (ℚ.<→ℚ₊ a b a<b)) .fst)))
+       in ∈ℚintervalℙ→∈intervalℙ a b _ z)
+   , _ , λ q q∈ → sym (snd (snd ext-f⁻¹) q q∈) 
+
+
  isoF : Iso (Σ _ (_∈ intervalℙ (rat a) (rat b)))
             (Σ _ (_∈ intervalℙ (rat fa) (rat fb)))
  isoF .Iso.fun (x , x∈) = 𝒇 x , 𝒇∈ x x∈ 
@@ -1366,3 +1412,5 @@ record IsBilipschitz a b  (a<b : a ℚ.< b) f : Type where
  isoF .Iso.leftInv (x , x∈) =
    Σ≡Prop (∈-isProp (intervalℙ (rat a) (rat b)))
      (𝒇⁻¹∘𝒇 x x∈)
+
+ 

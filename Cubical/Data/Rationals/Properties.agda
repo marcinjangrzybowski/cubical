@@ -6,6 +6,8 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.GroupoidLaws hiding (_⁻¹)
 open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Function
 
 open import Cubical.Data.Int as ℤ using (ℤ; pos·pos; pos0+)
 open import Cubical.HITs.SetQuotients as SetQuotient using () renaming (_/_ to _//_)
@@ -13,11 +15,44 @@ open import Cubical.HITs.SetQuotients as SetQuotient using () renaming (_/_ to _
 open import Cubical.Data.Nat as ℕ using (ℕ; zero; suc)
 open import Cubical.Data.NatPlusOne
 open import Cubical.Data.Sigma
+import Cubical.Data.Bool as 𝟚
 
 open import Cubical.Data.Sum
+open import Cubical.Data.Empty as ⊥
 open import Cubical.Relation.Nullary
 
 open import Cubical.Data.Rationals.Base
+
+open import Cubical.Data.Nat.GCD
+open import Cubical.Data.Nat.Coprime
+
+∼→sign≡sign : ∀ a a' b b' → (a , b) ∼ (a' , b') → ℤ.sign a ≡ ℤ.sign a'
+∼→sign≡sign (ℤ.pos zero) (ℤ.pos zero) (1+ n) (1+ n₁) x = refl
+∼→sign≡sign (ℤ.pos zero) (ℤ.pos (suc n₃)) (1+ n) (1+ n₁) x =
+  ⊥.rec $ ℕ.znots $
+     ℤ.injPos (x ∙ sym (ℤ.pos·pos (suc n₃) (suc n)))
+∼→sign≡sign (ℤ.pos (suc n₂)) (ℤ.pos zero) (1+ n) (1+ n₁) x =
+ ⊥.rec $ ℕ.znots $
+     ℤ.injPos (sym x ∙ sym (ℤ.pos·pos (suc n₂) (suc n₁)))
+∼→sign≡sign (ℤ.pos (suc n₂)) (ℤ.pos (suc n₃)) (1+ n) (1+ n₁) x = refl
+∼→sign≡sign (ℤ.pos zero) (ℤ.negsuc n₃) (1+ n) (1+ n₁) x =
+ ⊥.rec $ ℕ.znots $ ℤ.injPos $ cong ℤ.-_ (x ∙ ℤ.negsuc·pos n₃ (ℕ₊₁→ℕ (1+ n)))
+   ∙ ℤ.-Involutive _ ∙ sym (ℤ.pos·pos (suc n₃) (ℕ₊₁→ℕ (1+ n)))
+∼→sign≡sign (ℤ.pos (suc n₂)) (ℤ.negsuc n₃) (1+ n) (1+ n₁) x =
+ ⊥.rec (ℤ.posNotnegsuc _ _ (ℤ.pos·pos (suc n₂) (ℕ₊₁→ℕ (1+ n₁))
+  ∙∙ x ∙∙
+   (ℤ.negsuc·pos n₃ (ℕ₊₁→ℕ (1+ n)) ∙ cong ℤ.-_ (sym (ℤ.pos·pos (suc n₃) (ℕ₊₁→ℕ (1+ n)))))))
+∼→sign≡sign (ℤ.negsuc n₂) (ℤ.pos zero) (1+ n) (1+ n₁) x =
+  ⊥.rec $ ℕ.snotz $ ℤ.injPos $
+     (ℤ.pos·pos (suc n₂) (ℕ₊₁→ℕ (1+ n₁))) ∙∙
+      sym (ℤ.-Involutive _) ∙∙ cong ℤ.-_ (sym (ℤ.negsuc·pos n₂ (ℕ₊₁→ℕ (1+ n₁))) ∙ x) 
+∼→sign≡sign (ℤ.negsuc n₂) (ℤ.pos (suc n₃)) (1+ n) (1+ n₁) x = 
+  ⊥.rec (ℤ.negsucNotpos _ _
+     ((cong ℤ.-_ (ℤ.pos·pos (suc n₂) (ℕ₊₁→ℕ (1+ n₁)))
+      ∙ sym (ℤ.negsuc·pos n₂ (ℕ₊₁→ℕ (1+ n₁))))
+      ∙∙ x ∙∙ sym (ℤ.pos·pos (suc n₃) (ℕ₊₁→ℕ (1+ n)))))
+∼→sign≡sign (ℤ.negsuc n₂) (ℤ.negsuc n₃) (1+ n) (1+ n₁) x = refl
+
 
 ·CancelL : ∀ {a b} (c : ℕ₊₁) → [ ℕ₊₁→ℤ c ℤ.· a / c ·₊₁ b ] ≡ [ a / b ]
 ·CancelL {a} {b} c = eq/ _ _
@@ -32,6 +67,53 @@ open import Cubical.Data.Rationals.Base
    a ℤ.· (ℕ₊₁→ℤ c ℤ.· ℕ₊₁→ℤ b)  ≡⟨ cong (a ℤ.·_) (ℤ.·Comm (ℕ₊₁→ℤ c) (ℕ₊₁→ℤ b)) ⟩
    a ℤ.· (ℕ₊₁→ℤ b ℤ.· ℕ₊₁→ℤ c)  ≡⟨ cong (a ℤ.·_) (sym (pos·pos (ℕ₊₁→ℕ b) (ℕ₊₁→ℕ c))) ⟩
    a ℤ.· ℕ₊₁→ℤ (b ·₊₁ c) ∎)
+
+reduced : (x : ℚ) → Σ[ (p , q) ∈ (ℤ × ℕ₊₁) ] (areCoprime (ℤ.abs p , ℕ₊₁→ℕ q) × ([ p / q ] ≡ x)) 
+reduced = SetQuotient.Elim.go w
+ where
+
+ module cop a b where
+  open ToCoprime (ℤ.abs a , b) renaming (toCoprimeAreCoprime to tcac) public
+
+    
+  e : ℤ.sign a ℤ.· ℤ.pos c₁ ℤ.· ℕ₊₁→ℤ b ≡ a ℤ.· ℕ₊₁→ℤ c₂
+  e =     (sym (ℤ.·Assoc (ℤ.sign a) _ _)
+           ∙ cong (ℤ.sign a ℤ.·_)
+              (     cong (ℤ.pos c₁ ℤ.·_)
+                   (cong ℤ.pos (sym p₂ ∙ ℕ.·-comm _ d ) ∙ ℤ.pos·pos d _)
+                 ∙∙ ℤ.·Assoc (ℤ.pos c₁) _ _
+                 ∙∙ cong (λ p → p ℤ.· ℕ₊₁→ℤ c₂ )
+                     (sym (ℤ.pos·pos c₁ d) ∙ cong ℤ.pos p₁)) )
+       ∙∙ ℤ.·Assoc (ℤ.sign a) _ _
+       ∙∙ cong (ℤ._· ℕ₊₁→ℤ c₂) (ℤ.sign·abs a)
+  p' : ∀ a c₁ → (c₁ ℕ.· suc d-1 ≡ ℤ.abs a) → c₁ ≡ ℤ.abs (ℤ.sign a ℤ.· ℤ.pos c₁)
+  p' (ℤ.pos zero) zero x = refl
+  p' (ℤ.pos zero) (suc c₃) x = ⊥.rec (ℕ.snotz x)
+  p' (ℤ.pos (suc n)) _ x = refl
+  p' (ℤ.negsuc n) zero x = refl
+  p' (ℤ.negsuc n) (suc c₃) x = refl
+
+  r = (ℤ.sign a ℤ.· ℤ.pos c₁ , c₂) , subst areCoprime (cong (_, (ℕ₊₁→ℕ c₂))
+         (p' a _ (cong (c₁ ℕ.·_) (sym q) ∙ p₁))) tcac , eq/ _ _ e
+
+
+
+ w : SetQuotient.Elim _
+ w .SetQuotient.Elim.isSetB _ =
+  isSetΣ (isSet× ℤ.isSetℤ (subst isSet 1+Path ℕ.isSetℕ))
+    (isProp→isSet ∘ λ _ → isProp× isPropIsGCD (isSetℚ _ _))
+
+ w .SetQuotient.Elim.f (a , b) = cop.r  a b
+
+ w .SetQuotient.Elim.f∼ (a , b) (a' , b') r =
+   ΣPathPProp
+            (λ _ → isProp× isPropIsGCD (isSetℚ _ _))
+     (cong (map-fst ((ℤ.sign a ℤ.·_) ∘ ℤ.pos)) (sym (toCoprime-cancelʳ (ℤ.abs a , b) b')) ∙∙
+       cong₂ {x = ℤ.sign a} {y = ℤ.sign a'}
+        (λ sa → (map-fst ((sa ℤ.·_) ∘ ℤ.pos) ∘ toCoprime))
+        (∼→sign≡sign a a' b b' r)
+        (ΣPathP (sym (ℤ.abs· a _) ∙∙ cong ℤ.abs r ∙∙ ℤ.abs· a' _ , ·₊₁-comm b b'))
+      ∙∙ cong (map-fst ((ℤ.sign a' ℤ.·_) ∘ ℤ.pos)) (toCoprime-cancelʳ (ℤ.abs a' , b') b) )
 
 -- useful functions for defining operations on ℚ
 
@@ -574,3 +656,11 @@ abs'≡abs = SetQuotient.ElimProp.go w
 
 ℕ·→ℚ· : ∀ m n → fromNat m · fromNat n ≡ fromNat (m ℕ.· n)
 ℕ·→ℚ· m n = cong [_/ 1 ] (sym (ℤ.pos·pos m n))
+
+
+x+x≡2x : ∀ x → x + x ≡ 2 · x
+x+x≡2x x = cong₂ _+_
+    (sym (·IdL x))
+    (sym (·IdL x))
+    ∙ sym (·DistR+ 1 1 x)
+

@@ -78,6 +78,18 @@ sΣℚ<' {u} {v} {ε} p x =
    subst∼ (sym (lem--035 {fst ε} {fst δ}))
      $ 𝕣-lim r y (fst ε ℚ.- fst δ , v₁) δ p x
 
+-- 𝕣-lim'← : ∀ r y p ε 
+--          → r ∼[ ε ] (lim y p )
+--          → (∀ δ v → r ∼[ fst ε ℚ.- fst δ , v ] ( y δ ))
+        
+-- 𝕣-lim'← r y p ε r~lim δ v  = {!!}
+
+-- 𝕣-lim'≃ : ∀ r y ε δ p v →
+--           (r ∼[ fst ε ℚ.- fst δ , v ] ( y δ )
+--             ≃ r ∼[ ε ] (lim y p ))
+-- 𝕣-lim'≃ r y ε δ p v₁ x =
+--    {!!}
+
 
 -- HoTT Lemma (11.3.10)
 lim-surj : ∀ r → ∃[ x ∈ _ ] (r ≡ (uncurry lim x) )
@@ -177,6 +189,7 @@ Lipschitz-ℝ→ℝ : ℚ₊ → (ℝ → ℝ) → Type
 Lipschitz-ℝ→ℝ L f =
   (∀ u v → (ε : ℚ₊) →
     u ∼[ ε  ] v → f u ∼[ L ℚ₊· ε  ] f v)
+
 
 isPropLipschitz-ℝ→ℝ : ∀ q f → isProp (Lipschitz-ℝ→ℝ q f)
 isPropLipschitz-ℝ→ℝ q f = isPropΠ4 λ _ _ _ _ → isProp∼ _ _ _
