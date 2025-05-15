@@ -51,7 +51,7 @@ open import Cubical.HITs.CauchyReals.Bisect
 open import Cubical.HITs.CauchyReals.NthRoot
 
 
-
+    
 ointervalℙ⊆-max : ∀ n m →
            ointervalℙ
            (rat (ℚ.- fromNat (suc n)))
@@ -198,25 +198,6 @@ module EquivFromRestr
  equiv-fromRestr = isEmbedding×isSurjection→isEquiv
   (isEmbedding-f' , isSurjection-f')
  
-invℝ₊-<-invℝ₊ : ∀ x y → (fst (invℝ₊ x) <ᵣ fst (invℝ₊ y))
-                      ≃ (fst y <ᵣ fst x)
-invℝ₊-<-invℝ₊ x y = 
-     subst2Equiv _<ᵣ_ (sym (·IdL _)) (sym (·IdL _))
-  ∙ₑ z/y'<x/y≃y₊·z<y'₊·x 1 1 y x
-  ∙ₑ subst2Equiv _<ᵣ_ (·IdR _) (·IdR _)
-
-invℝ₊-≤-invℝ₊ : ∀ x y → (fst (invℝ₊ x) ≤ᵣ fst (invℝ₊ y))
-                      ≃ (fst y ≤ᵣ fst x)
-invℝ₊-≤-invℝ₊ x y = 
-     subst2Equiv _≤ᵣ_ (sym (·IdL _)) (sym (·IdL _))
-  ∙ₑ z/y'≤x/y≃y₊·z≤y'₊·x 1 1 y x
-  ∙ₑ subst2Equiv _≤ᵣ_ (·IdR _) (·IdR _)
-
-
-invℝ₊-rat : ∀ q → fst (invℝ₊ (ℚ₊→ℝ₊ q)) ≡ fst (ℚ₊→ℝ₊ (invℚ₊ q))
-invℝ₊-rat q = invℝ₊≡invℝ _ (inl (snd (ℚ₊→ℝ₊ q))) ∙∙
-    invℝ-rat _ _ (inl (ℚ.0<ℚ₊ q)) ∙∙
-     cong rat (ℚ.invℚ₊≡invℚ _ _)
 
 ℚApproxℙ''→ℚApproxℙ' : ∀ (P Q : ℙ ℝ) f  →
   (ℚApproxℙ'' P Q f) → (ℚApproxℙ' P Q f)  
@@ -338,19 +319,9 @@ module _ (f : ℚ → ℝ) (B : ℕ → ℚ₊)  where
        sym (∈ℚintervalℙ→clampᵣ≡ _ _ _
       (<ᵣWeaken≤ᵣ _ _ <x , <ᵣWeaken≤ᵣ _ _ x<))))
       
-  seq⊂ℝ : Seq⊆-abs<N Seq⊆.s⊇ (λ _ → Unit , isPropUnit)
-  seq⊂ℝ x _ = 
-    PT.map
-      (λ (1+ n , X) → 
-        n , (isTrans<≤ᵣ _ _ _ (-ᵣ<ᵣ _ _ X)
-                  (isTrans≡≤ᵣ _ _ _ (cong -ᵣ_ (-absᵣ x) )
-                    (isTrans≤≡ᵣ _ _ _ (-ᵣ≤ᵣ _ _ (≤absᵣ (-ᵣ x)))
-                       (-ᵣInvol _))))
-           , isTrans≤<ᵣ _ _ _ (≤absᵣ x) X)
-      (getClamps x)
 
   open Seq⊆→.FromIntersection Seq⊆→Power
-    isSetℝ (λ _ → Unit , isPropUnit) seq⊂ℝ public
+    isSetℝ (λ _ → Unit , isPropUnit) Seq⊆-abs<N-s⊇-⊤Pred public
 
   𝒇 : ℝ → ℝ
   𝒇 x = ∩$ x _
@@ -611,33 +582,12 @@ IsContinuous^ℤ (ℤ.negsuc n) =
 
 -- TODO : more direct!! (invℝ₊ is more basic than invℝ)
 
-invℝ₊· : ∀ x y →
-          invℝ₊ (x ₊·ᵣ y) ≡
-            (invℝ₊ x) ₊·ᵣ (invℝ₊ y)
-invℝ₊· x y =
-  ℝ₊≡ (invℝ₊≡invℝ (x ₊·ᵣ y) (inl (ℝ₊· x y)) ∙∙
-       invℝ· _ _ _ _ _
-       ∙∙ cong₂ _·ᵣ_
-        (sym (invℝ₊≡invℝ x (inl (snd x)))) (sym (invℝ₊≡invℝ y (inl (snd y)))) ) 
-
-
 ₊^ⁿ-invℝ₊ : ∀ n x  →
             ((invℝ₊ x) ₊^ⁿ n) ≡ (invℝ₊ (x ₊^ⁿ n))
 ₊^ⁿ-invℝ₊ n x =
     ℝ₊≡ (cong (_^ⁿ n) (invℝ₊≡invℝ _ (inl (snd x))) ∙∙
        ^ⁿ-invℝ _ _ _ _
        ∙∙ sym (invℝ₊≡invℝ _ (inl (snd (x ₊^ⁿ n)))) ) 
-
-invℝ₊Invol : ∀ x → invℝ₊ (invℝ₊ x) ≡ x
-invℝ₊Invol x = ℝ₊≡ $
-   fst (invℝ₊ (invℝ₊ x))
-       ≡⟨ (cong (fst ∘ invℝ₊) (ℝ₊≡ (invℝ₊≡invℝ _ _))) ⟩ _       
-       ≡⟨ invℝ₊≡invℝ (_ , invℝ-pos _ _) _  ⟩ _
-       ≡⟨ invℝInvol (fst x) (inl (snd x)) ⟩ _ ∎
-     
-
-invℝ₊1 : invℝ₊ 1 ≡ 1
-invℝ₊1 = ℝ₊≡ (invℝ₊≡invℝ 1 (inl decℚ<ᵣ?)  ∙ (invℝ1 _))
 
 1₊^ⁿ≡1 : ∀ k → 1 ₊^ⁿ k ≡ 1
 1₊^ⁿ≡1 zero = refl
@@ -1093,7 +1043,7 @@ module _ (x : ℝ) (0<x : 0 <ᵣ x) where
   where
   w : Elim (λ _ → ℝ₊)
   w .Elim.isSetB _ = isSetΣ isSetℝ λ _ → isProp→isSet squash₁
-  w .Elim.f (a , b) = root b (x , 0<x) ^ℤ a
+  w .Elim.f (a , b) = (root b (x , 0<x)) ^ℤ a
   w .Elim.f∼ (a , (1+ b)) (a' , (1+ b')) r = 
     ^ℚ-coh a a' b b' r
 
@@ -1697,7 +1647,7 @@ slope-incr-strict z 1<z a b c a<b b<c a<c =
 
 
 slope-incr'-strict : (z : ℝ₊) (1<z : 1 <ᵣ fst z) → (a b c : ℚ)
-  → (a<b : a ℚ.< b) → (b<c : b ℚ.< c) →  (a<c : a ℚ.< c) →     
+  → (a ℚ.< b) → (b<c : b ℚ.< c) →  (a<c : a ℚ.< c) →     
   ((fst (z ^ℚ c) -ᵣ fst (z ^ℚ a))
     ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _ a<c))
       <ᵣ
@@ -1718,56 +1668,242 @@ slope-incr'-strict z 1<z a b c a<b b<c a<c =
        ((ℝ₊≡ (cong rat lem--077)))) w
  
 
-slope-incr : (z : ℝ₊) (1<z : 1 <ᵣ fst z) → (a b c : ℚ)
+slope-incr : (z : ℝ₊) (a b c : ℚ)
   → (a<b : a ℚ.< b) → (b≤c : b ℚ.≤ c) →  (a<c : a ℚ.< c) →     
   ((fst (z ^ℚ b) -ᵣ fst (z ^ℚ a))
     ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _ a<b))
       ≤ᵣ
   ((fst (z ^ℚ c) -ᵣ fst (z ^ℚ a))
     ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _  a<c ))
-slope-incr z 1<z a b c a<b = flip
-  λ a<c → ⊎.rec
-     (≡ᵣWeaken≤ᵣ _ _ ∘
-       cong
-         (λ (b , a<b) →
-           ((fst (z ^ℚ b) -ᵣ fst (z ^ℚ a)) ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ a b a<b)))
-         ∘ Σ≡Prop {B = λ b → a ℚ.< b} (ℚ.isProp< _))
-     (λ b<c → <ᵣWeaken≤ᵣ _ _ $  slope-incr-strict z 1<z a b c a<b b<c a<c)
-    ∘ ℚ.≤→≡⊎< b c
+slope-incr (z , 0<z) a b c a<b b≤c a<c =
+  <→≤ContPos'pred {0}
+    {λ z 0<z →
+       ((fst ((z , 0<z) ^ℚ b)
+       -ᵣ fst ((z , 0<z) ^ℚ a))
+     ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _ a<b))}
+     {λ z 0<z →
+        ((fst ((z , 0<z) ^ℚ c)
+          -ᵣ fst ((z , 0<z) ^ℚ a))
+     ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _  a<c ))}
+      ((IsContinuousWP∘' _ _ _
+      (IsContinuous·ᵣR (fst (invℝ₊ (ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _ a<b)))))
+      (contDiagNE₂WP sumR _ _ _
+        (⊆IsContinuousWithPred _ _ (λ x 0<x → 0<x) _
+          (IsContinuous^ℚ _))
+           (IsContinuousWP∘' _ _ _ IsContinuous-ᵣ
+             ((⊆IsContinuousWithPred _ _ (λ x 0<x → 0<x) _
+          (IsContinuous^ℚ _)))))))
+      (((IsContinuousWP∘' _ _ _
+      (IsContinuous·ᵣR (fst (invℝ₊ (ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _ a<c)))))
+      (contDiagNE₂WP sumR _ _ _
+        (⊆IsContinuousWithPred _ _ (λ x 0<x → 0<x) _
+          (IsContinuous^ℚ _))
+           (IsContinuousWP∘' _ _ _ IsContinuous-ᵣ
+             ((⊆IsContinuousWithPred _ _ (λ x 0<x → 0<x) _
+          (IsContinuous^ℚ _))))))))
+      (ℚ.byTrichotomy 1 w)
+        z 0<z
+
+ where
+
+ slope-incr** : (z : ℝ₊) (1<z : 1 <ᵣ fst z) → (a b c : ℚ)
+   → (a<b : a ℚ.< b) → (b≤c : b ℚ.≤ c) →  (a<c : a ℚ.< c) →     
+   ((fst (z ^ℚ b) -ᵣ fst (z ^ℚ a))
+     ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _ a<b))
+       ≤ᵣ
+   ((fst (z ^ℚ c) -ᵣ fst (z ^ℚ a))
+     ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _  a<c ))
+ slope-incr** z 1<z a b c a<b = 
+    flip
+      λ a<c → ⊎.rec
+         (≡ᵣWeaken≤ᵣ _ _ ∘
+           cong
+             (λ (b , a<b) →
+               ((fst (z ^ℚ b) -ᵣ fst (z ^ℚ a)) ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ a b a<b)))
+             ∘ Σ≡Prop {B = λ b → a ℚ.< b} (ℚ.isProp< _))
+         (λ b<c → <ᵣWeaken≤ᵣ _ _ $  slope-incr-strict z 1<z a b c a<b b<c a<c)
+        ∘ ℚ.≤→≡⊎< b c
+
+ w : ℚ.TrichotomyRec 1
+        λ u → (0<u : 0 <ᵣ rat u) → ((fst ((rat u , 0<u) ^ℚ b) -ᵣ fst ((rat u , 0<u) ^ℚ a)) ／ᵣ₊
+                    ℚ₊→ℝ₊ (ℚ.<→ℚ₊ a b a<b))
+                   ≤ᵣ
+                   ((fst ((rat u , 0<u) ^ℚ c) -ᵣ fst ((rat u , 0<u) ^ℚ a)) ／ᵣ₊
+                    ℚ₊→ℝ₊ (ℚ.<→ℚ₊ a c a<c)) 
+ w .ℚ.TrichotomyRec.lt-case u u<1 0<u =
+   subst2 _≤ᵣ_
+       (sym (-ᵣ· _ _) ∙ cong₂ (λ A B → A ／ᵣ₊ (ℚ₊→ℝ₊ B))
+          (-[x-y]≡y-x _ _ ∙ cong₂ _-ᵣ_ (sym (cong fst (^ℚ-minus u₊ b)))
+                      ((sym (cong fst (^ℚ-minus u₊ a)))))
+                      {u = ℚ.<→ℚ₊ (ℚ.- b) (ℚ.- a) (ℚ.minus-< _ _ a<b)}
+                      (ℚ₊≡ (sym lem--083)))
+       (sym (-ᵣ· _ _) ∙ (cong₂ (λ A B → A ／ᵣ₊ (ℚ₊→ℝ₊ B))
+          (-[x-y]≡y-x _ _ ∙ cong₂ _-ᵣ_
+             ((sym (cong fst (^ℚ-minus u₊ c))))
+             ((sym (cong fst (^ℚ-minus u₊ a)))))
+             {u = ℚ.<→ℚ₊ (ℚ.- c) (ℚ.- a) (ℚ.minus-< _ _ a<c)}
+               (ℚ₊≡ (sym lem--083))))
+         (-ᵣ≤ᵣ _ _
+           (⊎.rec ww''
+                  ww'
+             (ℚ.≤→≡⊎< b c b≤c)))
+   where
+   u₊ : ℝ₊
+   u₊ = (rat u , 0<u)
+   1/u₊ = (invℝ₊ (rat u , 0<u))
+   1<1/u : 1 <ᵣ _
+   1<1/u = isTrans<≡ᵣ _ _ _
+      (invEq (z<x/y₊≃y₊·z<x 1 1 (rat u , 0<u)) (isTrans≡<ᵣ _ _ _
+          (·IdR _) (<ℚ→<ᵣ _ _ u<1)))
+       (·IdL _)
+       
+   ww' : (b ℚ.< c) →   ((fst (1/u₊ ^ℚ (ℚ.- a)) -ᵣ fst (1/u₊ ^ℚ (ℚ.- c)))
+                                ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _ _))
+                                  ≤ᵣ
+                              ((fst (1/u₊ ^ℚ (ℚ.- a)) -ᵣ fst (1/u₊ ^ℚ (ℚ.- b)))
+                                ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _  _ ))
+   ww' b<c = <ᵣWeaken≤ᵣ _ _ $ slope-incr'-strict (invℝ₊ (rat u , 0<u)) 1<1/u (ℚ.- c) (ℚ.- b) (ℚ.- a)
+            (ℚ.minus-< _ _ b<c) (ℚ.minus-< _ _ a<b) (ℚ.minus-< _ _ a<c)
+
+       
+   ww'' : (b ≡ c) →   ((fst (1/u₊ ^ℚ (ℚ.- a)) -ᵣ fst (1/u₊ ^ℚ (ℚ.- c)))
+                                ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _ _))
+                                 ≤ᵣ
+                              ((fst (1/u₊ ^ℚ (ℚ.- a)) -ᵣ fst (1/u₊ ^ℚ (ℚ.- b)))
+                                ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _  _ ))
+   ww'' b=c = ≡ᵣWeaken≤ᵣ _ _ (
+           cong
+             (λ (b , -b<-a) →
+               ((fst (1/u₊ ^ℚ (ℚ.- a)) -ᵣ fst (1/u₊ ^ℚ (ℚ.- b))) ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ (ℚ.- b) (ℚ.- a) -b<-a)))
+             (Σ≡Prop {B = λ b → (ℚ.- b) ℚ.< (ℚ.- a)} (λ _ → ℚ.isProp< _ _) (sym b=c)))
+  
+
+ w .ℚ.TrichotomyRec.eq-case _ = ≡ᵣWeaken≤ᵣ _ _
+           (𝐑'.0LeftAnnihilates' _ _
+               (𝐑'.+InvR' _ _ (cong (fst ∘ (_^ℚ b)) (ℝ₊≡ refl) ∙ cong fst (1^ℚ≡1 b)
+                 ∙ sym (cong (fst ∘ (_^ℚ a)) (ℝ₊≡ refl) ∙ cong fst (1^ℚ≡1 a))))
+             ∙ sym (𝐑'.0LeftAnnihilates' _ _
+               (𝐑'.+InvR' _ _ ((cong (fst ∘ (_^ℚ c)) (ℝ₊≡ refl) ∙ cong fst (1^ℚ≡1 c)
+                 ∙ sym (cong (fst ∘ (_^ℚ a)) (ℝ₊≡ refl) ∙ cong fst (1^ℚ≡1 a)))))))
+ w .ℚ.TrichotomyRec.gt-case u 1<u 0<u =
+   slope-incr** (rat u , 0<u) (<ℚ→<ᵣ _ _ 1<u) a b c a<b b≤c a<c
 
 
-slope-incr' : (z : ℝ₊) (1<z : 1 <ᵣ fst z) → (a b c : ℚ)
+
+
+slope-incr' : (z : ℝ₊) → (a b c : ℚ)
   → (a≤b : a ℚ.≤ b) → (b<c : b ℚ.< c) →  (a<c : a ℚ.< c) →     
   ((fst (z ^ℚ c) -ᵣ fst (z ^ℚ a))
     ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _ a<c))
       ≤ᵣ
   ((fst (z ^ℚ c) -ᵣ fst (z ^ℚ b))
     ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _  b<c ))
-slope-incr' z 1<z a b c = ⊎.rec
-    (λ a≡b b<c a<c →
-      ≡ᵣWeaken≤ᵣ _ _
-        (cong
-         (λ (b , b<c) →
-           ((fst (z ^ℚ c) -ᵣ fst (z ^ℚ b)) ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ b c b<c)))
-            (Σ≡Prop {B = λ b → b ℚ.< c} (flip ℚ.isProp< _)
-                a≡b)) )
-    (λ a<b b<c a<c →
-      <ᵣWeaken≤ᵣ _ _ $
-       slope-incr'-strict z 1<z a b c a<b b<c a<c )
-  ∘ ℚ.≤→≡⊎< a b 
+slope-incr' z a b c a≤b b<c a<c =
+     subst2 _≤ᵣ_
+       (sym (-ᵣ· _ _) ∙ cong₂ (λ A B → A ／ᵣ₊ (ℚ₊→ℝ₊ B))
+          (-[x-y]≡y-x _ _ ∙ cong₂ _-ᵣ_ (sym (cong fst (^ℚ-minus z _)))
+                      ((sym (cong fst (^ℚ-minus z _)))))
+                      {u = ℚ.<→ℚ₊ (ℚ.- _) (ℚ.- _) (ℚ.minus-< _ _ _)}
+                      (ℚ₊≡ (sym lem--083)))
+       (sym (-ᵣ· _ _) ∙ (cong₂ (λ A B → A ／ᵣ₊ (ℚ₊→ℝ₊ B))
+          (-[x-y]≡y-x _ _ ∙ cong₂ _-ᵣ_
+             ((sym (cong fst (^ℚ-minus z _))))
+             ((sym (cong fst (^ℚ-minus z _)))))
+             {u = ℚ.<→ℚ₊ (ℚ.- _) (ℚ.- _) (ℚ.minus-< _ _ _)}
+               (ℚ₊≡ (sym lem--083))))
+              ww
+
+ where
+ ww : -ᵣ ((fst (invℝ₊ z ^ℚ (ℚ.- a)) -ᵣ fst (invℝ₊ z ^ℚ (ℚ.- c))) ／ᵣ₊
+        ℚ₊→ℝ₊ (ℚ.<→ℚ₊ (ℚ.- c) (ℚ.- a) (ℚ.minus-< a c a<c)))
+      ≤ᵣ
+      -ᵣ ((fst (invℝ₊ z ^ℚ (ℚ.- b)) -ᵣ fst (invℝ₊ z ^ℚ (ℚ.- c))) ／ᵣ₊
+        ℚ₊→ℝ₊ (ℚ.<→ℚ₊ (ℚ.- c) (ℚ.- b) (ℚ.minus-< b c b<c)))
+       
+       
+ ww = -ᵣ≤ᵣ _ _ (slope-incr (invℝ₊ z) (ℚ.- c) (ℚ.- b) (ℚ.- a)
+         (ℚ.minus-< _ _ b<c) (ℚ.minus-≤ _ _ a≤b) (ℚ.minus-< _ _ a<c))
 
 
-slope-monotone : (z : ℝ₊) (1<z : 1 <ᵣ fst z) → (a b a' b' : ℚ)
+slope-monotone : (z : ℝ₊)  → (a b a' b' : ℚ)
   → (a<b : a ℚ.< b) → (a'<b' : a' ℚ.< b') → (a≤a' : a ℚ.≤ a') →  (b≤b' : b ℚ.≤ b') →     
   ((fst (z ^ℚ b) -ᵣ fst (z ^ℚ a))
     ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _ a<b))
       ≤ᵣ
   ((fst (z ^ℚ b') -ᵣ fst (z ^ℚ a'))
     ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _  a'<b' ))
-slope-monotone z 1<z a b a' b' a<b a'<b' a≤a' b≤b' =
+slope-monotone z a b a' b' a<b a'<b' a≤a' b≤b' =
   isTrans≤ᵣ _ _ _
-    (slope-incr z 1<z a b b' a<b b≤b' (ℚ.isTrans<≤ _ _ _ a<b b≤b'))
-      (slope-incr' z 1<z a a' b' a≤a' a'<b' (ℚ.isTrans<≤ _ _ _ a<b b≤b'))
+    (slope-incr z a b b' a<b b≤b' (ℚ.isTrans<≤ _ _ _ a<b b≤b'))
+      (slope-incr' z a a' b' a≤a' a'<b' (ℚ.isTrans<≤ _ _ _ a<b b≤b'))
+
+slope-monotone＃ : (z : ℝ₊) → (a b a' b' : ℚ)
+  → (a＃b : rat a ＃ rat b) → (a'<b' : a' ℚ.< b') → (a≤a' : a ℚ.≤ a') →  (b≤b' : b ℚ.≤ b') →     
+  ((fst (z ^ℚ b) -ᵣ fst (z ^ℚ a))
+    ／ᵣ[ rat b -ᵣ rat a  , invEq (＃Δ _ _) a＃b ])
+      ≤ᵣ
+  ((fst (z ^ℚ b') -ᵣ fst (z ^ℚ a'))
+    ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _  a'<b' ))
+slope-monotone＃ z a b a' b' (inl a<b) a'<b' a≤a' b≤b' =
+  isTrans≡≤ᵣ _ _ _
+    (cong ((fst (z ^ℚ b) -ᵣ fst (z ^ℚ a)) ·ᵣ_)
+      (sym (invℝ₊≡invℝ _ _)))
+    (slope-monotone z  a b a' b' (<ᵣ→<ℚ _ _ a<b) a'<b' a≤a' b≤b')
+slope-monotone＃ z  a b a' b' (inr b<a) a'<b' a≤a' b≤b' =
+  isTrans≡≤ᵣ _ _ _ 
+     w
+    (slope-monotone z b a a' b' (<ᵣ→<ℚ _ _ b<a) a'<b'
+      (ℚ.isTrans≤ _ _ _
+        (ℚ.<Weaken≤ _ _ (<ᵣ→<ℚ _ _ b<a)) a≤a')
+         (ℚ.isTrans≤ _ _ _ a≤a' (ℚ.<Weaken≤ _ _ a'<b')))
+
+ where
+ w : ((fst (z ^ℚ b) -ᵣ fst (z ^ℚ a)) ／ᵣ[ rat b -ᵣ rat a ,
+       invEq (＃Δ (rat b) (rat a)) (inr b<a) ])
+      ≡
+      ((fst (z ^ℚ a) -ᵣ fst (z ^ℚ b)) ／ᵣ₊
+       ℚ₊→ℝ₊ (ℚ.<→ℚ₊ b a (<ᵣ→<ℚ b a b<a)))
+ w = sym (-ᵣ·-ᵣ _ _) ∙
+     cong₂ _·ᵣ_
+       (-[x-y]≡y-x _ _)
+       (-invℝ _ _ ∙∙ cong₂ invℝ (-[x-y]≡y-x (rat b) (rat a))
+         (toPathP refl)
+         ∙∙ sym (invℝ₊≡invℝ _ _))
+
+slope-monotone＃' : (z : ℝ₊) → (a b a' b' : ℚ)
+  → (a<b : a ℚ.< b) → (a'＃b' : rat a' ＃ rat b')  → (a≤a' : a ℚ.≤ a') →  (b≤b' : b ℚ.≤ b') →     
+  ((fst (z ^ℚ b) -ᵣ fst (z ^ℚ a))
+    ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _  a<b ))
+      ≤ᵣ
+  ((fst (z ^ℚ b') -ᵣ fst (z ^ℚ a'))
+     ／ᵣ[ rat b' -ᵣ rat a'  , invEq (＃Δ _ _) a'＃b' ])
+slope-monotone＃' z a b a' b' a<b (inl a'<b') a≤a' b≤b' =
+  isTrans≤≡ᵣ _ _ _
+    (slope-monotone z a b a' b' a<b (<ᵣ→<ℚ _ _ a'<b') a≤a' b≤b')
+    ((cong ((fst (z ^ℚ b') -ᵣ fst (z ^ℚ a')) ·ᵣ_)
+      (invℝ₊≡invℝ _ _)))
+slope-monotone＃' z a b a' b' a<b (inr b'<a') a≤a' b≤b' =
+ isTrans≤≡ᵣ _ _ _
+   ((slope-monotone z a b b' a' a<b (<ᵣ→<ℚ _ _ b'<a')
+      (ℚ.isTrans≤ _ _ _ (ℚ.<Weaken≤ _ _ a<b) b≤b')
+      (ℚ.isTrans≤ _ _ _ b≤b' ((ℚ.<Weaken≤ _ _ (<ᵣ→<ℚ _ _ b'<a'))))))
+   (sym w)
+
+
+ where
+ w : ((fst (z ^ℚ b') -ᵣ fst (z ^ℚ a')) ／ᵣ[ rat b' -ᵣ rat a' ,
+       invEq (＃Δ (rat b') (rat a')) (inr b'<a') ])
+      ≡
+      ((fst (z ^ℚ a') -ᵣ fst (z ^ℚ b')) ／ᵣ₊
+       ℚ₊→ℝ₊ (ℚ.<→ℚ₊ b' a' (<ᵣ→<ℚ b' a' b'<a')))
+ w = sym (-ᵣ·-ᵣ _ _) ∙
+     cong₂ _·ᵣ_
+       (-[x-y]≡y-x _ _)
+       (-invℝ _ _ ∙∙ cong₂ invℝ (-[x-y]≡y-x (rat b') (rat a'))
+         (toPathP refl)
+         ∙∙ sym (invℝ₊≡invℝ _ _))
+
+
 
 
 slope-monotone-strict : (z : ℝ₊) (1<z : 1 <ᵣ fst z) → (a b a' b' : ℚ)
@@ -1780,7 +1916,19 @@ slope-monotone-strict : (z : ℝ₊) (1<z : 1 <ᵣ fst z) → (a b a' b' : ℚ)
 slope-monotone-strict z 1<z a b a' b' a<b a'<b' a≤a' b<b' =
   isTrans<≤ᵣ _ _ _
     (slope-incr-strict z 1<z a b b' a<b b<b' (ℚ.isTrans< _ _ _ a<b b<b'))
-      (slope-incr' z 1<z a a' b' a≤a' a'<b' (ℚ.isTrans< _ _ _ a<b b<b'))
+      (slope-incr' z a a' b' a≤a' a'<b' (ℚ.isTrans< _ _ _ a<b b<b'))
+
+slope-monotone-strict' : (z : ℝ₊) (1<z : 1 <ᵣ fst z) → (a b a' b' : ℚ)
+  → (a<b : a ℚ.< b) → (a'<b' : a' ℚ.< b') → (a<a' : a ℚ.< a') →  (b≤b' : b ℚ.≤ b') →     
+  ((fst (z ^ℚ b) -ᵣ fst (z ^ℚ a))
+    ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _ a<b))
+      <ᵣ
+  ((fst (z ^ℚ b') -ᵣ fst (z ^ℚ a'))
+    ／ᵣ₊ ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _  a'<b' ))
+slope-monotone-strict' z 1<z a b a' b' a<b a'<b' a<a' b≤b' =
+  isTrans≤<ᵣ _ _ _
+    (slope-incr z a b b' a<b b≤b' (ℚ.isTrans<≤ _ _ _ a<b b≤b'))
+      (slope-incr'-strict z 1<z a a' b' a<a' a'<b' (ℚ.isTrans<≤ _ _ _ a<b b≤b'))
 
 
 bernoulli's-ineq-^ℚ-r<1 : ∀ x r → 1 <ᵣ fst x → 0 ℚ.< r → r ℚ.< 1 → fst (x ^ℚ r) <ᵣ 1 +ᵣ rat r ·ᵣ (fst x -ᵣ 1) 
@@ -1977,7 +2125,10 @@ module _ (Z N : ℕ) where
 
 pred0< : ℙ ℝ
 pred0< = λ x → (0 <ᵣ x) , squash₁
- 
+
+pred1< : ℙ ℝ
+pred1< = λ x → (1 <ᵣ x) , squash₁
+
 contBound : ∀ B → IsContinuousWithPred pred0< (curry (flip bound B))
 contBound B =
   IsContinuousWP∘ ⊤Pred _ _ _ _
@@ -2004,7 +2155,7 @@ module ExpSlopeBound (z : ℝ₊) (1<z : 1 <ᵣ fst z)  where
        isTrans<≡ᵣ _ _ _
          (fst (z/y<x₊≃z<y₊·x _ _ (ℚ₊→ℝ₊ (ℚ.<→ℚ₊ _ _ x<y)))
            (isTrans≤<ᵣ _ _ _
-             (slope-incr' z 1<z x x' y
+             (slope-incr' z x x' y
                (ℚ.≤max _ _) x'<y x<y)
              (isTrans<≤ᵣ _ _ _
                (<ᵣ-·ᵣo _ _ (invℝ₊ (ℚ₊→ℝ₊ (ℚ.<→ℚ₊ x' y x'<y)))
@@ -2016,7 +2167,7 @@ module ExpSlopeBound (z : ℝ₊) (1<z : 1 <ᵣ fst z)  where
                        lem--05)  
                    (ℝ₊≡ (cong rat lem--078)))
                  (isTrans≤≡ᵣ _ _ _
-                    (slope-incr z 1<z
+                    (slope-incr z
                       (fst B) (y ℚ.+ (fst B ℚ.- x')) (2 ℚ.· (fst B))
                        (subst2 (ℚ._<_) (ℚ.+IdL (fst B))
                          (sym (ℚ.+Assoc _ _ _)

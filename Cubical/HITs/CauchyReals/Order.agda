@@ -496,6 +496,10 @@ instance
      (rat [ pos (suc n) / 1 ]) , <ℚ→<ᵣ _ _
        (ℚ.<ℤ→<ℚ _ _ (ℤ.suc-≤-suc ℤ.zero-≤pos)) }}
 
+
+fromNat+ᵣ : ∀ n m → fromNat n +ᵣ fromNat m ≡ fromNat (n ℕ.+ m)
+fromNat+ᵣ n m = cong rat (ℚ.ℕ+→ℚ+ n m)
+
 isIncrasing : (ℝ → ℝ) → Type₀
 isIncrasing f = ∀ x y → x <ᵣ y → f x <ᵣ f y
 

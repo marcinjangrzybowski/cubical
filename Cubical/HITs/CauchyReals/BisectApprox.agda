@@ -585,6 +585,16 @@ fromLipshitzℚ→ℝℙ→Cont L a b f lipF u ε u∈P =
       subst∼ (ℚ.y·[x/y] L (fst ε))
         (lipF u u∈P v v∈P ((invℚ₊ L) ℚ₊· ε) u∼v)) ∣₁
 
+fromLipshitzℚ→ℝℙ→Cont0< : ∀ L 
+                       → ∀ f
+                       → Lipschitz-ℝ→ℝℙ L pred0< f
+                       → IsContinuousWithPred pred0< f
+fromLipshitzℚ→ℝℙ→Cont0< L f lipF u ε u∈P = 
+  ∣ ((ℚ.invℚ₊ L) ℚ₊· ε ) ,
+    (λ v v∈P u∼v →
+      subst∼ (ℚ.y·[x/y] L (fst ε))
+        (lipF u u∈P v v∈P ((invℚ₊ L) ℚ₊· ε) u∼v)) ∣₁
+
 
 
 ≤Weaken<+ᵣ : ∀ x y (z : ℝ₊) →
@@ -734,11 +744,6 @@ a≤b-c⇒a+c≤b a b c p =
         (L𝐑.lem--00 {b} {c})
      (≤ᵣ-+o _ _ c p)
 
-a-b≤c⇒a≤c+b : ∀ a b c → a -ᵣ b ≤ᵣ c  → a ≤ᵣ c +ᵣ b
-a-b≤c⇒a≤c+b a b c p =
-  subst (_≤ᵣ (c +ᵣ b))
-    (L𝐑.lem--00 {a} {b})
-     (≤ᵣ-+o _ _ b p)
 
 1ℚ^ⁿ : ∀ a → 1 ℚ^ⁿ a ≡ 1
 1ℚ^ⁿ zero = refl

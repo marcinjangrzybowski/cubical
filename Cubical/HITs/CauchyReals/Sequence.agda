@@ -372,6 +372,15 @@ Seq≤→Σ≤ s s' x zero = ≤ᵣ-refl _
 Seq≤→Σ≤ s s' x (suc n) = ≤ᵣMonotone+ᵣ _ _ _ _
  (x 0) (Seq≤→Σ≤ (s ∘ suc) (s' ∘ suc) (x ∘ suc) n)
 
+Seq≤→Σ≤-upto : (s s' : Seq) → ∀ N → 
+  (∀ n → n ℕ.< N → s n ≤ᵣ s' n) →
+   seqSumUpTo s N ≤ᵣ seqSumUpTo s' N
+Seq≤→Σ≤-upto s s' zero x = ≤ᵣ-refl _
+Seq≤→Σ≤-upto s s' (suc N) x = ≤ᵣMonotone+ᵣ _ _ _ _
+ (x 0 ℕ.zero-<-suc) (Seq≤→Σ≤-upto (s ∘ suc) (s' ∘ suc) N
+   λ n u → x (suc n) (ℕ.suc-≤-suc u))
+
+
 Seq'≤→Σ≤ : (s s' : Seq) →
   (∀ n → s n ≤ᵣ s' n) →
    ∀ n → seqSumUpTo' s n ≤ᵣ seqSumUpTo' s' n
@@ -742,15 +751,37 @@ module bⁿ-aⁿ n'  where
             (·ᵣComm (y -ᵣ x) _) z))
 
 
+_~seq_ : Seq → Seq → Type
+s ~seq s' = ∀ (ε : ℚ₊) → Σ[ N ∈ ℕ ] (∀ m n → N ℕ.< n → N ℕ.< m →
+   absᵣ ((s n) +ᵣ (-ᵣ (s' m))) <ᵣ rat (fst ε)   )
+
+
 IsCauchySequence : Seq → Type
 IsCauchySequence s =
   ∀ (ε : ℝ₊) → Σ[ N ∈ ℕ ] (∀ m n → N ℕ.< n → N ℕ.< m →
     absᵣ ((s n) +ᵣ (-ᵣ (s m))) <ᵣ fst ε)
 
+
 IsCauchySequence' : Seq → Type
 IsCauchySequence' s =
   ∀ (ε : ℚ₊) → Σ[ N ∈ ℕ ] (∀ m n → N ℕ.< n → N ℕ.< m →
     absᵣ ((s n) +ᵣ (-ᵣ (s m))) <ᵣ rat (fst ε)   )
+
+
+IsCauchySequence'-via-~seq : ∀ s s' → s ~seq s' → IsCauchySequence' s → IsCauchySequence' s' 
+IsCauchySequence'-via-~seq s s' s~s' icS ε =
+  let (N , X) = icS (/2₊ ε)
+      (M , Y) = s~s' (/2₊ ε)
+  in M , (λ m n <m <n →
+     let zz = Y m n <m <n
+         yy = Y n n <m <m
+         uu = isTrans≡<ᵣ _ _ _ (cong absᵣ (sym L𝐑.lem--060))
+                (isTrans≤<ᵣ _ _ _
+                 (absᵣ-triangle _ _)
+                  (<ᵣMonotone+ᵣ _ _ _ _ (isTrans≡<ᵣ _ _ _ (minusComm-absᵣ _ _) yy) zz))
+      in isTrans<≡ᵣ _ _ _ uu (cong rat (ℚ.ε/2+ε/2≡ε _)))
+
+
 
 IsCauchySequence'ℚ : (ℕ → ℚ) → Type
 IsCauchySequence'ℚ s =
@@ -916,6 +947,25 @@ fromCauchySequence' : ∀ s → IsCauchySequence' s → ℝ
 fromCauchySequence' s ics =
   lim _ (fromCauchySequence'-isCA s ics)
 
+open ℚ.HLP
+
+
+fromCauchySequence'-≡-lem : ∀ s ics ics' 
+        →  fromCauchySequence' s ics ≡ fromCauchySequence' s ics'
+fromCauchySequence'-≡-lem s ics ics' =
+  eqℝ _ _
+    λ ε →
+      let (n , N) = ics (/4₊ ε)
+          (m , M) = ics' (/4₊ ε)
+          n⊔m = ℕ.max (suc n) (suc m)
+       in lim-lim _ _ _ (/4₊ ε) (/4₊ ε) _ _
+           (distℚ0<! ε (
+               ge1 +ge (neg-ge ((ge[ ℚ.[ 1 / 4 ] ] +ge ge[ ℚ.[ 1 / 4 ] ]))) ))
+           (subst∼ distℚ! (fst ε) ·[ (ge[ ℚ.[ 1 / 4 ] ] +ge ge[ ℚ.[ 1 / 4 ] ]) ≡
+               ge1 +ge (neg-ge ((ge[ ℚ.[ 1 / 4 ] ] +ge ge[ ℚ.[ 1 / 4 ] ]))) ]
+          (triangle∼
+            (invEq (∼≃abs<ε _ _ (/4₊ ε)) (N n⊔m (suc n) ℕ.≤-refl ℕ.left-≤-max))
+            (invEq (∼≃abs<ε _ _ (/4₊ ε)) (M (suc m) n⊔m ℕ.right-≤-max ℕ.≤-refl))))
 
 fromCauchySequence'≡ : ∀ s ics x 
          → ((∀ (ε : ℚ₊) →
@@ -940,7 +990,10 @@ fromCauchySequence'≡ s ics x p =
     (p (/4₊ ε))
 
 
-
+-- fromCauchySequence'≤ : ∀ s ics → (∀ n m → n ℕ.≤ m → s m ≤ᵣ s n) 
+--     → ∀ n → fromCauchySequence' s ics ≤ᵣ s n 
+-- fromCauchySequence'≤ s ics decr n =
+--   {!!}
 
 limₙ→∞_is_ : Seq → ℝ → Type
 limₙ→∞ s is x =
@@ -955,6 +1008,18 @@ lim'ₙ→∞ s is x =
       absᵣ ((s n) +ᵣ (-ᵣ x)) <ᵣ (rat (fst ε)))
 
 
+fromCauchySequence'-lim : ∀ s ics → lim'ₙ→∞ s is (fromCauchySequence' s ics)
+fromCauchySequence'-lim s ics ε =
+ let (N , X) = ics (/4₊ ε)
+ in N , λ n N<n →
+      let u = (𝕣-lim-self _ (fromCauchySequence'-isCA s ics) (/4₊ ε) (/4₊ ε))
+          u' = fst (∼≃abs<ε _ _ _)
+               (triangle∼ (invEq (∼≃abs<ε _ _ (/4₊ ε)) ((X  _ _  N<n (ℕ.≤-refl {suc N})) )) u)
+       in isTrans<ᵣ _ _ _ u'
+            (<ℚ→<ᵣ _ _
+              distℚ<! ε [ ge[ ℚ.[ 1 / 4 ] ]
+                            +ge  (ge[ ℚ.[ 1 / 4 ] ] +ge ge[ ℚ.[ 1 / 4 ] ]) < ge1 ])
+            
 
 Limₙ→∞ : Seq → Type
 Limₙ→∞ s = Σ _ (limₙ→∞ s is_)

@@ -117,6 +117,9 @@ reduced = SetQuotient.Elim.go w
 
 -- useful functions for defining operations on ℚ
 
+reduce : ℚ → ℚ
+reduce = [_] ∘ fst ∘  reduced 
+
 record OnCommonDenom : Type where
  no-eta-equality
  field
@@ -563,8 +566,14 @@ _·_ = OnCommonDenomSym.go ·Rec
 ·DistR+ x y z = sym ((λ i → ·Comm x z i + ·Comm y z i) ∙ (sym (·DistL+ z x y)) ∙ ·Comm z (x + y))
 
 
+[/]≡· : ∀ n m → [ n / m ] ≡ [ n / 1 ] · [ 1 / m ]
+[/]≡· n m = cong₂ [_/_] (sym (ℤ.·IdR n)) (sym (·₊₁-identityˡ _))
+
 -_ : ℚ → ℚ
 - x = -1 · x
+
+-[/] : ∀ n m → [ ℤ.negsuc m / n ] ≡ - [ ℤ.pos (suc m) / n ] 
+-[/] n m = cong [ ℤ.negsuc m /_] (sym (·₊₁-identityˡ _))
 
 -Invol : ∀ x → - - x ≡ x
 -Invol x = ·Assoc -1 -1 x ∙ ·IdL x
@@ -650,6 +659,12 @@ abs'≡abs = SetQuotient.ElimProp.go w
 
 ℤ+→ℚ+ : ∀ m n → [ m / 1 ] + [ n / 1 ] ≡ [ m ℤ.+ n / 1 ]
 ℤ+→ℚ+ m n = cong [_/ 1 ] (cong₂ ℤ._+_ (ℤ.·IdR m) (ℤ.·IdR n))
+
+ℤ-→ℚ- : ∀ m n → [ m / 1 ] - [ n / 1 ] ≡ [ m ℤ.- n / 1 ]
+ℤ-→ℚ- m n = cong [_/ 1 ]
+  (cong₂ 
+    ℤ._+_ (ℤ.·IdR m)
+    (ℤ.·IdR (ℤ.- n)))
 
 ℕ+→ℚ+ : ∀ m n → fromNat m + fromNat n ≡ fromNat (m ℕ.+ n)
 ℕ+→ℚ+ m n = ℤ+→ℚ+ (ℤ.pos m) (ℤ.pos n) ∙ cong [_/ 1 ] (sym (ℤ.pos+ m n))

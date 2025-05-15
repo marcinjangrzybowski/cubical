@@ -42,6 +42,8 @@ open import Cubical.HITs.CauchyReals.Lems
 
 open import Cubical.Algebra.CommRing.Instances.Int
 
+
+
 decℚ? : ∀ {x y} → {𝟚.True (discreteℚ x y)} →  (x ≡ y)
 decℚ? {_} {_} {p} = 𝟚.toWitness p
 
@@ -511,6 +513,16 @@ elimBy≤ : ∀ {ℓ} {A : ℚ → ℚ → Type ℓ}
 elimBy≤ s f x y = ⊎.rec
   (f _ _ ) (s _ _ ∘ f _ _ ) (≤cases x y)
 
+elim≤By≡⊎< : ∀ {ℓ} (a : ℚ) {A : ∀ x → a ≤ x → Type ℓ}
+  → (A a (isRefl≤ a))
+  → (∀ x a<x → A x (<Weaken≤ _ _ a<x)  )
+  → ∀ x a<x → A x a<x
+elim≤By≡⊎< a {A = A} r f x =
+  ⊎.rec
+    (λ a=x → subst (uncurry A) (Σ≡Prop (isProp≤ a) a=x) r)
+    (subst (A x) (isProp≤ a x _ _) ∘ f x)
+    ∘ (≤→≡⊎< a x)
+    
 elimBy≡⊎< : ∀ {ℓ} {A : ℚ → ℚ → Type ℓ}
   → (∀ x y → A x y → A y x)
   → (∀ x → A x x)
@@ -835,6 +847,20 @@ n/k+m/k n m k = let k' = pos (suc (k .ℕ₊₁.n)) in
   (cong (ℤ._· k') (sym (ℤ.·DistL+ n m k') ) ∙∙
     sym (ℤ.·Assoc (n ℤ.+ m) k' k') ∙∙
      cong ((n ℤ.+ m) ℤ.·_) (sym (ℤ.pos·pos (ℕ₊₁→ℕ k) (ℕ₊₁→ℕ k))))
+
+
+n/k-m/k : ∀ n m k → [ n / k ] - [ m / k ] ≡ [ n ℤ.- m / k ]
+n/k-m/k n m k = let k' = pos (suc (k .ℕ₊₁.n)) in
+  eq/ _ _
+  (cong (ℤ._· k') (cong₂ ℤ._+_ (cong (n ℤ.·_) (cong ℕ₊₁→ℤ (·₊₁-identityˡ _))) refl
+   ∙ sym (ℤ.·DistL+ _ _ _) ) ∙∙
+    sym (ℤ.·Assoc (n ℤ.- m) k' k') ∙∙
+     
+     cong {x = k' ℤ.· k'}
+       {y = ℕ₊₁→ℤ (k ·₊₁ ((1+ 0) ·₊₁ k))} ((n ℤ.- m) ℤ.·_) (sym (ℤ.pos·pos _ _) ∙
+         cong (ℕ₊₁→ℤ ∘ (k ·₊₁_)) (sym (·₊₁-identityˡ _)))
+     )
+
 
 k/k : ∀ k → [ ℕ₊₁→ℤ k / k ] ≡ 1
 k/k (1+ k) = eq/ _ _ (ℤ.·IdR (ℕ₊₁→ℤ (1+ k)))

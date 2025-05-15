@@ -270,6 +270,7 @@ fromLipschitz L (f , fL) = f' ,
  f' = Elimℝ.go w
 
 
+
 ∼-monotone< : ∀ {u v ε ε'} → fst ε ℚ.< fst ε' → u ∼[ ε ] v → u ∼[ ε' ] v
 ∼-monotone< {u} {v} {ε} {ε'} x x₁ =
   subst∼ (lem--05 {fst ε} {fst ε'})

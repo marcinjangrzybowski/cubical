@@ -63,9 +63,31 @@ record Seq⊆ : Type₁ where
  _s⊇_ : ℙ ℝ → Type₀
  _s⊇_ P = ∀ x → x ∈ P → ∃[ n ∈ ℕ ] x ∈ 𝕡 n
 
+
  _s⊆_ : ℙ ℝ → Type₀
  _s⊆_ P = ∀ n → 𝕡 n ⊆ P
- 
+
+
+ elimProp-∩ : ∀ P → ∀ x → x ∈ P  → (P⊇ : _s⊇_ P) → (A : ℝ → Type)
+    → (∀ x → isProp (A x))  
+    → (∀ n → x ∈ 𝕡 n → A x)
+    → A x
+ elimProp-∩ P x x∈P P⊇ A propA a  =
+   PT.rec (propA _)
+     (λ (n , x∈ₙ) → a n x∈ₙ)
+     (P⊇ x x∈P)
+
+ elimProp-∩' : ∀ P → ∀ x x∈P  → (_s⊇_ P) → (s⊆P : _s⊆_ P)
+   → (A : ∀ x → x ∈ P  → Type)
+    → (∀ x∈ → isProp (A x x∈))  
+    → (∀ n x∈ₙ → A x (s⊆P n x x∈ₙ ))
+    → A x x∈P
+ elimProp-∩' P x x∈P P⊇ Ps⊆ A propA a  = 
+   PT.rec (propA _)
+     (λ (n , x∈ₙ) → subst (A x) (∈-isProp P x _ _) (a n x∈ₙ))
+     (P⊇ x x∈P)
+
+
  elem𝕡-Seq : Sequence ℓ-zero 
  elem𝕡-Seq .Sequence.obj n = Σ _ (_∈ 𝕡 n)
  elem𝕡-Seq .Sequence.map = map-snd (𝕡⊆ _ _)
@@ -111,6 +133,7 @@ Seq⊆-abs<N .Seq⊆.𝕡⊆ n x (<x , x<) =
    (<ℚ→<ᵣ _ _ (ℚ.<ℤ→<ℚ _ _ ℤ.isRefl≤)) <x
    , isTrans<ᵣ _ _ _ x<
    (<ℚ→<ᵣ _ _ (ℚ.<ℤ→<ℚ _ _ ℤ.isRefl≤))
+
 
 
 record Seq⊆→ (A : Type ℓ) (s : Seq⊆) : Type ℓ where
@@ -220,6 +243,29 @@ record Seq⊆→ (A : Type ℓ) (s : Seq⊆) : Type ℓ where
   (Seq⊆→.FromIntersection.∩$-lem {A = ℝ} {s = s} r isSetℝ P s⊇P
      x x∈)    
 
+
+∩$-cont'' : ∀ P s → (∀ n x →
+               x ∈ (𝕡 s n) → 
+               ∃[ δ ∈ ℚ₊ ] (∀ y → y ∈ P → x ∼[ δ ] y → y ∈ (𝕡 s (suc n))  )) → ∀ r s⊇P 
+    → (∀ n → IsContinuousWithPred (𝕡 s n) (flip (Seq⊆→.fun r) n))
+    → IsContinuousWithPred P
+   (Seq⊆→.FromIntersection.∩$ {A = ℝ} {s = s} r isSetℝ P s⊇P)
+ 
+∩$-cont'' P s op r s⊇P cₙ x ε x∈ = 
+ PT.rec squash₁ (λ (n , p , q) →
+   PT.map2 (λ (δ , X) (η , Y) →
+        ℚ.min₊ δ η , λ v v∈ x∼v → 
+          let z = Y v (X v v∈ (∼-monotone≤ (ℚ.min≤ _ _) x∼v))
+                           (∼-monotone≤ (ℚ.min≤' _ _) x∼v)
+          in subst2 _∼[ ε ]_
+               (sym (Seq⊆→.FromIntersection.∩$-∈ₙ {A = ℝ} {s = s} r isSetℝ P s⊇P
+                _ _ _ _))
+               (sym (Seq⊆→.FromIntersection.∩$-∈ₙ {A = ℝ} {s = s} r isSetℝ P s⊇P
+                _ _ _ _)) z)
+     (op n x p) (cₙ (suc n) x ε (𝕡⊆ s n x p)))
+  
+  (Seq⊆→.FromIntersection.∩$-lem {A = ℝ} {s = s} r isSetℝ P s⊇P
+     x x∈)    
 
   
 -- HoTT (11.3.46)
@@ -755,75 +801,6 @@ x+x≡2x x = cong₂ _+ᵣ_
    fst (∼≃abs<ε _ _ ε) $ subst∼ (ℚ.ε/2+ε/2≡ε (fst ε))
      $ 𝕣-lim-self x y (ℚ./2₊ ε) (ℚ./2₊ ε)
 
-≡ContinuousWithPred : ∀ P P' → ⟨ openPred P ⟩ → ⟨ openPred P' ⟩ → ∀ f g
-  → IsContinuousWithPred P  f
-  → IsContinuousWithPred P' g
-  → (∀ r r∈ r∈' → f (rat r) r∈  ≡ g (rat r) r∈')
-  → ∀ u u∈ u∈' → f u u∈ ≡ g u u∈'
-≡ContinuousWithPred P P' oP oP' f g fC gC e = Elimℝ-Prop.go w
- where
- w : Elimℝ-Prop
-       (λ z → (u∈ : ⟨ P z ⟩) (u∈' : ⟨ P' z ⟩) → f z u∈ ≡ g z u∈')
- w .Elimℝ-Prop.ratA = e
- w .Elimℝ-Prop.limA x p R x∈ x∈' = PT.rec2 (isSetℝ _ _)
-  (λ (Δ , PΔ) (Δ' , PΔ') → eqℝ _ _ λ ε₀ →
-   let ε = ε₀
-       f' = fC (lim x p) (ℚ./2₊ ε) x∈
-       g' = gC (lim x p) (ℚ./2₊ ε) x∈'
-   in PT.rec2
-       (isProp∼ _ _ _)
-        (λ (θ , θ∼) (η , η∼) →
-         let δ = ℚ./2₊ (ℚ.min₊ (ℚ.min₊ Δ Δ') (ℚ.min₊ θ η))
-             limX∼x = sym∼ _ _ _ (𝕣-lim-self x p δ δ)
-             xδ∈P : ⟨ P (x δ) ⟩
-             xδ∈P = PΔ (x δ)
-                     (∼-monotone≤
-                       (((subst (ℚ._≤ fst Δ)
-                        (sym (ℚ.ε/2+ε/2≡ε
-                          (fst ((ℚ.min₊
-                           (ℚ.min₊ (Δ) (Δ')) (ℚ.min₊ θ η))))))
-                       (ℚ.isTrans≤ _ _ _ ((ℚ.min≤
-                          (fst (ℚ.min₊ (Δ) (Δ'))) (fst (ℚ.min₊ θ η)))
-                           ) (ℚ.min≤ (fst Δ) (fst Δ'))))))
-                       limX∼x)
-             xδ∈P' : ⟨ P' (x δ) ⟩
-             xδ∈P' = PΔ' (x δ)
-                     (∼-monotone≤ ((((subst (ℚ._≤ fst Δ')
-                        (sym (ℚ.ε/2+ε/2≡ε
-                          (fst ((ℚ.min₊
-                           (ℚ.min₊ (Δ) (Δ')) (ℚ.min₊ θ η))))))
-                       (ℚ.isTrans≤ _ _ _ ((ℚ.min≤
-                          (fst (ℚ.min₊ (Δ) (Δ'))) (fst (ℚ.min₊ θ η)))
-                           ) (ℚ.min≤' (fst Δ) (fst Δ'))))))) limX∼x)
-             zF : f (lim x p) x∈ ∼[ ℚ./2₊ ε ] g (x δ) xδ∈P'
-             zF = subst (f (lim x p) x∈ ∼[ ℚ./2₊ ε ]_)
-                  (R _ xδ∈P xδ∈P')
-                 (θ∼ _ _ (∼-monotone≤
-                    ((subst (ℚ._≤ fst θ)
-                        (sym (ℚ.ε/2+ε/2≡ε
-                          (fst ((ℚ.min₊
-                           (ℚ.min₊ (Δ) (Δ')) (ℚ.min₊ θ η))))))
-                       (ℚ.isTrans≤ _ _ _ ((ℚ.min≤'
-                          (fst (ℚ.min₊ (Δ) (Δ'))) (fst (ℚ.min₊ θ η)))
-                           ) (ℚ.min≤ (fst θ) (fst η)))))
-                  (sym∼ _ _ _ ((𝕣-lim-self x p δ δ)))))
-             zG : g (lim x p) x∈'  ∼[ ℚ./2₊ ε ] g (x δ) xδ∈P'
-             zG = η∼ _ _
-                   (∼-monotone≤
-                        ((subst (ℚ._≤ fst η)
-                        (sym (ℚ.ε/2+ε/2≡ε
-                          (fst ((ℚ.min₊
-                           (ℚ.min₊ (Δ) (Δ')) (ℚ.min₊ θ η))))))
-                       (ℚ.isTrans≤ _ _ _ ((ℚ.min≤'
-                          (fst (ℚ.min₊ (Δ) (Δ'))) (fst (ℚ.min₊ θ η)))
-                           ) (ℚ.min≤' (fst θ) (fst η)))))
-
-                  (sym∼ _ _ _ ((𝕣-lim-self x p δ δ))))
-             zz = subst∼ ((ℚ.ε/2+ε/2≡ε (fst ε))) (triangle∼ zF (sym∼ _ _ _ zG))
-         in  zz)
-        f' g') (oP (lim x p) x∈) (oP' (lim x p) x∈')
-
- w .Elimℝ-Prop.isPropA _ = isPropΠ2 λ _ _ → isSetℝ _ _
 
 
 
@@ -904,3 +881,8 @@ x ^ⁿ suc n = (x ^ⁿ n) ·ᵣ x
                      (λ x' →
                        cong absᵣ (sym (rat·ᵣrat _ _)) ∙∙
                         cong rat (sym (ℚ.abs'·abs' _ _)) ∙∙ rat·ᵣrat _ _) x
+
+
+IsContinuous₂·ᵣ :  IsContinuous₂ _·ᵣ_
+IsContinuous₂·ᵣ = IsContinuous·ᵣL , IsContinuous·ᵣR
+

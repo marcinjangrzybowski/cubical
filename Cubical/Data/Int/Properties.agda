@@ -1534,3 +1534,13 @@ sign·abs (negsuc n) = refl
 
 -- abs[sign[m]·pos[n]]≡n : ∀ m n → abs (sign m · pos n) ≡ n
 -- abs[sign[m]·pos[n]]≡n m n = {!!}
+
+
+-- ·'≡· : ∀ n m → n · m ≡ n ·' m 
+-- ·'≡· (pos n) (pos n₁) = sym (pos·pos n n₁)
+-- ·'≡· (pos zero) (negsuc n₁) = refl
+-- ·'≡· (pos (suc n)) (negsuc n₁) = {!!}
+-- ·'≡· (negsuc n) (pos zero) = ·AnnihilR (negsuc n)
+-- ·'≡· (negsuc n) (pos (suc n₁)) = negsuc·pos n (suc n₁) ∙
+--   {!!}
+-- ·'≡· (negsuc n) (negsuc n₁) = negsuc·negsuc n n₁ ∙ sym (pos·pos (suc n) (suc n₁))

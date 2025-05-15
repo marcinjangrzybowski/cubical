@@ -668,6 +668,24 @@ isPropIsContinuous f = isPropΠ2 λ _ _ → squash₁
         f' g'
  w .Elimℝ-Prop.isPropA _ = isSetℝ _ _
 
+
+
+fromLipschitz' : ∀ f → ∃[ L ∈ ℚ₊ ] (Lipschitz-ℚ→ℝ L f)
+                     → Σ[ f' ∈ (ℝ → ℝ) ] ∃[ L ∈ ℚ₊ ] (Lipschitz-ℝ→ℝ L f')
+fromLipschitz' f = PT.elim→Set
+  (λ _ → isSetΣ (isSet→ isSetℝ)
+   λ _ → isProp→isSet squash₁)
+   (λ (L , lip) → map-snd (∣_∣₁ ∘ (L ,_)) $ fromLipschitz L (f , lip))
+   λ (L , lip) (L' , lip') →
+    Σ≡Prop (λ _ → squash₁)
+          (funExt (≡Continuous _ _
+            (Lipschitz→IsContinuous L _
+              (snd (fromLipschitz L (f , lip))))
+            (Lipschitz→IsContinuous L' _
+              ((snd (fromLipschitz L' (f , lip')))) )
+            λ _ → refl)) 
+
+
 openPred : (P : ℝ → hProp ℓ-zero) → hProp ℓ-zero
 openPred P = (∀ x → ⟨ P x ⟩ → ∃[ δ ∈ ℚ₊ ] (∀ y → x ∼[ δ ] y → ⟨ P y ⟩ ) )
    , isPropΠ2 λ _ _ → squash₁
@@ -770,6 +788,7 @@ IsContinuousClamp a b =
 
 IsContinuous-ᵣ : IsContinuous (-ᵣ_)
 IsContinuous-ᵣ = Lipschitz→IsContinuous _ (fst -ᵣR) (snd -ᵣR)
+
 
 contDiagNE₂ : ∀ {h} → (ne : NonExpanding₂ h)
   → ∀ f g → (IsContinuous f) → (IsContinuous g)
@@ -933,6 +952,7 @@ absᵣNonNeg x p = abs-max x ∙∙ maxᵣComm _ _ ∙∙ z
 
 absᵣPos : ∀ x → 0 <ᵣ x → absᵣ x ≡ x
 absᵣPos x = absᵣNonNeg x ∘ <ᵣWeaken≤ᵣ _ _
+
 
 
 ≤lim : ∀ r x y → (∀ δ → rat r ≤ᵣ x δ) → rat r ≤ᵣ lim x y 
@@ -1144,7 +1164,6 @@ IsContinuous₂ f =
  (∀ x → IsContinuous (f x)) × (∀ x → IsContinuous (flip f x))
 
 
-
 ≡Cont₂ : {f₀ f₁ : ℝ → ℝ → ℝ}
          → IsContinuous₂ f₀
          → IsContinuous₂ f₁
@@ -1214,11 +1233,6 @@ contNE₂ ne =
 ≤Cont f₀C f₁C =
   ≡Continuous _ _ (contDiagNE₂ maxR _ _ f₀C f₁C ) f₁C
 
-
-
-
-
-
 ≤Cont₂Pos : {f₀ f₁ : ℝ → ℝ → ℝ}
          → IsContinuous₂ f₀
          → IsContinuous₂ f₁
@@ -1271,6 +1285,7 @@ contNE₂ ne =
 
 
 
+
 <→≤ContPos' : {x₀ : ℚ} {f₀ f₁ : ℝ → ℝ} 
          → IsContinuous f₀
          → IsContinuous f₁
@@ -1283,6 +1298,7 @@ contNE₂ ne =
              ((_∘ ℚ.isTrans<≤ _ _ _
                (ℚ.isTrans≤< _ _ _ (≤ᵣ→≤ℚ _ _ x₀≤q) q<q'))
                ∘ X ) x q'≤x
+
 
 
 IsContinuousWithPred⊆ : ∀ (P P' : ℝ → hProp ℓ-zero) f 
@@ -1315,7 +1331,9 @@ IsContinuousWithPred⊆ P P' f P'⊆P X u ε u∈P =
                       x q'≤x
      in subst (λ x₀<x → f₀ x x₀<x  ≤ᵣ f₁ x x₀<x)
             (squash₁ _ _) z
-  
+
+
+
 ≤ContPos : {f₀ f₁ : ℝ → ℝ}
          → IsContinuous f₀
          → IsContinuous f₁
@@ -1506,3 +1524,75 @@ IsUContinuousℙ P f =
   in fst (gA (fst (fA q q∈ δ)) uu' δ)
         , fst (snd (gA (fst (fA q q∈ δ)) uu' δ))
          , subst∼ (ℚ.ε/2+ε/2≡ε (fst ε)) zz
+
+≡ContinuousWithPred : ∀ P P' → ⟨ openPred P ⟩ → ⟨ openPred P' ⟩ → ∀ f g
+  → IsContinuousWithPred P  f
+  → IsContinuousWithPred P' g
+  → (∀ r r∈ r∈' → f (rat r) r∈  ≡ g (rat r) r∈')
+  → ∀ u u∈ u∈' → f u u∈ ≡ g u u∈'
+≡ContinuousWithPred P P' oP oP' f g fC gC e = Elimℝ-Prop.go w
+ where
+ w : Elimℝ-Prop
+       (λ z → (u∈ : ⟨ P z ⟩) (u∈' : ⟨ P' z ⟩) → f z u∈ ≡ g z u∈')
+ w .Elimℝ-Prop.ratA = e
+ w .Elimℝ-Prop.limA x p R x∈ x∈' = PT.rec2 (isSetℝ _ _)
+  (λ (Δ , PΔ) (Δ' , PΔ') → eqℝ _ _ λ ε₀ →
+   let ε = ε₀
+       f' = fC (lim x p) (ℚ./2₊ ε) x∈
+       g' = gC (lim x p) (ℚ./2₊ ε) x∈'
+   in PT.rec2
+       (isProp∼ _ _ _)
+        (λ (θ , θ∼) (η , η∼) →
+         let δ = ℚ./2₊ (ℚ.min₊ (ℚ.min₊ Δ Δ') (ℚ.min₊ θ η))
+             limX∼x = sym∼ _ _ _ (𝕣-lim-self x p δ δ)
+             xδ∈P : ⟨ P (x δ) ⟩
+             xδ∈P = PΔ (x δ)
+                     (∼-monotone≤
+                       (((subst (ℚ._≤ fst Δ)
+                        (sym (ℚ.ε/2+ε/2≡ε
+                          (fst ((ℚ.min₊
+                           (ℚ.min₊ (Δ) (Δ')) (ℚ.min₊ θ η))))))
+                       (ℚ.isTrans≤ _ _ _ ((ℚ.min≤
+                          (fst (ℚ.min₊ (Δ) (Δ'))) (fst (ℚ.min₊ θ η)))
+                           ) (ℚ.min≤ (fst Δ) (fst Δ'))))))
+                       limX∼x)
+             xδ∈P' : ⟨ P' (x δ) ⟩
+             xδ∈P' = PΔ' (x δ)
+                     (∼-monotone≤ ((((subst (ℚ._≤ fst Δ')
+                        (sym (ℚ.ε/2+ε/2≡ε
+                          (fst ((ℚ.min₊
+                           (ℚ.min₊ (Δ) (Δ')) (ℚ.min₊ θ η))))))
+                       (ℚ.isTrans≤ _ _ _ ((ℚ.min≤
+                          (fst (ℚ.min₊ (Δ) (Δ'))) (fst (ℚ.min₊ θ η)))
+                           ) (ℚ.min≤' (fst Δ) (fst Δ'))))))) limX∼x)
+             zF : f (lim x p) x∈ ∼[ ℚ./2₊ ε ] g (x δ) xδ∈P'
+             zF = subst (f (lim x p) x∈ ∼[ ℚ./2₊ ε ]_)
+                  (R _ xδ∈P xδ∈P')
+                 (θ∼ _ _ (∼-monotone≤
+                    ((subst (ℚ._≤ fst θ)
+                        (sym (ℚ.ε/2+ε/2≡ε
+                          (fst ((ℚ.min₊
+                           (ℚ.min₊ (Δ) (Δ')) (ℚ.min₊ θ η))))))
+                       (ℚ.isTrans≤ _ _ _ ((ℚ.min≤'
+                          (fst (ℚ.min₊ (Δ) (Δ'))) (fst (ℚ.min₊ θ η)))
+                           ) (ℚ.min≤ (fst θ) (fst η)))))
+                  (sym∼ _ _ _ ((𝕣-lim-self x p δ δ)))))
+             zG : g (lim x p) x∈'  ∼[ ℚ./2₊ ε ] g (x δ) xδ∈P'
+             zG = η∼ _ _
+                   (∼-monotone≤
+                        ((subst (ℚ._≤ fst η)
+                        (sym (ℚ.ε/2+ε/2≡ε
+                          (fst ((ℚ.min₊
+                           (ℚ.min₊ (Δ) (Δ')) (ℚ.min₊ θ η))))))
+                       (ℚ.isTrans≤ _ _ _ ((ℚ.min≤'
+                          (fst (ℚ.min₊ (Δ) (Δ'))) (fst (ℚ.min₊ θ η)))
+                           ) (ℚ.min≤' (fst θ) (fst η)))))
+
+                  (sym∼ _ _ _ ((𝕣-lim-self x p δ δ))))
+             zz = subst∼ ((ℚ.ε/2+ε/2≡ε (fst ε))) (triangle∼ zF (sym∼ _ _ _ zG))
+         in  zz)
+        f' g') (oP (lim x p) x∈) (oP' (lim x p) x∈')
+
+ w .Elimℝ-Prop.isPropA _ = isPropΠ2 λ _ _ → isSetℝ _ _
+
+

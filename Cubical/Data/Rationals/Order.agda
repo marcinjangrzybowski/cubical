@@ -166,6 +166,19 @@ data Trichotomy (m n : ℚ) : Type₀ where
   eq : m ≡ n → Trichotomy m n
   gt : m > n → Trichotomy m n
 
+record TrichotomyRec {ℓ : Level} (n : ℚ) (P : ℚ → Type ℓ) : Type ℓ where
+  no-eta-equality
+  field
+    lt-case : ∀ m → (p : m < n) → P m
+    eq-case : P n
+    gt-case : ∀ m → (p : m > n) → P m
+
+  go : ∀ m → (t : Trichotomy m n) → P m
+  go m (lt p) = lt-case m p 
+  go m (eq p) = subst P (sym p) eq-case
+  go m (gt p) = gt-case m p
+
+
 module _ where
   open BinaryRelation
 
@@ -627,6 +640,8 @@ m ≟ n with discreteℚ m n
 ...             | inl m<n = lt m<n
 ...             | inr n<m = gt n<m
 
+byTrichotomy : ∀ x₀ → {A : ℚ → Type} → TrichotomyRec x₀ A → ∀ x → A x 
+byTrichotomy x₀ r x = TrichotomyRec.go r x (_ ≟ _)
 
 #Dec : ∀ m n → Dec (m # n)
 #Dec m n with m ≟ n 

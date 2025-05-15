@@ -6,6 +6,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Powerset
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Equiv.Properties
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Functions.FunExtEquiv
@@ -121,6 +122,11 @@ at x limitOf f is L =
   ∀ (ε : ℝ₊) → ∃[ δ ∈ ℝ₊ ]
    (∀ r x＃r → absᵣ (x -ᵣ r) <ᵣ fst δ → absᵣ (L -ᵣ f r x＃r) <ᵣ fst ε)
 
+at_limitOfℙ_,_is_ : (x : ℝ) → (P : ℙ ℝ) →  (∀ r → r ∈ P → x ＃ r → ℝ)  → ℝ → Type
+at x limitOfℙ P , f is L =
+  ∀ (ε : ℝ₊) → ∃[ δ ∈ ℝ₊ ]
+   (∀ r r∈ x＃r → absᵣ (x -ᵣ r) <ᵣ fst δ → absᵣ (L -ᵣ f r r∈ x＃r) <ᵣ fst ε)
+
 at_limitOf_is'_ : (x : ℝ) → (∀ r → x ＃ r → ℝ)  → ℝ → Type
 at x limitOf f is' L =
   ∀ (ε : ℚ₊) → ∃[ δ ∈ ℚ₊ ]
@@ -155,6 +161,20 @@ IsContinuousInclLim f x cx = uncurry
 IsContinuousLim : ∀ f x → IsContinuous f →
                     at x limitOf (λ r _ → f r) is (f x)
 IsContinuousLim f x cx = inclLimit→Limit _ _ _ (IsContinuousInclLim f x cx)
+
+IsContinuousLimℙ : ∀ P f x x∈ → IsContinuousWithPred P f →
+                    at x limitOfℙ P , (λ r r∈ _ → f r r∈) is (f x x∈)
+IsContinuousLimℙ P f x x∈ cx = uncurry
+  λ ε → (PT.rec squash₁
+   λ (q , 0<q , q<ε) →
+     PT.map (λ (δ , X) →
+       (ℚ₊→ℝ₊ δ) ,
+         λ r x₁ xx yy → isTrans<ᵣ _ _ _
+           (fst (∼≃abs<ε _ _ _) ((X r x₁ (invEq (∼≃abs<ε _ _ _) yy))))
+            q<ε)
+       (cx x (q , ℚ.<→0< q (<ᵣ→<ℚ 0 q 0<q)) x∈)) ∘ denseℚinℝ 0 ε
+
+
 
 IsContinuousInclLim→IsContinuous : ∀ f  →
                     (∀ x → at x inclLimitOf f is (f x))
@@ -197,6 +217,12 @@ IsContinuousLimΔ f x cx =
 const-lim : ∀ C x → at x limitOf (λ _ _ → C) is C
 const-lim C x ε = ∣ (1 , decℚ<ᵣ?) ,
   (λ r x＃r x₁ → subst (_<ᵣ fst ε) (cong absᵣ (sym (+-ᵣ C))) (snd ε)) ∣₁
+
+const-limℙ : ∀ P C x → at x limitOfℙ P ,  (λ _ _ _ → C) is C
+const-limℙ _ C x ε = ∣ (1 , decℚ<ᵣ?) ,
+  (λ r x＃r _ x₁ → subst (_<ᵣ fst ε) (cong absᵣ (sym (+-ᵣ C))) (snd ε) ) ∣₁
+
+
 
 id-lim : ∀ x → at x limitOf (λ r _ → r) is x
 id-lim x ε = ∣ ε , (λ r x＃r p → p )  ∣₁
@@ -334,9 +360,55 @@ At x limitOf f = Σ _ (at x limitOf f is_)
 differenceAt : (ℝ → ℝ) → ℝ → ∀ h → 0 ＃ h → ℝ
 differenceAt f x h 0＃h = (f (x +ᵣ h) -ᵣ f x) ／ᵣ[ h , 0＃h ]
 
+differenceAt0-swap : ∀ f h 0＃h → differenceAt f 0 h 0＃h ≡ differenceAt f h (-ᵣ h) (-＃ _ _ 0＃h)
+differenceAt0-swap f h 0＃h =
+     sym (-ᵣ·-ᵣ _ _) 
+  ∙ cong₂ _·ᵣ_
+    (cong -ᵣ_ (cong₂ _-ᵣ_
+         (cong f (+IdL _))
+         (cong f (sym (+-ᵣ _))))
+      ∙ -[x-y]≡y-x _ _)
+    (-invℝ h 0＃h)
+
+
+
+differenceAtℙ : ∀ P → (∀ r → r ∈ P → ℝ) → ∀ x → ∀ h → 0 ＃ h → x ∈ P → x +ᵣ h ∈ P   → ℝ
+differenceAtℙ P f x h 0＃h x∈ x+h∈ = (f (x +ᵣ h) x+h∈ -ᵣ f x x∈) ／ᵣ[ h , 0＃h ]
+
+
+incr→0<differenceAtℙ : ∀ P f x h 0＃h x∈ x+h∈ →
+          (∀ x x∈ y y∈ → x <ᵣ y → f x x∈ <ᵣ f y y∈) →
+            0 <ᵣ differenceAtℙ P f x h 0＃h x∈ x+h∈
+incr→0<differenceAtℙ P f x h (inl 0<h) x∈ x+h∈ incr =
+ snd ((_ , x<y→0<y-x _ _ (incr _ _ _ _
+  (isTrans≡<ᵣ _ _ _ (sym (+IdR _)) $ <ᵣ-o+ 0 h x 0<h)))
+   ₊·ᵣ (_ , invℝ-pos _ 0<h))
+incr→0<differenceAtℙ P f x h (inr h<0) x∈ x+h∈ incr =
+ isTrans<≡ᵣ _ _ _
+   (snd ((_ , -ᵣ<ᵣ _ _ (x<y→x-y<0 _ _
+    (incr _ _ _ _ (isTrans<≡ᵣ _ _ _ (<ᵣ-o+ h 0 x h<0) (+IdR _)))))
+    ₊·ᵣ (_ , -ᵣ<ᵣ _ _ (invℝ-neg _ h<0))))
+   (-ᵣ·-ᵣ _ _)
+   
+＃ℙ : ℝ → ℙ ℝ
+＃ℙ r x = r ＃ x , isProp＃ r x
+
+
+IsContinuousWithPred-differenceAt : ∀ x f → IsContinuous f
+   → IsContinuousWithPred (＃ℙ 0) (differenceAt f x)
+IsContinuousWithPred-differenceAt x f cf =
+  cont₂·ᵣWP _ _ _
+    (AsContinuousWithPred _ _
+      (cont₂+ᵣ _ _ (IsContinuous∘ _ _ cf (IsContinuous+ᵣL _)) (IsContinuousConst _))) 
+    IsContinuousWithPredInvℝ
+    
 derivativeAt : (ℝ → ℝ) → ℝ → Type
 derivativeAt f x = At 0 limitOf (differenceAt f x)
 
+
+derivativeOfℙ_,_at_is_ : (P : ℙ ℝ) → (∀ r → r ∈ P → ℝ) → Σ _ (_∈ P) → ℝ → Type
+derivativeOfℙ P , f at (x , x∈) is d =
+ at 0 limitOfℙ P ∘S (x +ᵣ_) , (λ h h∈ 0＃h → differenceAtℙ P f x h 0＃h x∈ h∈) is d
 
 derivativeOf_at_is_ : (ℝ → ℝ) → ℝ → ℝ → Type
 derivativeOf f at x is d = at 0 limitOf (differenceAt f x) is d
@@ -460,10 +532,48 @@ derivative-^ⁿ (suc n) x =
     (·Derivative _ _ _ _ _ IsContinuousId
        (derivative-^ⁿ n x) (idDerivative x))
 
--- isPropIsIncrasing
+derivative-∘· : ∀ f f' x k 
+   → derivativeOf f at x is f'
+   → derivativeOf (f ∘ (fst k ·ᵣ_)) at x ／ᵣ₊ k is (fst k ·ᵣ f')
+derivative-∘· f f' x k X ε =
+ PT.map
+  (λ (δ , Y) →
+    (δ ₊·ᵣ invℝ₊ k) , λ h 0＃h v → 
+         let 0＃k·h : (0 <ᵣ fst k ·ᵣ h) ⊎ (fst k ·ᵣ h <ᵣ 0)
+             0＃k·h = ⊎.map
+                (λ 0<h → snd (k ₊·ᵣ (h , 0<h)))
+                (λ h<0 → isTrans<≡ᵣ _ _ _
+                           (<ᵣ-o·ᵣ _ _ k h<0) (𝐑'.0RightAnnihilates _)) 0＃h 
+             u = fst (z<x/y₊≃y₊·z<x _ _ _) (Y (fst k ·ᵣ h)
+                   0＃k·h (isTrans≡<ᵣ _ _ _
+                    (cong absᵣ (+IdL _ ∙ sym (·-ᵣ _ _)) ∙ ·absᵣ _ _  ∙
+                      cong₂ _·ᵣ_
+                       ((absᵣPos _ (snd k)))
+                       (cong absᵣ (sym (+IdL _))))
+                    (fst (z<x/y₊≃y₊·z<x _ _ _) v)))
+         in  isTrans≡<ᵣ _ _ _
+              (cong absᵣ
+                  (   cong (_-ᵣ_ (fst k ·ᵣ f'))
+                    ((cong₂ _·ᵣ_
+                       (cong₂ _-ᵣ_
+                         (cong f (·DistL+ _ _ _ ∙
+                           cong (_+ᵣ fst k ·ᵣ h)
+                             (·ᵣComm _ _ ∙ [x/₊y]·yᵣ x k) ))
+                         (cong f (·ᵣComm _ _ ∙ [x/₊y]·yᵣ x k)))
+                       ((sym ([x/y]·yᵣ _ _ _))
+                        ∙ cong (_·ᵣ (fst k))
+                         (·ᵣComm _ _ ∙ sym (invℝ· (fst k) h (inl (snd k)) _ 0＃k·h)) ) 
+                     ∙  (·ᵣAssoc _ _ _))
+                      ∙ ·ᵣComm _ _) 
+                    ∙ sym (·DistL- _ _ _))
+               ∙∙ ·absᵣ _ _ 
+               ∙∙ cong (_·ᵣ absᵣ (f' -ᵣ differenceAt f x (fst k ·ᵣ h) 0＃k·h))
+                   (absᵣPos _ (snd k))) u)
+   (X (ε ₊·ᵣ invℝ₊ k))
+
+-- -- -- easy to prove, but with narrow assumptin
 
 
--- easy to prove, but with narrow assumptin
 
 chainRuleIncr : ∀ x f f'gx g g'x
         → isIncrasing g
@@ -516,3 +626,130 @@ chainRuleIncr x f f'gx g g'x incrG cg dg df =
 -- -- --          → derivativeOf f at (g x) is f'gx
 -- -- --         → derivativeOf (f ∘ g) at x is (f'gx ·ᵣ g'x)
 -- -- -- chainRule = {!!}
+
+
+-- IsContinuousLimExcl : ∀ x f → IsContinuousWithPred (＃ℙ x) f →
+--                     at x limitOf f is (f x)
+-- IsContinuousLimExcl f x cx = ?
+--  -- inclLimit→Limit _ _ _ (IsContinuousInclLim f x cx)
+
+
+limitUniq : ∀ x f y y' 
+ → at x limitOf f is y
+ → at x limitOf f is y'
+ → y ≡ y'
+limitUniq x f y y' X X' = eqℝ _ _
+  λ ε → 
+    PT.rec2 (isProp∼ _ _ _)
+      (λ (δ , D) (δ' , D') →
+        let [δ⊔δ]/2 = (minᵣ₊ δ δ') ₊·ᵣ (ℚ₊→ℝ₊ ([ 1 / 2 ] , _))
+            x＃ : x ＃ (x +ᵣ -ᵣ (minᵣ₊ δ δ' ₊·ᵣ ℚ₊→ℝ₊ ([ 1 / 2 ] , tt)) .fst)
+            x＃ = (inr (isTrans<≡ᵣ _ _ _
+                        (<ᵣ-o+ _ _ _ (-ᵣ<ᵣ _ _ (snd [δ⊔δ]/2))) (+IdR _)))
+        in subst∼ (ℚ.ε/2+ε/2≡ε (fst ε))
+                  (triangle∼  {ε = /2₊ ε} {/2₊ ε}
+                    (invEq (∼≃abs<ε _ _ _) (D (x -ᵣ fst [δ⊔δ]/2)
+                     x＃
+                     ((isTrans≡<ᵣ _ _ _
+                       (cong absᵣ L𝐑.lem--079 ∙ absᵣPos _ (snd [δ⊔δ]/2))
+                       (isTrans≤<ᵣ _ _ _
+                         (≤ᵣ-·o _ _ _ (ℚ.0≤pos _ _) (min≤ᵣ _ _)) (isTrans<≡ᵣ _ _ _
+                           (<ᵣ-o·ᵣ _ _ δ decℚ<ᵣ?) (·IdR _)))))))
+                      (sym∼ _ _ _
+                       ((invEq (∼≃abs<ε _ _ _) (D' (x -ᵣ fst [δ⊔δ]/2)
+                     x＃
+                     (isTrans≡<ᵣ _ _ _
+                       (cong absᵣ L𝐑.lem--079 ∙ absᵣPos _ (snd [δ⊔δ]/2))
+                       (isTrans≤<ᵣ _ _ _
+                         (≤ᵣ-·o _ _ _ (ℚ.0≤pos _ _) (min≤ᵣ' _ _)) (isTrans<≡ᵣ _ _ _
+                           (<ᵣ-o·ᵣ _ _ δ' decℚ<ᵣ?) (·IdR _)))))))))
+        )
+      (X (ℚ₊→ℝ₊ (/2₊ ε))) (X' (ℚ₊→ℝ₊ (/2₊ ε)))
+
+-- mapLimit : ∀ x f y (g : ℝ → ℝ)
+--   → IsContinuousWithPred (＃ℙ x) f
+--   → IsContinuous g
+--   → at x limitOf f is y
+--   → at x limitOf (λ r r#x → g (f r r#x)) is g y
+-- mapLimit x f y g fC gC X (ε , 0<ε) =
+--   PT.rec squash₁
+--     (λ (q , 0<q , q<e) →
+--      let q₊ = (q , {!!})
+--      in PT.rec squash₁
+--          (λ (δ , D) →
+--             PT.rec squash₁
+--               (λ (δ' , D') →
+--                 ∣ minᵣ₊ (ℚ₊→ℝ₊ δ') δ ,
+--                     (λ r x＃r x-r<δ →
+--                        {!D r x＃r ?!}) ∣₁)
+--               (gfC (x +ᵣ fst δ) (/2₊ q₊)
+--                   {!!})
+           
+--                 )
+         
+--          (X (ℚ₊→ℝ₊ (/2₊ q₊)) ))
+--    (denseℚinℝ _ _ 0<ε)
+
+--  where
+--   gfC : _
+--   gfC = IsContinuousWP∘' _ _ _ gC fC
+
+
+-- mapLimit' : ∀ x z f y (v : ∀ r r#x → z ＃ f r r#x) → ∀ ＃y → (g : ∀ r → z ＃ r → ℝ)
+--   → IsContinuousWithPred (＃ℙ x) f
+--   → IsContinuousWithPred (＃ℙ z) g
+--   → at x limitOf f is y
+--   → at x limitOf (λ r r#x → g (f r r#x) (v _ _)) is (g y ＃y)
+-- mapLimit' x z f y v ＃y g fC gC L = {!!}
+
+
+-- preMapLimit : ∀ x x' f g y → (u : ∀ r ＃r →  x' ＃ g r ＃r)
+--   → at x  limitOf g is x'
+--   → at x' limitOf f is y
+--   → at x  limitOf (λ r ＃r → f (g r ＃r) (u _ _)) is y
+-- preMapLimit = {!!}
+
+
+-- invDerivative : ∀ f x (f' : ℝ) → ∀ 0＃f'  → (isEquivF : isEquiv f)
+--   → IsContinuous f
+--   → IsContinuous (invEq (f , isEquivF))
+--   → derivativeOf f at x is f' 
+--   → derivativeOf (invEq (f , isEquivF)) at (f x) is (invℝ f' 0＃f')
+-- invDerivative f x f' 0＃f' isEquivF fC gC d =
+--  let g = invEq (f , isEquivF)
+--      h' = λ h 0＃h →
+--              g (f x +ᵣ h) -ᵣ x
+--      d' = preMapLimit 0 0 _ h' f'
+--            (λ r ＃r →
+--              invEq (＃Δ _ _) {!!})
+--             (subst (at 0 limitOf h' is_)
+--               (cong (_-ᵣ x) (retEq (f , isEquivF) x) ∙ +-ᵣ x)
+--               (+-lim _ _ _ _ _ (IsContinuousLimΔ g (f x) gC)
+--                (const-lim (-ᵣ x) _)))
+--             d
+--      d'' = mapLimit' 0 0 _ f' {!!} 0＃f'
+--           invℝ
+--           (IsContinuousWP∘ _ _ _ _ _
+--             (IsContinuousWithPred-differenceAt _ _ fC)
+--              {!!})
+--           IsContinuousWithPredInvℝ
+--           d'
+          
+--  in substLim (λ r x＃r →
+--       invℝ· _ _ (invEq (＃Δ _ _) {!!}) _ _ ∙∙ ·ᵣComm _ _ ∙∙ 
+--         cong₂ _·ᵣ_
+--           (invℝInvol _ _ ∙
+--             cong (λ z → (invEq (f , isEquivF) (f x +ᵣ r)) -ᵣ z)
+--               (sym (retEq (f , isEquivF) x)))
+--           (cong₂ invℝ
+--              (cong (_-ᵣ f x) (fst (equivAdjointEquiv (f , isEquivF))
+--                  (cong (x +ᵣ_) (cong (_-ᵣ x) (cong (invEq (f , isEquivF)) (+ᵣComm _ _)) )
+--                   ∙ +ᵣComm _ _ ∙ 𝐑'.minusPlus _ _))
+--                ∙ 𝐑'.plusMinus _ _)
+--              (toPathP (isProp＃  _ _ _ _)))
+--       ) d''
+
+
+-- fromCauchySequence'-limit : ∀ s ics →
+--     {!fromCauchySequence' s ics!}
+-- fromCauchySequence'-limit = {!!}
