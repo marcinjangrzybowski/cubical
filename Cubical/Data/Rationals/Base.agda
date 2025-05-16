@@ -8,7 +8,7 @@ open import Cubical.Foundations.Function
 open import Cubical.Data.Nat as ℕ using (discreteℕ)
 open import Cubical.Data.NatPlusOne
 open import Cubical.Data.Sigma
-open import Cubical.Data.Int
+open import Cubical.Data.IntAlt
 
 open import Cubical.HITs.SetQuotients as SetQuotient
   using ([_]; eq/; discreteSetQuotients) renaming (_/_ to _//_) public
@@ -26,6 +26,7 @@ open BinaryRelation
 _∼_ : ℤ × ℕ₊₁ → ℤ × ℕ₊₁ → Type₀
 (a , b) ∼ (c , d) = a · ℕ₊₁→ℤ d ≡ c · ℕ₊₁→ℤ b
 
+
 ℚ : Type₀
 ℚ = (ℤ × ℕ₊₁) // _∼_
 
@@ -40,8 +41,10 @@ isSetℚ = SetQuotient.squash/
 isEquivRel∼ : isEquivRel _∼_
 isEquivRel.reflexive isEquivRel∼ (a , b) = refl
 isEquivRel.symmetric isEquivRel∼ (a , b) (c , d) = sym
-isEquivRel.transitive isEquivRel∼ (a , b) (c , d) (e , f) p q = ·rCancel _ _ (e · pos (ℕ.suc (ℕ₊₁.n b))) r (ℕ.snotz ∘ injPos)
-  where r = (a · ℕ₊₁→ℤ f) · ℕ₊₁→ℤ d ≡[ i ]⟨ ·Comm a (ℕ₊₁→ℤ f) i · ℕ₊₁→ℤ d ⟩
+isEquivRel.transitive isEquivRel∼ (a , b) (c , d) (e , f) p q =
+   ·rCancel _ _ (e · pos (ℕ.suc (ℕ₊₁.n b))) r (ℕ.snotz ∘ injPos)
+  where r = 
+            (a · ℕ₊₁→ℤ f) · ℕ₊₁→ℤ d ≡[ i ]⟨ ·Comm a (ℕ₊₁→ℤ f) i · ℕ₊₁→ℤ d ⟩
             (ℕ₊₁→ℤ f · a) · ℕ₊₁→ℤ d ≡⟨ sym (·Assoc (ℕ₊₁→ℤ f) a (ℕ₊₁→ℤ d)) ⟩
             ℕ₊₁→ℤ f · (a · ℕ₊₁→ℤ d) ≡[ i ]⟨ ℕ₊₁→ℤ f · p i ⟩
             ℕ₊₁→ℤ f · (c · ℕ₊₁→ℤ b) ≡⟨ ·Assoc (ℕ₊₁→ℤ f) c (ℕ₊₁→ℤ b) ⟩

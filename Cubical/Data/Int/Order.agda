@@ -20,8 +20,10 @@ infix 4 _≤_ _<_ _≥_ _>_
 _≤_ : ℤ → ℤ → Type₀
 m ≤ n = Σ[ k ∈ ℕ ] m +pos k ≡ n
 
+
 _<_ : ℤ → ℤ → Type₀
 m < n = sucℤ m ≤ n
+
 
 _≥_ : ℤ → ℤ → Type₀
 m ≥ n = n ≤ m
@@ -555,3 +557,4 @@ pos-<-pos≃ℕ< m n = propBiimpl→Equiv (isProp< {pos m} {pos n}) ℕ.isProp�
 0≤x² (pos n) = subst (0 ≤_) (pos·pos n n) zero-≤pos
 0≤x² (negsuc n) = subst (0 ≤_) (pos·pos (suc n) (suc n)
   ∙ sym (negsuc·negsuc n n)) zero-≤pos
+

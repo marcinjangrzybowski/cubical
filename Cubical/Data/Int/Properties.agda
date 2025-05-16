@@ -1532,15 +1532,31 @@ sign·abs (pos zero) = refl
 sign·abs (pos (suc n)) = refl
 sign·abs (negsuc n) = refl
 
--- abs[sign[m]·pos[n]]≡n : ∀ m n → abs (sign m · pos n) ≡ n
--- abs[sign[m]·pos[n]]≡n m n = {!!}
+ℕ-f-lem : ∀ n m → (pos n +negsuc m) ≡ (n ℕ-f suc m)
+ℕ-f-lem zero zero = refl
+ℕ-f-lem (suc zero) zero = refl
+ℕ-f-lem (suc (suc n)) zero = refl
+ℕ-f-lem zero (suc m) = cong predℤ (+Comm 0 (negsuc m))
+ℕ-f-lem (suc n) (suc m) =
+  predℤ+negsuc m (pos (suc n)) ∙ ℕ-f-lem n m
+
++≡+f : ∀ n m → n + m ≡ n +f m 
++≡+f (pos n) (pos n₁) = sym (pos+ n n₁)
++≡+f (pos n) (negsuc n₁) = ℕ-f-lem n n₁
++≡+f (negsuc n) (pos n₁) = +Comm (negsuc n) (pos n₁) ∙ ℕ-f-lem n₁ n
++≡+f (negsuc n) (negsuc n₁) = sym (neg+ (suc n) (suc n₁))
+  ∙ cong negsuc (ℕ.+-suc _ _)
 
 
--- ·'≡· : ∀ n m → n · m ≡ n ·' m 
--- ·'≡· (pos n) (pos n₁) = sym (pos·pos n n₁)
--- ·'≡· (pos zero) (negsuc n₁) = refl
--- ·'≡· (pos (suc n)) (negsuc n₁) = {!!}
--- ·'≡· (negsuc n) (pos zero) = ·AnnihilR (negsuc n)
--- ·'≡· (negsuc n) (pos (suc n₁)) = negsuc·pos n (suc n₁) ∙
---   {!!}
--- ·'≡· (negsuc n) (negsuc n₁) = negsuc·negsuc n n₁ ∙ sym (pos·pos (suc n) (suc n₁))
+·≡·f : ∀ n m → n · m ≡ n ·f m 
+·≡·f (pos n) (pos n₁) = sym (pos·pos n n₁)
+·≡·f (pos zero) (negsuc n₁) = refl
+·≡·f (pos (suc n)) (negsuc n₁) =
+   pos·negsuc (suc n) n₁ ∙
+     cong -_ (sym (pos·pos (suc n) (suc n₁)))
+·≡·f (negsuc n) (pos zero) = ·AnnihilR (negsuc n)
+·≡·f (negsuc n) (pos (suc n₁)) = 
+    negsuc·pos n (suc n₁) ∙
+      cong -_ (sym (pos·pos (suc n) (suc n₁)))
+   
+·≡·f (negsuc n) (negsuc n₁) = negsuc·negsuc n n₁ ∙ sym (pos·pos (suc n) (suc n₁))

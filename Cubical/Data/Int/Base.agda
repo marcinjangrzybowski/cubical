@@ -11,7 +11,9 @@ open import Cubical.Data.Fin.Inductive.Base
 
 infix  8 -_
 infixl 7 _·_
+infixl 7 _·f_
 infixl 6 _+_ _-_
+infixl 6 _+f_ _-f_
 
 data ℤ : Type₀ where
   pos    : (n : ℕ) → ℤ
@@ -60,20 +62,32 @@ _+_ : ℤ → ℤ → ℤ
 m + pos n = m +pos n
 m + negsuc n = m +negsuc n
 
-_+f_ : ℤ → ℤ → ℤ
-pos n +f pos n₁ = pos (n ℕ.+ n₁) 
-negsuc n +f negsuc n₁ = negsuc (suc (n ℕ.+ n₁))
-n +f m = n + m
--- pos n +f negsuc n₁ = {!!}
--- negsuc n +f pos n₁ = {!!}
 
 -_ : ℤ → ℤ
 - pos zero = pos zero
 - pos (suc n) = negsuc n
 - negsuc n = pos (suc n)
 
+
+ℕ-f-hlp : ℕ → ℕ → ℤ
+ℕ-f-hlp m-n@zero n-m = - (pos n-m)
+ℕ-f-hlp m-n@(suc _) n-m = pos m-n
+
+_ℕ-f_ : ℕ → ℕ → ℤ
+m ℕ-f n = ℕ-f-hlp (m ℕ.∸ n) (n ℕ.∸ m)
+ 
+
+_+f_ : ℤ → ℤ → ℤ
+pos n +f pos n₁ = pos (n ℕ.+ n₁) 
+negsuc n +f negsuc n₁ = negsuc (suc (n ℕ.+ n₁))
+pos n +f negsuc n₁ = n ℕ-f (suc n₁)
+negsuc n +f pos n₁ = n₁ ℕ-f (suc n)
+
 _-_ : ℤ → ℤ → ℤ
 m - n = m + (- n)
+
+_-f_ : ℤ → ℤ → ℤ
+m -f n = m +f (- n)
 
 _·_ : ℤ → ℤ → ℤ
 pos zero · m = pos zero
@@ -84,9 +98,9 @@ negsuc (suc n) · m = - m + negsuc n · m
 _·f_ : ℤ → ℤ → ℤ
 pos n ·f pos n₁ = pos (n ℕ.· n₁) 
 pos zero ·f negsuc n₁ = pos zero
-pos (suc n) ·f negsuc n₁ = negsuc (suc n ℕ.· suc n₁)
+pos (suc n) ·f negsuc n₁ = negsuc (predℕ (suc n ℕ.· suc n₁))
 negsuc n ·f pos zero = pos zero
-negsuc n ·f pos (suc n₁) = negsuc (suc n ℕ.· suc n₁)
+negsuc n ·f pos (suc n₁) = negsuc (predℕ (suc n ℕ.· suc n₁))
 negsuc n ·f negsuc n₁ = pos (suc n ℕ.· suc n₁)
 
 

@@ -24,7 +24,7 @@ import Cubical.Data.Nat.Mod as ℕ
 import Cubical.Data.Nat.Order as ℕ
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sum as ⊎
-open import Cubical.Data.Int as ℤ using (pos; ℤ)
+open import Cubical.Data.IntAlt as ℤ using (pos; ℤ)
 import Cubical.Data.Int.Order as ℤ
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
@@ -36,7 +36,7 @@ open import Cubical.HITs.SetQuotients as SQ hiding (_/_)
 open import Cubical.Data.NatPlusOne
 
 import Cubical.Data.Rationals as ℚ
-import Cubical.Data.Rationals.Order.Properties as ℚ
+-- import Cubical.Data.Rationals.Order.Properties as ℚ
 
 open import Cubical.Data.BinNat.BinNat
 
@@ -47,11 +47,11 @@ a = 12333212
 b : ℕ
 b = 32444391
 
-a·b : ℕ
-a·b = {!a ℕ.+ b!}
+-- a·b : ℕ
+-- a·b = {!a ℕ.+ b!}
 
-a·b' : ℤ
-a·b' = {!pos a ℤ.+f pos b!}
+-- a·b' : ℤ
+-- a·b' = {!pos a ℤ.+f pos b!}
 
 
 
@@ -74,8 +74,8 @@ expSeqℕ×ℕ n = suc n ^ n , (n ^ n)
 -- x ℚ^ⁿr suc n = (x ℚ^ⁿr n) ·r x
 
 
--- expSeq : ℕ → ℚ.ℚ
--- expSeq n = (ℚ.[ pos n / 1+ n ]) ℚ.ℚ^ⁿ n
+expSeq : ℕ → ℚ.ℚ
+expSeq n = (ℚ.[ pos n / 1+ n ]) ℚ.ℚ^ⁿ n
 
 -- -- expSeq-r : ℕ → ℚ.ℚ
 -- -- expSeq-r n = (1 +r ℚ.[ 1 / 1+ n ]) ℚ^ⁿr n
