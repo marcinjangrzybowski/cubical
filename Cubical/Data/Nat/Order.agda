@@ -236,6 +236,9 @@ predℕ-≤-predℕ {suc m} {suc n} ineq = pred-≤-pred ineq
            (d + suc m) · suc k               ≡⟨ cong (_· suc k) r ⟩
            n · suc k                         ∎
 
+<-·sk' : 0 < k → m < n → m · k < n · k
+<-·sk' {zero} {m} {n} 0<0 = ⊥.rec (¬-<-zero 0<0)
+<-·sk' {suc k} {m} {n}  _ = <-·sk {m} {n} {k}
 
 <-·sk-cancel : ∀ {m n k} → m · suc k < n · suc k → m < n
 <-·sk-cancel {n = zero} x = ⊥.rec (¬-<-zero x)
@@ -640,6 +643,17 @@ sn<ssm^sn (suc n) m =
                   (^-monotone (suc (suc m)) 0 n zero-≤)))
              (≤-·k {1} {suc m} {(suc (suc m) ^ suc n)} (suc-≤-suc zero-≤))))))
 
+k+predℕₖ : k ≤ n → k + iter k predℕ n ≡ n
+k+predℕₖ {zero} x = refl
+k+predℕₖ {suc k} {zero} x = ⊥.rec (¬-<-zero x)
+k+predℕₖ {suc k} {suc n} x =
+ cong suc (cong (k +_) (w n k (predℕ-≤-predℕ x)) ∙ k+predℕₖ {k} {n} (predℕ-≤-predℕ x))
+
+ where
+ w : ∀ n k → k ≤ n → predℕ (iter k predℕ (suc n)) ≡ iter k predℕ n
+ w n zero x = refl
+ w zero (suc k) x = ⊥.rec (¬-<-zero x)
+ w (suc n) (suc k) x = cong predℕ (w (suc n) k (≤-trans ≤-predℕ x))
 
 infix 4 _≤ᵖ_ _<ᵖ_ _≤ᵉ_ _<ᵉ_ _≲_ _≺_ _≲ᵉ_ _≺ᵉ_
 

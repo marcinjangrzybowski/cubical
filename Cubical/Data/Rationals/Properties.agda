@@ -569,11 +569,23 @@ _·_ = OnCommonDenomSym.go ·Rec
 [/]≡· : ∀ n m → [ n / m ] ≡ [ n / 1 ] · [ 1 / m ]
 [/]≡· n m = cong₂ [_/_] (sym (ℤ.·IdR n)) (sym (·₊₁-identityˡ _))
 
+[1/n]·[1/m]≡[1/n·m] : ∀ n m → [ 1 / n ] · [ 1 / m ] ≡ [ 1 / n ·₊₁ m ]
+[1/n]·[1/m]≡[1/n·m] n m = eq/ _ _ refl
+
+
+[n/n]≡[m/m] : ∀ n m → [ ℤ.pos (suc n) / 1+ n ] ≡ [ ℤ.pos (suc m) / 1+ m ]
+[n/n]≡[m/m] n m = eq/ _ _ (ℤ.·Comm (ℤ.pos (suc n)) (ℤ.pos (suc m)))
+
+[0/n]≡[0/m] : ∀ n m → [ ℤ.pos zero / 1+ n ] ≡ [ ℤ.pos zero / 1+ m ]
+[0/n]≡[0/m] n m = eq/ _ _ refl
+
+
 -_ : ℚ → ℚ
 - x = -1 · x
 
 -[/] : ∀ n m → [ ℤ.negsuc m / n ] ≡ - [ ℤ.pos (suc m) / n ] 
 -[/] n m = cong [ ℤ.negsuc m /_] (sym (·₊₁-identityˡ _))
+
 
 -Invol : ∀ x → - - x ≡ x
 -Invol x = ·Assoc -1 -1 x ∙ ·IdL x

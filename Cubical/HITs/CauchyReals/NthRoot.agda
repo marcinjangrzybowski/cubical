@@ -134,7 +134,8 @@ module NthRoot (m : ℕ) where
                   [b-a]·S≡bⁿ-aⁿ (rat r) (rat q)
                      0<r 0<q)
                (isTrans≤≡ᵣ _ _ _ (≤ᵣ-o·ᵣ _ _ _
-                      (≤ℚ→≤ᵣ _ _  $ ℚ.<Weaken≤ _ _ (ℚ.<→<minus _ _ r<q))
+                      (isTrans≤≡ᵣ _ _ _  (≤ℚ→≤ᵣ _ _  $ ℚ.<Weaken≤ _ _ (ℚ.<→<minus _ _ r<q))
+                       (sym (-ᵣ-rat₂ _ _))) --
                     (isTrans≤≡ᵣ _ _ _
                (S≤Bⁿ·n (rat r) (rat q) 0<r 0<q A B 0<A
                      (isTrans≤<ᵣ _ _ _
@@ -145,16 +146,17 @@ module NthRoot (m : ℕ) where
                         ∙ cong (_·ᵣ (rat ((fromNat (2 ℕ.+ m)))))
                           (sym (^ⁿ-ℚ^ⁿ _ _)))))
                           ))
-                           (sym (rat·ᵣrat _ _) ∙ (cong rat (ℚ.·Comm _ _))))
+                           (cong₂ _·ᵣ_ (-ᵣ-rat₂ _ _) refl ∙ (sym (rat·ᵣrat _ _) ∙ (cong rat (ℚ.·Comm _ _)))) -- 
+                           )
            
            
-       in isTrans≡≤ᵣ _ _ _ (absᵣPos _
+       in isTrans≡≤ᵣ _ _ _ (cong absᵣ (-ᵣ-rat₂ _ _) ∙ absᵣPos _
             (<ℚ→<ᵣ _ _  (ℚ.<→<minus _ _ (incrF r
                      (∈intervalℙ→∈ℚintervalℙ _ _ _ r∈)
                      q
                      (∈intervalℙ→∈ℚintervalℙ _ _ _ q∈)
                      r<q)))
-                 ∙ cong₂ _-ᵣ_
+                 ∙ sym (-ᵣ-rat₂ _ _)  ∙ cong₂ _-ᵣ_
                    (sym (^ⁿ-ℚ^ⁿ _ _))
                    (sym (^ⁿ-ℚ^ⁿ _ _))) ineqL
 
@@ -187,10 +189,10 @@ module NthRoot (m : ℕ) where
                              (snd q∈')
                              (<ℚ→<ᵣ _ _ r<q))
                              ))
-                    ([b-a]·S≡bⁿ-aⁿ (rat r) (rat q) 0<r 0<q 
+                    (cong₂ _·ᵣ_ (sym (-ᵣ-rat₂ _ _)) refl ∙ [b-a]·S≡bⁿ-aⁿ (rat r) (rat q) 0<r 0<q 
                        ∙
                       cong₂ _-ᵣ_ (^ⁿ-ℚ^ⁿ _ _) (^ⁿ-ℚ^ⁿ _ _)
-                      ∙ cong rat (sym (ℚ.absPos _
+                      ∙ -ᵣ-rat₂ _ _ ∙ cong rat (sym (ℚ.absPos _
                       (ℚ.<→<minus _ _ (incrF r r∈ q q∈ r<q))) ∙
                        ℚ.abs'≡abs _))
                        )
@@ -293,14 +295,15 @@ module NthRoot (m : ℕ) where
              (fst (invℚ₊ (ℚ.[ pos (suc (suc n)) , (1+ 0) ] , tt)))
              _ r)
            h
-           
+
+
   2+n≤ℚ2+n' = (ℚ.≤ℤ→≤ℚ _ _ (ℤ.ℕ≤→pos-≤-pos _ _ (ℕ.<-weaken (ℕ.<-k+ n<n'))))
 
   x⁻¹∈ : 𝒇⁻¹ ib x ∈
             intervalℙ (rat (fst (invℚ₊ (fromNat (2 ℕ.+ n')))))
             (rat (fromNat (2 ℕ.+ n')))
   x⁻¹∈ = (isTrans≤ᵣ _ _ _ (≤ℚ→≤ᵣ _ _
-           (fst (ℚ.invℚ₊-≤-invℚ₊ _ (fromNat (2 ℕ.+ n')))
+           (fst (ℚ.invℚ₊-≤-invℚ₊ (fromNat (2 ℕ.+ n)) (fromNat (2 ℕ.+ n')))
         2+n≤ℚ2+n'))
        (fst x∈*))
     , (isTrans≤ᵣ _ _ _ (snd x∈*) (≤ℚ→≤ᵣ _ _ 2+n≤ℚ2+n'))
@@ -385,15 +388,18 @@ module NthRoot (m : ℕ) where
    isTrans≡≤ᵣ _ _ _  (sym (absᵣPos _ 0<x))
       (isTrans≤ᵣ _ _ _    
        (<ᵣWeaken≤ᵣ _ _ x<1+M)
-         (≤ℚ→≤ᵣ _ _ (ℚ.isTrans≤ _ _ _ 1+M≤hiB
+         ((≤ℚ→≤ᵣ _ _ (ℚ.isTrans≤ (fromNat (suc M)) _ _ 1+M≤hiB
            ((ℚ^ⁿ-Monotone (suc (suc m))
               (ℚ.≤ℤ→≤ℚ _ _ (ℤ.ℕ≤→pos-≤-pos _ _ ℕ.zero-≤))
               (ℚ.≤ℤ→≤ℚ _ _ (ℤ.ℕ≤→pos-≤-pos _ _ ℕ.zero-≤))
             (ℚ.≤ℤ→≤ℚ _ _ (ℤ.ℕ≤→pos-≤-pos _ _
              ((ℕ.right-≤-max {suc (suc hi𝑵)} {suc (suc lo𝑵)})) ))
-             )))))
+             )))
+             ))
+         
+             )
 
- ℝ₊⊆rootSeq : rootSeq⊆ Seq⊆.s⊇ (λ x → (0 <ᵣ x ) , squash₁)
+ ℝ₊⊆rootSeq : rootSeq⊆ Seq⊆.s⊇ (λ x → (0 <ᵣ x ) , isProp<ᵣ _ _)
  ℝ₊⊆rootSeq x 0<x = 
    PT.map2
      (getBounds x 0<x)
@@ -410,7 +416,7 @@ module NthRoot (m : ℕ) where
      (fst (IsBilipschitz.𝒇⁻¹∈ (rootRest n) x x∈))
 
 
- open Seq⊆→.FromIntersection rootSeq⊆→ isSetℝ (λ x → (0 <ᵣ x ) , squash₁) ℝ₊⊆rootSeq public
+ open Seq⊆→.FromIntersection rootSeq⊆→ isSetℝ (λ x → (0 <ᵣ x ) , isProp<ᵣ _ _) ℝ₊⊆rootSeq public
            
         
  𝒇=f : ∀ n x → x ∈ intervalℙ
@@ -449,12 +455,14 @@ module NthRoot (m : ℕ) where
                     (L𝐑.lem--079 {rat (loB n)})
                      L𝐑.lem--079
                     (≤ᵣMonotone+ᵣ _ _ _ _
-                       lo<x (-ᵣ≤ᵣ _ _ u))
+                       lo<x (-ᵣ≤ᵣ _ _ (isTrans≤≡ᵣ _ _ _ u (sym (-ᵣ-rat₂ _ _) ))))
                     , subst2 _≤ᵣ_
-                          (𝐑'.minusPlus _ _)
+                          (𝐑'.minusPlus _ x)
                           (𝐑'.minusPlus (rat (hiB (suc n))) (rat (hiB n)))
-                          (≤ᵣMonotone+ᵣ _ _ _ _
-                             v x<hi))
+                          (isTrans≤≡ᵣ _ _ _ (≤ᵣMonotone+ᵣ _ _ _ _
+                             v x<hi) (cong (_+ᵣ rat (hiB n)) (sym (-ᵣ-rat₂ _ _))))
+                           
+                             )
              ∘ fst (∼≃abs<ε _ _ _)) ∣₁
   where
   δ = ℚ.min₊ (ℚ.<→ℚ₊ _ _ (loB-mon n))
@@ -463,7 +471,7 @@ module NthRoot (m : ℕ) where
   nth-root : ℝ₊ → ℝ₊
   nth-root (x , 0<x) = 
       ∩$ x 0<x
-    , ∩$-elimProp x 0<x {B = λ y → 0 <ᵣ y} (λ _ → squash₁)
+    , ∩$-elimProp x 0<x {B = λ y → 0 <ᵣ y} (λ _ → isProp<ᵣ _ _)
        (0<root x)
 
   ^ⁿ∘ⁿ√ : ∀ x 0<x → (fst (nth-root (x , 0<x)) ^ⁿ (2 ℕ.+ m)) ≡ x
@@ -479,11 +487,20 @@ module NthRoot (m : ℕ) where
     {B = λ a → a ≡ x}
     (λ _ → isSetℝ _ _)
      λ n x∈' →
-      let 0<n = ℕ.suc-≤-suc ℕ.zero-≤ 
-          x∈ =  (^ⁿMonotone⁻¹ (suc (suc m)) 0<n
-                 (0<A n) 0<x (isTrans≡≤ᵣ _ _ _ (^ⁿ-ℚ^ⁿ _ _) (fst x∈'))) ,
-                   ^ⁿMonotone⁻¹ (suc (suc m)) 0<n 0<x (0<B n)
-                     (isTrans≤≡ᵣ _ _ _ (snd x∈') (sym (^ⁿ-ℚ^ⁿ _ _)))
+      let 0<n = ℕ.suc-≤-suc ℕ.zero-≤
+          zzs : rat (fst (invℚ₊ (_/_.[ pos (suc (suc n)) , (1+ 0) ] , tt))) ≤ᵣ x
+          zzs = (^ⁿMonotone⁻¹ (suc (suc m)) 0<n
+                 (0<A n) 0<x (isTrans≡≤ᵣ _ _ _ (^ⁿ-ℚ^ⁿ _ _) (fst x∈')))
+                 
+          zzss : x ≤ᵣ rat [ pos (suc (suc n)) / 1+ 0 ]
+          zzss = (^ⁿMonotone⁻¹ (suc (suc m)) 0<n 0<x (0<B n)
+                     (isTrans≤≡ᵣ _ _ _ (snd x∈') (sym (^ⁿ-ℚ^ⁿ _ _))))
+          x∈ : (rat (fst (invℚ₊ (_/_.[ pos (suc (suc n)) , (1+ 0) ] , tt))) ≤ᵣ x) ×
+               (x ≤ᵣ rat (fromNat (2 ℕ.+ n)))           
+          x∈ =  zzs , zzss
+
+
+
 
       in cong (fst (IsBilipschitz.f⁻¹R-L (rootRest n)))
                  (𝒇=f n x x∈)
@@ -491,15 +508,15 @@ module NthRoot (m : ℕ) where
 
 
   nth-root-cont : IsContinuousWithPred
-          (λ x → _ , squash₁) (curry (fst ∘ nth-root))
+          (λ x → _ , isProp<ᵣ _ _) (curry (fst ∘ nth-root))
   nth-root-cont = ∩$-cont' _ _
      bounds⊂ _ _
       λ n → AsContinuousWithPred _ _
                (IsBilipschitz.isCont𝒇⁻¹ (rootRest n))
  
   ℚApproxℙ-nth-root : ℚApproxℙ'
-                          (λ x → (0 <ᵣ x) , squash₁)
-                          (λ x → (0 <ᵣ x) , squash₁)
+                          (λ x → (0 <ᵣ x) , isProp<ᵣ _ _)
+                          (λ x → (0 <ᵣ x) , isProp<ᵣ _ _)
                           (curry (nth-root))
   ℚApproxℙ-nth-root q q∈ =
    let q₊ = (q , ℚ.<→0< _ (<ᵣ→<ℚ _ _ q∈))
@@ -528,9 +545,9 @@ module NthRoot (m : ℕ) where
    (x ^ⁿ (2 ℕ.+ m)) , 0<x^ⁿ _ _ 0<x
  nth-pow-root-iso₊₂ .Iso.inv = nth-root
  nth-pow-root-iso₊₂ .Iso.rightInv =
-   Σ≡Prop (λ _ → squash₁) ∘ uncurry ^ⁿ∘ⁿ√
+   ℝ₊≡ ∘ uncurry ^ⁿ∘ⁿ√
  nth-pow-root-iso₊₂ .Iso.leftInv =
-   Σ≡Prop (λ _ → squash₁) ∘ uncurry ⁿ√∘^ⁿ
+   ℝ₊≡ ∘ uncurry ⁿ√∘^ⁿ
 
   
 root : ℕ₊₁ → ℝ₊ →  ℝ₊
@@ -538,15 +555,15 @@ root one x = x
 root (2+ n) x = NthRoot.nth-root n x
 
 ℚApproxℙ-root : ∀ n → ℚApproxℙ'
-                        (λ x → (0 <ᵣ x) , squash₁)
-                        (λ x → (0 <ᵣ x) , squash₁)
+                        (λ x → (0 <ᵣ x) , isProp<ᵣ _ _)
+                        (λ x → (0 <ᵣ x) , isProp<ᵣ _ _)
                         (curry ((root n)))
 ℚApproxℙ-root one q q∈ = (λ _ → q) , (λ _ → q∈) , (λ _ _ → refl∼ _ _) , limConstRat _ _
 
 ℚApproxℙ-root (2+ n) = NthRoot.ℚApproxℙ-nth-root n
  
 IsContinuousRoot : ∀ n → IsContinuousWithPred
-         (λ x → _ , squash₁)
+         (λ x → _ , isProp<ᵣ _ _)
          λ x 0<x → fst (root n (x , 0<x))
 IsContinuousRoot one =
   AsContinuousWithPred _ _ IsContinuousId

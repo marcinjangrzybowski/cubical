@@ -30,6 +30,8 @@ open import Cubical.Relation.Binary.Base
 
 infix 4 _≤_ _<_ _≥_ _>_
 
+
+
 private
   ·CommR : (a b c : ℤ) → a ℤ.· b ℤ.· c ≡ a ℤ.· c ℤ.· b
   ·CommR a b c = sym (ℤ.·Assoc a b c) ∙ cong (a ℤ.·_) (ℤ.·Comm b c) ∙ ℤ.·Assoc a c b
@@ -982,3 +984,9 @@ clamp d u x = ℚ.min (ℚ.max d x) u
 
 <ℤ→<ℚ : ∀ m n → m ℤ.< n → [ m , 1 ] < [ n , 1 ]
 <ℤ→<ℚ m n = subst2 ℤ._<_ (sym (ℤ.·IdR m)) (sym (ℤ.·IdR n))
+
+[k/n]<[k'/n] : ∀ k k' n → k ℤ.< k' → ([ ( k , n ) ]) < ([ (k' , n) ])
+[k/n]<[k'/n] k k' n k<k' = ℤ.<-·o k<k'  
+
+[k/n]≤[k'/n] : ∀ k k' n → k ℤ.≤ k' → ([ ( k , n ) ]) ≤ ([ (k' , n) ])
+[k/n]≤[k'/n] k k' n k<k' = ℤ.≤-·o k<k'  

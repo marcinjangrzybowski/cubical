@@ -44,6 +44,20 @@ IsUContinuous f =
   ∀ (ε : ℚ₊) → Σ[ δ ∈ ℚ₊ ]
      (∀ u v → u ∼[ δ ] v → f u ∼[ ε ] f v)
 
+IsUContinuous-εᵣ : ∀ f → IsUContinuous f →
+   ∀ (ε : ℝ₊) → ∃[ δ ∈ ℚ₊ ]
+     (∀ u v → u ∼[ δ ] v → absᵣ (f u -ᵣ f v) <ᵣ fst ε)
+IsUContinuous-εᵣ f fuc εᵣ =
+ PT.map
+   (λ (ε , 0<ε , ε<εᵣ) →
+     map-snd
+      (λ {δ} X →
+        λ u v u∼v → isTrans<ᵣ _ _ _ (fst (∼≃abs<ε _ _ _) (X u v u∼v)) ε<εᵣ)
+      (fuc (ε , ℚ.<→0< _ (<ᵣ→<ℚ 0 ε 0<ε))))
+   (denseℚinℝ 0 (fst εᵣ) (snd εᵣ))
+  
+
+
 IsUContinuousℚ : (ℚ → ℝ) → Type
 IsUContinuousℚ f =
   ∀ (ε : ℚ₊) → Σ[ δ ∈ ℚ₊ ]
@@ -216,11 +230,11 @@ IsContinuousLimΔ f x cx =
 
 const-lim : ∀ C x → at x limitOf (λ _ _ → C) is C
 const-lim C x ε = ∣ (1 , decℚ<ᵣ?) ,
-  (λ r x＃r x₁ → subst (_<ᵣ fst ε) (cong absᵣ (sym (+-ᵣ C))) (snd ε)) ∣₁
+  (λ r x＃r x₁ → subst (_<ᵣ fst ε) (sym (absᵣ-rat 0) ∙ cong absᵣ (sym (+-ᵣ C))) (snd ε)) ∣₁
 
 const-limℙ : ∀ P C x → at x limitOfℙ P ,  (λ _ _ _ → C) is C
 const-limℙ _ C x ε = ∣ (1 , decℚ<ᵣ?) ,
-  (λ r x＃r _ x₁ → subst (_<ᵣ fst ε) (cong absᵣ (sym (+-ᵣ C))) (snd ε) ) ∣₁
+  (λ r x＃r _ x₁ → subst (_<ᵣ fst ε) (sym (absᵣ-rat 0) ∙ cong absᵣ (sym (+-ᵣ C))) (snd ε) ) ∣₁
 
 
 
@@ -268,90 +282,92 @@ f #[ _op_ ]$ g = λ r x → (f r x) op (g r x)
 
  where
 
- ε'f : ℝ₊
- ε'f = (ε ₊／ᵣ₊ 2) ₊／ᵣ₊ (1 +ᵣ absᵣ G ,
-          <≤ᵣMonotone+ᵣ 0 1 0 (absᵣ G) decℚ<ᵣ? (0≤absᵣ G))
+  ε'f : ℝ₊
+  ε'f = (ε ₊／ᵣ₊ 2) ₊／ᵣ₊ (1 +ᵣ absᵣ G ,
+           isTrans≡<ᵣ _ _ _ (sym (+ᵣ-rat _ _))
+            (<≤ᵣMonotone+ᵣ 0 1 0 (absᵣ G) decℚ<ᵣ? (0≤absᵣ G)))
 
- ε'g : ℝ₊
- ε'g = (ε ₊／ᵣ₊ 2) ₊／ᵣ₊ (1 +ᵣ absᵣ F ,
-          <≤ᵣMonotone+ᵣ 0 1 0 (absᵣ F) decℚ<ᵣ? (0≤absᵣ F))
+  ε'g : ℝ₊
+  ε'g = (ε ₊／ᵣ₊ 2) ₊／ᵣ₊ (1 +ᵣ absᵣ F ,
+            isTrans≡<ᵣ _ _ _ (sym (+ᵣ-rat _ _))
+            (<≤ᵣMonotone+ᵣ 0 1 0 (absᵣ F) decℚ<ᵣ? (0≤absᵣ F)))
 
- w : _
- w (δ , p) (δ' , p') (δ'' , p'') = δ* , ww
+  w : _
+  w (δ , p) (δ' , p') (δ'' , p'') = δ* , ww
 
-  where
+   where
 
-   δ* : ℝ₊
-   δ* = minᵣ₊ (minᵣ₊ δ δ') δ'' 
+    δ* : ℝ₊
+    δ* = minᵣ₊ (minᵣ₊ δ δ') δ'' 
 
-   ww : (r : ℝ) (x＃r : x ＃ r) →
-          absᵣ (x -ᵣ r) <ᵣ fst δ* →
-          absᵣ (F ·ᵣ G -ᵣ (f #[ _·ᵣ_ ]$ g) r x＃r) <ᵣ fst ε
-   ww r x＃r x₁ = subst2 _<ᵣ_
-        (cong absᵣ (sym L𝐑.lem--065))
-        yy
-        (isTrans≤<ᵣ _ _ _
-          ((absᵣ-triangle _ _) )
-          (<ᵣMonotone+ᵣ _ _ _ _
-            (isTrans≡<ᵣ _ _ _
-              (·absᵣ _ _)
-              (<ᵣ₊Monotone·ᵣ _ _ _ _
-              (0≤absᵣ _) (0≤absᵣ _) gx< u))
-              (isTrans≡<ᵣ _ _ _ (·absᵣ _ _)
-                (<ᵣ₊Monotone·ᵣ _ _ _ _
-              ((0≤absᵣ F)) (0≤absᵣ _)
-               (subst (_<ᵣ (1 +ᵣ (absᵣ F)))
-                (+IdL _)
-                 (<ᵣ-+o (rat 0) (rat 1) (absᵣ F) decℚ<ᵣ?)) u'))))
+    ww : (r : ℝ) (x＃r : x ＃ r) →
+           absᵣ (x -ᵣ r) <ᵣ fst δ* →
+           absᵣ (F ·ᵣ G -ᵣ (f #[ _·ᵣ_ ]$ g) r x＃r) <ᵣ fst ε
+    ww r x＃r x₁ = subst2 _<ᵣ_
+         (cong absᵣ (sym L𝐑.lem--065))
+         yy
+         (isTrans≤<ᵣ _ _ _
+           ((absᵣ-triangle _ _) )
+           (<ᵣMonotone+ᵣ _ _ _ _
+             (isTrans≡<ᵣ _ _ _
+               (·absᵣ _ _)
+               (<ᵣ₊Monotone·ᵣ _ _ _ _
+               (0≤absᵣ _) (0≤absᵣ _) gx< u))
+               (isTrans≡<ᵣ _ _ _ (·absᵣ _ _)
+                 (<ᵣ₊Monotone·ᵣ _ _ _ _
+               ((0≤absᵣ F)) (0≤absᵣ _)
+                (subst (_<ᵣ (1 +ᵣ (absᵣ F)))
+                 (+IdL _)
+                  (<ᵣ-+o (rat 0) (rat 1) (absᵣ F) decℚ<ᵣ?)) u'))))
 
 
-     where
-      x₁' = isTrans<≤ᵣ _ _ _ x₁
-                 (isTrans≤ᵣ _ _ _ (min≤ᵣ _ _) (min≤ᵣ _ _))
-      x₁'' = isTrans<≤ᵣ _ _ _ x₁
-                 (isTrans≤ᵣ _ _ _ (min≤ᵣ _ _) (min≤ᵣ' _ _))
-      x₁''' = isTrans<≤ᵣ _ _ _ x₁ (min≤ᵣ' _ _)
-      u = p r x＃r x₁'
-      u' = p' r x＃r x₁''
-      u'' = p'' r x＃r x₁'''
-      gx< : absᵣ (g r x＃r) <ᵣ 1 +ᵣ absᵣ G
-      gx< =
-         subst (_<ᵣ (1 +ᵣ absᵣ G))
-            (cong absᵣ (sym (L𝐑.lem--035)))
+      where
+       x₁' = isTrans<≤ᵣ _ _ _ x₁
+                  (isTrans≤ᵣ _ _ _ (min≤ᵣ _ _) (min≤ᵣ _ _))
+       x₁'' = isTrans<≤ᵣ _ _ _ x₁
+                  (isTrans≤ᵣ _ _ _ (min≤ᵣ _ _) (min≤ᵣ' _ _))
+       x₁''' = isTrans<≤ᵣ _ _ _ x₁ (min≤ᵣ' _ _)
+       u = p r x＃r x₁'
+       u' = p' r x＃r x₁''
+       u'' = p'' r x＃r x₁'''
+       gx< : absᵣ (g r x＃r) <ᵣ 1 +ᵣ absᵣ G
+       gx< =
+          subst (_<ᵣ (1 +ᵣ absᵣ G))
+             (cong absᵣ (sym (L𝐑.lem--035)))
 
-           (isTrans≤<ᵣ _ _ _
-             (absᵣ-triangle ((g r x＃r) -ᵣ G) G)
-              (<ᵣ-+o _ 1 (absᵣ G)
-                (subst (_<ᵣ 1) (minusComm-absᵣ _ _) u'')))
-      0<1+g = <≤ᵣMonotone+ᵣ 0 1 0 (absᵣ G) decℚ<ᵣ? (0≤absᵣ G)
-      0<1+f = <≤ᵣMonotone+ᵣ 0 1 0 (absᵣ F) decℚ<ᵣ? (0≤absᵣ F)
+            (isTrans≤<ᵣ _ _ _
+              (absᵣ-triangle ((g r x＃r) -ᵣ G) G)
+               (<ᵣ-+o _ 1 (absᵣ G)
+                 (subst (_<ᵣ 1) (minusComm-absᵣ _ _) u'')))
+       0<1+g = isTrans≡<ᵣ _ _ _ (sym (+ᵣ-rat _ _)) (<≤ᵣMonotone+ᵣ 0 1 0 (absᵣ G) decℚ<ᵣ? (0≤absᵣ G))
+       0<1+f = isTrans≡<ᵣ _ _ _ (sym (+ᵣ-rat _ _)) $ <≤ᵣMonotone+ᵣ 0 1 0 (absᵣ F) decℚ<ᵣ? (0≤absᵣ F)
 
-      yy : _ ≡ _
-      yy = (cong₂ _+ᵣ_
-          (cong ((1 +ᵣ absᵣ G) ·ᵣ_)
-            (cong ((fst (ε ₊／ᵣ₊ 2)) ·ᵣ_)
+       yy : _ ≡ _
+       yy = (cong₂ _+ᵣ_
+           (cong ((1 +ᵣ absᵣ G) ·ᵣ_)
+             (cong ((fst (ε ₊／ᵣ₊ 2)) ·ᵣ_)
+               (invℝ≡ _ _ _)
+              ∙ ·ᵣComm  (fst (ε ₊／ᵣ₊ 2))
+             (invℝ (1 +ᵣ absᵣ G)
+                 (inl 0<1+g))) ∙
+             ·ᵣAssoc _ _ _)
+           (cong ((1 +ᵣ absᵣ F) ·ᵣ_)
+             (cong ((fst (ε ₊／ᵣ₊ 2)) ·ᵣ_)
               (invℝ≡ _ _ _)
-             ∙ ·ᵣComm  (fst (ε ₊／ᵣ₊ 2))
-            (invℝ (1 +ᵣ absᵣ G)
-                (inl 0<1+g))) ∙
-            ·ᵣAssoc _ _ _)
-          (cong ((1 +ᵣ absᵣ F) ·ᵣ_)
-            (cong ((fst (ε ₊／ᵣ₊ 2)) ·ᵣ_)
-             (invℝ≡ _ _ _)
-             ∙ ·ᵣComm  (fst (ε ₊／ᵣ₊ 2))
-            (invℝ (1 +ᵣ absᵣ F)
-                (inl 0<1+f))) ∙
-             ·ᵣAssoc _ _ _) ∙
-          sym (·DistR+ _ _ (fst (ε ₊／ᵣ₊ 2)))
-           ∙∙ cong {y = 2} (_·ᵣ (fst (ε ₊／ᵣ₊ 2)))
-                           (cong₂ _+ᵣ_
-                               (x·invℝ[x] (1 +ᵣ absᵣ G)
-                                 (inl 0<1+g))
-                               (x·invℝ[x] (1 +ᵣ absᵣ F)
-                                 (inl 0<1+f))
-                              )
-                      ∙∙ ·ᵣComm 2 (fst (ε ₊／ᵣ₊ 2))  ∙
-                        [x/y]·yᵣ (fst ε) _ (inl _))
+              ∙ ·ᵣComm  (fst (ε ₊／ᵣ₊ 2))
+             (invℝ (1 +ᵣ absᵣ F)
+                 (inl 0<1+f))) ∙
+              ·ᵣAssoc _ _ _) ∙
+           sym (·DistR+ _ _ (fst (ε ₊／ᵣ₊ 2)))
+            ∙∙ cong {y = 2} (_·ᵣ (fst (ε ₊／ᵣ₊ 2)))
+                            (cong₂ _+ᵣ_
+                                (x·invℝ[x] (1 +ᵣ absᵣ G)
+                                  (inl 0<1+g))
+                                (x·invℝ[x] (1 +ᵣ absᵣ F)
+                                  (inl 0<1+f))
+                               ∙ +ᵣ-rat _ _)
+                       ∙∙ ·ᵣComm 2 (fst (ε ₊／ᵣ₊ 2))  ∙
+                         [x/y]·yᵣ (fst ε) _ (inl _))
 
 At_limitOf_ : (x : ℝ) → (∀ r → x ＃ r → ℝ) → Type
 At x limitOf f = Σ _ (at x limitOf f is_)
@@ -360,7 +376,8 @@ At x limitOf f = Σ _ (at x limitOf f is_)
 differenceAt : (ℝ → ℝ) → ℝ → ∀ h → 0 ＃ h → ℝ
 differenceAt f x h 0＃h = (f (x +ᵣ h) -ᵣ f x) ／ᵣ[ h , 0＃h ]
 
-differenceAt0-swap : ∀ f h 0＃h → differenceAt f 0 h 0＃h ≡ differenceAt f h (-ᵣ h) (-＃ _ _ 0＃h)
+differenceAt0-swap : ∀ f h 0＃h → differenceAt f 0 h 0＃h ≡ differenceAt f h (-ᵣ h)
+  (subst (_＃ (-ᵣ h)) (-ᵣ-rat 0) (-＃ _ _ 0＃h)) --
 differenceAt0-swap f h 0＃h =
      sym (-ᵣ·-ᵣ _ _) 
   ∙ cong₂ _·ᵣ_
@@ -375,20 +392,21 @@ differenceAt0-swap f h 0＃h =
 differenceAtℙ : ∀ P → (∀ r → r ∈ P → ℝ) → ∀ x → ∀ h → 0 ＃ h → x ∈ P → x +ᵣ h ∈ P   → ℝ
 differenceAtℙ P f x h 0＃h x∈ x+h∈ = (f (x +ᵣ h) x+h∈ -ᵣ f x x∈) ／ᵣ[ h , 0＃h ]
 
-
-incr→0<differenceAtℙ : ∀ P f x h 0＃h x∈ x+h∈ →
-          (∀ x x∈ y y∈ → x <ᵣ y → f x x∈ <ᵣ f y y∈) →
-            0 <ᵣ differenceAtℙ P f x h 0＃h x∈ x+h∈
-incr→0<differenceAtℙ P f x h (inl 0<h) x∈ x+h∈ incr =
- snd ((_ , x<y→0<y-x _ _ (incr _ _ _ _
-  (isTrans≡<ᵣ _ _ _ (sym (+IdR _)) $ <ᵣ-o+ 0 h x 0<h)))
-   ₊·ᵣ (_ , invℝ-pos _ 0<h))
-incr→0<differenceAtℙ P f x h (inr h<0) x∈ x+h∈ incr =
- isTrans<≡ᵣ _ _ _
-   (snd ((_ , -ᵣ<ᵣ _ _ (x<y→x-y<0 _ _
-    (incr _ _ _ _ (isTrans<≡ᵣ _ _ _ (<ᵣ-o+ h 0 x h<0) (+IdR _)))))
-    ₊·ᵣ (_ , -ᵣ<ᵣ _ _ (invℝ-neg _ h<0))))
-   (-ᵣ·-ᵣ _ _)
+opaque
+ unfolding -ᵣ_
+ incr→0<differenceAtℙ : ∀ P f x h 0＃h x∈ x+h∈ →
+           (∀ x x∈ y y∈ → x <ᵣ y → f x x∈ <ᵣ f y y∈) →
+             0 <ᵣ differenceAtℙ P f x h 0＃h x∈ x+h∈
+ incr→0<differenceAtℙ P f x h (inl 0<h) x∈ x+h∈ incr =
+  snd ((_ , x<y→0<y-x _ _ (incr _ _ _ _
+   (isTrans≡<ᵣ _ _ _ (sym (+IdR _)) $ <ᵣ-o+ 0 h x 0<h)))
+    ₊·ᵣ (_ , invℝ-pos _ 0<h))
+ incr→0<differenceAtℙ P f x h (inr h<0) x∈ x+h∈ incr =
+  isTrans<≡ᵣ _ _ _
+    (snd ((_ , -ᵣ<ᵣ _ _ (x<y→x-y<0 _ _
+     (incr _ _ _ _ (isTrans<≡ᵣ _ _ _ (<ᵣ-o+ h 0 x h<0) (+IdR _)))))
+     ₊·ᵣ (_ , -ᵣ<ᵣ _ _ (invℝ-neg _ h<0))))
+    (-ᵣ·-ᵣ _ _)
    
 ＃ℙ : ℝ → ℙ ℝ
 ＃ℙ r x = r ＃ x , isProp＃ r x
@@ -412,6 +430,12 @@ derivativeOfℙ P , f at (x , x∈) is d =
 
 derivativeOf_at_is_ : (ℝ → ℝ) → ℝ → ℝ → Type
 derivativeOf f at x is d = at 0 limitOf (differenceAt f x) is d
+
+as-derivativeOfℙ : ∀ P f x x∈P x' 
+    → derivativeOf f at x is x'
+    → derivativeOfℙ P , (λ r _ → f r) at x , x∈P  is x'
+as-derivativeOfℙ P f x x∈P x' X ε =
+  PT.map (map-snd λ y r _ y＃r x₂ → y r  y＃r x₂) (X ε)
 
 
 derivativeOf_at_is'_ : (ℝ → ℝ) → ℝ → ℝ → Type
@@ -528,7 +552,7 @@ derivative-^ⁿ (suc n) x =
        (·ᵣComm _ _) (sym (·ᵣAssoc _ _ _)) ∙
        sym (·DistR+ _ _ _) ∙
         cong (_·ᵣ ((x ^ⁿ n) ·ᵣ idfun ℝ x))
-         (cong rat (ℚ.ℕ+→ℚ+ _ _)))
+         (+ᵣ-rat _ _ ∙ cong rat (ℚ.ℕ+→ℚ+ _ _)))
     (·Derivative _ _ _ _ _ IsContinuousId
        (derivative-^ⁿ n x) (idDerivative x))
 
@@ -633,38 +657,39 @@ chainRuleIncr x f f'gx g g'x incrG cg dg df =
 -- IsContinuousLimExcl f x cx = ?
 --  -- inclLimit→Limit _ _ _ (IsContinuousInclLim f x cx)
 
-
-limitUniq : ∀ x f y y' 
- → at x limitOf f is y
- → at x limitOf f is y'
- → y ≡ y'
-limitUniq x f y y' X X' = eqℝ _ _
-  λ ε → 
-    PT.rec2 (isProp∼ _ _ _)
-      (λ (δ , D) (δ' , D') →
-        let [δ⊔δ]/2 = (minᵣ₊ δ δ') ₊·ᵣ (ℚ₊→ℝ₊ ([ 1 / 2 ] , _))
-            x＃ : x ＃ (x +ᵣ -ᵣ (minᵣ₊ δ δ' ₊·ᵣ ℚ₊→ℝ₊ ([ 1 / 2 ] , tt)) .fst)
-            x＃ = (inr (isTrans<≡ᵣ _ _ _
-                        (<ᵣ-o+ _ _ _ (-ᵣ<ᵣ _ _ (snd [δ⊔δ]/2))) (+IdR _)))
-        in subst∼ (ℚ.ε/2+ε/2≡ε (fst ε))
-                  (triangle∼  {ε = /2₊ ε} {/2₊ ε}
-                    (invEq (∼≃abs<ε _ _ _) (D (x -ᵣ fst [δ⊔δ]/2)
-                     x＃
-                     ((isTrans≡<ᵣ _ _ _
-                       (cong absᵣ L𝐑.lem--079 ∙ absᵣPos _ (snd [δ⊔δ]/2))
-                       (isTrans≤<ᵣ _ _ _
-                         (≤ᵣ-·o _ _ _ (ℚ.0≤pos _ _) (min≤ᵣ _ _)) (isTrans<≡ᵣ _ _ _
-                           (<ᵣ-o·ᵣ _ _ δ decℚ<ᵣ?) (·IdR _)))))))
-                      (sym∼ _ _ _
-                       ((invEq (∼≃abs<ε _ _ _) (D' (x -ᵣ fst [δ⊔δ]/2)
-                     x＃
-                     (isTrans≡<ᵣ _ _ _
-                       (cong absᵣ L𝐑.lem--079 ∙ absᵣPos _ (snd [δ⊔δ]/2))
-                       (isTrans≤<ᵣ _ _ _
-                         (≤ᵣ-·o _ _ _ (ℚ.0≤pos _ _) (min≤ᵣ' _ _)) (isTrans<≡ᵣ _ _ _
-                           (<ᵣ-o·ᵣ _ _ δ' decℚ<ᵣ?) (·IdR _)))))))))
-        )
-      (X (ℚ₊→ℝ₊ (/2₊ ε))) (X' (ℚ₊→ℝ₊ (/2₊ ε)))
+opaque
+ unfolding -ᵣ_
+ limitUniq : ∀ x f y y' 
+  → at x limitOf f is y
+  → at x limitOf f is y'
+  → y ≡ y'
+ limitUniq x f y y' X X' = eqℝ _ _
+   λ ε → 
+     PT.rec2 (isProp∼ _ _ _)
+       (λ (δ , D) (δ' , D') →
+         let [δ⊔δ]/2 = (minᵣ₊ δ δ') ₊·ᵣ (ℚ₊→ℝ₊ ([ 1 / 2 ] , _))
+             x＃ : x ＃ (x +ᵣ -ᵣ (minᵣ₊ δ δ' ₊·ᵣ ℚ₊→ℝ₊ ([ 1 / 2 ] , tt)) .fst)
+             x＃ = (inr (isTrans<≡ᵣ _ _ _
+                         (<ᵣ-o+ _ _ _ (-ᵣ<ᵣ _ _ (snd [δ⊔δ]/2))) (+IdR _)))
+         in subst∼ (ℚ.ε/2+ε/2≡ε (fst ε))
+                   (triangle∼  {ε = /2₊ ε} {/2₊ ε}
+                     (invEq (∼≃abs<ε _ _ _) (D (x -ᵣ fst [δ⊔δ]/2)
+                      x＃
+                      ((isTrans≡<ᵣ _ _ _
+                        (cong absᵣ L𝐑.lem--079 ∙ absᵣPos _ (snd [δ⊔δ]/2))
+                        (isTrans≤<ᵣ _ _ _
+                          (≤ᵣ-·o _ _ _ (ℚ.0≤pos _ _) (min≤ᵣ _ _)) (isTrans<≡ᵣ _ _ _
+                            (<ᵣ-o·ᵣ _ _ δ decℚ<ᵣ?) (·IdR _)))))))
+                       (sym∼ _ _ _
+                        ((invEq (∼≃abs<ε _ _ _) (D' (x -ᵣ fst [δ⊔δ]/2)
+                      x＃
+                      (isTrans≡<ᵣ _ _ _
+                        (cong absᵣ L𝐑.lem--079 ∙ absᵣPos _ (snd [δ⊔δ]/2))
+                        (isTrans≤<ᵣ _ _ _
+                          (≤ᵣ-·o _ _ _ (ℚ.0≤pos _ _) (min≤ᵣ' _ _)) (isTrans<≡ᵣ _ _ _
+                            (<ᵣ-o·ᵣ _ _ δ' decℚ<ᵣ?) (·IdR _)))))))))
+         )
+       (X (ℚ₊→ℝ₊ (/2₊ ε))) (X' (ℚ₊→ℝ₊ (/2₊ ε)))
 
 -- mapLimit : ∀ x f y (g : ℝ → ℝ)
 --   → IsContinuousWithPred (＃ℙ x) f

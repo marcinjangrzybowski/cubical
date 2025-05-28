@@ -626,13 +626,6 @@ Dichotomyℝ ε x x' =
 
 
 
-isIncrasingℙᵣ : (P : ℙ ℝ) → (∀ (x : ℝ) → x ∈ P → ℝ) → Type
-isIncrasingℙᵣ P f =
- ∀ (x : ℝ) (x∈ : x ∈ P) (y : ℝ) (y∈ : y ∈ P) → x <ᵣ y → f x x∈ <ᵣ f y y∈
-
-isNondecrasingℙᵣ : (P : ℙ ℝ) → (∀ (x : ℝ) → x ∈ P → ℝ) → Type
-isNondecrasingℙᵣ P f =
- ∀ (x : ℝ) (x∈ : x ∈ P) (y : ℝ) (y∈ : y ∈ P) → x ≤ᵣ y → f x x∈ ≤ᵣ f y y∈
 
 
 isProp<ᵣ : ∀ x y → isProp (x <ᵣ y)

@@ -46,33 +46,6 @@ open import Cubical.HITs.CauchyReals.Exponentiation
 
 
 
-≤Weaken<+ᵣ : ∀ x y (z : ℝ₊) →
-       x ≤ᵣ y → x <ᵣ y +ᵣ fst z 
-≤Weaken<+ᵣ x y z x≤y =
-  isTrans≡<ᵣ _ _ _ (sym (+IdR _))
-   (≤<ᵣMonotone+ᵣ x y 0 (fst z) x≤y (snd z))
-
-Dichotomyℝ : ∀ (ε : ℚ₊) x y →
-    ⟨ ((x  <ᵣ y +ᵣ rat (fst ε)) , squash₁)
-       L.⊔ ((y <ᵣ x +ᵣ rat (fst ε)) , squash₁) ⟩
-Dichotomyℝ ε x x' =
-     (PT.map2 
-         (λ (r , x<r , r<x+ε/2) (r' , x'-ε/2<r' , r'<x') →
-           ⊎.map
-
-              (λ r≤r' → isTrans<ᵣ _ _ _
-                 x<r (isTrans≤<ᵣ _ _ _
-                   (≤ℚ→≤ᵣ r r' r≤r') r'<x'))
-              (λ r'<r → 
-                 isTrans<ᵣ _ _ _
-                  (isTrans<ᵣ _ _ _ x'-ε/2<r' (<ℚ→<ᵣ r' r r'<r))
-                  r<x+ε/2 )
-             (ℚ.Dichotomyℚ r r'))
-        (denseℚinℝ x (x +ᵣ rat (fst (ε)))
-          (≤Weaken<+ᵣ _ _ (ℚ₊→ℝ₊ (ε)) (≤ᵣ-refl _)))
-        (denseℚinℝ x' (x' +ᵣ rat (fst (ε)))
-         ((≤Weaken<+ᵣ _ _ (ℚ₊→ℝ₊ (ε)) (≤ᵣ-refl _)))))
-
 
 -- isIncrasing→injectiveℝ : ∀ f → IsContinuous f  →
 --      isIncrasing f →

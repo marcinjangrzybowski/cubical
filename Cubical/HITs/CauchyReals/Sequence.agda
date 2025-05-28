@@ -8,6 +8,10 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Transport
+open import Cubical.Foundations.Structure
+
+import Cubical.Functions.Logic as L
+
 
 open import Cubical.Data.Bool as 𝟚 hiding (_≤_)
 open import Cubical.Data.Nat as ℕ hiding (_·_;_+_)
@@ -40,6 +44,44 @@ open import Cubical.HITs.CauchyReals.Multiplication
 open import Cubical.HITs.CauchyReals.Inverse
 
 
+
+Dichotomyℝ : ∀ (ε : ℚ₊) x y →
+    ⟨ ((x  <ᵣ y +ᵣ rat (fst ε)) , isProp<ᵣ _ _)
+       L.⊔ ((y <ᵣ x +ᵣ rat (fst ε)) , isProp<ᵣ _ _) ⟩
+Dichotomyℝ ε x x' =
+     (PT.map2 
+         (λ (r , x<r , r<x+ε/2) (r' , x'-ε/2<r' , r'<x') →
+           ⊎.map
+
+              (λ r≤r' → isTrans<ᵣ _ _ _
+                 x<r (isTrans≤<ᵣ _ _ _
+                   (≤ℚ→≤ᵣ r r' r≤r') r'<x'))
+              (λ r'<r → 
+                 isTrans<ᵣ _ _ _
+                  (isTrans<ᵣ _ _ _ x'-ε/2<r' (<ℚ→<ᵣ r' r r'<r))
+                  r<x+ε/2 )
+             (ℚ.Dichotomyℚ r r'))
+        (denseℚinℝ x (x +ᵣ rat (fst (ε)))
+          (≤Weaken<+ᵣ _ _ (ℚ₊→ℝ₊ (ε)) (≤ᵣ-refl _)))
+        (denseℚinℝ x' (x' +ᵣ rat (fst (ε)))
+         ((≤Weaken<+ᵣ _ _ (ℚ₊→ℝ₊ (ε)) (≤ᵣ-refl _)))))
+
+-- Dichotomyℝ' : ∀ x →
+--     ⟨ ((x ≤ᵣ 0) , isProp≤ᵣ _ _)
+--        L.⊔ ((0 ≤ᵣ x) , isProp≤ᵣ _ _) ⟩
+-- Dichotomyℝ' = Elimℝ-Prop.go w
+--  where
+--  w : Elimℝ-Prop _
+--  w .Elimℝ-Prop.ratA x =
+--    PT.map (⊎.map (≤ℚ→≤ᵣ _ _) (≤ℚ→≤ᵣ _ _))
+--      (ℚ.isStronglyConnected≤ x 0)
+--  w .Elimℝ-Prop.limA x p X = {!!}
+--   where
+--   ww : {!!}
+--   ww = {!X!}
+--  w .Elimℝ-Prop.isPropA x = snd
+--     (((x ≤ᵣ 0) , isProp≤ᵣ _ _)
+--        L.⊔ ((0 ≤ᵣ x) , isProp≤ᵣ _ _))
 
 Seq : Type
 Seq = ℕ → ℝ
@@ -85,7 +127,8 @@ seqSumUpToConst x zero = sym (𝐑'.0RightAnnihilates x)
 seqSumUpToConst x (suc n) =
  cong₂ (_+ᵣ_) (sym (·IdR x)) (seqSumUpToConst x n) ∙
    sym (·DistL+ x 1 (fromNat n))
-    ∙ cong ((x ·ᵣ_) ∘ rat ) (ℚ.ℕ+→ℚ+ _ _)
+    ∙ cong ((x ·ᵣ_))
+     (+ᵣ-rat _ _ ∙ cong rat (ℚ.ℕ+→ℚ+ _ _))
 
 seqSumUpTo· : ∀ s r n → seqSumUpTo s n ·ᵣ r ≡ seqSumUpTo ((_·ᵣ r) ∘ s) n
 seqSumUpTo· s r zero = 𝐑'.0LeftAnnihilates r
@@ -208,38 +251,40 @@ log2ℕ n = w n n ℕ.≤-refl
    (≤ᵣ-o·ᵣ 0 _ _ (0≤x^ⁿ x n 0≤x) 0≤x)
 
 
-
-^ⁿ-invℝ : ∀ n x 0＃x 0＃x^ →
-            ((invℝ x 0＃x) ^ⁿ n) ≡ (invℝ (x ^ⁿ n) (0＃x^))
-^ⁿ-invℝ zero x _ _ = sym (invℝ1 _)
-^ⁿ-invℝ (suc n) x 0＃x _ =
-  cong (_·ᵣ invℝ x _) (^ⁿ-invℝ n x _ z) ∙
-    sym (invℝ· _ _ _ _ _) 
- where
- z' : ∀ n → x <ᵣ 0 → 0 ＃ (x ^ⁿ n)
- z' zero _ = inl decℚ<ᵣ?
- z' (suc n) x<0 =
-  ⊎.rec (λ p → inr
-     (isTrans≡<ᵣ _ _ _
-      (sym (-ᵣ·-ᵣ _ _) ∙ -ᵣ· _ _)
-      (isTrans<≡ᵣ _ _ _ (-ᵣ<ᵣ _ _ (<ᵣ₊Monotone·ᵣ _ _ _ _
-       (≤ᵣ-refl 0) (≤ᵣ-refl _ )
-     p 0<-x)) (cong (-ᵣ_) (sym (rat·ᵣrat 0 0)))) ))
-    (λ p →
-      inl (isTrans≡<ᵣ _ _ _ (rat·ᵣrat 0 0)
-         (isTrans<≡ᵣ _ _ _
-            (<ᵣ₊Monotone·ᵣ _ _ _ _
-              (≤ᵣ-refl 0) (≤ᵣ-refl 0)
-              (-ᵣ<ᵣ _ _ p) 0<-x)
-                         (-ᵣ·-ᵣ _ _))))
-    (z' n x<0)
+opaque
+ unfolding _<ᵣ_
+ ^ⁿ-invℝ : ∀ n x 0＃x 0＃x^ →
+             ((invℝ x 0＃x) ^ⁿ n) ≡ (invℝ (x ^ⁿ n) (0＃x^))
+ ^ⁿ-invℝ zero x _ _ = sym (invℝ1 _)
+ ^ⁿ-invℝ (suc n) x 0＃x _ =
+   cong (_·ᵣ invℝ x _) (^ⁿ-invℝ n x _ z) ∙
+     sym (invℝ· _ _ _ _ _) 
   where
-   0<-x : 0 <ᵣ -ᵣ x
-   0<-x = -ᵣ<ᵣ _ _ x<0
 
- z : 0 ＃ (x ^ⁿ n)
- z = ⊎.rec (inl ∘ 0<x^ⁿ x n)
-       (z' n) 0＃x
+  z' : ∀ n → x <ᵣ 0 → 0 ＃ (x ^ⁿ n)
+  z' zero _ = inl decℚ<ᵣ?
+  z' (suc n) x<0 =
+   ⊎.rec (λ p → inr
+      (isTrans≡<ᵣ _ _ _
+       (sym (-ᵣ·-ᵣ _ _) ∙ -ᵣ· _ _)
+       (isTrans<≡ᵣ _ _ _ (-ᵣ<ᵣ _ _ (<ᵣ₊Monotone·ᵣ _ _ _ _
+        (≤ᵣ-refl 0) (≤ᵣ-refl _ )
+      p 0<-x)) (cong (-ᵣ_) (sym (rat·ᵣrat 0 0)))) ))
+     (λ p →
+       inl (isTrans≡<ᵣ _ _ _ (rat·ᵣrat 0 0)
+          (isTrans<≡ᵣ _ _ _
+             (<ᵣ₊Monotone·ᵣ _ _ _ _
+               (≤ᵣ-refl 0) (≤ᵣ-refl 0)
+               (-ᵣ<ᵣ _ _ p) 0<-x)
+                          (-ᵣ·-ᵣ _ _))))
+     (z' n x<0)
+   where
+    0<-x : 0 <ᵣ -ᵣ x
+    0<-x = -ᵣ<ᵣ _ _ x<0
+
+  z : 0 ＃ (x ^ⁿ n)
+  z = ⊎.rec (inl ∘ 0<x^ⁿ x n)
+        (z' n) 0＃x
 
 ^ⁿDist·ᵣ : ∀ n x y →
             ((x ·ᵣ y) ^ⁿ n) ≡ (x ^ⁿ n) ·ᵣ (y ^ⁿ n)
@@ -343,7 +388,7 @@ Sₙ-sup a r n a<0 0<r r<1  =
               0<1/x _ _ (( (x<y→0<y-x _ _ r<1))))
             (isTrans<≤ᵣ _ _ _
                (<ᵣ-o+ _ _ 1 (-ᵣ<ᵣ 0 (r ^ⁿ n) (0<x^ⁿ r n 0<r)))
-               (≡ᵣWeaken≤ᵣ _ _ (+IdR _)) ))
+               (≡ᵣWeaken≤ᵣ _ _ ((𝐑'.+IdR' _ _ (-ᵣ-rat 0)))) ))
           (≡ᵣWeaken≤ᵣ _ _ (·IdL _ ) )))
 
 Seq<→Σ< : (s s' : Seq) → ∀ n →
@@ -393,19 +438,24 @@ Seq'≤→Σ≤ s s' x (suc n) =
             → ∀ n → 0 ≤ᵣ seqΣ s n
 0≤seqΣ s x zero = ≤ᵣ-refl _
 0≤seqΣ s x (suc n) =
-  ≤ᵣMonotone+ᵣ _ _ _ _ (0≤seqΣ s x n) (x n)
+  isTrans≡≤ᵣ _ _ _
+    (sym (+ᵣ-rat _ _)) (≤ᵣMonotone+ᵣ _ _ _ _ (0≤seqΣ s x n) (x n))
 
 0≤seqΣ' : ∀ s → (∀ n → 0 ≤ᵣ s n)
             → ∀ n → 0 ≤ᵣ seqΣ' s n
 0≤seqΣ' s x zero = ≤ᵣ-refl _
 0≤seqΣ' s x (suc n) =
-  ≤ᵣMonotone+ᵣ _ _ _ _ (x 0) (0≤seqΣ' (s ∘ suc) (x ∘ suc) n) 
+  isTrans≡≤ᵣ _ _ _
+    (sym (+ᵣ-rat _ _))
+    $ ≤ᵣMonotone+ᵣ _ _ _ _ (x 0) (0≤seqΣ' (s ∘ suc) (x ∘ suc) n) 
 
 0<seqΣ' : ∀ s → (∀ n → 0 <ᵣ s n)
             → ∀ n → 0 <ᵣ seqΣ' s (suc n)
 0<seqΣ' s x zero = isTrans<≡ᵣ _ _ _ (x 0) (sym (+IdR (s 0)))
 0<seqΣ' s x (suc n) =
-  <ᵣMonotone+ᵣ _ _ _ _ (x 0) (0<seqΣ' (s ∘ suc) (x ∘ suc) n)
+    isTrans≡<ᵣ _ _ _
+    (sym (+ᵣ-rat _ _))
+    $ <ᵣMonotone+ᵣ _ _ _ _ (x 0) (0<seqΣ' (s ∘ suc) (x ∘ suc) n)
 
 
 seriesDiff : (s : Seq)  →
@@ -418,31 +468,32 @@ seriesDiff s N (suc n) =
    cong (s (n ℕ.+ N) +ᵣ_) (seriesDiff s N n)
     ∙ +ᵣComm (s (n ℕ.+ N)) (seqΣ (s ∘ (ℕ._+ N)) n)
 
-
-0＃· : ∀ x y → 0 ＃ x → 0 ＃ y → 0 ＃ (x ·ᵣ y)   
-0＃· x y =
- ⊎.rec (λ 0<x → ⊎.rec
-        (λ 0<y → inl (isTrans≡<ᵣ _ _ _ (rat·ᵣrat _ _)
-            (<ᵣ₊Monotone·ᵣ _ _ _ _
-              (≤ᵣ-refl _) (≤ᵣ-refl _) 0<x 0<y)))
-            λ y<0 → inr (
-              let z = isTrans≡<ᵣ _ _ _ (rat·ᵣrat _ _) $
-                       <ᵣ₊Monotone·ᵣ _ _ _ _
-                        (≤ᵣ-refl _) (≤ᵣ-refl _) 0<x (-ᵣ<ᵣ _ _ y<0)
-              in isTrans≡<ᵣ _ _ _ (cong (x ·ᵣ_) (sym (-ᵣInvol _))
-                    ∙  (·-ᵣ _ _)) (-ᵣ<ᵣ _ _ z)))
-       λ x<0 → ⊎.rec
-         (λ 0<y → inr (
-              let z = isTrans≡<ᵣ _ _ _ (rat·ᵣrat _ _) $
-                       <ᵣ₊Monotone·ᵣ _ _ _ _
-                        (≤ᵣ-refl _) (≤ᵣ-refl _) (-ᵣ<ᵣ _ _  x<0) 0<y
-              in isTrans≡<ᵣ _ _ _ (sym (-ᵣInvol _)
-                 ∙ cong (-ᵣ_) (sym (-ᵣ· _ _))) (-ᵣ<ᵣ _ _ z)))
-         λ y<0 → inl
-            let z = isTrans≡<ᵣ _ _ _ (rat·ᵣrat _ _) $
-                       <ᵣ₊Monotone·ᵣ _ _ _ _
-                        (≤ᵣ-refl _) (≤ᵣ-refl _) (-ᵣ<ᵣ _ _  x<0) (-ᵣ<ᵣ _ _  y<0)
-              in isTrans<≡ᵣ _ _ _ z (-ᵣ·-ᵣ x y)
+opaque
+ unfolding -ᵣ_
+ 0＃· : ∀ x y → 0 ＃ x → 0 ＃ y → 0 ＃ (x ·ᵣ y)   
+ 0＃· x y =
+  ⊎.rec (λ 0<x → ⊎.rec
+         (λ 0<y → inl (isTrans≡<ᵣ _ _ _ (rat·ᵣrat _ _)
+             (<ᵣ₊Monotone·ᵣ _ _ _ _
+               (≤ᵣ-refl _) (≤ᵣ-refl _) 0<x 0<y)))
+             λ y<0 → inr (
+               let z = isTrans≡<ᵣ _ _ _ (rat·ᵣrat _ _) $
+                        <ᵣ₊Monotone·ᵣ _ _ _ _
+                         (≤ᵣ-refl _) (≤ᵣ-refl _) 0<x (-ᵣ<ᵣ _ _ y<0)
+               in isTrans≡<ᵣ _ _ _ (cong (x ·ᵣ_) (sym (-ᵣInvol _))
+                     ∙  (·-ᵣ _ _)) (-ᵣ<ᵣ _ _ z)))
+        λ x<0 → ⊎.rec
+          (λ 0<y → inr (
+               let z = isTrans≡<ᵣ _ _ _ (rat·ᵣrat _ _) $
+                        <ᵣ₊Monotone·ᵣ _ _ _ _
+                         (≤ᵣ-refl _) (≤ᵣ-refl _) (-ᵣ<ᵣ _ _  x<0) 0<y
+               in isTrans≡<ᵣ _ _ _ (sym (-ᵣInvol _)
+                  ∙ cong (-ᵣ_) (sym (-ᵣ· _ _))) (-ᵣ<ᵣ _ _ z)))
+          λ y<0 → inl
+             let z = isTrans≡<ᵣ _ _ _ (rat·ᵣrat _ _) $
+                        <ᵣ₊Monotone·ᵣ _ _ _ _
+                         (≤ᵣ-refl _) (≤ᵣ-refl _) (-ᵣ<ᵣ _ _  x<0) (-ᵣ<ᵣ _ _  y<0)
+               in isTrans<≡ᵣ _ _ _ z (-ᵣ·-ᵣ x y)
 
 ＃Δ : ∀ x y → (0 ＃ (x -ᵣ y)) ≃ y ＃ x   
 ＃Δ x y = ⊎.⊎-equiv
@@ -779,7 +830,7 @@ IsCauchySequence'-via-~seq s s' s~s' icS ε =
                 (isTrans≤<ᵣ _ _ _
                  (absᵣ-triangle _ _)
                   (<ᵣMonotone+ᵣ _ _ _ _ (isTrans≡<ᵣ _ _ _ (minusComm-absᵣ _ _) yy) zz))
-      in isTrans<≡ᵣ _ _ _ uu (cong rat (ℚ.ε/2+ε/2≡ε _)))
+      in isTrans<≡ᵣ _ _ _ uu (+ᵣ-rat _ _ ∙ cong rat (ℚ.ε/2+ε/2≡ε _)))
 
 
 
@@ -807,8 +858,8 @@ IsoIsConvSeriesIsCauchySequenceSum : (s : Seq) →
 IsoIsConvSeriesIsCauchySequenceSum s =
    codomainIsoDep λ ε →
      Σ-cong-iso-snd λ N →
-        isProp→Iso (isPropΠ2 λ _ _ → squash₁)
-         (isPropΠ4 λ _ _ _ _ → squash₁ )
+        isProp→Iso (isPropΠ2 λ _ _ → isProp<ᵣ _ _)
+         (isPropΠ4 λ _ _ _ _ → isProp<ᵣ _ _ )
          (λ f → ℕ.elimBy≤
            (λ n n' X <n <n' → subst (_<ᵣ fst ε)
              (minusComm-absᵣ _ _) (X <n' <n))
@@ -840,8 +891,8 @@ IsoIsConvSeries'IsCauchySequenceSum' : (s : Seq) →
 IsoIsConvSeries'IsCauchySequenceSum' s =
  codomainIsoDep λ ε →
      Σ-cong-iso-snd λ N →
-        isProp→Iso (isPropΠ2 λ _ _ → squash₁)
-         (isPropΠ4 λ _ _ _ _ → squash₁ )
+        isProp→Iso (isPropΠ2 λ _ _ → isProp<ᵣ _ _)
+         (isPropΠ4 λ _ _ _ _ → isProp<ᵣ _ _)
 
          (λ f → ℕ.elimBy≤
            (λ n n' X <n <n' → subst (_<ᵣ rat (fst ε))
@@ -1054,88 +1105,90 @@ ratio→seqLimit s sRat sPos l (ε , 0<ε) =
     (l ([ 1 / 2 ] , _))
 
  where
- w : ∀ N → ((n : ℕ) →  N ℕ.< n →
-          absᵣ ((s (suc n) ／ᵣ[ s n , inl (sPos n) ]) +ᵣ (-ᵣ 0)) <ᵣ
-          rat [ 1 / 2 ]) →
-       Σ ℕ (λ N → (n : ℕ) → N ℕ.< n → absᵣ (s n +ᵣ (-ᵣ 0)) <ᵣ rat ε)
- w N f =
-     let 0<s' = ((subst (0 <ᵣ_) (snd (sRat (suc N))))
-                   (sPos (suc N)))
-         δ₊ = (ε , 0<ε) ℚ₊· invℚ₊ (fst (sRat (suc N)) ,
-                 (ℚ.<→0< _  (<ᵣ→<ℚ 0 _
-                   0<s')))
-         (m½ , q) = 1/2ⁿ<ε δ₊
-         pp : rat ([ 1 / 2 ] ℚ^ⁿ m½)  <ᵣ
-                 ((rat ε ·ᵣ invℝ (s (suc N)) (inl (sPos _))))
-         pp = isTrans<≡ᵣ _ _ _ (<ℚ→<ᵣ _ _ q)
-                 (rat·ᵣrat _ _ ∙
-                   cong (rat ε ·ᵣ_)
-                     (cong rat (sym (ℚ.invℚ₊≡invℚ _
-                       (inl (<ᵣ→<ℚ 0 _ 0<s'))))
-                       ∙ sym (invℝ-rat _ (inl 0<s') _) ∙
-                       cong₂ invℝ (sym (snd (sRat (suc N))))
-                         (isProp→PathP (λ i → isProp＃ _ _)  _ _)))
-         pp' = subst ((rat ([ ℤ.pos 1 / 1+ 1 ] ℚ^ⁿ m½) ·ᵣ s (suc N)) <ᵣ_)
-                  ([x/y]·yᵣ _ _ _) (<ᵣ-·ᵣo _ _ (s (suc N) , (sPos _)) pp)
-         zzz : ∀ m → s (((suc (suc (m ℕ.+ m½))) ℕ.+ N))
-                     ≤ᵣ
-                      s (suc N) ·ᵣ  (rat ([ ℤ.pos 1 / 1+ 1 ] ℚ^ⁿ m½))
-         zzz m  = isTrans≤ᵣ _ _ _ (g (m ℕ.+ m½))
-                     (≤ᵣ-o·ᵣ _ _ (s (suc N)) (<ᵣWeaken≤ᵣ _ _ (sPos _))
-                       (≤ℚ→≤ᵣ _ _ (subst2 ℚ._≤_ (ℚ.·-ℚ^ⁿ (suc m) m½ [ 1 / 2 ])
-                           (ℚ.·IdL _)
-                          (ℚ.≤-·o (([ ℤ.pos 1 / 1+ 1 ] ℚ^ⁿ (suc m)))
-                               1 _ ((ℚ.0≤ℚ₊ (_ ℚ₊^ⁿ m½)))
-                                  (ℚ.x^ⁿ≤1 [ ℤ.pos 1 / 1+ 1 ] (suc m)
-                                    (𝟚.toWitness
-                                       {Q = ℚ.≤Dec 0  [ ℤ.pos 1 / 1+ 1 ]} tt)
-                                    (𝟚.toWitness
-                                       {Q = ℚ.≤Dec [ ℤ.pos 1 / 1+ 1 ] 1} tt))
-                                  ))) )
-     in (1 ℕ.+ m½) ℕ.+ N ,
-          λ m <m →
-           isTrans≤<ᵣ _ _ _ (
-               subst2 (_≤ᵣ_)
-               (cong s ((cong (ℕ._+ N) (cong suc (sym (+-suc _ _))
-                ∙ sym (+-suc _ _)) ∙ sym (ℕ.+-assoc _ _ N) )
-                   ∙ snd <m) ∙ sym (absᵣPos _ (sPos _))
-                 ∙ cong absᵣ (sym (+IdR (s m))) )
-                 (·ᵣComm _ _)
-                (zzz (fst <m)) --(zzz m <m)
-                ) pp'
-          --   (lowerℚBound (ε ·ᵣ invℝ (s (suc N)) (inl (sPos _)))
-          -- (ℝ₊· (ε , 0<ε) (_ , invℝ-pos (s (suc N)) (sPos _))))
-  where
+ opaque
+  unfolding -ᵣ_
+  w : ∀ N → ((n : ℕ) →  N ℕ.< n →
+           absᵣ ((s (suc n) ／ᵣ[ s n , inl (sPos n) ]) +ᵣ (-ᵣ 0)) <ᵣ
+           rat [ 1 / 2 ]) →
+        Σ ℕ (λ N → (n : ℕ) → N ℕ.< n → absᵣ (s n +ᵣ (-ᵣ 0)) <ᵣ rat ε)
+  w N f =
+      let 0<s' = ((subst (0 <ᵣ_) (snd (sRat (suc N))))
+                    (sPos (suc N)))
+          δ₊ = (ε , 0<ε) ℚ₊· invℚ₊ (fst (sRat (suc N)) ,
+                  (ℚ.<→0< _  (<ᵣ→<ℚ 0 _
+                    0<s')))
+          (m½ , q) = 1/2ⁿ<ε δ₊
+          pp : rat ([ 1 / 2 ] ℚ^ⁿ m½)  <ᵣ
+                  ((rat ε ·ᵣ invℝ (s (suc N)) (inl (sPos _))))
+          pp = isTrans<≡ᵣ _ _ _ (<ℚ→<ᵣ _ _ q)
+                  (rat·ᵣrat _ _ ∙
+                    cong (rat ε ·ᵣ_)
+                      (cong rat (sym (ℚ.invℚ₊≡invℚ _
+                        (inl (<ᵣ→<ℚ 0 _ 0<s'))))
+                        ∙ sym (invℝ-rat _ (inl 0<s') _) ∙
+                        cong₂ invℝ (sym (snd (sRat (suc N))))
+                          (isProp→PathP (λ i → isProp＃ _ _)  _ _)))
+          pp' = subst ((rat ([ ℤ.pos 1 / 1+ 1 ] ℚ^ⁿ m½) ·ᵣ s (suc N)) <ᵣ_)
+                   ([x/y]·yᵣ _ _ _) (<ᵣ-·ᵣo _ _ (s (suc N) , (sPos _)) pp)
+          zzz : ∀ m → s (((suc (suc (m ℕ.+ m½))) ℕ.+ N))
+                      ≤ᵣ
+                       s (suc N) ·ᵣ  (rat ([ ℤ.pos 1 / 1+ 1 ] ℚ^ⁿ m½))
+          zzz m  = isTrans≤ᵣ _ _ _ (g (m ℕ.+ m½))
+                      (≤ᵣ-o·ᵣ _ _ (s (suc N)) (<ᵣWeaken≤ᵣ _ _ (sPos _))
+                        (≤ℚ→≤ᵣ _ _ (subst2 ℚ._≤_ (ℚ.·-ℚ^ⁿ (suc m) m½ [ 1 / 2 ])
+                            (ℚ.·IdL _)
+                           (ℚ.≤-·o (([ ℤ.pos 1 / 1+ 1 ] ℚ^ⁿ (suc m)))
+                                1 _ ((ℚ.0≤ℚ₊ (_ ℚ₊^ⁿ m½)))
+                                   (ℚ.x^ⁿ≤1 [ ℤ.pos 1 / 1+ 1 ] (suc m)
+                                     (𝟚.toWitness
+                                        {Q = ℚ.≤Dec 0  [ ℤ.pos 1 / 1+ 1 ]} tt)
+                                     (𝟚.toWitness
+                                        {Q = ℚ.≤Dec [ ℤ.pos 1 / 1+ 1 ] 1} tt))
+                                   ))) )
+      in (1 ℕ.+ m½) ℕ.+ N ,
+           λ m <m →
+            isTrans≤<ᵣ _ _ _ (
+                subst2 (_≤ᵣ_)
+                (cong s ((cong (ℕ._+ N) (cong suc (sym (+-suc _ _))
+                 ∙ sym (+-suc _ _)) ∙ sym (ℕ.+-assoc _ _ N) )
+                    ∙ snd <m) ∙ sym (absᵣPos _ (sPos _))
+                  ∙ cong absᵣ (sym (+IdR (s m))) )
+                  (·ᵣComm _ _)
+                 (zzz (fst <m)) --(zzz m <m)
+                 ) pp'
+           --   (lowerℚBound (ε ·ᵣ invℝ (s (suc N)) (inl (sPos _)))
+           -- (ℝ₊· (ε , 0<ε) (_ , invℝ-pos (s (suc N)) (sPos _))))
+   where
 
-   f' : ((n : ℕ) →  N ℕ.< n →
-          (s (suc n)) <ᵣ
-          s n ·ᵣ rat [ 1 / 2 ])
-   f' n n< =
-    subst2 _<ᵣ_
-      ((congS (_·ᵣ s n) (+IdR _) ∙
-        [x/y]·yᵣ _ _ _)) (·ᵣComm _ _)
-     (<ᵣ-·ᵣo _ _ (s n , sPos _)
-      (isTrans≤<ᵣ _ _ _ (≤absᵣ _) (f n n<)))
+    f' : ((n : ℕ) →  N ℕ.< n →
+           (s (suc n)) <ᵣ
+           s n ·ᵣ rat [ 1 / 2 ])
+    f' n n< =
+     subst2 _<ᵣ_
+       ((congS (_·ᵣ s n) (+IdR _) ∙
+         [x/y]·yᵣ _ _ _)) (·ᵣComm _ _)
+      (<ᵣ-·ᵣo _ _ (s n , sPos _)
+       (isTrans≤<ᵣ _ _ _ (≤absᵣ _) (f n n<)))
 
-   g : ∀ m → s ((suc (suc m)) ℕ.+ N)
-             ≤ᵣ (s (suc N)) ·ᵣ rat ([ 1 / 2 ] ℚ^ⁿ (suc m))
-   g zero = subst (s (suc (suc N)) ≤ᵣ_)
-                (cong ((s (suc N) ·ᵣ_) ∘ rat) (sym (ℚ.·IdR _)))
-                 (<ᵣWeaken≤ᵣ _ _ (f' (suc N) (ℕ.≤-refl {suc N})))
-   g (suc m) =
-     isTrans≤ᵣ _ _ _ (<ᵣWeaken≤ᵣ _ _ (f' (2 ℕ.+ m ℕ.+ N)
-      (subst (N ℕ.<_)
-        (cong suc (ℕ.+-suc _ _)) (ℕ.≤SumRight {suc N} {suc m})))) ww
-    where
-    ww : (s (suc (suc m) ℕ.+ N) ·ᵣ rat [ 1 / 2 ]) ≤ᵣ
-         (s (suc N) ·ᵣ rat ([ 1 / 2 ] ℚ^ⁿ suc (suc m)))
+    g : ∀ m → s ((suc (suc m)) ℕ.+ N)
+              ≤ᵣ (s (suc N)) ·ᵣ rat ([ 1 / 2 ] ℚ^ⁿ (suc m))
+    g zero = subst (s (suc (suc N)) ≤ᵣ_)
+                 (cong ((s (suc N) ·ᵣ_) ∘ rat) (sym (ℚ.·IdR _)))
+                  (<ᵣWeaken≤ᵣ _ _ (f' (suc N) (ℕ.≤-refl {suc N})))
+    g (suc m) =
+      isTrans≤ᵣ _ _ _ (<ᵣWeaken≤ᵣ _ _ (f' (2 ℕ.+ m ℕ.+ N)
+       (subst (N ℕ.<_)
+         (cong suc (ℕ.+-suc _ _)) (ℕ.≤SumRight {suc N} {suc m})))) ww
+     where
+     ww : (s (suc (suc m) ℕ.+ N) ·ᵣ rat [ 1 / 2 ]) ≤ᵣ
+          (s (suc N) ·ᵣ rat ([ 1 / 2 ] ℚ^ⁿ suc (suc m)))
 
-    ww =
-       subst ((s (suc (suc m) ℕ.+ N) ·ᵣ rat [ 1 / 2 ]) ≤ᵣ_)
+     ww =
+        subst ((s (suc (suc m) ℕ.+ N) ·ᵣ rat [ 1 / 2 ]) ≤ᵣ_)
 
-         (sym (·ᵣAssoc _ _ _) ∙
-           cong (s (suc N) ·ᵣ_) (sym (rat·ᵣrat _ _)))
-            (≤ᵣ-·o _ _ [ 1 / 2 ] (ℚ.decℚ≤? {0} {[ 1 / 2 ]}) (g m))
+          (sym (·ᵣAssoc _ _ _) ∙
+            cong (s (suc N) ·ᵣ_) (sym (rat·ᵣrat _ _)))
+             (≤ᵣ-·o _ _ [ 1 / 2 ] (ℚ.decℚ≤? {0} {[ 1 / 2 ]}) (g m))
 
 
 -- TODO : generalize properly
@@ -1164,81 +1217,85 @@ ratioTest₊ s sPos l' l ε₊@(ε , 0<ε) =
      (0≤seqΣ _ (λ n → <ᵣWeaken≤ᵣ _ _ (sPos (n ℕ.+ (m ℕ.+ suc N)))) _))) pp
 
   where
-  s' : Seq
-  s' = s ∘ (ℕ._+ (suc (m ℕ.+ N)))
+  opaque
+   unfolding -ᵣ_ _+ᵣ_
+
+   s' : Seq
+   s' = s ∘ (ℕ._+ (suc (m ℕ.+ N)))
 
 
-  f' : ((n : ℕ) →  N ℕ.≤ n →
-         (s (suc n)) ≤ᵣ
-         s n ·ᵣ rat [ 1 / 2 ])
-  f' n n< =
-     subst2 {x = ((s (suc n) ／ᵣ[ s n , inl (sPos n) ])
-                    +ᵣ 0 ) ·ᵣ s n }
-        _≤ᵣ_ (congS (_·ᵣ s n) (+IdR _) ∙
-          [x/y]·yᵣ _ _ _) (·ᵣComm _ _)
-       ((<ᵣWeaken≤ᵣ _ _
-          (<ᵣ-·ᵣo _ _ (s n , sPos _)
-           (isTrans≤<ᵣ _ _ _ (≤absᵣ _)
-             (snd N½ n (
-              ℕ.<-trans (ℕ.left-≤-max {suc (fst N½)} {fst Nε})
-               n<))))))
+   f' : ((n : ℕ) →  N ℕ.≤ n →
+          (s (suc n)) ≤ᵣ
+          s n ·ᵣ rat [ 1 / 2 ])
+   f' n n< =
+      subst2 {x = ((s (suc n) ／ᵣ[ s n , inl (sPos n) ])
+                     +ᵣ 0 ) ·ᵣ s n }
+         _≤ᵣ_ (congS (_·ᵣ s n) (+IdR _) ∙
+           [x/y]·yᵣ _ _ _) (·ᵣComm _ _)
+        ((<ᵣWeaken≤ᵣ _ _
+           (<ᵣ-·ᵣo _ _ (s n , sPos _)
+            (isTrans≤<ᵣ _ _ _ (≤absᵣ _)
+              (snd N½ n (
+               ℕ.<-trans (ℕ.left-≤-max {suc (fst N½)} {fst Nε})
+                n<))))))
 
 
-  p : ∀ n → s' n ≤ᵣ geometricProgression (s (m ℕ.+ N)) (fst ½ᵣ) n
-  p zero =
-     isTrans≤ᵣ _ _ _ ((f' (m ℕ.+ N) (ℕ.≤SumRight {N} {m}) ))
-             (subst ((s (m ℕ.+ N) ·ᵣ rat [ ℤ.pos 1 / 1+ 1 ]) ≤ᵣ_)
-                (·IdR _)
-                 (≤ᵣ-o·ᵣ (fst ½ᵣ) 1 (s (m ℕ.+ N))
-                   (<ᵣWeaken≤ᵣ _ _ (sPos _))
-                  (≤ℚ→≤ᵣ _ _ ((𝟚.toWitness {Q = ℚ.≤Dec ([ 1 / 2 ]) 1} _)))))
+   p : ∀ n → s' n ≤ᵣ geometricProgression (s (m ℕ.+ N)) (fst ½ᵣ) n
+   p zero =
+      isTrans≤ᵣ _ _ _ ((f' (m ℕ.+ N) (ℕ.≤SumRight {N} {m}) ))
+              (subst ((s (m ℕ.+ N) ·ᵣ rat [ ℤ.pos 1 / 1+ 1 ]) ≤ᵣ_)
+                 (·IdR _)
+                  (≤ᵣ-o·ᵣ (fst ½ᵣ) 1 (s (m ℕ.+ N))
+                    (<ᵣWeaken≤ᵣ _ _ (sPos _))
+                   (≤ℚ→≤ᵣ _ _ ((𝟚.toWitness {Q = ℚ.≤Dec ([ 1 / 2 ]) 1} _)))))
 
-  p (suc n) =
-    isTrans≤ᵣ _ _ _ (f' _
-      (subst (N ℕ.≤_) (sym (ℕ.+-assoc n (1 ℕ.+ m) N))
-        ℕ.≤SumRight))
-      (≤ᵣ-·o _ _ ([ 1 / 2 ]) ((𝟚.toWitness {Q = ℚ.≤Dec 0 ([ 1 / 2 ])} _)) (p n))
+   p (suc n) =
+     isTrans≤ᵣ _ _ _ (f' _
+       (subst (N ℕ.≤_) (sym (ℕ.+-assoc n (1 ℕ.+ m) N))
+         ℕ.≤SumRight))
+       (≤ᵣ-·o _ _ ([ 1 / 2 ]) ((𝟚.toWitness {Q = ℚ.≤Dec 0 ([ 1 / 2 ])} _)) (p n))
 
-  p' = Seq'≤→Σ≤ s' (geometricProgression (s (m ℕ.+ N)) (fst ½ᵣ))
-        p
+   p' : ∀ n → seqSumUpTo' s' n ≤ᵣ seqSumUpTo' (geometricProgression (s (m ℕ.+ N)) (fst ½ᵣ)) n 
+   p' = Seq'≤→Σ≤ s' (geometricProgression (s (m ℕ.+ N)) (fst ½ᵣ))
+         p
 
-  s<ε : (s (m ℕ.+ N)) <ᵣ rat (fst ε/2)
-  s<ε = subst (_<ᵣ rat (fst ε/2)) (+IdR _)
-           ((isTrans≤<ᵣ _ _ _
-          (≤absᵣ ((s (m ℕ.+ N)) +ᵣ (-ᵣ 0))) (snd Nε _
-           (ℕ.≤<-trans ℕ.right-≤-max ℕ.≤SumRight))))
+   s<ε : (s (m ℕ.+ N)) <ᵣ rat (fst ε/2)
+   s<ε = subst (_<ᵣ rat (fst ε/2)) (+IdR _)
+            ((isTrans≤<ᵣ _ _ _
+           (≤absᵣ ((s (m ℕ.+ N)) +ᵣ (-ᵣ 0))) (snd Nε _
+            (ℕ.≤<-trans ℕ.right-≤-max ℕ.≤SumRight))))
 
 
-  pp : (seqΣ (λ x → s (x ℕ.+ (m ℕ.+ suc N))) n) <ᵣ (rat ε)
-  pp =
-      subst {x = ℕ._+ suc (m ℕ.+ N) } {y = λ z → z ℕ.+ (m ℕ.+ suc N)}
-           (λ h → seqΣ (s ∘S h) n <ᵣ rat ε)
+   pp : (seqΣ (λ x → s (x ℕ.+ (m ℕ.+ suc N))) n) <ᵣ (rat ε)
+   pp =
+       subst {x = ℕ._+ suc (m ℕ.+ N) } {y = λ z → z ℕ.+ (m ℕ.+ suc N)}
+            (λ h → seqΣ (s ∘S h) n <ᵣ rat ε)
 
-          (funExt (λ x → cong (x ℕ.+_) (sym (ℕ.+-suc _ _)) ))
-          (isTrans≤<ᵣ _ _ _ (p' n)
-            (isTrans≤<ᵣ _ _ _
-              (≡ᵣWeaken≤ᵣ _ _ (seqSumUpTo≡seqSumUpTo' _ _))
-                (isTrans<≤ᵣ _ _ _
-                 (Sₙ-sup (s (m ℕ.+ N)) (fst ½ᵣ)
-                   n (sPos _) (snd ½ᵣ)
-                    (<ℚ→<ᵣ _ _ ((𝟚.toWitness {Q = ℚ.<Dec [ 1 / 2 ] 1} tt))))
-                (isTrans≤ᵣ _ _ _
-                  (≤ᵣ₊Monotone·ᵣ _ _ _ 2
-                        (<ᵣWeaken≤ᵣ _ _ (<ℚ→<ᵣ _ _ (ℚ.0<ℚ₊ ε/2)))
-                          (<ᵣWeaken≤ᵣ _ _
-                             ((0<1/x _ _ (
-                       <ℚ→<ᵣ _ _
-                       (𝟚.toWitness {Q = ℚ.<Dec 0 [ 1 / 2 ]} tt)))))
+           (funExt (λ x → cong (x ℕ.+_) (sym (ℕ.+-suc _ _)) ))
+           (isTrans≤<ᵣ _ _ _ (p' n)
+             (isTrans≤<ᵣ _ _ _
+               (≡ᵣWeaken≤ᵣ _ _ (seqSumUpTo≡seqSumUpTo' _ _))
+                 (isTrans<≤ᵣ _ _ _
+                  (Sₙ-sup (s (m ℕ.+ N)) (fst ½ᵣ)
+                    n (sPos _) (snd ½ᵣ)
+                     (<ℚ→<ᵣ _ _ ((𝟚.toWitness {Q = ℚ.<Dec [ 1 / 2 ] 1} tt))))
+                 (isTrans≤ᵣ _ _ _
+                   (≤ᵣ₊Monotone·ᵣ _ _ _ 2
+                         (<ᵣWeaken≤ᵣ _ _ (<ℚ→<ᵣ _ _ (ℚ.0<ℚ₊ ε/2)))
+                           (<ᵣWeaken≤ᵣ _ _
+                              ((0<1/x _ _ (
+                        <ℚ→<ᵣ _ _
+                        (𝟚.toWitness {Q = ℚ.<Dec 0 [ 1 / 2 ]} tt)))))
 
-                    (<ᵣWeaken≤ᵣ _ _ s<ε)
-                    (≡ᵣWeaken≤ᵣ _ _
-                       (invℝ-rat _ _
-                        (inl ((𝟚.toWitness {Q = ℚ.<Dec 0 [ 1 / 2 ]} tt))))))
-                        (≡ᵣWeaken≤ᵣ _ _ (sym (rat·ᵣrat _  _) ∙
-                          cong rat (sym (ℚ.·Assoc _ _ _) ∙
-                            cong (ε ℚ.·_) ℚ.decℚ? ∙ ℚ.·IdR _)))
+                     (<ᵣWeaken≤ᵣ _ _ s<ε)
+                     (≡ᵣWeaken≤ᵣ _ _
+                        (invℝ-rat _ _
+                         (inl ((𝟚.toWitness {Q = ℚ.<Dec 0 [ 1 / 2 ]} tt))))))
+                         (≡ᵣWeaken≤ᵣ _ _ (sym (rat·ᵣrat _  _) ∙
+                           cong rat (sym (ℚ.·Assoc _ _ _) ∙
+                             cong (ε ℚ.·_) ℚ.decℚ? ∙ ℚ.·IdR _)))
 
-                        ))))
+                         ))))
 
 
 expSeq : ℝ → Seq
@@ -1258,7 +1315,7 @@ expSeries-rat q zero = 0 , refl
 expSeries-rat q (suc n) =
   let (e , p) = expSeries-rat q n
       (e' , p') = expSeq-rat q n
-  in (e ℚ.+ e') , cong₂ _+ᵣ_ p p'
+  in (e ℚ.+ e') , cong₂ _+ᵣ_ p p' ∙ +ᵣ-rat _ _
 
 expSeqPos : ∀ x → 0 <ᵣ x → ∀ n → 0 <ᵣ expSeq x n
 expSeqPos x 0<x zero = decℚ<ᵣ?
@@ -1272,77 +1329,81 @@ limₙ→∞[expSeqRatio]=0 : ∀ x → ∀ (0<x : 0 ℚ.< x)  → lim'ₙ→∞
       is 0
 limₙ→∞[expSeqRatio]=0 x 0<x =
   subst (lim'ₙ→∞_is 0)
-    (funExt (w (rat x) _))
+    (funExt (w (rat x) (<ℚ→<ᵣ 0 x 0<x)))
     w'
 
  where
- x₊ : ℚ₊
- x₊ = x , ℚ.<→0< _ 0<x
+ opaque
+  unfolding -ᵣ_
 
- 0<ᵣx = <ℚ→<ᵣ 0 x 0<x
- w : ∀ x 0<x n → (x ·ᵣ rat ([ 1 / 1+ n ])) ≡ (expSeq x (suc n) ／ᵣ[ expSeq x n ,
-                    inl (expSeqPos x 0<x n) ])
- w x 0<x zero = cong₂ {y = expSeq x 1} _·ᵣ_
-        (( sym (·IdR x) ∙
-        (cong
-            (x ·ᵣ_) (sym (invℝ-rat _
-              (invEq (rat＃ _ _) (inl (ℚ.decℚ<? {0} {1})))
-               (inl (ℚ.decℚ<? {0} {1}))))) ∙ sym (/nᵣ-／ᵣ 1 (x)
-          (invEq (rat＃ _ _) (inl (ℚ.decℚ<? {0} {1}))))
-           ∙ (cong (/nᵣ 1) (sym (·IdL x))) ) )
-     (sym (invℝ-rat 1 (inl ((expSeqPos x 0<x zero)))
-            ((inl (ℚ.decℚ<? {0} {1})))))
+  x₊ : ℚ₊
+  x₊ = x , ℚ.<→0< _ 0<x
 
- w x 0<x (suc n) =
-   let z = _
-       z' = _
-   in ((cong (x ·ᵣ_) ((sym (·IdL _) ∙
-         cong₂ _·ᵣ_ (sym (x·invℝ[x] _ _))
-           (cong rat (sym (ℚ.fromNat-invℚ _
-                (inl (ℚ.<ℤ→<ℚ _ _ (ℤ.suc-≤-suc ℤ.zero-≤pos )))))
-             ∙ sym (invℝ-rat _ _ _)))
-               ∙ sym (·ᵣAssoc _ _ _))
-         ∙ ·ᵣAssoc _ (expSeq x (suc n)) _)
-           ∙ cong₂ (_·ᵣ_) (·ᵣComm _ _) (·ᵣComm z' z))
-       ∙ (·ᵣAssoc _ z z'
-         ∙ cong (_／ᵣ[ expSeq x (suc n) ,
-                    inl (expSeqPos x 0<x (suc n)) ])
-                     (sym (/nᵣ-／ᵣ (2+ n) (/nᵣ (1+ n) (expSeq x n ·ᵣ x) ·ᵣ x)
-                       (inl (<ℚ→<ᵣ 0 _ (ℚ.<ℤ→<ℚ _ _
-                         (ℤ.suc-≤-suc ℤ.zero-≤pos )))))))
+  0<ᵣx : 0 <ᵣ rat x
+  0<ᵣx = <ℚ→<ᵣ 0 x 0<x
+  w : ∀ x 0<x n → (x ·ᵣ rat ([ 1 / 1+ n ])) ≡ (expSeq x (suc n) ／ᵣ[ expSeq x n ,
+                     inl (expSeqPos x 0<x n) ])
+  w x 0<x zero = cong₂ {y = expSeq x 1} _·ᵣ_
+         (( sym (·IdR x) ∙
+         (cong
+             (x ·ᵣ_) (sym (invℝ-rat _
+               (invEq (rat＃ _ _) (inl (ℚ.decℚ<? {0} {1})))
+                (inl (ℚ.decℚ<? {0} {1}))))) ∙ sym (/nᵣ-／ᵣ 1 (x)
+           (invEq (rat＃ _ _) (inl (ℚ.decℚ<? {0} {1}))))
+            ∙ (cong (/nᵣ 1) (sym (·IdL x))) ) )
+      (sym (invℝ-rat 1 (inl ((expSeqPos x 0<x zero)))
+             ((inl (ℚ.decℚ<? {0} {1})))))
 
- w' : lim'ₙ→∞ _ is 0
- w' ε =
-  let (cN , X) = ℚ.ceilℚ₊ (x₊ ℚ₊· (invℚ₊ ε))
+  w x 0<x (suc n) =
+    let z = _
+        z' = _
+    in ((cong (x ·ᵣ_) ((sym (·IdL _) ∙
+          cong₂ _·ᵣ_ (sym (x·invℝ[x] _ _))
+            (cong rat (sym (ℚ.fromNat-invℚ _
+                 (inl (ℚ.<ℤ→<ℚ _ _ (ℤ.suc-≤-suc ℤ.zero-≤pos )))))
+              ∙ sym (invℝ-rat _ _ _)))
+                ∙ sym (·ᵣAssoc _ _ _))
+          ∙ ·ᵣAssoc _ (expSeq x (suc n)) _)
+            ∙ cong₂ (_·ᵣ_) (·ᵣComm _ _) (·ᵣComm z' z))
+        ∙ (·ᵣAssoc _ z z'
+          ∙ cong (_／ᵣ[ expSeq x (suc n) ,
+                     inl (expSeqPos x 0<x (suc n)) ])
+                      (sym (/nᵣ-／ᵣ (2+ n) (/nᵣ (1+ n) (expSeq x n ·ᵣ x) ·ᵣ x)
+                        (inl (<ℚ→<ᵣ 0 _ (ℚ.<ℤ→<ℚ _ _
+                          (ℤ.suc-≤-suc ℤ.zero-≤pos )))))))
 
-      X'' = subst (ℚ._< [ pos (ℕ₊₁→ℕ cN) / 1+ 0 ])
-               (cong (x ℚ.·_) (sym (ℚ.invℚ₊≡invℚ ε _) ))
-             X
-      X' : x ℚ.· [ pos 1 / 1+ (ℕ₊₁→ℕ cN) ] ℚ.< fst ε
+  w' : lim'ₙ→∞ (λ n → (rat x ·ᵣ rat ([ 1 / 1+ n ]))) is 0
+  w' ε =
+   let (cN , X) = ℚ.ceilℚ₊ (x₊ ℚ₊· (invℚ₊ ε))
 
-      X' = subst (ℚ._< fst ε)
-             ((cong (x ℚ.·_) (ℚ.fromNat-invℚ _ _)))
-            (ℚ.ℚ-x/y<z→x/z<y x [ pos (suc (ℕ₊₁→ℕ cN)) / 1 ] (fst ε)
-                        0<x (ℚ.<ℤ→<ℚ _ _ (ℤ.suc-≤-suc ℤ.zero-≤pos))
-                         (ℚ.0<→< _ (snd ε))
-                         (ℚ.isTrans< _ [ pos ((ℕ₊₁→ℕ cN)) / 1+ 0 ] _
-                           X'' (ℚ.<ℤ→<ℚ _ _ ℤ.isRefl≤ )))
-  in (suc (ℕ₊₁→ℕ cN)) , (λ n' <n' →
-      let 0<n' = ℚ.<ℤ→<ℚ _ _
-             (ℤ.ℕ≤→pos-≤-pos _ _ (ℕ.suc-≤-suc ℕ.zero-≤))
-      in isTrans≡<ᵣ _ _ _
-          (cong absᵣ (+IdR _) ∙ absᵣPos _
-            (ℝ₊· (_ , <ℚ→<ᵣ 0 x 0<x)
-                       (_ ,
-                          <ℚ→<ᵣ _ _
-                           (ℚ.invℚ-pos [ pos (suc n') / 1 ]
-                            (inl 0<n') 0<n')))
-                             ∙ sym (rat·ᵣrat _ _))
-           (<ℚ→<ᵣ _ _ (ℚ.isTrans< _ _ _
-             (ℚ.<-o· [ 1 / 1+ n' ]
-                     [ 1 / 1+ (ℕ₊₁→ℕ cN) ] x 0<x
-                      ((ℤ.ℕ≤→pos-≤-pos _ _ (ℕ.≤-suc <n'))))
-                          X')))
+       X'' = subst (ℚ._< [ pos (ℕ₊₁→ℕ cN) / 1+ 0 ])
+                (cong (x ℚ.·_) (sym (ℚ.invℚ₊≡invℚ ε _) ))
+              X
+       X' : x ℚ.· [ pos 1 / 1+ (ℕ₊₁→ℕ cN) ] ℚ.< fst ε
+
+       X' = subst (ℚ._< fst ε)
+              ((cong (x ℚ.·_) (ℚ.fromNat-invℚ _ _)))
+             (ℚ.ℚ-x/y<z→x/z<y x [ pos (suc (ℕ₊₁→ℕ cN)) / 1 ] (fst ε)
+                         0<x (ℚ.<ℤ→<ℚ _ _ (ℤ.suc-≤-suc ℤ.zero-≤pos))
+                          (ℚ.0<→< _ (snd ε))
+                          (ℚ.isTrans< _ [ pos ((ℕ₊₁→ℕ cN)) / 1+ 0 ] _
+                            X'' (ℚ.<ℤ→<ℚ _ _ ℤ.isRefl≤ )))
+   in (suc (ℕ₊₁→ℕ cN)) , (λ n' <n' →
+       let 0<n' = ℚ.<ℤ→<ℚ _ _
+              (ℤ.ℕ≤→pos-≤-pos _ _ (ℕ.suc-≤-suc ℕ.zero-≤))
+       in isTrans≡<ᵣ _ _ _
+           (cong absᵣ (+IdR _) ∙ absᵣPos _
+             (ℝ₊· (_ , <ℚ→<ᵣ 0 x 0<x)
+                        (_ ,
+                           <ℚ→<ᵣ _ _
+                            (ℚ.invℚ-pos [ pos (suc n') / 1 ]
+                             (inl 0<n') 0<n')))
+                              ∙ sym (rat·ᵣrat _ _))
+            (<ℚ→<ᵣ _ _ (ℚ.isTrans< _ _ _
+              (ℚ.<-o· [ 1 / 1+ n' ]
+                      [ 1 / 1+ (ℕ₊₁→ℕ cN) ] x 0<x
+                       ((ℤ.ℕ≤→pos-≤-pos _ _ (ℕ.≤-suc <n'))))
+                           X')))
 
 
 limₙ→∞[expSeq]=0 : ∀ x → (0<x : 0 ℚ.< x) →  lim'ₙ→∞ expSeq (rat x) is 0
