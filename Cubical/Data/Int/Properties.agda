@@ -1,5 +1,6 @@
-{-# OPTIONS --safe #-}
+{-# OPTIONS --safe --v=tc.conv:20 #-}
 module Cubical.Data.Int.Properties where
+
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function

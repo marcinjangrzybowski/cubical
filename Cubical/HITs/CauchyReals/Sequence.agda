@@ -9,6 +9,7 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Structure
+open import Cubical.Foundations.Powerset
 
 import Cubical.Functions.Logic as L
 
@@ -43,6 +44,45 @@ open import Cubical.HITs.CauchyReals.Continuous
 open import Cubical.HITs.CauchyReals.Multiplication
 open import Cubical.HITs.CauchyReals.Inverse
 
+
+Lipschitz-ℚ→ℝℙ : ℚ₊ → (P : ℙ ℝ) → (∀ x → rat x ∈ P  → ℝ) → Type
+Lipschitz-ℚ→ℝℙ L P f =
+  (∀ q q∈ r r∈ → (ε : ℚ₊) →
+    ℚ.abs (q ℚ.- r) ℚ.< (fst ε) → absᵣ (f q q∈ -ᵣ f r r∈)
+     <ᵣ rat (fst (L ℚ₊· ε  )))
+
+
+extend-Lipshitzℚ→ℝ : ∀ L →  ∀ a b → (a ℚ.≤ b) → ∀ f →  
+        Lipschitz-ℚ→ℝℙ L (intervalℙ (rat a) (rat b)) f →
+        Σ[ f' ∈ (ℚ → ℝ) ]
+          (Lipschitz-ℚ→ℝ L f' × (∀ x x∈ → f' x ≡ f x x∈ ))
+        
+extend-Lipshitzℚ→ℝ L a b a≤b f li =
+ (λ x → f (ℚ.clamp a b x) (∈ℚintervalℙ→∈intervalℙ _ _ _
+  (clam∈ℚintervalℙ a b a≤b x))) ,
+   w , (λ x x∈ → cong (uncurry f)
+    (Σ≡Prop (∈-isProp (intervalℙ (rat a) (rat b) ∘ rat))
+    (ℚ.inClamps a b x (≤ᵣ→≤ℚ _ _ (fst x∈)) (≤ᵣ→≤ℚ _ _ (snd x∈)) )))
+
+ where
+ w : Lipschitz-ℚ→ℝ L
+       (λ x →
+          f (ℚ.clamp a b x)
+          (∈ℚintervalℙ→∈intervalℙ a b (ℚ.clamp a b x)
+           (clam∈ℚintervalℙ a b a≤b x)))
+ w q r ε u v = invEq (∼≃abs<ε _ _ _)
+  (li _ _
+   _ _ ε (ℚ.isTrans≤<
+    (ℚ.abs (ℚ.clamp a b q ℚ.- ℚ.clamp a b r)) (ℚ.abs (q ℚ.- r)) (fst ε)
+    (ℚ.clampDist a b r q) (ℚ.absFrom<×< (fst ε) (q ℚ.- r) u v))) 
+
+
+LLipschitz-ℚ→ℝ : (ℚ → ℝ) → Type
+LLipschitz-ℚ→ℝ f =
+  (∀ x → ∃[ (L , ε) ∈ (ℚ₊ × ℚ₊) ] 
+    ∀ q r → absᵣ (rat q -ᵣ x) <ᵣ rat (fst ε)
+          → absᵣ (rat r -ᵣ x) <ᵣ rat (fst ε)
+            → f q ∼[ L ℚ₊· ε  ] f r)
 
 
 Dichotomyℝ : ∀ (ε : ℚ₊) x y →

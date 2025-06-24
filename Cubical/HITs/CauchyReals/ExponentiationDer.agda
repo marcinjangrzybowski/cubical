@@ -301,11 +301,11 @@ opaque
 
  ε'f : ℝ₊
  ε'f = (ε ₊／ᵣ₊ 2) ₊／ᵣ₊ (1 +ᵣ absᵣ G ,
-          <≤ᵣMonotone+ᵣ 0 1 0 (absᵣ G) decℚ<ᵣ? (0≤absᵣ G))
+          isTrans≡<ᵣ _ _ _ (sym (+ᵣ-rat _ _)) (<≤ᵣMonotone+ᵣ 0 1 0 (absᵣ G) decℚ<ᵣ? (0≤absᵣ G)))
 
  ε'g : ℝ₊
  ε'g = (ε ₊／ᵣ₊ 2) ₊／ᵣ₊ (1 +ᵣ absᵣ F ,
-          <≤ᵣMonotone+ᵣ 0 1 0 (absᵣ F) decℚ<ᵣ? (0≤absᵣ F))
+          isTrans≡<ᵣ _ _ _ (sym (+ᵣ-rat _ _)) (<≤ᵣMonotone+ᵣ 0 1 0 (absᵣ F) decℚ<ᵣ? (0≤absᵣ F)))
 
  
  w : _
@@ -369,22 +369,23 @@ opaque
                 (invℝ≡ _ _ _)
                ∙ ·ᵣComm  (fst (ε ₊／ᵣ₊ 2))
               (invℝ (1 +ᵣ absᵣ G)
-                  (inl 0<1+g))) ∙
+                  (inl (isTrans≡<ᵣ _ _ _ (sym (+ᵣ-rat _ _)) 0<1+g)))) ∙
               ·ᵣAssoc _ _ _)
             (cong ((1 +ᵣ absᵣ F) ·ᵣ_)
               (cong ((fst (ε ₊／ᵣ₊ 2)) ·ᵣ_)
                (invℝ≡ _ _ _)
                ∙ ·ᵣComm  (fst (ε ₊／ᵣ₊ 2))
               (invℝ (1 +ᵣ absᵣ F)
-                  (inl 0<1+f))) ∙
+                  (inl (isTrans≡<ᵣ _ _ _ (sym (+ᵣ-rat _ _)) 0<1+f)))) ∙
                ·ᵣAssoc _ _ _) ∙
             sym (·DistR+ _ _ (fst (ε ₊／ᵣ₊ 2)))
              ∙∙ cong {y = 2} (_·ᵣ (fst (ε ₊／ᵣ₊ 2)))
                              (cong₂ _+ᵣ_
                                  (x·invℝ[x] (1 +ᵣ absᵣ G)
-                                   (inl 0<1+g))
+                                   (inl (isTrans≡<ᵣ _ _ _ (sym (+ᵣ-rat _ _)) 0<1+g)))
                                  (x·invℝ[x] (1 +ᵣ absᵣ F)
-                                   (inl 0<1+f))
+                                   (inl (isTrans≡<ᵣ _ _ _ (sym (+ᵣ-rat _ _)) 0<1+f)))
+                                   ∙ +ᵣ-rat _ _
                                 )
                         ∙∙ ·ᵣComm 2 (fst (ε ₊／ᵣ₊ 2))  ∙
                           [x/y]·yᵣ (fst ε) _ (inl _))
@@ -1231,7 +1232,7 @@ seqΔ-δ Z ε = x^→∞ (suc (suc Z))
          (ε ℚ₊· (invℚ₊ ((([ pos (suc Z) / 1 ] , _)) ℚ₊· 2)))
 
 opaque
- unfolding -ᵣ_
+ unfolding -ᵣ_ _+ᵣ_
 
  seqΔ-pos : ∀ z Z → (z<Z : fst z ≤ᵣ fromNat (suc (suc Z))) →
     1 ≤ᵣ fst z → ∀ (ε : ℚ₊) → 
@@ -1399,7 +1400,7 @@ module expPreDer (Z : ℕ) where
           (z≤Z : fst z ≤ᵣ fromNat (suc (suc Z)))
           (1/Z≤z :  rat [ 1 / fromNat (suc (suc Z)) ] ≤ᵣ fst z) where
 
-
+ 
 
   seqΔ : ∀ (ε : ℚ₊) →
      (∀ n → (fst (seqΔ-δ Z ε)) ℕ.< n →
@@ -1426,14 +1427,15 @@ module expPreDer (Z : ℕ) where
          cong (fst ∘ invℝ₊) (ℝ₊≡ refl))
          ∙ sym (·IdL _)) (cong fst (sym (invℝ₊Invol z)) ∙ sym (·IdL _))
          1/Z≤z)))
-
-     wC : ∀ n →
-       IsContinuousWithPred pred0<
-         (λ z 0<z → diff (z , 0<z) n)
-     wC n = contDiagNE₂WP sumR pred0<  _ _
-               (lnSeqCont n)
-               (IsContinuousWP∘' pred0< _ _ IsContinuous-ᵣ
-                (lnSeq'Cont n))
+     opaque
+      unfolding _+ᵣ_
+      wC : ∀ n →
+        IsContinuousWithPred pred0<
+          (λ z 0<z → diff (z , 0<z) n)
+      wC n = contDiagNE₂WP sumR pred0<  _ _
+                (lnSeqCont n)
+                (IsContinuousWP∘' pred0< _ _ IsContinuous-ᵣ
+                 (lnSeq'Cont n))
 
      w-r<1 : ∀ n r 0<r → diff (ℚ₊→ℝ₊ (r , 0<r)) n ≡
                         diff (invℝ₊ (ℚ₊→ℝ₊ (r , 0<r))) n
@@ -1631,46 +1633,48 @@ module expPreDer (Z : ℕ) where
      b'-a' = (_ , x<y→0<y-x _ _ a'<b' )
      b-a : ℝ₊
      b-a = (_ , x<y→0<y-x _ _ a<b )
-     ww : Σ ℚ₊ (λ L → Lipschitz-ℝ→ℝ L (_·ᵣ fst (invℝ₊ b'-a'))) →
-          Σ ℚ₊ (λ L → Lipschitz-ℝ→ℝ L (_·ᵣ fst (invℝ₊ b-a))) →
-             ((preLn b' b'≤Z 1/Z≤b' -ᵣ preLn a' a'≤Z 1/Z≤a') ／ᵣ₊
-                 (fst b' +ᵣ -ᵣ fst a' , x<y→0<y-x (fst a') (fst b') a'<b'))
-                ≤ᵣ
-                ((preLn b b≤Z 1/Z≤b -ᵣ preLn a a≤Z 1/Z≤a) ／ᵣ₊
-                 (fst b +ᵣ -ᵣ fst a , x<y→0<y-x (fst a) (fst b) a<b))
-     ww (_ , lip·') (_ , lip·) = subst2 _≤ᵣ_
-       (sym (snd (map-fromCauchySequence' _ _ _ _ lip·'))
-              ∙ cong (_／ᵣ₊ b'-a')
-                  (sym (snd (mapNE-fromCauchySequence' sumR _ _ _ _))
-                    ∙ cong ((preLn b' b'≤Z 1/Z≤b') +ᵣ_)
-                      (sym (snd (map-fromCauchySequence' _ _ _ _ (snd -ᵣR))))))
-       (sym (snd (map-fromCauchySequence' _ _ _ _ lip·))
-              ∙ cong (_／ᵣ₊ b-a)
-                  (sym (snd (mapNE-fromCauchySequence' sumR _ _ _ _))
-                    ∙ cong ((preLn b b≤Z 1/Z≤b) +ᵣ_)
-                      (sym (snd (map-fromCauchySequence' _ _ _ _ (snd -ᵣR))))))
-           (fromCauchySequence'≤ _ _ _ _ w)
+     opaque
+      unfolding _+ᵣ_
+      ww : Σ ℚ₊ (λ L → Lipschitz-ℝ→ℝ L (_·ᵣ fst (invℝ₊ b'-a'))) →
+           Σ ℚ₊ (λ L → Lipschitz-ℝ→ℝ L (_·ᵣ fst (invℝ₊ b-a))) →
+              ((preLn b' b'≤Z 1/Z≤b' -ᵣ preLn a' a'≤Z 1/Z≤a') ／ᵣ₊
+                  (fst b' +ᵣ -ᵣ fst a' , x<y→0<y-x (fst a') (fst b') a'<b'))
+                 ≤ᵣ
+                 ((preLn b b≤Z 1/Z≤b -ᵣ preLn a a≤Z 1/Z≤a) ／ᵣ₊
+                  (fst b +ᵣ -ᵣ fst a , x<y→0<y-x (fst a) (fst b) a<b))
+      ww (_ , lip·') (_ , lip·) = subst2 _≤ᵣ_
+        (sym (snd (map-fromCauchySequence' _ _ _ _ lip·'))
+               ∙ cong (_／ᵣ₊ b'-a')
+                   (sym (snd (mapNE-fromCauchySequence' sumR _ _ _ _))
+                      ∙ cong ((preLn b' b'≤Z 1/Z≤b') +ᵣ_)
+                       (sym (snd (map-fromCauchySequence' _ _ _ _ (snd -ᵣR))))))
+        (sym (snd (map-fromCauchySequence' _ _ _ _ lip·))
+               ∙ cong (_／ᵣ₊ b-a)
+                   (sym (snd (mapNE-fromCauchySequence' sumR _ _ _ _))
+                     ∙ cong ((preLn b b≤Z 1/Z≤b) +ᵣ_)
+                       (sym (snd (map-fromCauchySequence' _ _ _ _ (snd -ᵣR))))))
+            (fromCauchySequence'≤ _ _ _ _ w)
 
-      where
+       where
 
-     
 
-      w : (n : ℕ) →
-               (((lnSeq b' n) -ᵣ (lnSeq a' n)) ／ᵣ₊ b'-a')
-            ≤ᵣ (((lnSeq b n) -ᵣ (lnSeq a n)) ／ᵣ₊ b-a)
-      w n = subst2 _≤ᵣ_
-             (·ᵣAssoc _ _ _
-                ∙ cong (_／ᵣ₊ b'-a')
-                 ((cong (fromNat (suc (suc n)) ·ᵣ_)
-                  (cong₂ _-ᵣ_ (sym (·IdL _)) (sym (·IdL _)) ∙ sym ( L𝐑.lem--075))
-                     ∙ ·ᵣComm _ _  ∙ 𝐑'.·DistL- _ _ _)))
-             (·ᵣAssoc _ _ _
-                 ∙ cong (_／ᵣ₊ b-a) ((cong (fromNat (suc (suc n)) ·ᵣ_)
-                   (cong₂ _-ᵣ_ (sym (·IdL _)) (sym (·IdL _)) ∙ sym (L𝐑.lem--075))
-                     ∙ ·ᵣComm _ _ ∙ 𝐑'.·DistL- _ _ _)))
-             (≤ᵣ-o·ᵣ _ _ _ (≤ℚ→≤ᵣ _ _ (ℚ.0≤pos _ _))
-               (slope-monotone-ₙ√ (suc n) _ _ _ _
-                 a<b a'<b' a≤a' b≤b'))
+
+       w : (n : ℕ) →
+                (((lnSeq b' n) -ᵣ (lnSeq a' n)) ／ᵣ₊ b'-a')
+             ≤ᵣ (((lnSeq b n) -ᵣ (lnSeq a n)) ／ᵣ₊ b-a)
+       w n = subst2 _≤ᵣ_
+              (·ᵣAssoc _ _ _
+                 ∙ cong (_／ᵣ₊ b'-a')
+                  ((cong (fromNat (suc (suc n)) ·ᵣ_)
+                   (cong₂ _-ᵣ_ (sym (·IdL _)) (sym (·IdL _)) ∙ sym ( L𝐑.lem--075))
+                      ∙ ·ᵣComm _ _  ∙ 𝐑'.·DistL- _ _ _)))
+              (·ᵣAssoc _ _ _
+                  ∙ cong (_／ᵣ₊ b-a) ((cong (fromNat (suc (suc n)) ·ᵣ_)
+                    (cong₂ _-ᵣ_ (sym (·IdL _)) (sym (·IdL _)) ∙ sym (L𝐑.lem--075))
+                      ∙ ·ᵣComm _ _ ∙ 𝐑'.·DistL- _ _ _)))
+              (≤ᵣ-o·ᵣ _ _ _ (≤ℚ→≤ᵣ _ _ (ℚ.0≤pos _ _))
+                (slope-monotone-ₙ√ (suc n) _ _ _ _
+                  a<b a'<b' a≤a' b≤b'))
 
 
             

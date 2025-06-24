@@ -85,7 +85,7 @@ record Elimℝ {ℓ} {ℓ'} (A : ℝ → Type ℓ)
   ratA : ∀ x → A (rat x)
   -- HoTT (11.3.5)
   limA : ∀ x p → (a : ∀ q → A (x q)) →
-             (∀ δ ε → B (a δ) (a ε) (δ ℚ₊+ ε) (p _ _) ) → A (lim x p)
+             (∀ δ ε → B {x δ} {x ε} (a δ) (a ε) (δ ℚ₊+ ε) (p δ ε) ) → A (lim x p)
   eqA : ∀ {x y} p a a' → (∀ δ ε → B a a' _ (p (δ ℚ₊+ ε)))
    → (∀ ε → B a a' ε (p ε))
    → PathP (λ i → A (eqℝ x y p i)) a a'

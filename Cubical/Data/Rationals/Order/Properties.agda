@@ -258,6 +258,8 @@ ceilℚ₊ q = 1+ (fst (fst (floor-fracℚ₊ q))) ,
 
 
 
+
+
 sign : ℚ → ℚ
 sign = Rec.go w
  where
@@ -821,6 +823,9 @@ invℚ₊Dist· = uncurry (flip ∘ uncurry ∘ ElimProp2.go w)
 /4₊+/4₊≡/2₊ : ∀ ε → (/4₊ ε) ℚ₊+ (/4₊ ε) ≡ /2₊ ε
 /4₊+/4₊≡/2₊ ε = ℚ₊≡ (sym (·DistL+ (fst ε) [ 1 / 4 ] [ 1 / 4 ])
    ∙ cong (fst ε ·_) decℚ?)
+
+/4₊≡/2₊/2₊ : ∀ ε → fst (/4₊ ε) ≡ fst (/2₊ (/2₊ ε))
+/4₊≡/2₊/2₊ ε = cong (fst ε ·_) decℚ? ∙ ·Assoc _ _ _
 
 weak0< : ∀ q (ε δ : ℚ₊)
              →  q < (fst ε - fst δ)

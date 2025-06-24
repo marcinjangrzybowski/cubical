@@ -1,4 +1,4 @@
-{-# OPTIONS --lossy-unification --safe #-}
+{-# OPTIONS --safe --lossy-unification #-}
 
 module Cubical.HITs.CauchyReals.ExpLog where
 
@@ -98,7 +98,7 @@ module 𝒆-number a (1<a : 1 <ᵣ fst a) where
   ln[𝒆'^x]≡x x = ln[a^b]≡b·ln[a] _ x ∙ 𝐑'.·IdR' _ _  ln-𝒆'≡1
 
   𝒆'^ln[x]≡x : ∀ (x : ℝ₊) → (𝒆' ^ᵣ (ln x)) ≡  x 
-  𝒆'^ln[x]≡x x = inj-ln _ _ (ln[𝒆'^x]≡x (ln x))
+  𝒆'^ln[x]≡x x = inj-ln (𝒆' ^ᵣ ln x) x (ln[𝒆'^x]≡x (ln x))
 
   exp-ln-Iso : Iso ℝ ℝ₊
   exp-ln-Iso .Iso.fun = 𝒆' ^ᵣ_
@@ -116,12 +116,12 @@ module 𝒆-number a (1<a : 1 <ᵣ fst a) where
    → ln y <ᵣ ln y' 
   ln-mon-str y y' y<y' =
     <-o+-cancel _ _ _ $ subst2 _<ᵣ_
-     (sym (ln-+ _ _))
-     (sym (ln-+ _ _))
+     (sym (ln-+ (2 ₊·ᵣ invℝ₊ y) y))
+     (sym (ln-+ (2 ₊·ᵣ invℝ₊ y) y'))
       $ ln-mon-str-1<
        ((2 ₊·ᵣ (invℝ₊ y)) ₊·ᵣ y)
        ((2 ₊·ᵣ (invℝ₊ y)) ₊·ᵣ y')
-       (isTrans<≡ᵣ _ 2 _ decℚ<ᵣ? (sym ([x/₊y]·yᵣ 2 y)) )
+       (isTrans<≡ᵣ 1 2 (fst ((2 ₊·ᵣ invℝ₊ y) ₊·ᵣ y)) decℚ<ᵣ? (sym ([x/₊y]·yᵣ 2 y)) )
        (<ᵣ-o·ᵣ _ _ (2 ₊·ᵣ (invℝ₊ y)) y<y')
        
   𝒆'^-der : ∀ y → derivativeOf (fst ∘ 𝒆' ^ᵣ_) at y is (fst (𝒆' ^ᵣ y))

@@ -576,6 +576,18 @@ opaque
    L𝐑.lem--05 
    (≤ᵣ-o+ _ _ a p)
 
+ a-b≤c-d⇒a+d≤c+b : ∀ a b c d → a -ᵣ b ≤ᵣ c -ᵣ d → a +ᵣ d ≤ᵣ c +ᵣ b
+ a-b≤c-d⇒a+d≤c+b a b c d x =
+   isTrans≡≤ᵣ _ _ _ (+ᵣComm _ _) (a-b≤c⇒a≤c+b _ _ _
+    (isTrans≡≤ᵣ _ _ _ (sym (+ᵣAssoc _ _ _))
+    (b≤c-b⇒a+b≤c _ _ _ x)))
+
+ a+d≤c+b⇒a-b≤c-d : ∀ a b c d → a +ᵣ d ≤ᵣ c +ᵣ b → a -ᵣ b ≤ᵣ c -ᵣ d
+ a+d≤c+b⇒a-b≤c-d a b c d x =
+   a-b≤c-d⇒a+d≤c+b a (-ᵣ d) c (-ᵣ b)
+    (subst2 (λ d b → a +ᵣ d ≤ᵣ c +ᵣ b)
+     (sym (-ᵣInvol d)) (sym (-ᵣInvol b)) x)
+
  b<c-b⇒a+b<c : ∀ a b c → b  <ᵣ c -ᵣ a → a +ᵣ b <ᵣ c 
  b<c-b⇒a+b<c a b c p = subst (_ <ᵣ_)
    L𝐑.lem--05 
@@ -1141,6 +1153,12 @@ opaque
            ∙ cong rat (cong (ℚ._· ℚ.sign r) (sym (ℚ.abs'≡abs r))
             ∙ ℚ.sign·abs r) ) r
 
+
+ ·sign-flip≡ : ∀ r 0＃r → absᵣ r ≡ r ·ᵣ (signᵣ r 0＃r)
+ ·sign-flip≡ r 0＃r = 
+  (sym (𝐑'.·IdR' _ _ (sign²=1 r 0＃r)) ∙ ·ᵣAssoc _ _ _)
+  ∙ cong (_·ᵣ (signᵣ r 0＃r)) (sign·absᵣ r 0＃r) 
+ 
 -- HoTT Theorem (11.3.47)
 
 opaque
@@ -1284,11 +1302,26 @@ x/y≡z→x≡z·y : ∀ x q r → (0＃r : 0 ＃ r)
 x/y≡z→x≡z·y x q r 0＃r p =
     sym ([x/y]·yᵣ _ _ _) ∙ cong (_·ᵣ r) p
 
+x/₊y≡z→x≡z·y : ∀ x q r 
+               → (x ／ᵣ₊ r) ≡ q
+               → x ≡ q ·ᵣ (fst r)
+x/₊y≡z→x≡z·y x q r p =
+    sym ([x/₊y]·yᵣ _ _) ∙ cong (_·ᵣ fst r) p
+
+
 x·y≡z→x≡z/y : ∀ x q r → (0＃r : 0 ＃ r)
                → (x ·ᵣ r) ≡ q
                → x ≡ q ／ᵣ[ r , 0＃r ]
 x·y≡z→x≡z/y x q r 0＃r p =
     sym ([x·y]/yᵣ _ _ _) ∙ cong (_／ᵣ[ r , 0＃r ]) p
+
+
+
+x·y≡z→x≡z/₊y : ∀ x q r 
+               → (x ·ᵣ fst r) ≡ q
+               → x ≡ q ／ᵣ₊ r
+x·y≡z→x≡z/₊y x q r  p =
+    sym ([x·yᵣ]/₊y _ _) ∙ cong (_／ᵣ₊ r) p
 
 
 x·rat[α]+x·rat[β]=x : ∀ x →
@@ -1460,6 +1493,15 @@ _₊／ᵣ₊_ : ℝ₊ → ℝ₊  → ℝ₊
     (·ᵣComm _ _) (·ᵣComm _ _) (<ᵣ-·ᵣo m n (o , 0<o) p)
 
 
+absᵣ-triangle-minus : (x y : ℝ) → absᵣ x -ᵣ absᵣ y ≤ᵣ absᵣ (x -ᵣ y)
+absᵣ-triangle-minus x y =
+  isTrans≡≤ᵣ _ _ _ (cong (_-ᵣ _) (cong absᵣ (sym (L𝐑.lem--05))))
+   (a≤c+b⇒a-c≤b _ _ _ (absᵣ-triangle y (x -ᵣ y)))
+
+absᵣ-triangle' : (x y : ℝ) → absᵣ x  ≤ᵣ absᵣ (x -ᵣ y) +ᵣ absᵣ y
+absᵣ-triangle' x y =
+   isTrans≡≤ᵣ _ _ _ (cong absᵣ (sym (L𝐑.lem--00))) (absᵣ-triangle (x -ᵣ y) y)
+  
 
 opaque
  unfolding _<ᵣ_
@@ -1837,3 +1879,99 @@ opaque
 ≤Weaken<+ᵣ x y z x≤y =
   isTrans≡<ᵣ _ _ _ (sym (+IdR _))
    (≤<ᵣMonotone+ᵣ x y 0 (fst z) x≤y (snd z))
+
+
+
+clam∈ℚintervalℙ : ∀ a b → (a ℚ.≤ b) → ∀ x →
+  ℚ.clamp a b x ∈ ℚintervalℙ a b 
+clam∈ℚintervalℙ a b a≤b x = ℚ.≤clamp _ _ _ a≤b , (ℚ.clamp≤ _ _ _)
+
+∈ℚintervalℙ→clam≡ : ∀ a b → ∀ x →
+    x ∈ ℚintervalℙ a b → x ≡ ℚ.clamp a b x
+∈ℚintervalℙ→clam≡ a b x = sym ∘ uncurry (ℚ.inClamps a b x)
+ 
+∈ℚintervalℙ→clampᵣ≡ : ∀ a b → ∀ x →
+    x ∈ intervalℙ a b → x ≡ clampᵣ a b x
+∈ℚintervalℙ→clampᵣ≡ a b x (a≤x , x≤b) =
+ sym (≤→minᵣ _ _ x≤b)  ∙ cong (λ y → minᵣ y b) (sym (≤ᵣ→≡ a≤x))
+
+
+clamp-contained-agree : ∀ (a b a' b' x : ℚ)
+  → a ℚ.≤ a'
+  → b' ℚ.≤ b
+  → x ∈ ℚintervalℙ a' b'
+  → ℚ.clamp a b x ≡ ℚ.clamp a' b' x
+clamp-contained-agree a b a' b' x a≤a' b'≤b x∈ =
+  sym (∈ℚintervalℙ→clam≡ a b x
+   ((ℚ.isTrans≤ _ _ _ a≤a' (fst x∈)) ,
+    (ℚ.isTrans≤ _ _ _ (snd x∈) b'≤b))) ∙ ∈ℚintervalℙ→clam≡ a' b' x x∈
+  
+
+
+clampᵣ∈ℚintervalℙ : ∀ a b → (a ≤ᵣ b) → ∀ x →
+  clampᵣ a b x ∈ intervalℙ a b 
+clampᵣ∈ℚintervalℙ a b a≤b x =
+        ≤clampᵣ _ _ _ a≤b , min≤ᵣ' (maxᵣ a x) b
+
+≡clampᵣ→∈intervalℙ : ∀ a b → (a ≤ᵣ b) → ∀ x →
+  x ≡ clampᵣ a b x → x ∈ intervalℙ a b 
+≡clampᵣ→∈intervalℙ a b a≤b x p =
+        subst-∈ (intervalℙ a b ) (sym p) (clampᵣ∈ℚintervalℙ a b a≤b x)
+
+
+∈ℚintervalℙ→∈intervalℙ : ∀ a b x → x ∈ ℚintervalℙ a b
+                                 → rat x ∈ intervalℙ (rat a) (rat b)
+∈ℚintervalℙ→∈intervalℙ a b x (a≤x , x≤b) = ≤ℚ→≤ᵣ _ _ a≤x , ≤ℚ→≤ᵣ _ _ x≤b
+
+∈intervalℙ→∈ℚintervalℙ : ∀ a b x → rat x ∈ intervalℙ (rat a) (rat b)
+                                 → x ∈ ℚintervalℙ a b
+∈intervalℙ→∈ℚintervalℙ a b x (a≤x , x≤b) = ≤ᵣ→≤ℚ _ _ a≤x , ≤ᵣ→≤ℚ _ _ x≤b
+
+x≤→clampᵣ≡ : ∀ a b x → a ≤ᵣ b  → x ≤ᵣ a →  clampᵣ a b x ≡ a
+x≤→clampᵣ≡ a b x a≤b x≤a = (≤→minᵣ _ _
+ (isTrans≡≤ᵣ _ _ _ ((maxᵣComm _ _) ∙ (≤→maxᵣ _ _ x≤a)) a≤b) ∙ maxᵣComm _ _)
+ ∙ ≤→maxᵣ _ _ x≤a
+
+≤x→clampᵣ≡ : ∀ a b x → a ≤ᵣ b → b ≤ᵣ x →  clampᵣ a b x ≡ b
+≤x→clampᵣ≡ a b x a≤b b≤x =
+  cong (flip minᵣ b)
+    (≤→maxᵣ _ _ (isTrans≤ᵣ _ _ _ a≤b b≤x))
+   ∙ minᵣComm _ _ ∙ ≤→minᵣ _ _ b≤x
+
+
+min-monotone-≤ᵣ : ∀ a → ∀ x y  → x ≤ᵣ y →
+                       minᵣ x a ≤ᵣ minᵣ y a
+min-monotone-≤ᵣ a x y x≤y =
+ ≤min-lem _ _ _ (isTrans≤ᵣ _ _ _ (min≤ᵣ _ _) x≤y)
+  (isTrans≡≤ᵣ _ _ _ (minᵣComm _ _) (min≤ᵣ _ _) )
+
+max-monotone-≤ᵣ : ∀ a → ∀ x y  → x ≤ᵣ y →
+                       maxᵣ a x ≤ᵣ maxᵣ a y
+max-monotone-≤ᵣ a x y x≤y =
+ max≤-lem _ _ _
+   (≤maxᵣ _ _)
+   (isTrans≤ᵣ _ _ _ x≤y
+    (isTrans≤≡ᵣ _ _ _
+      (≤maxᵣ _ _)
+      (maxᵣComm _ _)))
+
+clamp-monotone-≤ᵣ : ∀ a b x y  → x ≤ᵣ y →
+                       clampᵣ a b x ≤ᵣ clampᵣ a b y
+clamp-monotone-≤ᵣ a b x y x≤y =
+  min-monotone-≤ᵣ b _ _ (max-monotone-≤ᵣ a _ _ x≤y)
+
+opaque
+ unfolding _+ᵣ_
+ clampDistᵣ' : ∀ L L' x y →
+     absᵣ (clampᵣ (rat L) (rat L') y -ᵣ clampᵣ (rat L) (rat L') x) ≤ᵣ absᵣ (y -ᵣ x)
+ clampDistᵣ' L L' = ≤Cont₂
+           (cont∘₂ IsContinuousAbsᵣ
+             (contNE₂∘ sumR ((λ _ → IsContinuousClamp (rat L) (rat L')) , λ _ → IsContinuousConst _)
+               ((λ _ → IsContinuousConst _) , λ _ → IsContinuous∘ _ _ IsContinuous-ᵣ (IsContinuousClamp (rat L) (rat L')))))
+           (cont∘₂ IsContinuousAbsᵣ
+              (contNE₂∘ sumR ((λ _ → IsContinuousId) , λ _ → IsContinuousConst _)
+               ((λ _ → IsContinuousConst _) , λ _ → IsContinuous-ᵣ )))
+           λ u u' →
+              subst2 _≤ᵣ_ (sym (absᵣ-rat _) ∙ cong absᵣ (sym (-ᵣ-rat₂ _ _)))
+                ( sym (absᵣ-rat _) ∙ cong absᵣ (sym (-ᵣ-rat₂ _ _)))
+                (≤ℚ→≤ᵣ _ _ (ℚ.clampDist L L' u u'))

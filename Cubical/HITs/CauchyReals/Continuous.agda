@@ -658,7 +658,6 @@ IsContinuousClamp a b =
    (IsContinuousMinR _)
    (IsContinuousMaxL _)
 
-
 IsContinuous-ᵣ : IsContinuous (-ᵣ_)
 IsContinuous-ᵣ = Lipschitz→IsContinuous _ _ -ᵣ-lip
 
@@ -1039,6 +1038,14 @@ IsContinuous₂ : (ℝ → ℝ → ℝ) → Type
 IsContinuous₂ f =
  (∀ x → IsContinuous (f x)) × (∀ x → IsContinuous (flip f x))
 
+cont₂-fst : IsContinuous₂ (λ x _ → x)
+cont₂-fst = (λ _ → IsContinuousConst _) , (λ _ → IsContinuousId)
+
+cont₂-snd : IsContinuous₂ (λ _ x → x)
+cont₂-snd = (λ _ → IsContinuousId) , (λ _ → IsContinuousConst _)
+
+cont₂-id : ∀ x → IsContinuous₂ (λ _ _ → x)
+cont₂-id _ = (λ _ → IsContinuousConst _) , (λ _ → IsContinuousConst _)
 
 ≡Cont₂ : {f₀ f₁ : ℝ → ℝ → ℝ}
          → IsContinuous₂ f₀
@@ -1049,6 +1056,7 @@ IsContinuous₂ f =
   ≡Continuous _ _ (f₀C x) (f₁C x)
     (λ q → ≡Continuous _ _ (f₀C' (rat q)) (f₁C' (rat q))
        (λ r → p r q) x)
+
 
 
 contNE₂∘ : ∀ {h} → (ne : NonExpanding₂ h)
@@ -1085,6 +1093,34 @@ contNE₂ ne =
   contNE₂∘ ne
    ((λ _ → IsContinuousConst _) , (λ _ → IsContinuousId))
    ((λ _ → IsContinuousId) , (λ _ → IsContinuousConst _))
+
+
+
+IsContinuousClamp₂ : ∀ x → IsContinuous₂ λ a b → clampᵣ a b x 
+IsContinuousClamp₂ x = (λ _ → IsContinuousMinL _) ,
+   λ _ → IsContinuous∘ _ _ (IsContinuousMinR _) (IsContinuousMaxR _)
+
+IsContinuousClamp₂∘ : ∀ {f₀} {f₁} x → IsContinuous₂ f₀ → IsContinuous₂ f₁ →
+         IsContinuous₂ λ a b → clampᵣ (f₀ a b) (f₁ a b) x
+IsContinuousClamp₂∘ x =
+  contNE₂∘ minR ∘ 
+    (flip (contNE₂∘ maxR) ((λ _ → IsContinuousConst _) , (λ _ → IsContinuousConst _)))
+
+IsContinuousClamp₂∘' : ∀ {f₀} {f₁} {f₂} →
+         IsContinuous₂ f₀ → IsContinuous₂ f₁ → IsContinuous₂ f₂ →
+         IsContinuous₂ λ a b → clampᵣ (f₀ a b) (f₁ a b) (f₂ a b)
+IsContinuousClamp₂∘' f₀C f₁C f₂C =
+  contNE₂∘ minR (contNE₂∘ maxR f₀C f₂C) f₁C
+  
+
+opaque
+ unfolding _+ᵣ_
+ IsContinuous-₂∘ : ∀ {f₀} {f₁} → IsContinuous₂ f₀ → IsContinuous₂ f₁ →
+      IsContinuous₂ λ a b → (f₀ a b) -ᵣ (f₁ a b)
+ IsContinuous-₂∘ f₀C f₁C =
+  contNE₂∘ sumR f₀C
+    (cont∘₂ IsContinuous-ᵣ f₁C)
+
 
 
 

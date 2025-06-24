@@ -703,6 +703,11 @@ opaque
              (IsContinuous∘ _ _ IsContinuousSqᵣ fC)
              ((IsContinuous∘ _ _ IsContinuousSqᵣ gC)))))
 
+cont₂·₂ᵣ : ∀ {f₀ f₁} → (IsContinuous₂ f₀) → (IsContinuous₂ f₁)
+  → IsContinuous₂ (λ x x' → f₀ x x' ·ᵣ f₁ x x')
+cont₂·₂ᵣ {f₀} {f₁} f₀C f₁C =
+  (λ x → cont₂·ᵣ _ _ (fst f₀C x) (fst f₁C x)) ,
+  λ x → cont₂·ᵣ _ _ (snd f₀C x) (snd f₁C x)
 
 IsContinuous·ᵣL : ∀ x → IsContinuous (x ·ᵣ_)
 IsContinuous·ᵣL x = subst IsContinuous

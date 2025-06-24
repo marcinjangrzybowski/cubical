@@ -149,7 +149,8 @@ maxᵣ = NonExpanding₂.go maxR
 clampᵣ : ℝ → ℝ → ℝ → ℝ
 clampᵣ d u x = minᵣ (maxᵣ d x) u
 
-
+clampᵣ-rat : ∀ a b x → clampᵣ (rat a) (rat b) (rat x) ≡ rat (ℚ.clamp a b x) 
+clampᵣ-rat a b x = refl
 
 Lipschitz-ℝ→ℝ-1→NonExpanding : ∀ f
   → Lipschitz-ℝ→ℝ 1 f → ⟨ NonExpandingₚ f ⟩
@@ -757,3 +758,22 @@ intervalℙ a b x = ((a ≤ᵣ x) × (x ≤ᵣ b)) ,
 ointervalℙ : ℝ → ℝ → ℙ ℝ 
 ointervalℙ a b x = ((a <ᵣ x) × (x <ᵣ b)) ,
   isProp× (isProp<ᵣ _ _ )  (isProp<ᵣ _ _ )
+
+
+pred< : ℝ → ℙ ℝ
+pred< x y = (y <ᵣ x) , isProp<ᵣ _ _
+
+pred≤ : ℝ → ℙ ℝ
+pred≤ x y = (y ≤ᵣ x) , isProp≤ᵣ _ _
+
+pred≥ : ℝ → ℙ ℝ
+pred≥ x y = (x ≤ᵣ y) , isProp≤ᵣ _ _
+
+pred> : ℝ → ℙ ℝ
+pred> x y = (x <ᵣ y) , isProp<ᵣ _ _
+
+pred≤< : ℝ → ℝ → ℙ ℝ
+pred≤< a b x = ((a ≤ᵣ x) × (x <ᵣ b)) , isProp× (isProp≤ᵣ _ _) (isProp<ᵣ _ _)
+
+pred<≤ : ℝ → ℝ → ℙ ℝ
+pred<≤ a b x = ((a <ᵣ x) × (x ≤ᵣ b)) , isProp× (isProp<ᵣ _ _) (isProp≤ᵣ _ _)

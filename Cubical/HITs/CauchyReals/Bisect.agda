@@ -42,6 +42,7 @@ open import Cubical.HITs.CauchyReals.Inverse
 open import Cubical.HITs.CauchyReals.Sequence
 
 
+
 <^n : ∀ N n → N ℕ.< n →
         ([ 1 / 2 ] ℚ^ⁿ n) ℚ.< ([ 1 / 2 ] ℚ^ⁿ N)
 <^n N zero x = ⊥.rec (ℕ.¬-<-zero x)
@@ -58,12 +59,6 @@ open import Cubical.HITs.CauchyReals.Sequence
    (<^n N n (ℕ.predℕ-≤-predℕ x))
 
 
-
-Lipschitz-ℚ→ℝℙ : ℚ₊ → (P : ℙ ℝ) → (∀ x → rat x ∈ P  → ℝ) → Type
-Lipschitz-ℚ→ℝℙ L P f =
-  (∀ q q∈ r r∈ → (ε : ℚ₊) →
-    ℚ.abs (q ℚ.- r) ℚ.< (fst ε) → absᵣ (f q q∈ -ᵣ f r r∈)
-     <ᵣ rat (fst (L ℚ₊· ε  )))
 
 Lipschitz-ℚ→ℝℙ< : ℚ₊ → (P : ℙ ℝ) → (∀ x → rat x ∈ P  → ℝ) → Type
 Lipschitz-ℚ→ℝℙ< L P f = ∀ q q∈ r r∈ → r ℚ.< q →
@@ -234,51 +229,6 @@ ointervalℙ⊆intervalℙ a b x (<x  , x<) = <ᵣWeaken≤ᵣ _ _ <x , <ᵣWeak
 openIintervalℙ : ∀ a b → ⟨ openPred (ointervalℙ a b)  ⟩
 openIintervalℙ a b = ∩-openPred _ _ (openPred< a) (openPred> b) 
 
-clam∈ℚintervalℙ : ∀ a b → (a ℚ.≤ b) → ∀ x →
-  ℚ.clamp a b x ∈ ℚintervalℙ a b 
-clam∈ℚintervalℙ a b a≤b x = ℚ.≤clamp _ _ _ a≤b , (ℚ.clamp≤ _ _ _)
-
-∈ℚintervalℙ→clam≡ : ∀ a b → ∀ x →
-    x ∈ ℚintervalℙ a b → x ≡ ℚ.clamp a b x
-∈ℚintervalℙ→clam≡ a b x = sym ∘ uncurry (ℚ.inClamps a b x)
- 
-∈ℚintervalℙ→clampᵣ≡ : ∀ a b → ∀ x →
-    x ∈ intervalℙ a b → x ≡ clampᵣ a b x
-∈ℚintervalℙ→clampᵣ≡ a b x (a≤x , x≤b) =
- sym (≤→minᵣ _ _ x≤b)  ∙ cong (λ y → minᵣ y b) (sym (≤ᵣ→≡ a≤x))
-
-
-clamp-contained-agree : ∀ (a b a' b' x : ℚ)
-  → a ℚ.≤ a'
-  → b' ℚ.≤ b
-  → x ∈ ℚintervalℙ a' b'
-  → ℚ.clamp a b x ≡ ℚ.clamp a' b' x
-clamp-contained-agree a b a' b' x a≤a' b'≤b x∈ =
-  sym (∈ℚintervalℙ→clam≡ a b x
-   ((ℚ.isTrans≤ _ _ _ a≤a' (fst x∈)) ,
-    (ℚ.isTrans≤ _ _ _ (snd x∈) b'≤b))) ∙ ∈ℚintervalℙ→clam≡ a' b' x x∈
-  
-
-
-clampᵣ∈ℚintervalℙ : ∀ a b → (a ≤ᵣ b) → ∀ x →
-  clampᵣ a b x ∈ intervalℙ a b 
-clampᵣ∈ℚintervalℙ a b a≤b x =
-        ≤clampᵣ _ _ _ a≤b , min≤ᵣ' (maxᵣ a x) b
-
-≡clampᵣ→∈intervalℙ : ∀ a b → (a ≤ᵣ b) → ∀ x →
-  x ≡ clampᵣ a b x → x ∈ intervalℙ a b 
-≡clampᵣ→∈intervalℙ a b a≤b x p =
-        subst-∈ (intervalℙ a b ) (sym p) (clampᵣ∈ℚintervalℙ a b a≤b x)
-
-
-∈ℚintervalℙ→∈intervalℙ : ∀ a b x → x ∈ ℚintervalℙ a b
-                                 → rat x ∈ intervalℙ (rat a) (rat b)
-∈ℚintervalℙ→∈intervalℙ a b x (a≤x , x≤b) = ≤ℚ→≤ᵣ _ _ a≤x , ≤ℚ→≤ᵣ _ _ x≤b
-
-∈intervalℙ→∈ℚintervalℙ : ∀ a b x → rat x ∈ intervalℙ (rat a) (rat b)
-                                 → x ∈ ℚintervalℙ a b
-∈intervalℙ→∈ℚintervalℙ a b x (a≤x , x≤b) = ≤ᵣ→≤ℚ _ _ a≤x , ≤ᵣ→≤ℚ _ _ x≤b
-
 
 isIncrasingℙ : (P : ℙ ℚ) → (∀ x → x ∈ P → ℚ) → Type₀
 isIncrasingℙ P f = ∀ x x∈ y y∈ → x ℚ.< y → f x x∈ ℚ.< f y y∈
@@ -385,29 +335,6 @@ cont-f∈ f fc a b a≤b a' b' a'≤b' X = elimInClampsᵣ (rat a) (rat b)
                  ∘S ∈ℚintervalℙ→∈intervalℙ a b r  )
          ) _)
 
-
-extend-Lipshitzℚ→ℝ : ∀ L →  ∀ a b → (a ℚ.≤ b) → ∀ f →  
-        Lipschitz-ℚ→ℝℙ L (intervalℙ (rat a) (rat b)) f →
-        Σ[ f' ∈ (ℚ → ℝ) ]
-          (Lipschitz-ℚ→ℝ L f' × (∀ x x∈ → f' x ≡ f x x∈ ))
-        
-extend-Lipshitzℚ→ℝ L a b a≤b f li =
- (λ x → f (ℚ.clamp a b x) (∈ℚintervalℙ→∈intervalℙ _ _ _
-  (clam∈ℚintervalℙ a b a≤b x))) ,
-   w , (λ x x∈ → cong (uncurry f)
-    (Σ≡Prop (∈-isProp (intervalℙ (rat a) (rat b) ∘ rat))
-    (ℚ.inClamps a b x (≤ᵣ→≤ℚ _ _ (fst x∈)) (≤ᵣ→≤ℚ _ _ (snd x∈)) )))
-
- where
- w : Lipschitz-ℚ→ℝ L
-       (λ x →
-          f (ℚ.clamp a b x)
-          (∈ℚintervalℙ→∈intervalℙ a b (ℚ.clamp a b x)
-           (clam∈ℚintervalℙ a b a≤b x)))
- w q r ε u v = invEq (∼≃abs<ε _ _ _)
-  (li _ _
-   _ _ ε (ℚ.isTrans≤< _ _ _
-    (ℚ.clampDist _ _ _ _) (ℚ.absFrom<×< (fst ε) (q ℚ.- r) u v))) 
 
 
 -- pre-^ⁿ-Monotone⁻¹ : ∀ {x y : ℝ} (n : ℕ) 
@@ -598,7 +525,7 @@ extend-Bilipshitz L K 1/K≤L a b a≤b f monF li il =
              (rat ((ℚ.abs' ((f q+Δ' _) ℚ.- (f q' _)))
                ℚ.+ (fst L ℚ.· (fst Δ ℚ.- (q+Δ' ℚ.- q'))))) _
               (≤ℚ→≤ᵣ _ _ zz )
-               (isTrans≡<ᵣ _ _ _ (cong (_+ᵣ rat (fst L ℚ.· (fst Δ ℚ.- (q+Δ' ℚ.- q'))))
+               (isTrans≡<ᵣ _ _ _ (sym (+ᵣ-rat _ _) ∙ cong (_+ᵣ rat (fst L ℚ.· (fst Δ ℚ.- (q+Δ' ℚ.- q'))))
                  (sym (absᵣ-rat' _) ∙ cong absᵣ (sym (-ᵣ-rat₂ _ _)))) h')) -- 
   where
     Δ<ε : fst Δ ℚ.< fst ε
@@ -658,7 +585,7 @@ extend-Bilipshitz L K 1/K≤L a b a≤b f monF li il =
                    )
                    ((cong rat (ℚ.·DistL+ (fst L) (fst ε)
                   (ℚ.- (fst Δ ℚ.- (q+Δ' ℚ.- q')))) ∙
-                 cong (rat (fst L ℚ.· fst ε) +ᵣ_)
+                 sym (+ᵣ-rat _ _) ∙ cong (rat (fst L ℚ.· fst ε) +ᵣ_)
                   (cong rat (sym lem--070) ∙ sym (-ᵣ-rat _))))
                
                   )
@@ -765,15 +692,6 @@ extend-Bilipshitz L K 1/K≤L a b a≤b f monF li il =
      subst2 (_<ᵣ_) L𝐑.lem--04 L𝐑.lem--04
      (<ᵣ-o+ _ _ (-ᵣ o) p)
 
-absᵣ-triangle-minus : (x y : ℝ) → absᵣ x -ᵣ absᵣ y ≤ᵣ absᵣ (x -ᵣ y)
-absᵣ-triangle-minus x y =
-  isTrans≡≤ᵣ _ _ _ (cong (_-ᵣ _) (cong absᵣ (sym (L𝐑.lem--05))))
-   (a≤c+b⇒a-c≤b _ _ _ (absᵣ-triangle y (x -ᵣ y)))
-
-absᵣ-triangle' : (x y : ℝ) → absᵣ x  ≤ᵣ absᵣ (x -ᵣ y) +ᵣ absᵣ y
-absᵣ-triangle' x y =
-   isTrans≡≤ᵣ _ _ _ (cong absᵣ (sym (L𝐑.lem--00))) (absᵣ-triangle (x -ᵣ y) y)
-  
 
 fromLip-Invlipschitz-ℚ→ℚ' : ∀ L K f
            → (l : Lipschitz-ℚ→ℝ L (rat ∘ f))
@@ -846,7 +764,13 @@ fromLip-Invlipschitz-ℚ→ℚ' L K f l il u v ε <ε =
                          fst K ℚ.· ((fst δ ℚ.+ fst δ) ℚ.+ ε')
                    z = il u' v' ((δ ℚ.ℚ₊+ δ) ℚ.ℚ₊+ ε'₊) (<ᵣ→<ℚ (ℚ.abs' ((f u') ℚ.+ (ℚ.- f v')))
                       _
-                     (isTrans≡<ᵣ _ _ _ (sym (absᵣ-rat' _) ∙ cong absᵣ (sym (-ᵣ-rat₂ _ _))) z<)) -- z<
+                     (isTrans≡<ᵣ _ _ _ (sym (absᵣ-rat' _) ∙ cong absᵣ (sym (-ᵣ-rat₂ _ _)))
+                      (isTrans<≡ᵣ _ _ _ z<
+                        (cong (_+ᵣ rat ε')
+                          (+ᵣ-rat _ _)
+                         ∙ +ᵣ-rat _ _))) 
+                     )
+                     -- z<
                    zz : absᵣ (u +ᵣ -ᵣ v -ᵣ (rat u' -ᵣ rat v'))
                           ≤ᵣ (rat ((fst K ℚ.· fst δ)
                                ℚ.+ (fst K ℚ.· fst δ)))
@@ -854,22 +778,26 @@ fromLip-Invlipschitz-ℚ→ℚ' L K f l il u v ε <ε =
                           (isTrans≡≤ᵣ _ _ _
                             (cong absᵣ (L𝐑.lem--067 {u} {v} {rat u'} {rat v'} ))
                              (absᵣ-triangle _ _))
-                          (≤ᵣMonotone+ᵣ _ _ _ _
+                             (isTrans≤≡ᵣ _ _ _
+                              (≤ᵣMonotone+ᵣ _ _ _ _
                             (isTrans≤ᵣ _ _ _
                               (isTrans≡≤ᵣ _ _ _ (minusComm-absᵣ _ _)
                                  (<ᵣWeaken≤ᵣ _ _ ∣'u-u∣<δ/L⊔K)) δ/L⊔K≤K·δ)
                             (isTrans≤ᵣ _ _ _
-                              (<ᵣWeaken≤ᵣ _ _ ∣'v-v∣<δ/L⊔K) δ/L⊔K≤K·δ)) 
+                              (<ᵣWeaken≤ᵣ _ _ ∣'v-v∣<δ/L⊔K) δ/L⊔K≤K·δ))
+                              (+ᵣ-rat _ _))
+                           
                in invEq (∼≃abs<ε _ _ _)
                     (isTrans<≡ᵣ _ (rat ((((fst K ℚ.· fst δ)
                                ℚ.+ (fst K ℚ.· fst δ)))
                                       ℚ.+ (fst K ℚ.· ((fst δ ℚ.+ fst δ) ℚ.+ ε')))) _
                       (isTrans≤<ᵣ _ _ _
                         ((absᵣ-triangle' (u +ᵣ -ᵣ v) ((rat u' -ᵣ (rat v')))))
-                        (≤<ᵣMonotone+ᵣ _ (rat ((fst K ℚ.· fst δ)
+                        (isTrans<≡ᵣ _ _ _ (≤<ᵣMonotone+ᵣ _ (rat ((fst K ℚ.· fst δ)
                                ℚ.+ (fst K ℚ.· fst δ)))
                              _ _ zz (isTrans≡<ᵣ _ _ _
-                              (cong absᵣ (-ᵣ-rat₂ _ _) ∙  (absᵣ-rat' _)) (<ℚ→<ᵣ _ _ z)) ))
+                              (cong absᵣ (-ᵣ-rat₂ _ _) ∙  (absᵣ-rat' _)) (<ℚ→<ᵣ _ _ z)))
+                              (+ᵣ-rat _ _)))
                       (cong rat
                         (cong (ℚ._+ (fst K ℚ.· ((fst δ ℚ.+ fst δ) ℚ.+ ε')))
                             (sym (ℚ.·DistL+ _ _ _)) ∙

@@ -44,6 +44,54 @@ IsUContinuous f =
   ∀ (ε : ℚ₊) → Σ[ δ ∈ ℚ₊ ]
      (∀ u v → u ∼[ δ ] v → f u ∼[ ε ] f v)
 
+IsUContinuous→IsContinuous : ∀ f → IsUContinuous f → IsContinuous f
+IsUContinuous→IsContinuous f fc u ε =
+  ∣ map-snd (_$ u) (fc ε) ∣₁
+
+
+IsUContinuous∘ : ∀ {f g} → IsUContinuous f → IsUContinuous g →
+  IsUContinuous (f ∘ g) 
+IsUContinuous∘ cF cG ε =
+  let (η , X) = cF ε ; (δ , Y) = cG η
+  in _ , λ _ _ → X _ _ ∘ Y _ _
+
+interpℝ : ℝ → ℝ → ℝ → ℝ
+interpℝ a b t = a +ᵣ t ·ᵣ (b -ᵣ a)
+
+IsUContinuous+ᵣL : ∀ x → IsUContinuous (x +ᵣ_)
+IsUContinuous+ᵣL x ε = ε , λ u v u∼v →
+  subst2 (_∼[ ε ]_) (+ᵣComm _ _) (+ᵣComm _ _) $ +ᵣ-∼ u v x ε u∼v
+
+
+·ᵣ-∼ : ∀ u v r r' ε 
+    → absᵣ r ≤ᵣ rat (fst r')
+    → u ∼[ ε ℚ₊· invℚ₊ r' ] v
+    → (u ·ᵣ r) ∼[ ε ] (v ·ᵣ r)
+·ᵣ-∼ u v r r' ε abs-r≤ᵣr' u∼v =
+ invEq (∼≃abs<ε _ _ _)
+   (isTrans≤<ᵣ _ _ _
+     (isTrans≡≤ᵣ _ _ _
+       (cong absᵣ (sym (𝐑'.·DistL- _ _ _) ∙ ·ᵣComm _ _)
+        ∙ ·absᵣ _ _)
+       (≤ᵣ-·ᵣo _ _ (absᵣ (u +ᵣ -ᵣ v)) (0≤absᵣ _) abs-r≤ᵣr'))
+     (isTrans<≡ᵣ _ _ _
+    (<ᵣ-o·ᵣ _ _ (ℚ₊→ℝ₊ r')  (fst (∼≃abs<ε _ _ _) u∼v))
+    (sym (rat·ᵣrat _ _) ∙ cong rat (cong ((fst r') ℚ.·_) (ℚ.·Comm (fst ε) _)
+     ∙ ℚ.y·[x/y] r' (fst ε) ))))
+
+
+
+IsUContinuous·ᵣR : ∀ x → ∥ IsUContinuous (_·ᵣ x) ∥₁
+IsUContinuous·ᵣR x =
+  PT.map
+    (λ (x' , (absᵣx<x' , _)) ε →
+      ε ℚ₊· invℚ₊ (x' , ℚ.<→0< x'
+       (<ᵣ→<ℚ 0 x' (isTrans≤<ᵣ 0 (absᵣ x) _ (0≤absᵣ _) absᵣx<x'))) ,
+       λ _ _ → ·ᵣ-∼ _ _ _ _ ε (<ᵣWeaken≤ᵣ _ _ absᵣx<x') )
+    (denseℚinℝ (absᵣ x) ((absᵣ x) +ᵣ 1)
+       (isTrans≡<ᵣ _ _ _
+         (sym (+IdR _)) (<ᵣ-o+ 0 1 (absᵣ x) decℚ<ᵣ?)))
+
 IsUContinuous-εᵣ : ∀ f → IsUContinuous f →
    ∀ (ε : ℝ₊) → ∃[ δ ∈ ℚ₊ ]
      (∀ u v → u ∼[ δ ] v → absᵣ (f u -ᵣ f v) <ᵣ fst ε)
@@ -411,6 +459,13 @@ opaque
 ＃ℙ : ℝ → ℙ ℝ
 ＃ℙ r x = r ＃ x , isProp＃ r x
 
+
+uDerivativeOfℙ_,_is_ : (P : ℙ ℝ) → (∀ r → r ∈ P → ℝ)
+                                    → (∀ r → r ∈ P → ℝ) → Type
+uDerivativeOfℙ P , f is f' =
+  ∀ (ε : ℚ₊) → ∃[ δ ∈ ℚ₊ ]
+   (∀ x x∈ h h∈ 0＃h → absᵣ h <ᵣ rat (fst δ)
+    → absᵣ (f' x x∈ -ᵣ differenceAtℙ P f x h 0＃h x∈ h∈) <ᵣ rat (fst ε))
 
 IsContinuousWithPred-differenceAt : ∀ x f → IsContinuous f
    → IsContinuousWithPred (＃ℙ 0) (differenceAt f x)
