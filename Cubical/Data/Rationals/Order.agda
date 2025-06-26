@@ -30,6 +30,8 @@ open import Cubical.Relation.Binary.Base
 
 infix 4 _≤_ _<_ _≥_ _>_
 
+
+
 private
   ·CommR : (a b c : ℤ) → a ℤ.· b ℤ.· c ≡ a ℤ.· c ℤ.· b
   ·CommR a b c = sym (ℤ.·Assoc a b c) ∙ cong (a ℤ.·_) (ℤ.·Comm b c) ∙ ℤ.·Assoc a c b
@@ -166,6 +168,19 @@ data Trichotomy (m n : ℚ) : Type₀ where
   eq : m ≡ n → Trichotomy m n
   gt : m > n → Trichotomy m n
 
+record TrichotomyRec {ℓ : Level} (n : ℚ) (P : ℚ → Type ℓ) : Type ℓ where
+  no-eta-equality
+  field
+    lt-case : ∀ m → (p : m < n) → P m
+    eq-case : P n
+    gt-case : ∀ m → (p : m > n) → P m
+
+  go : ∀ m → (t : Trichotomy m n) → P m
+  go m (lt p) = lt-case m p
+  go m (eq p) = subst P (sym p) eq-case
+  go m (gt p) = gt-case m p
+
+
 module _ where
   open BinaryRelation
 
@@ -218,8 +233,8 @@ module _ where
   isAsym< : isAsym _<_
   isAsym< = isIrrefl×isTrans→isAsym _<_ (isIrrefl< , isTrans<)
 
-  isStronglyConnected≤ : isStronglyConnected _≤_
-  isStronglyConnected≤ =
+  isTotal≤ : isTotal _≤_
+  isTotal≤ =
     elimProp2 {P = λ a b → (a ≤ b) ⊔′ (b ≤ a)}
               (λ _ _ → isPropPropTrunc)
                λ a b → ∣ lem a b ∣₁
@@ -232,12 +247,34 @@ module _ where
 
   isConnected< : isConnected _<_
   isConnected< =
-    elimProp2 {P = λ a b → ¬ a ≡ b → (a < b) ⊔′ (b < a)}
-              (λ _ _ → isProp→ isPropPropTrunc)
-               λ a b ¬a≡b → ∣ lem a b ¬a≡b ∣₁
+    elimProp2 {P = λ a b → (¬ a < b) × (¬ b < a) → a ≡ b}
+              (λ a b → isProp→ (isSetℚ a b))
+               lem
     where
-      -- Agda can't infer the relation involved, so the signature looks a bit weird here
-      lem : (a b : ℤ.ℤ × ℕ₊₁) → ¬ [_] {R = _∼_} a ≡ [ b ] → ([ a ] < [ b ]) ⊎ ([ b ] < [ a ])
+      lem : (a b : ℤ.ℤ × ℕ₊₁) → (¬ [ a ] < [ b ]) × (¬ [ b ] < [ a ]) → [ a ] ≡ [ b ]
+      lem (a , b) (c , d) (¬ad<cb , ¬cb<ad) with (a ℤ.· ℕ₊₁→ℤ d) ℤ.≟ (c ℤ.· ℕ₊₁→ℤ b)
+      ... | ℤ.lt ad<cb = ⊥.rec (¬ad<cb ad<cb)
+      ... | ℤ.eq ad≡cb = eq/ (a , b) (c , d) ad≡cb
+      ... | ℤ.gt cb<ad = ⊥.rec (¬cb<ad cb<ad)
+
+  isProp# : isPropValued _#_
+  isProp# x y = isProp⊎ (isProp< x y) (isProp< y x) (isAsym< x y)
+
+  isIrrefl# : isIrrefl _#_
+  isIrrefl# x (inl x<x) = isIrrefl< x x<x
+  isIrrefl# x (inr x<x) = isIrrefl< x x<x
+
+  isSym# : isSym _#_
+  isSym# _ _ (inl x<y) = inr x<y
+  isSym# _ _ (inr y<x) = inl y<x
+
+  inequalityImplies# : inequalityImplies _#_
+  inequalityImplies#
+    = elimProp2 {P = λ a b → ¬ a ≡ b → a # b}
+                (λ a b → isProp→ (isProp# a b))
+                 lem
+    where
+      lem : (a b : ℤ.ℤ × ℕ₊₁) → ¬ [_] {R = _∼_} a ≡ [ b ] → [ a ] # [ b ]
       lem (a , b) (c , d) ¬a≡b with (a ℤ.· ℕ₊₁→ℤ d) ℤ.≟ (c ℤ.· ℕ₊₁→ℤ b)
       ... | ℤ.lt ad<cb = inl ad<cb
       ... | ℤ.eq ad≡cb = ⊥.rec (¬a≡b (eq/ (a , b) (c , d) ad≡cb))
@@ -252,20 +289,9 @@ module _ where
       lem : (a b c : ℤ.ℤ × ℕ₊₁) → [ a ] < [ b ] → ([ a ] < [ c ]) ⊔′ ([ c ] < [ b ])
       lem a b c a<b with discreteℚ [ a ] [ c ]
       ... | yes a≡c = ∣ inr (subst (_< [ b ]) a≡c a<b) ∣₁
-      ... | no a≢c = ∥₁.map (⊎.map (λ a<c → a<c)
-                                    (λ c<a → isTrans< [ c ] [ a ] [ b ] c<a a<b))
-                             (isConnected< [ a ] [ c ] a≢c)
-
-  isProp# : isPropValued _#_
-  isProp# x y = isProp⊎ (isProp< x y) (isProp< y x) (isAsym< x y)
-
-  isIrrefl# : isIrrefl _#_
-  isIrrefl# x (inl x<x) = isIrrefl< x x<x
-  isIrrefl# x (inr x<x) = isIrrefl< x x<x
-
-  isSym# : isSym _#_
-  isSym# _ _ (inl x<y) = inr x<y
-  isSym# _ _ (inr y<x) = inl y<x
+      ... | no a≢c = ∣ ⊎.map (λ a<c → a<c)
+                             (λ c<a → isTrans< [ c ] [ a ] [ b ] c<a a<b)
+                             (inequalityImplies# [ a ] [ c ] a≢c) ∣₁
 
   isCotrans# : isCotrans _#_
   isCotrans#
@@ -276,10 +302,7 @@ module _ where
         lem : (a b c : ℤ.ℤ × ℕ₊₁) → [ a ] # [ b ] → ([ a ] # [ c ]) ⊔′ ([ b ] # [ c ])
         lem a b c a#b with discreteℚ [ b ] [ c ]
         ... | yes b≡c = ∣ inl (subst ([ a ] #_) b≡c a#b) ∣₁
-        ... | no  b≢c = ∥₁.map inr (isConnected< [ b ] [ c ] b≢c)
-
-  inequalityImplies# : inequalityImplies _#_
-  inequalityImplies# a b = ∥₁.rec (isProp# a b) (λ a#b → a#b) ∘ (isConnected< a b)
+        ... | no  b≢c = ∣ inr (inequalityImplies# [ b ] [ c ] b≢c) ∣₁
 
 ≤-+o : ∀ m n o → m ≤ n → m ℚ.+ o ≤ n ℚ.+ o
 ≤-+o =
@@ -619,12 +642,29 @@ min≤' m n = subst (_≤ n) (ℚ.minComm n m) (min≤ n m)
 <Dec = elimProp2 (λ x y → isPropDec (isProp< x y))
        λ { (a , b) (c , d) → ℤ.<Dec (a ℤ.· ℕ₊₁→ℤ d) (c ℤ.· ℕ₊₁→ℤ b) }
 
+
 _≟_ : (m n : ℚ) → Trichotomy m n
 m ≟ n with discreteℚ m n
 ... | yes m≡n = eq m≡n
 ... | no m≢n with inequalityImplies# m n m≢n
 ...             | inl m<n = lt m<n
 ...             | inr n<m = gt n<m
+
+byTrichotomy : ∀ x₀ → {A : ℚ → Type} → TrichotomyRec x₀ A → ∀ x → A x
+byTrichotomy x₀ r x = TrichotomyRec.go r x (_ ≟ _)
+
+#Dec : ∀ m n → Dec (m # n)
+#Dec m n with m ≟ n
+... | lt x = yes (inl x)
+... | gt x = yes (inr x)
+... | eq x = no (isIrrefl# n ∘ subst (_# n) x)
+
+≡⊎# : ∀ m n → (m ≡ n) ⊎ (m # n)
+≡⊎# m n with m ≟ n
+... | lt x = inr (inl x)
+... | gt x = inr (inr x)
+... | eq x = inl x
+
 
 ≤MonotoneMin : ∀ m n o s → m ≤ n → o ≤ s → ℚ.min m o ≤ ℚ.min n s
 ≤MonotoneMin m n o s m≤n o≤s
@@ -662,7 +702,7 @@ m ≟ n with discreteℚ m n
 ... | yes m≡n = ≡Weaken≤ n m (sym m≡n)
 ... | no  m≢n = ∥₁.elim (λ _ → isProp≤ n m)
                         (⊎.rec (⊥.rec ∘ m≮n) (<Weaken≤ n m))
-                        (isConnected< m n m≢n)
+                         ∣ inequalityImplies# m n m≢n ∣₁
 
 0<+ : ∀ m n → 0 < m ℚ.+ n → (0 < m) ⊎ (0 < n)
 0<+ m n 0<m+n with <Dec 0 m | <Dec 0 n
@@ -699,6 +739,17 @@ minus-≤ m n p =
 
 <→<minus : ∀ m n → m < n → 0 < n - m
 <→<minus m n x = subst (_< n - m) (+InvR m) (<-+o m n (- m) x)
+
+≤→<minus : ∀ m n → m ≤ n → 0 ≤ n - m
+≤→<minus m n x = subst (_≤ n - m) (+InvR m) (≤-+o m n (- m) x)
+
+<minus→< : ∀ m n → 0 < n - m → m < n
+<minus→< m n x = subst2 _<_ (+IdL m)
+  (sym (+Assoc n (- m) m) ∙∙ cong (n ℚ.+_) (+InvL m) ∙∙ +IdR n) (<-+o 0 (n - m) m x)
+
+≤minus→≤ : ∀ m n → 0 ≤ n - m → m ≤ n
+≤minus→≤ m n x = subst2 _≤_ (+IdL m)
+  (sym (+Assoc n (- m) m) ∙∙ cong (n ℚ.+_) (+InvL m) ∙∙ +IdR n) (≤-+o 0 (n - m) m x)
 
 
 minus-<' : ∀ n m → - n < - m → m < n
@@ -901,6 +952,7 @@ absFrom≤×≤ ε q x x₁ with absCases q
 ... | inl x₂ = subst2 (_≤_) (sym x₂) (-Invol ε) (minus-≤ (- ε) q x  )
 ... | inr x₂ = subst (_≤ ε) (sym x₂) x₁
 
+
 absFrom<×< : ∀ ε q →
                 - ε < q
                 → q < ε
@@ -929,8 +981,20 @@ clamp d u x = ℚ.min (ℚ.max d x) u
 ... | eq x = inl x
 ... | gt x = ⊥.rec (≤→≯ q r y x)
 
+≤≃≡⊎< : ∀ q r → (q ≤ r) ≃ ((q ≡ r) ⊎ (q < r))
+≤≃≡⊎< q r = propBiimpl→Equiv
+  (isProp≤ q r)
+  (⊎.isProp⊎ (isSetℚ _ _) ((isProp< q r)) λ u v → ≤→≯ r q (≡Weaken≤ _ _ (sym u)) v)
+    (≤→≡⊎< q r) (⊎.rec (≡Weaken≤ _ _) (<Weaken≤ q r))
+
 ≤ℤ→≤ℚ : ∀ m n → m ℤ.≤ n → [ m , 1 ] ≤ [ n , 1 ]
 ≤ℤ→≤ℚ m n = subst2 ℤ._≤_ (sym (ℤ.·IdR m)) (sym (ℤ.·IdR n))
 
 <ℤ→<ℚ : ∀ m n → m ℤ.< n → [ m , 1 ] < [ n , 1 ]
 <ℤ→<ℚ m n = subst2 ℤ._<_ (sym (ℤ.·IdR m)) (sym (ℤ.·IdR n))
+
+[k/n]<[k'/n] : ∀ k k' n → k ℤ.< k' → ([ ( k , n ) ]) < ([ (k' , n) ])
+[k/n]<[k'/n] k k' n k<k' = ℤ.<-·o k<k'
+
+[k/n]≤[k'/n] : ∀ k k' n → k ℤ.≤ k' → ([ ( k , n ) ]) ≤ ([ (k' , n) ])
+[k/n]≤[k'/n] k k' n k<k' = ℤ.≤-·o k<k'

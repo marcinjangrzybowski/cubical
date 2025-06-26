@@ -3,12 +3,15 @@ module Cubical.Data.Rationals.Order.Properties where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Equiv.Properties
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Path
 
 open import Cubical.Functions.FunExtEquiv
+open import Cubical.Functions.Involution
 
 open import Cubical.Functions.Logic using (_⊔′_; ⇔toPath)
 
@@ -39,6 +42,8 @@ open import Cubical.HITs.CauchyReals.Lems
 
 open import Cubical.Algebra.CommRing.Instances.Int
 
+
+
 decℚ? : ∀ {x y} → {𝟚.True (discreteℚ x y)} →  (x ≡ y)
 decℚ? {_} {_} {p} = 𝟚.toWitness p
 
@@ -48,8 +53,26 @@ decℚ<? {_} {_} {p} = 𝟚.toWitness p
 decℚ≤? : ∀ {x y} → {𝟚.True (≤Dec x y)} →  (x ≤ y)
 decℚ≤? {_} {_} {p} = 𝟚.toWitness p
 
+0<sucN : ∀ n → 0 < fromNat (suc n)
+0<sucN n = <ℤ→<ℚ _ _ (ℤ.ℕ≤→pos-≤-pos _ _ (ℕ.suc-≤-suc ℕ.zero-≤))
+
+0<pos : ∀ n m → 0 < [ pos (suc n) / m ]
+0<pos n m = 0<→< [ pos (suc n) / m ] tt
+
+0≤pos : ∀ n m → 0 ≤ [ pos n / m ]
+0≤pos n m = subst (0 ℤ.≤_)
+   (sym (ℤ.·IdR _))
+  (ℤ.zero-≤pos {n})
 
 
+-fromNat : ∀ n → fromNeg n ≡ - fromNat n
+-fromNat zero = refl
+-fromNat (suc n) = refl
+
+neg≤pos : ∀ n m → fromNeg n ≤ fromNat m
+neg≤pos n m =
+ subst (_≤ fromNat m) (sym (-fromNat n))
+  (isTrans≤ _ 0 (fromNat m) ((minus-≤ 0 (fromNat n) (0≤pos n 1))) (0≤pos m 1))
 
 floor-lemma : ∀ p q → fromNat (ℕ.quotient p / (suc q))
                    ℚ.+ [ ℤ.pos (ℕ.remainder p / (suc q)) / 1+ q ]
@@ -66,6 +89,9 @@ floor-lemma p q = eq/ _ _
   w = cong₂ (ℤ._+_) (ℤ.·Comm _ _ ∙ sym (ℤ.pos·pos _ _)) (ℤ.·IdR _)
        ∙ sym (ℤ.pos+ _ _) ∙ cong ℤ.pos
           (ℕ.+-comm _ _  ∙ ℕ.≡remainder+quotient (suc q) p)
+
+
+
 
 
 floor-fracℚ₊ : ∀ (x : ℚ₊) → Σ (ℕ × ℚ) λ (k , q) →
@@ -159,6 +185,24 @@ floor-fracℚ₊ = uncurry (SQ.Elim.go w)
          ∙∙ sym (ℕ.·-distribʳ _ _ _))
         ∙∙ (λ i → ℕ.·-comm (ℕ.·-comm (suc q') (ℕ.quotient p' / suc q') i) (suc q) i)))
 
+floor-fracℚ₊≤ : (x : ℚ₊) → fromNat (fst (fst (floor-fracℚ₊ x))) ≤ fst x
+floor-fracℚ₊≤ x =
+  let ((N , q) , (e , (0≤q , _))) = floor-fracℚ₊ x
+      zz = ≡Weaken≤ _ _ e
+      uu = subst (_≤ (fst x + q))
+                (+IdR _) $ ≤Monotone+ _ _ 0 _ zz 0≤q
+  in ≤-+o-cancel (fromNat N) _ _ uu
+
+≤floor-fracℚ₊ : (x : ℚ₊) → fst x < fromNat (suc (fst (fst (floor-fracℚ₊ x))))
+≤floor-fracℚ₊ x =
+  let ((N , q) , (e , (_ , q<1))) = floor-fracℚ₊ x
+  in subst (fst x <_) (ℕ+→ℚ+ _ _ ∙ cong (λ x → [ pos x / 1 ])
+             (ℕ.+-comm N 1))
+           $ isTrans≤< _ _ ((fromNat N) + 1)
+              (≡Weaken≤ _ _ (sym e))
+                 (<-o+ q 1 (fromNat N) q<1)
+
+
 ceil-[1-frac]ℚ₊ : ∀ (x : ℚ₊) → Σ (ℕ × ℚ) λ (k , q) →
                        (fst x + q ≡ fromNat k) × ((0 ≤ q)  × (q < 1))
 ceil-[1-frac]ℚ₊ x =
@@ -204,13 +248,15 @@ floor-frac x with 0 ≟ x
         p , e'
 
 
-ceilℚ₊ : (q : ℚ₊) → Σ[ k ∈ ℕ ] (fst q) < fromNat k
-ceilℚ₊ q = suc (fst (fst (floor-fracℚ₊ q))) ,
+ceilℚ₊ : (q : ℚ₊) → Σ[ k ∈ ℕ₊₁ ] (fst q) < fromNat (ℕ₊₁→ℕ k)
+ceilℚ₊ q = 1+ (fst (fst (floor-fracℚ₊ q))) ,
    subst2 (_<_) --  (fromNat (suc (fst (fst (floor-fracℚ₊ q)))))
       (ℚ.+Comm _ _ ∙ fst (snd (floor-fracℚ₊ q)))
       (ℚ.ℕ+→ℚ+ _ _)
        (<-+o _ _ (fromNat (fst (fst (floor-fracℚ₊ q))))
          (snd (snd (snd (floor-fracℚ₊ q)))))
+
+
 
 
 
@@ -469,6 +515,16 @@ elimBy≤ : ∀ {ℓ} {A : ℚ → ℚ → Type ℓ}
 elimBy≤ s f x y = ⊎.rec
   (f _ _ ) (s _ _ ∘ f _ _ ) (≤cases x y)
 
+elim≤By≡⊎< : ∀ {ℓ} (a : ℚ) {A : ∀ x → a ≤ x → Type ℓ}
+  → (A a (isRefl≤ a))
+  → (∀ x a<x → A x (<Weaken≤ _ _ a<x)  )
+  → ∀ x a<x → A x a<x
+elim≤By≡⊎< a {A = A} r f x =
+  ⊎.rec
+    (λ a=x → subst (uncurry A) (Σ≡Prop (isProp≤ a) a=x) r)
+    (subst (A x) (isProp≤ a x _ _) ∘ f x)
+    ∘ (≤→≡⊎< a x)
+
 elimBy≡⊎< : ∀ {ℓ} {A : ℚ → ℚ → Type ℓ}
   → (∀ x y → A x y → A y x)
   → (∀ x → A x x)
@@ -477,6 +533,12 @@ elimBy≡⊎< : ∀ {ℓ} {A : ℚ → ℚ → Type ℓ}
 elimBy≡⊎< {A = A} s r f =
  elimBy≤ s (λ x y → ⊎.rec (λ p → subst (A x) p (r x)) (f x y) ∘ ≤→≡⊎< x y)
 
+
+max< : ∀ x y z → x < z → y < z → max x y < z
+max< = elimBy≤
+  (λ x y X z y<z x<z → subst (_< z) (maxComm _ _) (X z x<z y<z) )
+  λ x y x≤y z x<z y<z →
+    subst (_< z) (sym (≤→max x y x≤y)) y<z
 
 maxDistMin : ∀ x y z → ℚ.min (ℚ.max x y) z ≡ ℚ.max (ℚ.min x z) (ℚ.min y z)
 maxDistMin = elimBy≤
@@ -499,8 +561,15 @@ minDistMax x = elimBy≤
  subst (L ≤_) (cong (λ y → ℚ.max y _) (sym $ ≤→min L L' y)
       ∙ sym (maxDistMin L x L')) (≤max L (ℚ.min x L'))
 
+clamped≤ : ∀ L L' x → L ≤ x → clamp L L' x ≤ x
+clamped≤ L L' x L≤x = subst (_≤ x)
+  (cong (flip min L') (sym (≤→max L x L≤x))) (min≤ x L')
+
 absComm- : ∀ x y → ℚ.abs (x ℚ.- y) ≡ ℚ.abs (y ℚ.- x)
 absComm- x y i = ℚ.maxComm (-[x-y]≡y-x y x (~ i)) (-[x-y]≡y-x x y i) i
+
+abs'Comm- : ∀ x y → ℚ.abs' (x ℚ.- y) ≡ ℚ.abs' (y ℚ.- x)
+abs'Comm- x y = sym (abs'≡abs _) ∙∙ absComm- x y ∙∙ abs'≡abs _
 
 ≤MonotoneClamp : ∀ L L' x y → x ≤ y → clamp L L' x ≤ clamp L L' y
 ≤MonotoneClamp L L' x y p =
@@ -532,6 +601,19 @@ inClamps L L' x u v =
 
 -≤abs' : ∀ x → ℚ.- x ≤ abs' x
 -≤abs' x = subst (- x ≤_) (sym (-abs' x)) (≤abs' (ℚ.- x))
+
+-≤abs : ∀ x → ℚ.- x ≤ abs x
+-≤abs x = subst (- x ≤_) (sym (-abs x)) (≤abs (ℚ.- x))
+
+
+absTo≤×≤ : ∀ ε q
+                → abs q ≤ ε
+                → (- ε ≤ q) × (q ≤ ε)
+
+absTo≤×≤ ε q abs[q]≤ε .fst =
+ subst (- ε ≤_) (-Invol q) (minus-≤ _ _ (isTrans≤ _ _ _ (-≤abs q) abs[q]≤ε))
+absTo≤×≤ ε q abs[q]≤ε .snd = isTrans≤ _ _ _ (≤abs q) abs[q]≤ε
+
 
 Dichotomyℚ : ∀ (n m : ℚ) → (n ≤ m) ⊎ (m < n)
 Dichotomyℚ n m = decRec inr (inl ∘ ≮→≥ _ _) (<Dec m n)
@@ -640,6 +722,9 @@ invℚ₊-invol = uncurry (ElimProp.go w)
   ww : ∀ x x₁ → (ℕ₊₁→ℤ (fst (ℤ.0<→ℕ₊₁ (x .fst) x₁)) , (1+ x .snd .ℕ₊₁.n)) ∼ x
   ww (pos (suc n) , snd₁) x₁ = refl
 
+equivInvℚ₊ : ℚ₊ ≃ ℚ₊
+equivInvℚ₊ = involEquiv {f = invℚ₊} λ x → ℚ₊≡ (invℚ₊-invol x)
+
 x·invℚ₊[x] : ∀ x → fst x · fst (invℚ₊ x) ≡ 1
 x·invℚ₊[x] = uncurry (ElimProp.go w)
  where
@@ -739,6 +824,9 @@ invℚ₊Dist· = uncurry (flip ∘ uncurry ∘ ElimProp2.go w)
 /4₊+/4₊≡/2₊ ε = ℚ₊≡ (sym (·DistL+ (fst ε) [ 1 / 4 ] [ 1 / 4 ])
    ∙ cong (fst ε ·_) decℚ?)
 
+/4₊≡/2₊/2₊ : ∀ ε → fst (/4₊ ε) ≡ fst (/2₊ (/2₊ ε))
+/4₊≡/2₊/2₊ ε = cong (fst ε ·_) decℚ? ∙ ·Assoc _ _ _
+
 weak0< : ∀ q (ε δ : ℚ₊)
              →  q < (fst ε - fst δ)
              → q < fst ε
@@ -764,6 +852,20 @@ n/k+m/k n m k = let k' = pos (suc (k .ℕ₊₁.n)) in
   (cong (ℤ._· k') (sym (ℤ.·DistL+ n m k') ) ∙∙
     sym (ℤ.·Assoc (n ℤ.+ m) k' k') ∙∙
      cong ((n ℤ.+ m) ℤ.·_) (sym (ℤ.pos·pos (ℕ₊₁→ℕ k) (ℕ₊₁→ℕ k))))
+
+
+n/k-m/k : ∀ n m k → [ n / k ] - [ m / k ] ≡ [ n ℤ.- m / k ]
+n/k-m/k n m k = let k' = pos (suc (k .ℕ₊₁.n)) in
+  eq/ _ _
+  (cong (ℤ._· k') (cong₂ ℤ._+_ (cong (n ℤ.·_) (cong ℕ₊₁→ℤ (·₊₁-identityˡ _))) refl
+   ∙ sym (ℤ.·DistL+ _ _ _) ) ∙∙
+    sym (ℤ.·Assoc (n ℤ.- m) k' k') ∙∙
+
+     cong {x = k' ℤ.· k'}
+       {y = ℕ₊₁→ℤ (k ·₊₁ ((1+ 0) ·₊₁ k))} ((n ℤ.- m) ℤ.·_) (sym (ℤ.pos·pos _ _) ∙
+         cong (ℕ₊₁→ℤ ∘ (k ·₊₁_)) (sym (·₊₁-identityˡ _)))
+     )
+
 
 k/k : ∀ k → [ ℕ₊₁→ℤ k / k ] ≡ 1
 k/k (1+ k) = eq/ _ _ (ℤ.·IdR (ℕ₊₁→ℤ (1+ k)))
@@ -932,6 +1034,12 @@ elimBy≡⊎<' {A = A} s r f' =
  f : ∀ x y → x < y → A x y
  f x y v = subst (A x) lem--05 $ f' x (<→ℚ₊ x y v)
 
+elim≤By+ : ∀ {ℓ} {A : ∀ x y → x < y →  Type ℓ}
+  → (∀ x (ε : ℚ₊) x< → A x (x + fst ε) x<)
+  → ∀ x y x<y → A x y x<y
+elim≤By+ {A = A} X x y v =
+  subst (uncurry (A x)) (Σ≡Prop (isProp< x) lem--05) $
+   X x (<→ℚ₊ x y v) (<+ℚ₊' x x ((<→ℚ₊ x y v)) (isRefl≤ x))
 
 
 module HLP where
@@ -1112,9 +1220,27 @@ riseQandD p q r =
                     ∙ sym (·₊₁-assoc _ _ _)))
 
 
-clampDiff : ∀ L L' x → clamp L L' x ≡
+
+<MonotoneMax : ∀ m o n s → m < n → o < s → max m o < max n s
+<MonotoneMax =
+  elimBy≤ (λ x y X o s u v → subst2 _<_ (maxComm _ _) (maxComm _ _)
+                 ((X s o) v u))
+   λ x y x≤y n s _ y<s →
+     subst (_< max n s) (sym (≤→max x y x≤y))
+      (isTrans<≤ _ _ _ y<s (≤max' n s))
+
+<MonotoneMin : ∀ n s m o  → m < n → o < s → min m o < min n s
+<MonotoneMin =
+  elimBy≤ (λ x y X o s u v → subst2 _<_ (minComm _ _) (minComm _ _)
+                 ((X s o) v u))
+   λ x y x≤y n s n<x _ →
+     subst (min n s <_) (sym (≤→min x y x≤y))
+       (isTrans≤< _ _ _ (min≤ n s) n<x)
+
+
+clampDelta : ∀ L L' x → clamp L L' x ≡
                (x + clamp (L - x) (L' - x) 0)
-clampDiff L L' x =
+clampDelta L L' x =
      cong₂ min
        (cong₂ max (lem--035 {L} {x})
          (sym $ +IdL x) ∙ sym (+MaxDistrℚ _ _ x))
@@ -1123,17 +1249,14 @@ clampDiff L L' x =
   ∙∙ +Comm (min (max (L - x) 0) (L' - x)) x
 
 
-clampDist' : ∀ L L' x y → x ≤ y →
-    abs (clamp L L' y - clamp L L' x) ≤ abs (y - x)
-clampDist' L L' x y z =
- subst2 _≤_
-  (sym (absNonNeg (clamp L L' y - clamp L L' x)
-          (-≤ (clamp L L' x) (clamp L L' y)  (≤MonotoneClamp L L' x y z))))
-  (sym (absNonNeg (y - x) (-≤ x y z)))
+
+clampDiff : ∀ L L' x y → x ≤ y →
+    clamp L L' y - clamp L L' x ≤ y - x
+clampDiff L L' x y z =
   (subst2 _≤_
      ((sym (lem--041 {y} {a'} {x} {a})) ∙
-       cong₂ _-_ (sym $ clampDiff L L' y)
-                   (sym $ clampDiff L L' x))
+       cong₂ _-_ (sym $ clampDelta L L' y)
+                   (sym $ clampDelta L L' x))
      (+IdR (y - x))
      (≤-o+ ((a' - a)) 0 (y - x)
       (subst (_≤ 0) (-[x-y]≡y-x a a')
@@ -1150,6 +1273,24 @@ clampDist' L L' x y z =
             ) (≤-o+ (- y) (- x) L' $ minus-≤ x y z)
 
 
+minDiff : ∀ L' x y → x ≤ y →
+    min y L' - min x L' ≤ y - x
+minDiff L' x y x≤y =
+ subst (_≤ (y - x))
+    (cong₂ _-_
+     (cong (flip min L') (≤→max x y x≤y ))
+     (cong (flip min L') (maxIdem x)))
+     (clampDiff x L' x y x≤y)
+
+
+clampDist' : ∀ L L' x y → x ≤ y →
+    abs (clamp L L' y - clamp L L' x) ≤ abs (y - x)
+clampDist' L L' x y z =
+ subst2 _≤_
+  (sym (absNonNeg (clamp L L' y - clamp L L' x)
+          (-≤ (clamp L L' x) (clamp L L' y)  (≤MonotoneClamp L L' x y z))))
+  (sym (absNonNeg (y - x) (-≤ x y z)))
+  (clampDiff L L' x y z)
 
 clampDist : ∀ L L' x y →
     abs (clamp L L' y - clamp L L' x) ≤ abs (y - x)
@@ -1279,7 +1420,16 @@ getPosRatio L₁ L₂ =
                   (<Weaken≤ 0 (y' - y) (-< y y' x₂) ) x₃)))
 
 
-
+≤<Monotone·-onPos : ∀ x x' y y' →
+  x ≤ x' →
+  y < y' →
+  0 < x →
+  0 ≤ y →
+   x · y < x' · y'
+≤<Monotone·-onPos x x' y y' x≤x' y<y' 0<x 0≤y =
+  isTrans≤< _ _ _
+    (≤-·o x x' y 0≤y x≤x')
+    (<-o· y y' x' (isTrans<≤ 0 _ _ 0<x x≤x') y<y')
 
 invℚ : ∀ q → 0 # q → ℚ
 invℚ q p = sign q · fst (invℚ₊ (0#→ℚ₊ q p))
@@ -1372,6 +1522,65 @@ q ／ℚ[ r , 0＃r ] = q · (invℚ r 0＃r)
 ℚ-x·y≡z→x≡z/y x q r 0＃r p =
     sym (ℚ-[x·y]/y x r 0＃r ) ∙ cong (_／ℚ[ r , 0＃r ]) p
 
+x≤z/y→x·y≤z : ∀ x q r 0#r → (0<r : 0 < r)
+               → x ≤ q ／ℚ[ r , 0#r  ]
+               → (x · r) ≤ q
+x≤z/y→x·y≤z x q r 0＃r 0<r  p =
+   subst ((x · r) ≤_) (ℚ-[x/y]·y q r 0＃r) (≤-·o _ _ r (<Weaken≤ 0 r 0<r ) p)
+
+
+x/y≤z→x≤z·y : ∀ x q r 0#r → (0<r : 0 < r)
+               → x ／ℚ[ r , 0#r  ] ≤ q
+               → x ≤ q · r
+x/y≤z→x≤z·y x q r 0＃r 0<r  p =
+   subst (_≤ (q · r)) (ℚ-[x/y]·y x r 0＃r) (≤-·o _ _ r (<Weaken≤ 0 r 0<r ) p)
+
+x·invℚ₊y≤z→x≤y·z : ∀ x q r
+               → x · fst (invℚ₊ r) ≤ q
+               → x ≤ (fst r) · q
+x·invℚ₊y≤z→x≤y·z x q r  p =
+   subst (_≤ ((fst r) · q)) (cong ((fst r) ·_) (·Comm _ _) ∙ y·[x/y] r x)
+      (≤-o· _ _ (fst r) (0≤ℚ₊ r ) p)
+
+
+x·invℚ₊y<z→x<y·z : ∀ x q r
+               → x · fst (invℚ₊ r) < q
+               → x < (fst r) · q
+x·invℚ₊y<z→x<y·z x q r  p =
+   subst (_< ((fst r) · q)) (cong ((fst r) ·_) (·Comm _ _) ∙ y·[x/y] r x)
+      (<-o· _ _ (fst r) (0<ℚ₊ r ) p)
+
+
+y·x<z→x<z·invℚ₊y : ∀ x z r
+               → (fst r) · x < z
+               → x < z · fst (invℚ₊ r)
+y·x<z→x<z·invℚ₊y x z r p =
+   subst (_< z · fst (invℚ₊ r))
+    (·Comm _ _ ∙ [y·x]/y _ _)
+    (<-·o _ _ (fst (invℚ₊ r)) (0<ℚ₊ (invℚ₊ r) ) p)
+
+x≤y·z→x·invℚ₊y≤z : ∀ x q r
+               → x ≤ (fst r) · q
+               → x · fst (invℚ₊ r) ≤ q
+
+x≤y·z→x·invℚ₊y≤z x q r  p =
+  subst (x · fst (invℚ₊ r) ≤_)
+   (·Comm _ _ ∙ [y·x]/y _ _)
+   (≤-·o x _ (fst (invℚ₊ r)) ((0≤ℚ₊ ( invℚ₊ r) )) p)
+
+
+x<y·z→x·invℚ₊y<z : ∀ x q r
+               → x < (fst r) · q
+               → x · fst (invℚ₊ r) < q
+
+x<y·z→x·invℚ₊y<z x q r  p =
+  subst (x · fst (invℚ₊ r) <_)
+   (·Comm _ _ ∙ [y·x]/y _ _)
+   (<-·o x _ (fst (invℚ₊ r)) ((0<ℚ₊ ( invℚ₊ r) )) p)
+
+
+
+
 ℚ-x/y<z→x/z<y : ∀ x q r  → (0<x : 0 < x) → (0<q : 0 < q) → (0<r : 0 < r)
                → (x ／ℚ[ r , inl 0<r ]) < q
                → (x ／ℚ[ q , inl 0<q ]) < r
@@ -1460,22 +1669,6 @@ invℚ₊≤invℚ₊ x y p =
 
 
 
-<MonotoneMaxℚ : ∀ m o n s → m < n → o < s → max m o < max n s
-<MonotoneMaxℚ =
-  elimBy≤ (λ x y X o s u v → subst2 _<_ (maxComm _ _) (maxComm _ _)
-                 ((X s o) v u))
-   λ x y x≤y n s _ y<s →
-     subst (_< max n s) (sym (≤→max x y x≤y))
-      (isTrans<≤ _ _ _ y<s (≤max' n s))
-
-<MonotoneMinℚ : ∀ n s m o  → m < n → o < s → min m o < min n s
-<MonotoneMinℚ =
-  elimBy≤ (λ x y X o s u v → subst2 _<_ (minComm _ _) (minComm _ _)
-                 ((X s o) v u))
-   λ x y x≤y n s n<x _ →
-     subst (min n s <_) (sym (≤→min x y x≤y))
-       (isTrans≤< _ _ _ (min≤ n s) n<x)
-
 
 _ℚ^ⁿ_ : ℚ → ℕ → ℚ
 x ℚ^ⁿ zero = 1
@@ -1498,6 +1691,21 @@ x^ⁿ≤1 x zero 0≤x x≤1 = isRefl≤ 1
 x^ⁿ≤1 x (suc n) 0≤x x≤1 =
  ≤Monotone·-onNonNeg _ 1 _ 1
    (x^ⁿ≤1 x n 0≤x x≤1) x≤1 (0≤ℚ^ⁿ x 0≤x n) 0≤x
+
+1≤x^ⁿ : ∀ x n → 1 ≤ x →  1 ≤ (x ℚ^ⁿ n)
+1≤x^ⁿ x zero 1≤x = isRefl≤ 1
+1≤x^ⁿ x (suc n) 1≤x =
+ ≤Monotone·-onNonNeg 1 _ 1 _
+   (1≤x^ⁿ x n 1≤x) 1≤x (decℚ≤? {0} {1})
+     (decℚ≤? {0} {1})
+
+1<x^ⁿ : ∀ x n → 1 < x →  1 < (x ℚ^ⁿ (suc n))
+1<x^ⁿ x zero 1<x = subst (1 <_) (sym (·IdL _)) 1<x
+1<x^ⁿ x (suc n) 1<x =
+ <Monotone·-onPos 1 _ 1 _
+   (1<x^ⁿ x n 1<x) 1<x (decℚ≤? {0} {1})
+     (decℚ≤? {0} {1})
+
 
 ·-ℚ^ⁿ : ∀ n m x → (x ℚ^ⁿ n) · (x ℚ^ⁿ m) ≡ (x ℚ^ⁿ (n ℕ.+ m))
 ·-ℚ^ⁿ zero m x = ·IdL _
@@ -1536,3 +1744,13 @@ invℚ₊-<-invℚ₊ (q , 0<q) (r , 0<r) = ElimProp2.go w q r 0<q 0<r
    propBiimpl→Equiv ℤ.isProp<  ℤ.isProp<
     (subst2 ℤ._<_ (ℤ.·Comm _ _) (ℤ.·Comm _ _))
     (subst2 ℤ._<_ (ℤ.·Comm _ _) (ℤ.·Comm _ _))
+
+invℚ₊-≤-invℚ₊ : ∀ q r → ((fst q) ≤ (fst r))
+             ≃ (fst (invℚ₊ r) ≤ fst (invℚ₊ q))
+invℚ₊-≤-invℚ₊ q r =
+    (≤≃≡⊎< _ _)
+   ∙ₑ ⊎.⊎-equiv (Σ≡PropEquiv (snd ∘ 0<ₚ_) {u = q} {v = r}
+    ∙ₑ congEquiv equivInvℚ₊ ∙ₑ
+     invEquiv (Σ≡PropEquiv (snd ∘ 0<ₚ_) {u = invℚ₊ r} {v = invℚ₊ q}
+        ∙ₑ isoToEquiv symIso )) (invℚ₊-<-invℚ₊ q r)
+   ∙ₑ (invEquiv (≤≃≡⊎< _ _))

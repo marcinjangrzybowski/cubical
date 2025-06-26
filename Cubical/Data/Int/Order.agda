@@ -4,7 +4,7 @@ module Cubical.Data.Int.Order where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Function
-
+open import Cubical.Foundations.Equiv
 open import Cubical.Data.Empty as ⊥ using (⊥)
 open import Cubical.Data.Int.Base as ℤ
 open import Cubical.Data.Int.Properties as ℤ
@@ -535,6 +535,20 @@ min-0< (pos (suc (suc n₁))) (pos (suc (suc n))) x x₁ =
 
 ℕ≤→pos-≤-pos : ∀ m n → m ℕ.≤ n → pos m ≤ pos n
 ℕ≤→pos-≤-pos m n (k , p) = k , sym (pos+ m k) ∙∙ cong pos (ℕ.+-comm m k) ∙∙ cong pos p
+
+ℕ≥→negsuc-≤-negsuc : ∀ m n → m ℕ.≤ n → negsuc n ≤ negsuc m
+ℕ≥→negsuc-≤-negsuc m n = negsuc-≤-negsuc ∘ ℕ≤→pos-≤-pos m n
+
+pos-≤-pos→ℕ≤ : ∀ m n → pos m ≤ pos n → m ℕ.≤ n
+pos-≤-pos→ℕ≤ m n (k , p) = k , injPos ((pos+ k m ∙ ℤ.+Comm (pos k) (pos m)) ∙ p)
+
+pos-≤-pos≃ℕ≤ : ∀ m n → (pos m ≤ pos n) ≃ (m ℕ.≤ n)
+pos-≤-pos≃ℕ≤ m n = propBiimpl→Equiv isProp≤ ℕ.isProp≤
+                (pos-≤-pos→ℕ≤ _ _) (ℕ≤→pos-≤-pos _ _)
+
+pos-<-pos≃ℕ< : ∀ m n → (pos m < pos n) ≃ (m ℕ.< n)
+pos-<-pos≃ℕ< m n = propBiimpl→Equiv (isProp< {pos m} {pos n}) ℕ.isProp≤
+                (pos-≤-pos→ℕ≤ _ _) (ℕ≤→pos-≤-pos (suc m) n)
 
 
 0≤x² : ∀ n → 0 ≤ n ℤ.· n

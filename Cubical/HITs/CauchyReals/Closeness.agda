@@ -834,18 +834,18 @@ triangle∼ {u} {v} {w} {ε} {η} x  =
 
 
 
--- _ : ∀ r x y ε → (rat r) ∼'[ ε ] (lim x y) ≡
---               (∃[ δ ∈ ℚ₊ ] Σ[ v ∈ _ ] ((rat r) ∼'[ (fst ε ℚ.- fst δ) , v ] x δ))
--- _ = λ r x y ε → refl
+_ : ∀ r x y ε → (rat r) ∼'[ ε ] (lim x y) ≡
+              (∃[ δ ∈ ℚ₊ ] Σ[ v ∈ _ ] ((rat r) ∼'[ (fst ε ℚ.- fst δ) , v ] x δ))
+_ = λ r x y ε → refl
 
--- _ : ∀ r x y ε → (lim x y) ∼'[ ε ] (rat r) ≡
---               (∃[ δ ∈ ℚ₊ ] Σ[ v ∈ _ ]
---                 ((x δ) ∼'[ (fst ε ℚ.- fst δ) , v ] rat r ))
--- _ = λ r x y ε → refl
+_ : ∀ r x y ε → (lim x y) ∼'[ ε ] (rat r) ≡
+              (∃[ δ ∈ ℚ₊ ] Σ[ v ∈ _ ]
+                ((x δ) ∼'[ (fst ε ℚ.- fst δ) , v ] rat r ))
+_ = λ r x y ε → refl
 
 
--- _ : ∀ x y x' y' ε → (lim x y) ∼'[ ε ] (lim x' y') ≡
---                (∃[ (δ , η) ∈ (ℚ₊ × ℚ₊) ] Σ[ v ∈ _ ]
---                 ((x δ) ∼'[ (fst ε ℚ.- (fst δ ℚ.+ fst η)) , v ] (x' η) ))
--- _ = λ x y x' y' ε → refl
+_ : ∀ x y x' y' ε → (lim x y) ∼'[ ε ] (lim x' y') ≡
+               (∃[ (δ , η) ∈ (ℚ₊ × ℚ₊) ] Σ[ v ∈ _ ]
+                ((x δ) ∼'[ (fst ε ℚ.- (fst δ ℚ.+ fst η)) , v ] (x' η) ))
+_ = λ x y x' y' ε → refl
 

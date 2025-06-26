@@ -6,14 +6,21 @@ open import Cubical.Foundations.Structure
 
 
 open import Cubical.Data.List
+open import Cubical.Data.Nat using (ℕ)
 
 import Cubical.Algebra.CommRing as CR
 
 open import Cubical.Tactics.CommRingSolver
 
+
+
 module Lems (R : CR.CommRing ℓ-zero) where
  open CR.CommRingStr (snd R)
 
+ [_]r : ℕ → fst R
+ [ ℕ.zero ]r = 0r
+ [ ℕ.suc (ℕ.zero) ]r = 1r
+ [ ℕ.suc x@(ℕ.suc _) ]r = 1r + [ x ]r
 
  lem-01 : ∀ ε δ η η' a →
        (ε - (δ + η)) +
@@ -259,6 +266,88 @@ module Lems (R : CR.CommRing ℓ-zero) where
  lem--065 : (x' · y') - (x · y)
               ≡ y · (x' - x) + x' · (y' - y)
  lem--065 = solve! R
+
+ lem--066 : (x' - y') + (x - y)
+              ≡ (x' - y) + (x - y')
+ lem--066 = solve! R
+
+ lem--067 : (x' - y') - (y - x)
+              ≡ (x' - y) + (x - y')
+ lem--067 = solve! R
+
+ lem--068 : (x' - y') - (y - x)
+              ≡ (x' - y) - (y' - x)
+ lem--068 = solve! R
+
+ lem--069 : (((a · ((q + q') - δ)) - (a · (x - δ))) + y)
+             - (((a · (q - δ)) - (a · (x' - δ))) + y') ≡
+                (a · (q' - (x - x')) + (y - y'))
+ lem--069 = solve! R
+
+ lem--070 : - (a · b) ≡ a · (- b)
+ lem--070 = solve! R
+
+ lem--071 : x' - (y - ((x + y) - x)) ≡ x'
+ lem--071 = solve! R
+
+ lem--072 : x - (x + y) ≡ - y
+ lem--072 = solve! R
+
+ lem--073 : (x - y) · (x - y) ≡ (x · x + y · y) - (( x · y ) + ( x · y ))
+ lem--073 = solve! R
+
+ lem--074 : (x - y) + (y + x') ≡ x + x'
+ lem--074 = solve! R
+
+ lem--075 : (y + x') - (x + x')  ≡ y - x
+ lem--075 = solve! R
+
+ lem--076 : x - y + (x - y) - (x' - y) ≡ x + x - x' - y
+ lem--076 = solve! R
+
+ lem--077 : x - y ≡ (x' - y) + (x - x')
+ lem--077 = solve! R
+
+ lem--078 : y - x' ≡ (y + (y' - x')) - y'
+ lem--078 = solve! R
+
+ lem--079 : y - (y - x) ≡ x
+ lem--079 = solve! R
+
+ lem--080 : (ε + x) + ((- y) + ε) ≡ (ε + ε) + (x - y)
+ lem--080 = solve! R
+
+ lem--081 : (q + x) - (q + y) ≡ x - y
+ lem--081 = solve! R
+
+ lem--082 : (((ε - θ) - η) + (θ + η')) ≡ ε + (η' - η)
+ lem--082 = solve! R
+
+ lem--083 : x - y ≡ (- y) - (- x)
+ lem--083 = solve! R
+
+ lem--084 : δ - ε ≡ (- (ε - δ))
+ lem--084 = solve! R
+
+ lem--085 : (((x - 1r) · (x - 1r)) · ([ 2 ]r · x - 1r)) ≡ (x · ((([ 2 ]r) · (x - 1r)) · (x - 1r)
+           - (x - 1r) + 1r)) - 1r
+ lem--085 = solve! R
+
+ lem--086 : (x · y) · (x' · y') ≡ (x · x') · (y · y')
+ lem--086 = solve! R
+
+ lem--087 : x + y + (x' + y') ≡ x + x' + (y + y')
+ lem--087 = solve! R
+
+ lem--088 : (x + y) - (x + y') ≡ (y - y')
+ lem--088 = solve! R
+
+ lem--089 : y - (y' + x) ≡ (y - y') - x
+ lem--089 = solve! R
+
+ lem--090 : (η · (y · y')) · (x · η') ≡ (((x · y) · y') · η) · η'
+ lem--090 = solve! R
+
 
 open import Cubical.Data.Rationals as ℚ
 

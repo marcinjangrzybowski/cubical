@@ -78,6 +78,18 @@ sΣℚ<' {u} {v} {ε} p x =
    subst∼ (sym (lem--035 {fst ε} {fst δ}))
      $ 𝕣-lim r y (fst ε ℚ.- fst δ , v₁) δ p x
 
+-- 𝕣-lim'← : ∀ r y p ε
+--          → r ∼[ ε ] (lim y p )
+--          → (∀ δ v → r ∼[ fst ε ℚ.- fst δ , v ] ( y δ ))
+
+-- 𝕣-lim'← r y p ε r~lim δ v  = {!!}
+
+-- 𝕣-lim'≃ : ∀ r y ε δ p v →
+--           (r ∼[ fst ε ℚ.- fst δ , v ] ( y δ )
+--             ≃ r ∼[ ε ] (lim y p ))
+-- 𝕣-lim'≃ r y ε δ p v₁ x =
+--    {!!}
+
 
 -- HoTT Lemma (11.3.10)
 lim-surj : ∀ r → ∃[ x ∈ _ ] (r ≡ (uncurry lim x) )
@@ -178,6 +190,7 @@ Lipschitz-ℝ→ℝ L f =
   (∀ u v → (ε : ℚ₊) →
     u ∼[ ε  ] v → f u ∼[ L ℚ₊· ε  ] f v)
 
+
 isPropLipschitz-ℝ→ℝ : ∀ q f → isProp (Lipschitz-ℝ→ℝ q f)
 isPropLipschitz-ℝ→ℝ q f = isPropΠ4 λ _ _ _ _ → isProp∼ _ _ _
 
@@ -255,6 +268,7 @@ fromLipschitz L (f , fL) = f' ,
 
  f' : ℝ → ℝ
  f' = Elimℝ.go w
+
 
 
 ∼-monotone< : ∀ {u v ε ε'} → fst ε ℚ.< fst ε' → u ∼[ ε ] v → u ∼[ ε' ] v
@@ -651,3 +665,9 @@ fromLipshitzNEβ : ∀ f (fl : Lipschitz-ℚ→ℝ 1 f) x y →
      _
 fromLipshitzNEβ f fl x y = congLim' _ _ _
  λ q → cong (Elimℝ.go _ ∘ x) (ℚ₊≡ $ ℚ.·IdL _)
+
+fromLipshitzβLim : ∀ L f (fl : Lipschitz-ℚ→ℝ L f) x y →
+  fst (fromLipschitz L (f , fl)) (lim x y) ≡
+    lim (λ x₁ → Elimℝ.go _ (x (invℚ₊ L ℚ₊· x₁)))
+     _
+fromLipshitzβLim L f fl x y = refl
