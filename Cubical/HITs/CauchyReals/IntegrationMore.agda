@@ -48,7 +48,37 @@ open import Cubical.HITs.CauchyReals.Integration
 open import Cubical.HITs.CauchyReals.Exponentiation
 open import Cubical.HITs.CauchyReals.ExponentiationDer
 open import Cubical.HITs.CauchyReals.MeanValue
+open import Cubical.HITs.CauchyReals.Summation
 
+clampᵣ-IntegralOf' : ∀ a b → (a≤b : a ≤ᵣ b) → ∀ (f : (x : ℝ) → x ∈ intervalℙ a b → ℝ) s
+   → on[ a , b ]IntegralOf
+      (λ x → f (clampᵣ a b x) (clampᵣ∈ℚintervalℙ a b a≤b x)) is' s 
+   ≃ on[ a , b ]IntegralOf curry ∘ f is s
+   
+clampᵣ-IntegralOf' a b a≤b f s =
+  
+  propBiimpl→Equiv
+   (isPropΠ λ _ → squash₁) (isPropΠ λ _ → squash₁)
+    (PT.map (map-snd
+    (λ X tp msh≤ →
+      isTrans≡<ᵣ _ _ _
+         (cong absᵣ (cong (_-ᵣ s)
+           (riemannSum-clamp (snd tp) f  ∙
+             cong (riemannSum' (tp .snd))
+               (funExt λ _ →
+                cong (f _) (∈-isProp (intervalℙ a b) _ _ _)))))
+          (X tp msh≤)))
+    ∘_)
+    ((PT.map (map-snd
+    (λ X tp msh≤ →
+      isTrans≡<ᵣ _ _ _
+         (sym $ cong absᵣ (cong (_-ᵣ s)
+           ( (riemannSum-clamp (snd tp) f)  ∙
+             cong (riemannSum' (tp .snd))
+               (funExt λ _ →
+                cong (f _) (∈-isProp (intervalℙ a b) _ _ _)))))
+          (X tp msh≤)))
+    ∘_))
 
 Integral'-abs≤ : ∀ a b → a ≤ᵣ b → ∀ f s s'
             → on[ a , b ]IntegralOf f is' s
@@ -761,13 +791,32 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
         ∙ w'''-F→⊎→F-finj (F→⊎'''.fun k))))
      (w'''-⊎ δ me me' (F→⊎'''.fun k))
 
+clampDistᵣ
+   : (L L' : ℝ) (x y : ℝ) →
+     absᵣ (clampᵣ L L' y -ᵣ clampᵣ L L' x) ≤ᵣ
+     absᵣ (y -ᵣ x)
+clampDistᵣ L L' x y =
+ ≤Cont₂
+   {λ L L' → absᵣ (clampᵣ L L' y -ᵣ clampᵣ L L' x)}
+   {λ _ _ → absᵣ (y -ᵣ x)}
+  (cont∘₂ IsContinuousAbsᵣ
+    (IsContinuous-₂∘ (IsContinuousClamp₂ y) (IsContinuousClamp₂ x)))
+     (cont₂-id _)
+  (λ u u' → clampDistᵣ' u u' x y)
+  L L'
+
+
+clampᵣ∼ : ∀ {a b u v ε} → u ∼[ ε ] v → clampᵣ a b u ∼[ ε ] clampᵣ a b v
+clampᵣ∼ {a} {b} = invEq (∼≃abs<ε _ _ _)
+  ∘ isTrans≤<ᵣ _ _ _ (clampDistᵣ a b _ _)
+  ∘ fst (∼≃abs<ε _ _ _)
+
 
 Integral'-additive : ∀ a b c → a ≤ᵣ b → b ≤ᵣ c → ∀ f s s' s+s' →
   on[ a , b ]IntegralOf f is' s →
   on[ b , c ]IntegralOf f is' s' →
   on[ a , c ]IntegralOf f is' s+s' →
   s +ᵣ s' ≡ s+s'
-
 
 Integral'-additive a b c a≤b b≤c f s s' s+s' S S' S+S' =
   eqℝ _ _ (invEq (∼≃abs<ε _ _ _) ∘ w)
@@ -837,6 +886,9 @@ Integral'-additive a b c a≤b b≤c f s s' s+s' S S' S+S' =
         (∃RefinableTaggedPartition rtp-1/n a b a≤b )
         (∃RefinableTaggedPartition rtp-1/n b c b≤c))
     (S (/2₊ (/2₊ ε))) (S' (/2₊ (/2₊ ε))) (S+S' (/2₊ (/2₊ ε)))
+
+
+
 
 Integral'-empty : ∀ a → ∀ f s →
   on[ a , a ]IntegralOf f is' s →
@@ -976,8 +1028,8 @@ module IntegrationUC
 
  Integrate-UContinuous-≡ : ∀ a b (a≤b : a ≤ᵣ b) f g fc gc
     → (∀ x → f x ≡ g x)
-    → fst (Integrate-UContinuous a b a≤b f fc)
-       ≡ fst (Integrate-UContinuous a b a≤b g gc)
+     → fst (Integrate-UContinuous a b a≤b f fc)
+     ≡ fst (Integrate-UContinuous a b a≤b g gc)
  Integrate-UContinuous-≡ a b a≤b f g fc gc x =
    cong {A = Σ _ IsUContinuous}
          {x = f , fc} {g , subst IsUContinuous (funExt x) fc }
@@ -987,6 +1039,23 @@ module IntegrationUC
        (snd (Integrate-UContinuous a b a≤b g
           (subst IsUContinuous (funExt x) fc)))
         (snd (Integrate-UContinuous a b a≤b g gc))
+
+
+ Integrate-UContinuous-≡-∈ : ∀ a b (a≤b : a ≤ᵣ b) f g fc gc
+    → (∀ x → x ∈ intervalℙ a b → f x ≡ g x)
+       → fst (Integrate-UContinuous a b a≤b f fc)
+       ≡ fst (Integrate-UContinuous a b a≤b g gc)
+ Integrate-UContinuous-≡-∈ a b a≤b f g fc gc x =
+   Integral'Uniq a b a≤b _ _ _
+     (PT.map (map-snd (λ {δ} X tp msh< →
+      isTrans≡<ᵣ _ _ _
+        (cong (λ rs → absᵣ
+         (rs -ᵣ
+          Integrate-UContinuous a b a≤b f fc .fst))
+             (sym (riemannSum'≡ (snd tp) _ _ x)))
+        (X tp msh<)))
+       ∘ (snd (Integrate-UContinuous a b a≤b f fc)))
+     (snd (Integrate-UContinuous a b a≤b g gc))
 
  Integral- : ∀ a b (a≤b : a ≤ᵣ b) f g fc gc
     → fst (Integrate-UContinuous a b a≤b f fc)
@@ -1039,6 +1108,37 @@ module IntegrationUC
       (snd (Integrate-UContinuous a b a≤b (λ _ → fc-sup)
         (IsUContinuousConst _)))))
     (IntegralConst a b a≤b fc-sup _)
+
+ Integrate-UContinuousℙ : ∀ a b (a≤b : a ≤ᵣ b) f
+   → IsUContinuousℙ (intervalℙ a b) f →
+    Σ ℝ λ R → on[ a , b ]IntegralOf curry ∘ f is R
+ Integrate-UContinuousℙ a b a≤b f ucf =
+   map-snd (fst (clampᵣ-IntegralOf' _ _ _ _ _))
+     (Integrate-UContinuous
+       a b a≤b (λ x → f (clampᵣ a b x) (clampᵣ∈ℚintervalℙ a b a≤b x))
+        ((λ {ε} →
+          map-snd
+           λ {δ} X u v u∼v →
+            X _ _ _ _
+             (invEq (∼≃abs<ε _ _ _)
+              (isTrans≤<ᵣ _ _ _
+                (clampDistᵣ a b v u)
+                (fst (∼≃abs<ε _ _ _) u∼v))))
+           ∘ ucf))
+
+
+ Integrate-UContinuousℙ-≡ : ∀ a b (a≤b : a ≤ᵣ b) f g fc gc
+    → (∀ x x∈ → f x x∈ ≡ g x x∈)
+    → fst (Integrate-UContinuousℙ a b a≤b f fc)
+       ≡ fst (Integrate-UContinuousℙ a b a≤b g gc)
+ Integrate-UContinuousℙ-≡ a b a≤b f g fc gc x =
+   cong {x = f , fc} {g , _}
+     (fst ∘ uncurry (Integrate-UContinuousℙ a b a≤b))
+      (ΣPathP (funExt₂ x , toPathP refl))
+        ∙ IntegralUniq a b a≤b _ _ _
+       (snd (Integrate-UContinuousℙ a b a≤b g
+          (subst (IsUContinuousℙ (intervalℙ a b)) (funExt₂ x) fc)))
+        (snd (Integrate-UContinuousℙ a b a≤b g gc))
 
 
  FTOC⇒ : ∀ x₀ (f : ℝ → ℝ) → (ucf : IsUContinuous f)
@@ -1221,25 +1321,30 @@ module IntegrationUC
 
 
 
-
- FTOC⇐ : ∀ a b (a<b : a <ᵣ b) (f F : ℝ → ℝ) → ∀ ucf
-           → uDerivativeOfℙ (intervalℙ a b) , (λ x _ → F x) is (λ x _ → f x)
-           → fst (Integrate-UContinuous a b (<ᵣWeaken≤ᵣ _ _ a<b) f ucf)
-               ≡ F b -ᵣ F a
- FTOC⇐ a b a<b f F ucf udc =
+ FTOC⇐' : ∀ a b (a<b : a <ᵣ b) (f F : ∀ x → x ∈ intervalℙ a b → ℝ)
+           → ∀ (ucf : IsUContinuousℙ (intervalℙ a b) f)
+           → uDerivativeOfℙ (intervalℙ a b) , F is f
+           → fst (Integrate-UContinuousℙ a b (<ᵣWeaken≤ᵣ _ _ a<b) f ucf)
+               ≡ F b _ -ᵣ F a _
+ FTOC⇐' a b a<b f F ucf udc =
    let a≤b = <ᵣWeaken≤ᵣ _ _ a<b
+       f∘clamp = λ x → f (clampᵣ a b x) (clampᵣ∈ℚintervalℙ a b a≤b x)
+       ucf∘clamp : IsUContinuous f∘clamp
+       ucf∘clamp = map-snd
+         (λ {δ} X u v u∼v → X _ _ _ _ (clampᵣ∼ {a} {b}  u∼v))
+                ∘ ucf
        z =
            subst2 (uDerivativeOfℙ (pred≥ a) ,_is_)
              (funExt₂ λ _ _ → sym (-ᵣ≡[-1·ᵣ] _))
              (funExt₂ λ _ _ → sym (-ᵣ≡[-1·ᵣ] _))
-             (C·uDerivativeℙ (pred≥ a) -1 _ _ (FTOC⇒ a f ucf))
+             (C·uDerivativeℙ (pred≥ a) -1 _ _ (FTOC⇒ a f∘clamp ucf∘clamp))
 
 
        f* : (r : ℝ) → r ∈ intervalℙ a b → ℝ
-       f* r r∈ = -ᵣ (fst (Integrate-UContinuous a r (fst r∈) f ucf))
+       f* r r∈ = -ᵣ (fst (Integrate-UContinuous a r (fst r∈) f∘clamp ucf∘clamp))
        zD : _
        zD = +uDerivativeℙ (intervalℙ a b) _ _
-                f* (λ x _ → -ᵣ (f x))
+                f* (λ x _ → -ᵣ (f∘clamp x))
               udc λ ε →
                 PT.map (map-snd
                   (λ X →
@@ -1249,18 +1354,46 @@ module IntegrationUC
                   (z ε)
        b∈ = a≤b , ≤ᵣ-refl _
        a∈ = ≤ᵣ-refl _ , a≤b
-       z' : F a ≡ F b +ᵣ f* b b∈
+       z' : F a (≤ᵣ-refl a , a≤b) ≡ F b (a≤b , ≤ᵣ-refl b) +ᵣ f* b b∈
        z' = sym (𝐑'.+IdR' _ _
              (cong -ᵣ_
-               (Integral'-empty a f _
-                (snd (Integrate-UContinuous a a (≤ᵣ-refl a) f ucf)))
-               ∙ -ᵣ-rat 0))
+               (Integral'-empty a f∘clamp _
+                (snd (Integrate-UContinuous a a (≤ᵣ-refl a) f∘clamp ucf∘clamp)))
+               ∙ (-ᵣ-rat 0)))
              ∙ nullDerivative→const a b
                 a∈ b∈
-                a<b (λ r r∈ → F r +ᵣ f* r r∈)
+                a<b (λ r r∈ → F r r∈ +ᵣ f* r r∈)
+                 
                  (subst (uDerivativeOfℙ (intervalℙ a b) ,
-                   (λ r r∈ → F r +ᵣ f* r r∈) is_)
-                   (funExt₂ (λ _ _ → +-ᵣ _)) zD)
-   in sym L𝐑.lem--079
+                   (λ r r∈ → F r r∈ +ᵣ f* r r∈) is_)
+                   (funExt₂ (λ x x∈ →
+                     cong₂ _-ᵣ_  refl
+                       ( cong (uncurry f)
+                         (Σ≡Prop (∈-isProp (intervalℙ a b))
+                          (sym (∈ℚintervalℙ→clampᵣ≡ a b x x∈)))) ∙ +-ᵣ _ )) zD)
+   in Integrate-UContinuous-≡-∈ a b a≤b _ _ _ _
+        (λ _ _ → refl)
+       ∙ sym L𝐑.lem--079
        ∙ cong₂ _-ᵣ_ refl (sym z')
 
+ -- FTOC⇐'' : ∀ a b (a<b : a <ᵣ b) (f F : ∀ x → x ∈ intervalℙ a b → ℝ)
+ --           → (ucf : IsUContinuousℙ (intervalℙ a b) f)
+ --           → uDerivativeOfℙ (intervalℙ a b) , F is f
+ --           → ∀ x x∈
+ --           → on[ a , x ]IntegralOf
+ --               (λ x₁ ≤x x≤ → f x₁ (≤x , isTrans≤ᵣ x₁ x b x≤ (snd x∈))) is
+ --               (F x x∈ -ᵣ F a {!!})
+ -- FTOC⇐'' a b a<b f F ucf fd x x∈ = {!w!}
+ --  where
+ --  w = FTOC⇐' a x
+  
+ FTOC⇐ : ∀ a b (a<b : a <ᵣ b) (f F : ∀ x → x ∈ intervalℙ a b → ℝ)
+        → IsUContinuousℙ (intervalℙ a b) f
+           → uDerivativeOfℙ (intervalℙ a b) , F is f
+           → (on[ a , b ]IntegralOf curry ∘ f is (F b _ -ᵣ F a _))
+ FTOC⇐ a b a<b f F ucf udc =   
+     subst (on[ a , b ]IntegralOf curry ∘ f is_)
+     (FTOC⇐' a b a<b _ _ ucf udc)
+     (snd (Integrate-UContinuousℙ a b (<ᵣWeaken≤ᵣ a b a<b) f ucf))
+  
+open IntegrationUC rtp-1/n  public

@@ -1401,6 +1401,7 @@ IsUContinuousℙ P f =
   ∀ (ε : ℚ₊) → Σ[ δ ∈ ℚ₊ ]
      (∀ u v u∈ v∈ → u ∼[ δ ] v  → f u u∈ ∼[ ε ] f v v∈)
 
+
 ℚApproxℙ'' : (P Q : ℙ ℝ) (f : ∀ x → x ∈ P → Σ ℝ (_∈ Q)) → Type
 ℚApproxℙ'' P Q f =
  ∀ x → (x∈P : rat x ∈ P) (ε : ℚ₊) →

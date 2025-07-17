@@ -82,10 +82,6 @@ Lipschitz-ℚ→ℝℙ<→Lipschitz-ℚ→ℝℙ L P f X = (flip ∘
         (<ℚ→<ᵣ _ _  (ℚ.<-o· _ _ (fst L) (ℚ.0<ℚ₊ L)
           (subst (ℚ._< fst ε) (ℚ.absPos _ ((ℚ.-< _ _ x₁))) u)) )))
 
-Lipschitz-ℝ→ℝℙ : ℚ₊ → (P : ℙ ℝ) → (∀ x → x ∈ P  → ℝ) → Type
-Lipschitz-ℝ→ℝℙ L P f =
-    (∀ u u∈ v v∈ → (ε : ℚ₊) →
-        u ∼[ ε  ] v → f u u∈ ∼[ L ℚ₊· ε  ] f v v∈)
 
 
 Lipschitz-ℚ→ℝ' : ℚ₊ → (ℚ → ℝ) → Type
@@ -850,54 +846,6 @@ fromBilpschitz-ℚ→ℚℙ L K 1/K≤L a b a<b f incrF l il =
 open ℚ.HLP
 
 
-map-fromCauchySequence' : ∀ L s ics f → (Lipschitz-ℝ→ℝ L f) →
-    Σ _ λ icsf →
-      f (fromCauchySequence' s ics) ≡ fromCauchySequence' (f ∘ s) icsf
-map-fromCauchySequence' L s ics f lf =
-  icsf , sym (fromCauchySequence'≡ _ _ _ h)
-
- where
-
- icsf : IsCauchySequence' (f ∘ s)
- icsf ε = map-snd
-   (λ X m n <m <n →
-      let z = X m n <m <n
-          z' = lf (s n) (s m) (invℚ₊ L ℚ₊· ε)
-                (invEq (∼≃abs<ε _ _ _) z)
-       in fst (∼≃abs<ε _ _ ε) (subst∼ (ℚ.y·[x/y] L (fst ε)) z'))
-   (ics (invℚ₊ L ℚ₊· ε))
-
- h : (ε : ℚ₊) →
-       ∃-syntax ℕ
-       (λ N →
-          (n : ℕ) →
-          N ℕ.< n →
-          absᵣ ((f ∘ s) n -ᵣ f (fromCauchySequence' s ics)) <ᵣ rat (fst ε))
- h ε =
-   let (N , X) = ics ((invℚ₊ L ℚ₊· (/4₊ ε)))
-       (N' , X') = icsf (/4₊ ε)
-       midN = suc (ℕ.max N N')
-       midV = f (s midN)
-
-   in ∣ midN , (λ n midN<n →
-        let 3ε/4<ε = subst (ℚ._< (fst ε))
-                 (cong (fst (/4₊ ε) ℚ.+_)
-                   (sym (ℚ.y·[x/y] L _)
-                    ∙ cong (fst L ℚ.·_) (ℚ.·DistL+ _ _ _) ))
-                    distℚ<! ε [ ((ge[ ℚ.[ 1 / 4 ] ]) +ge
-                        (ge[ ℚ.[ 1 / 4 ] ] +ge ge[ ℚ.[ 1 / 4 ] ]))
-                        < ge1 ]
-            z' = invEq (∼≃abs<ε _ _ (/4₊ ε)) (X' ((suc N')) n
-                 (ℕ.<-trans (ℕ.suc-≤-suc ℕ.right-≤-max) midN<n)
-                  ℕ.≤-refl )
-
-            zzzz' =
-                (𝕣-lim-self _ (fromCauchySequence'-isCA s ics)
-                      ((invℚ₊ L ℚ₊· (/4₊ ε))) ( (invℚ₊ L ℚ₊· (/4₊ ε))))
-
-        in fst (∼≃abs<ε _ _ ε)
-             (∼-monotone< 3ε/4<ε
-                (triangle∼ z' (lf _ _ _ zzzz')))) ∣₁
 
 
 

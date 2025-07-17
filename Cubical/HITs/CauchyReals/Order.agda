@@ -63,6 +63,10 @@ opaque
  +ᵣ-∼ u v r =
    NonExpanding₂.go∼L sumR r u v
 
+ +ᵣ-∼' : ∀ u v r ε → u ∼[ ε ] v → (r +ᵣ u) ∼[ ε ] (r +ᵣ v)
+ +ᵣ-∼' u v r =
+   NonExpanding₂.go∼R sumR r u v
+
  +ᵣ-rat : ∀ p q → rat p +ᵣ rat q ≡ rat (p ℚ.+ q)
  +ᵣ-rat p q = refl
 
@@ -378,7 +382,9 @@ opaque
             r<q = ℚ.isTrans<≤ _ _ _ y' (≤ᵣ→≤ℚ _ _ (isTrans≤ᵣ _ _ _ y'' x))
         in ℚ.isAsym< _ _ q<r r<q
 
-
+ isAntisym≤ᵣ : BinaryRelation.isAntisym _≤ᵣ_
+ isAntisym≤ᵣ a b a≤b b≤a = sym b≤a ∙∙ maxᵣComm _ _ ∙∙ a≤b
+ 
  -ᵣR : Σ (ℝ → ℝ) (Lipschitz-ℝ→ℝ (1 , tt))
  -ᵣR = fromLipschitz (1 , _)
    ((rat ∘ ℚ.-_ ) , λ q r ε x x₁ →

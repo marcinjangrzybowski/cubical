@@ -876,7 +876,6 @@ _^ⁿ_ : ℝ → ℕ → ℝ
 x ^ⁿ zero = 1
 x ^ⁿ suc n = (x ^ⁿ n) ·ᵣ x
 
-
 ^ⁿ-ℚ^ⁿ : ∀ n q → ((rat q) ^ⁿ n) ≡ rat (q ℚ.ℚ^ⁿ n)
 ^ⁿ-ℚ^ⁿ zero _ = refl
 ^ⁿ-ℚ^ⁿ (suc n) a =

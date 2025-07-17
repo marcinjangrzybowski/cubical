@@ -150,52 +150,6 @@ slope-monotone-ₙ√ n a b a' b' a<b a'<b' a≤a' b≤b' =
        ((ₙ√-Monotone {b} {b'} (1+ n) b≤b'))
 
 
-cauchySequenceSpeedup : ∀ s
-    → (ics : IsCauchySequence' s)
-    → (spd : ℚ₊ → ℕ)
-    → (∀ ε → fst (ics ε) ℕ.≤ spd ε)
-
-    → IsCauchySequence' s
-cauchySequenceSpeedup s  ics spd ≤spd ε =
- let (N , X) = ics ε
- in spd ε ,
-     λ m n spdN<n spdN<m →
-
-        X m n (ℕ.≤<-trans (≤spd ε) spdN<n)
-               (ℕ.≤<-trans (≤spd ε) spdN<m)
-opaque
- unfolding _≤ᵣ_
- cauchySequenceSpeedup≡ : ∀ s ics spd ≤spd →
-   fromCauchySequence' s ics ≡
-    fromCauchySequence' s (cauchySequenceSpeedup s ics spd ≤spd   )
- cauchySequenceSpeedup≡ s ics spd ≤spd =
-   fromCauchySequence'-≡-lem _ _ _
-
- fromCauchySequence'≤ : ∀ s ics s' ics'
-   → (∀ n → s n ≤ᵣ s' n)
-   → fromCauchySequence' s ics ≤ᵣ fromCauchySequence' s' ics'
- fromCauchySequence'≤ s ics s' ics' x =
-   cong₂ maxᵣ
-      (cauchySequenceSpeedup≡ s  ics
-         (λ ε → ℕ.max (ℕ.max (fst (ics ε)) (fst (ics' ε))) ((fst (ics' (2 ℚ₊· ε)))))
-           λ ε → ℕ.≤-trans ℕ.left-≤-max ℕ.left-≤-max)
-      (cauchySequenceSpeedup≡ s' ics'
-         ((λ ε → ℕ.max (ℕ.max (fst (ics ε)) (fst (ics' ε))) ((fst (ics' (2 ℚ₊· ε))))))
-           λ ε → ℕ.≤-trans ℕ.right-≤-max ℕ.left-≤-max) ∙
-   snd (NonExpanding₂.β-lim-lim/2 maxR _ _ _ _) ∙
-     (congLim _ _ _ _
-      λ q →  x (suc (fastS q)))
-      ∙
-       sym (cauchySequenceSpeedup≡ s' ics'
-         fastS λ ε → subst (ℕ._≤ fastS ε) (cong (fst ∘ ics')
-           ((ℚ₊≡ (cong (2 ℚ.·_) (ℚ.·Comm _ _) ∙ ℚ.y·[x/y] 2 _)))) ℕ.right-≤-max)
-
-  where
-   fastS : ℚ₊ → ℕ
-   fastS ε = ℕ.max (ℕ.max (fst (ics (/2₊ ε)))
-        (fst (ics' (/2₊ ε))))
-               (fst (ics' (2 ℚ₊· /2₊ ε)))
-
 ·-limℙ : ∀ P x f g F G
         → at x limitOfℙ P , f is F
         → at x limitOfℙ P , g is G
@@ -1248,39 +1202,6 @@ opaque
 
 
 
-mapNE-fromCauchySequence' : ∀ {h} (ne : NonExpanding₂ h) s ics s' ics' →
-    Σ (IsCauchySequence'
-         λ k → NonExpanding₂.go ne (s k) (s' k)) λ icsf →
-      NonExpanding₂.go ne
-        (fromCauchySequence' s ics)
-        (fromCauchySequence' s' ics')
-          ≡
-           fromCauchySequence' _ icsf
-mapNE-fromCauchySequence' ne s ics s' ics' =
- (λ  ε →
-  let (N , X) = ics (/2₊ ε)
-      (N' , X') = ics' (/2₊ ε)
-  in ℕ.max N N' , λ m n <n <m →
-       isTrans<≡ᵣ _ _ _ (fst (∼≃abs<ε _ _ _) (go∼₂ (/2₊ ε) (/2₊ ε)
-           (invEq (∼≃abs<ε _ _ _)
-             (X m n (ℕ.≤<-trans ℕ.left-≤-max <n)
-                    (ℕ.≤<-trans ℕ.left-≤-max <m)))
-           (invEq (∼≃abs<ε _ _ _)
-              ((X' m n (ℕ.≤<-trans ℕ.right-≤-max <n)
-                       (ℕ.≤<-trans ℕ.right-≤-max <m)))))
-          ) (cong rat (ℚ.ε/2+ε/2≡ε (fst ε))))
-   , cong₂ go
-       (cauchySequenceSpeedup≡ _ _
-          (λ ε → ℕ.max (fst (ics ε)) (fst (ics' ε)))
-            λ _ → ℕ.left-≤-max)
-       (cauchySequenceSpeedup≡ _ _
-          (λ ε → ℕ.max (fst (ics ε)) (fst (ics' ε)))
-            λ _ → ℕ.right-≤-max)
-      ∙ snd (β-lim-lim/2 _ _ _ _)
-         ∙ congLim _ _ _ _ λ _ → refl
-
- where
- open NonExpanding₂ ne
 
 Lipschitz-·R : ∀ q a → absᵣ a ≤ᵣ rat (fst q) → Lipschitz-ℝ→ℝ q (_·ᵣ a)
 Lipschitz-·R q a a<q u v ε u∼v =

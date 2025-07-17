@@ -266,48 +266,45 @@ private
              (2≤x→1<quotient[x/2] n)) )
       (≤SumRight {_} {(remainder 2 + n / 2)}))
 
+open Minimal
 
--- -- TODO: shoulld be easy to generalise to other nuumbers than 2
+log2ℕ : ∀ n → Σ _ (Least (λ k → n < 2 ^ k))
+log2ℕ n = w n n ≤-refl
+ where
 
--- log2ℕ : ∀ n → Σ _ (Minimal.Least (λ k → n < 2 ^ k))
--- log2ℕ n = w n n ≤-refl
---  where
+  w : ∀ N n → n ≤ N
+          → Σ _ (Least (λ k → n < 2 ^ k))
+  w N zero x = 0 , (≤-refl , λ k' q → ⊥.rec (¬-<-zero q))
+  w N (suc zero) x = 1 , (≤-refl ,
+     λ { zero q → <-asym (suc-≤-suc ≤-refl)
+      ; (suc k') q → ⊥.rec (¬-<-zero (pred-≤-pred q))})
+  w zero (suc (suc n)) x = ⊥.rec (¬-<-zero x)
+  w (suc N) (suc (suc n)) x =
+   let (k , (X , Lst)) = w N
+          (quotient 2 + n / 2)
+          (≤-trans (pred-≤-pred (2≤x→quotient[x/2]<x n))
+             (pred-≤-pred x))
+       z = ≡remainder+quotient 2 (2 + n)
+       zz = <-+-≤ X X
+       zzz : suc (suc n) < (2 ^ suc k)
+       zzz = subst2 (_<_)
+           (+-comm (quotient 2 + n / 2) ((remainder 2 + n / 2) + (quotient 2 + n / 2))
+              ∙ sym (+-assoc ((remainder 2 + n / 2)) (quotient 2 + n / 2) (quotient 2 + n / 2))
+               ∙ cong ((remainder 2 + n / 2) +_)
+             ((cong ((quotient 2 + n / 2) +_)
+              (sym (+-zero (quotient 2 + n / 2)))))
+             ∙ z)
+           (cong ((2 ^ k) +_) (sym (+-zero (2 ^ k))))
+           (≤<-trans
+             (≤-k+ (≤-+k (pred-≤-pred (mod< 1 (2 + n))))) zz)
+   in (suc k)
+       , zzz
+        , λ { zero 0'<sk 2+n<2^0' →
+                ⊥.rec (¬-<-zero (pred-≤-pred 2+n<2^0'))
+            ; (suc k') k'<sk 2+n<2^k' →
+               Lst k' (pred-≤-pred k'<sk)
+                (<-·sk-cancel {k = 1}
+                    (subst2 _<_ (·-comm 2 (quotient 2 + n / 2)) (·-comm 2 (2 ^ k'))
+                      (≤<-trans  ((remainder 2 + n / 2) , z)
+                         2+n<2^k' )))}
 
---   w : ∀ N n → n ≤ N
---           → Σ _ (Minimal.Least (λ k → n < 2 ^ k))
---   w N zero x = 0 , (≤-refl , λ k' q → ⊥.rec (¬-<-zero q))
---   w N (suc zero) x = 1 , (≤-refl ,
---      λ { zero q → <-asym (suc-≤-suc ≤-refl)
---       ; (suc k') q → ⊥.rec (¬-<-zero (pred-≤-pred q))})
---   w zero (suc (suc n)) x = ⊥.rec (¬-<-zero x)
---   w (suc N) (suc (suc n)) x =
---    let (k , (X , Lst)) = w N
---           (quotient 2 + n / 2)
---           (≤-trans (pred-≤-pred (2≤x→quotient[x/2]<x n))
---              (pred-≤-pred x))
---        z = ≡remainder+quotient 2 (2 + n)
---        zz = <-+-≤ X X
---        zzz : suc (suc n) < (2 ^ suc k)
---        zzz = subst2 (_<_)
---            (+-comm ({!remainder 2 + n / 2!} +
---                      (({!!})))
---                       ({!!})
---               ∙ sym (+-assoc _ _ _)
---                ∙ cong ((remainder 2 + n / 2) +_)
---              ((cong ((quotient 2 + n / 2) +_)
---               (sym (+-zero (quotient 2 + n / 2)))))
---              ∙ z)
---            (cong ((2 ^ k) +_) (sym (+-zero (2 ^ k))))
---            ((≤<-trans
---              (≤-k+ {k = _}
---                (≤-+k {k = {!!}} (pred-≤-pred (mod< 1 (2 + n))))) zz))
---    in (suc k)
---        , zzz
---         , λ { zero 0'<sk 2+n<2^0' →
---                 ⊥.rec (¬-<-zero (pred-≤-pred 2+n<2^0'))
---             ; (suc k') k'<sk 2+n<2^k' →
---                Lst k' (pred-≤-pred k'<sk)
---                 (<-·sk-cancel {k = 1}
---                     (subst2 _<_ (·-comm _ _) (·-comm _ _)
---                       (≤<-trans (_ , z)
---                          2+n<2^k' )))}

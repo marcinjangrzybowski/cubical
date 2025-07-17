@@ -292,6 +292,10 @@ isAsym< m<n = isIrrefl< ∘ <≤-trans m<n
 <Monotone+ : m < n → o < s → m ℤ.+ o < n ℤ.+ s
 <Monotone+ {o = o} m<n o<s = isTrans< (<-+o {o = o} m<n) (<-o+ o<s)
 
+≤<Monotone+ : m ≤ n → o < s → m ℤ.+ o < n ℤ.+ s
+≤<Monotone+ {o = o} m≤n o<s = ≤<-trans (≤-+o {o = o} m≤n) (<-o+ o<s)
+
+
 <-+-≤ : m < n → o ≤ s → m ℤ.+ o < n ℤ.+ s
 <-+-≤ {o = o} m<n o≤s = <≤-trans (<-+o {o = o} m<n) (≤-o+ o≤s)
 

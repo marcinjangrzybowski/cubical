@@ -212,6 +212,9 @@ predℕ-≤-predℕ {suc m} {suc n} ineq = pred-≤-pred ineq
 <-+-≤ : m < n → k ≤ l → m + k < n + l
 <-+-≤ p q = <≤-trans (<-+k p) (≤-k+ q)
 
+≤-+-< : m ≤ n → k < l → m + k < n + l
+≤-+-< p q = ≤<-trans (≤-+k p) (<-k+ q)
+
 ¬squeeze< : {n m : ℕ} → ¬ (n < m) × (m < suc n)
 ¬squeeze< {n = n} ((zero , p) , t) = ¬m<m (subst (_< suc n) (sym p) t)
 ¬squeeze< {n = n}  ((suc diff1 , p) , q) =
@@ -681,22 +684,43 @@ a ≲ᵉ b = Σ[ N ∈ ℕ ] (∀ n → N ≤ n → a (suc n) + b n ≤ b (suc n
 _≺ᵉ_ : (ℕ → ℕ) → (ℕ → ℕ) → Type₀
 a ≺ᵉ b = Σ[ N ∈ ℕ ] (∀ n → N ≤ n → a (suc n) + b n < b (suc n) + a n)
 
--- eventualGrowth⇒eventualLarger :
+0<! : ∀ n → 0 < n !
+0<! zero = zero-<-suc
+0<! (suc n) = <monotone· (zero-<-suc {n}) (0<! n)
+
+StrictMonotone! : m < n → suc m ! < suc n !
+StrictMonotone! {m} {zero} = ⊥.rec ∘ ¬-<-zero
+StrictMonotone! {zero} {suc zero} _ = ≤-refl {2}
+StrictMonotone! {zero} {suc (suc n)} 0<ssn =
+ <monotone· (suc-≤-suc 0<ssn)
+   (StrictMonotone! {zero} {suc n} (zero-<-suc {n}))
+StrictMonotone! {suc m} {suc n} sm<sn =
+  <monotone· (suc-≤-suc sm<sn)
+    (StrictMonotone! {m} {n} (pred-≤-pred sm<sn))
+
+StrictMonotone!' : 0 < m → m < n → m ! < n !
+StrictMonotone!' {m} {zero} _ m<0 = ⊥.rec (¬-<-zero m<0)
+StrictMonotone!' {zero} {suc n} 0<0 _ = ⊥.rec (¬-<-zero 0<0)
+StrictMonotone!' {suc m} {suc n} _ m<n = StrictMonotone! (pred-≤-pred m<n)
+
+Monotone! : m ≤ n → m ! ≤ n !
+Monotone! {zero} {n} _ = 0<! n
+Monotone! {suc m} {zero} m≤n = ⊥.rec (¬-<-zero m≤n)
+Monotone! {suc m} {suc n} sm≤sn =
+  ≤monotone· (sm≤sn)
+    (Monotone! {m} {n} (pred-≤-pred sm≤sn))
+
+
+-- eventualGrowth⇒eventuallyLarger :
 --   ∀ {a b : ℕ → ℕ} →
 --   a ≺ᵉ b →
 --   Σ[ N ∈ ℕ ] (∀ n → N ≤ n → a n < b n)
--- eventualGrowth⇒eventualLarger = {!!}
+-- eventualGrowth⇒eventuallyLarger = {!!}
 
--- ℕε<kⁿ : ∀ p q r s → 0 < q →  s < r → Σ[ n ∈ ℕ ]
---            p · s ^ n < q · r ^ n
--- ℕε<kⁿ p q zero s 0<q s<r = ⊥.rec (¬-<-zero s<r)
--- ℕε<kⁿ p zero (suc r) zero 0<q s<r = ⊥.rec (¬-<-zero 0<q)
--- ℕε<kⁿ p (suc q) (suc r) zero 0<q s<r = {!!}
--- ℕε<kⁿ p q (suc r) (suc s) 0<q s<r = {!!}
+--  -- where
+ 
+-- -- Σk-m<snᵏ : Σ[ k ∈ ℕ ] (m < (suc (suc n)) ^ k)
+-- -- Σk-m<snᵏ {zero} = 1 , zero-<-suc
+-- -- Σk-m<snᵏ {suc m} {n} = {!n!}
+-- --  -- {!!} , {!sn<ssm^sn m ?!}
 
---  where
---   ΔLHS : ℕ → ℕ
---   ΔLHS n = (p · s) · ((suc s) ^ n)
-
---   ΔRHS : ℕ → ℕ
---   ΔRHS n = (q · r) · ((suc r) ^ n)
