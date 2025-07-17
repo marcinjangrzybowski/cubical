@@ -55,8 +55,8 @@ open import Cubical.HITs.CauchyReals.Uniform
 open import Cubical.HITs.CauchyReals.PiNumber
 open import Cubical.HITs.CauchyReals.NthRoot
 
-x²=1→∣x∣=1 : ∀ x → x ·ᵣ x ≡ 1 → absᵣ x ≡ 1
-x²=1→∣x∣=1 x x²=1 = {!cong (x ·ᵣ_) !}
+-- x²=1→∣x∣=1 : ∀ x → x ·ᵣ x ≡ 1 → absᵣ x ≡ 1
+-- x²=1→∣x∣=1 x x²=1 = {!cong (x ·ᵣ_) !}
 
 -- sin[π/2]≡1 : sin π-number/2 ≡ 1
 -- sin[π/2]≡1 =
