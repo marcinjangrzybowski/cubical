@@ -287,7 +287,7 @@ module _
     ; (inr q) →
         let ∣+  = ∣-+ p (∣-right {m = m} {k = - qr .div})
             m∣r = subst {x = n + - qr .div · m} {y = qr .rem}
-                (m ∣_) (cong₂ _+_ (qr .quotEq) refl ∙ solve! ℤCommRing) ∣+
+                (m ∣_) (cong (_+ _) (qr .quotEq) ∙ solve! ℤCommRing) ∣+
             m≤r = m∣n→m≤n (¬x≡0→¬abs≡0 (q .fst)) (∣→∣ℕ m∣r)
         in  Empty.rec (<-asym (q .snd) m≤r) }
 
