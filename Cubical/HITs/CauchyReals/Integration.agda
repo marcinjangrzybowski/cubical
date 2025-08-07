@@ -64,12 +64,12 @@ record Partition[_,_] (a b : ℝ) : Type₀ where
  a≤b : a ≤ᵣ b
  a≤b = isTrans≤ᵣ a _ _ (a≤pts fzero) (pts≤b fzero)
 
- pts'Σ-R : ElimFinSS (Σ-syntax ℝ (λ p → (a ≤ᵣ p) × (p ≤ᵣ b))) (suc len)
+ pts'Σ-R : ElimFinSS (Σ _ (_∈ intervalℙ a b))  (suc len)
  pts'Σ-R .ElimFinSS.a₀ = a , ≤ᵣ-refl a , a≤b
  pts'Σ-R .ElimFinSS.f k = pts k , a≤pts _ , pts≤b _
  pts'Σ-R .ElimFinSS.aₙ = b , a≤b , ≤ᵣ-refl b
 
- pts'Σ : Fin (3 ℕ.+ len) → Σ[ p ∈ ℝ ] (a ≤ᵣ p) × (p ≤ᵣ b)
+ pts'Σ : Fin (3 ℕ.+ len) → (Σ _ (_∈ intervalℙ a b))
  pts'Σ = ElimFinSS.go pts'Σ-R
 
  pts' : Fin (3 ℕ.+ len) → ℝ
@@ -253,6 +253,23 @@ record Partition[_,_] (a b : ℝ) : Type₀ where
    foldFin+map (2 ℕ.+ len) 0 _
     (λ k →  samplesΣ k , pts' (fsuc k) -ᵣ pts' (finj k))
     (idfun _)
+
+
+  riemannSum-empty : (f : ∀ r → r ∈ intervalℙ a b → ℝ)
+    → a ≡ b
+    → 0 ≡ riemannSum (curry ∘ f)
+      
+  riemannSum-empty f a≡b =
+      sym (𝐑'.0RightAnnihilates _)
+    ∙ sym (foldFin+Const (2 ℕ.+ len) 0 (idfun _)) 
+    ∙ (cong (foldlFin {n = 2 ℕ.+ len}) (funExt₂
+      (λ S y → cong (S +ᵣ_) ((sym (𝐑'.0LeftAnnihilates' _ _
+        (𝐑'.+InvR' _ _ (
+         cong fst (isContr→isProp (pointIntervalℙ a b a≡b)
+          (pts'Σ (fsuc y)) (pts'Σ (finj y))))))))))
+       ≡$ 0 ≡$ idfun _)
+    ∙ sym (riemannSum'-alt-lem _)
+    ∙ sym (riemannSum-clamp f)
 
 
   riemannSum'-absᵣ≤ : (f : ℝ → ℝ) →
@@ -530,6 +547,8 @@ Integral'Uniq a b a≤b f s s' S S' =
                 (∃Partition< a b a≤b δ⊔δ'))
        (S (/2₊ ε)) (S' (/2₊ ε))
 
+
+
 IntegralUniq : ∀ a b → (a ≤ᵣ b) → ∀ f s s'
   → on[ a , b ]IntegralOf f is s
   → on[ a , b ]IntegralOf f is s'
@@ -557,6 +576,13 @@ IntegratedProp : ∀ a b → a ≤ᵣ b → ∀ f → isProp (Σ _ on[ a , b ]In
 IntegratedProp a b a≤b f (s , S) (s' , S')  =
   Σ≡Prop (λ _ → isPropΠ λ _ → squash₁ )
    (Integral'Uniq a b a≤b f s s' S S')
+
+IntegratedℙPropℙ : ∀ a b → a ≤ᵣ b → ∀ f → isProp (Σ _ on[ a , b ]IntegralOf f is_)
+IntegratedℙPropℙ a b a≤b f (s , S) (s' , S')  =
+  Σ≡Prop (λ _ → isPropΠ λ _ → squash₁ )
+   (IntegralUniq a b a≤b f s s' S S')
+
+
 
 module Partition-pre+ (a b : ℝ) (α : ℝ) where
  partition-pre+ :

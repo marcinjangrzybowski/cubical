@@ -13,6 +13,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.GroupoidLaws
 
 open import Cubical.Functions.Surjection
 
@@ -102,3 +103,9 @@ rec : (Rt : BinaryRelation.isTrans R)
     → (x : A // Rt)
     → B
 rec Rt Bgpd = elim Rt (λ _ → Bgpd)
+
+refl≡Id : (Rt : BinaryRelation.isTrans R) →
+           {a : A} (r : R a a) →
+            Rt a a a r r ≡ r →
+             eq// {Rt = Rt} r ≡ refl 
+refl≡Id Rt r x = rCancelRefl _ _ (sym (comp'// _ Rt r r) ∙ cong eq// (x))

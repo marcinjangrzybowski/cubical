@@ -461,8 +461,25 @@ Integral'Const a b a≤b C ε =
      ∙ absᵣ0) (snd (ℚ₊→ℝ₊ ε))) ∣₁
 
 
+IntegralConstℙ : ∀ a b → a ≤ᵣ b → ∀ C → 
+      on[ a , b ]IntegralOf
+      (λ _ _ _ → C) is
+      (C ·ᵣ (b -ᵣ a))
+IntegralConstℙ a b a≤b C ε =
+  ∣ 1 , (λ tp _ → isTrans≡<ᵣ _ _ _
+    (cong absᵣ (𝐑'.+InvR' _ _ (riemannSum'Const (snd tp) C))
+     ∙ absᵣ0) (snd (ℚ₊→ℝ₊ ε))) ∣₁
+
+
+
 sin≤1 : ∀ x → sin x ≤ᵣ 1
 sin≤1 x = isTrans≤ᵣ _ _ _ (≤absᵣ _) (∣sin∣≤1 x)
+
+-1≤sin : ∀ x → -1 ≤ᵣ sin x 
+-1≤sin x = subst2 _≤ᵣ_
+  (-ᵣ-rat 1)
+  (sym (cong -ᵣ_ (sin-odd x)) ∙ -ᵣInvol _)
+  (-ᵣ≤ᵣ _ _ (sin≤1 (-ᵣ x)))
 
 open ℚ.HLP
 
@@ -781,7 +798,8 @@ t<π-seq→0<cos[t] : ∀ t n →
 0<η-seq[n] : ∀ n → 0 <ᵣ π-seq (suc n)
 
 t<π-seq→0<cos[t] t zero 0≤t t≤0+1 =
-    PT.elim
+    isTrans<≡ᵣ _ _ _
+    (PT.elim
     (λ ich →
        isProp<ᵣ
         0
@@ -821,7 +839,7 @@ t<π-seq→0<cos[t] t zero 0≤t t≤0+1 =
              ℕ.≤monotone· (ℕ.≤-sucℕ {n}) (ℕ.≤-sucℕ {1}) 
             )) ich))))))
           ))
-    (cos-ch t)
+    (cos-ch t)) (sym (cosImpl _))
 
   where
   t≤1 = (isTrans≤≡ᵣ _ _ _ t≤0+1
@@ -1131,8 +1149,20 @@ isConvSeriesΣπ-seq-diffs =
     (λ n → π-seq (suc n) -ᵣ π-seq n)) X)) isConvSeriesΣπ-seq-diffs
 
 
-π-number/2 : ℝ
-π-number/2 = fromCauchySequence'₁ π-seq π-seq-cauchy
+opaque
+ π-number/2 : ℝ
+ π-number/2 = fromCauchySequence'₁ π-seq π-seq-cauchy
+
+ π-seq-lim : ∥ lim'ₙ→∞ π-seq is π-number/2  ∥₁
+ π-seq-lim = do
+  ics ← π-seq-cauchy
+  ∣ subst (lim'ₙ→∞ π-seq is_)
+    (fromCauchySequence'₁-≡-lem _ ∣ ics ∣₁ π-seq-cauchy)
+     (fromCauchySequence'-lim _ ics) ∣₁  
+
+π-number : ℝ
+π-number = 2 ·ᵣ π-number/2
+
 
 Lipschitz-cos : Lipschitz-ℝ→ℝ 1 cos
 Lipschitz-cos u v ε x =
@@ -1152,6 +1182,35 @@ Lipschitz-sin u v ε x =
 0≤η-seq[n] : ∀ n → 0 ≤ᵣ π-seq n
 0≤η-seq[n] zero = ≤ᵣ-refl 0
 0≤η-seq[n] (suc n) = <ᵣWeaken≤ᵣ _ _  (0<η-seq[n] n)
+
+opaque
+ unfolding π-number/2
+
+ 1<π-number/2 : 1 <ᵣ π-number/2
+ 1<π-number/2 = isTrans<≤ᵣ _ (π-seq 2) _
+   (isTrans≡<ᵣ _ _ _ (sym (cos0=1) ∙ sym (+IdL _))
+    (π-seq-incr 1)) 
+
+  (isTrans≤≡ᵣ _ _ _
+    (isTrans≡≤ᵣ _ _ _ (sym (fromCauchySequence'-const (π-seq 2) _ ) )
+    (fromCauchySequence'₁≤ (λ _ → (π-seq 2)) (π-seq ∘ suc ∘ suc) 
+      ∣ isCauchySequence'-const (π-seq 2) ∣₁
+         (PT.map (λ x → fst (cauchySequenceFaster
+           π-seq (λ k → suc (suc k) , ℕ.≤-+k {0} {2} {k} (ℕ.≤-solver 0 2)) x))
+            π-seq-cauchy)
+        λ n → π-seq-monotone 2 (suc (suc n))
+         (ℕ.≤-k+ {0} {n} {2} (ℕ.zero-≤ {n}))))
+         (sym (fromCauchySequence'₁-∘+ π-seq 2 _ _)))
+
+
+ 0<π-number/2 : 0 <ᵣ π-number/2
+ 0<π-number/2 = isTrans<ᵣ _ _ _ (decℚ<ᵣ? {0} {1}) 1<π-number/2
+
+π-number/2₊ : ℝ₊
+π-number/2₊ = π-number/2 , 0<π-number/2
+
+π-number₊ : ℝ₊
+π-number₊ = 2 ₊·ᵣ (_ , 0<π-number/2)
 
 0<cos-π-seq : ∀ n → 0 <ᵣ cos (π-seq n)
 0<cos-π-seq n = t<π-seq→0<cos[t] (π-seq n) n (0≤η-seq[n] n)
@@ -1189,61 +1248,62 @@ x²≡0→x≡0 x x²=0 =
                (rat (fst ε))
                (<ℚ→<ᵣ _ _ (x/2<x ε)))))
     
-
-cos[π/2]≡0 : cos π-number/2 ≡ 0
-cos[π/2]≡0 =
-  PT.rec (isSetℝ _ _)
-  (λ (η , 1-sin1<η , η<1) →
-    snd (map-fromCauchySequence'₁ 1
-     π-seq π-seq-cauchy cos Lipschitz-cos) ∙
-      fromCauchySequence'₁≡ (cos ∘ π-seq)
-       _ 0
-        λ ε →
-          let zwz = lim0FromRatioBound (cos ∘ π-seq)
-                     (η , ℚ.<→0< _ (<ᵣ→<ℚ _ _ (isTrans≤<ᵣ _ _ _
-                      (x≤y→0≤y-x _ _ (sin≤1 _))
-                      1-sin1<η)
-                       ))
-                     (<ᵣ→<ℚ _ _ η<1) (1 , (λ _ → ∣cos∣≤1 _))
-                     (inl ∘ 0<cos-π-seq) 1
-                      (λ n x → isTrans≤<ᵣ _ _ _
-                        (isTrans≡≤ᵣ _ _ _ (cong absᵣ
-                          (cong₂ _·ᵣ_ (sym L𝐑.lem--063)
-                           (cong (uncurry invℝ)
-                             (Σ≡Prop (isProp＃ 0)
-                              (sym L𝐑.lem--063))))) (zz n x))
-                        1-sin1<η)
-                      ε
-           in ∣ zwz ∣₁)
-   (denseℚinℝ (1 -ᵣ sin 1) 1
-     (isTrans<≡ᵣ _ _ _
-       (<ᵣ-o+ _ _ _ (-ᵣ<ᵣ _ _ 0<sin1))
-      (cong₂ _+ᵣ_ refl (-ᵣ-rat 0) ∙ +IdR 1)))
-
-  
- where
+opaque
+ unfolding π-number/2
+ cos[π/2]≡0 : cos π-number/2 ≡ 0
+ cos[π/2]≡0 =
+   PT.rec (isSetℝ _ _)
+   (λ (η , 1-sin1<η , η<1) →
+     snd (map-fromCauchySequence'₁ 1
+      π-seq π-seq-cauchy cos Lipschitz-cos) ∙
+       fromCauchySequence'₁≡ (cos ∘ π-seq)
+        _ 0
+         λ ε →
+           let zwz = lim0FromRatioBound (cos ∘ π-seq)
+                      (η , ℚ.<→0< _ (<ᵣ→<ℚ _ _ (isTrans≤<ᵣ _ _ _
+                       (x≤y→0≤y-x _ _ (sin≤1 _))
+                       1-sin1<η)
+                        ))
+                      (<ᵣ→<ℚ _ _ η<1) (1 , (λ _ → ∣cos∣≤1 _))
+                      (inl ∘ 0<cos-π-seq) 1
+                       (λ n x → isTrans≤<ᵣ _ _ _
+                         (isTrans≡≤ᵣ _ _ _ (cong absᵣ
+                           (cong₂ _·ᵣ_ (sym L𝐑.lem--063)
+                            (cong (uncurry invℝ)
+                              (Σ≡Prop (isProp＃ 0)
+                               (sym L𝐑.lem--063))))) (zz n x))
+                         1-sin1<η)
+                       ε
+            in ∣ zwz ∣₁)
+    (denseℚinℝ (1 -ᵣ sin 1) 1
+      (isTrans<≡ᵣ _ _ _
+        (<ᵣ-o+ _ _ _ (-ᵣ<ᵣ _ _ 0<sin1))
+       (cong₂ _+ᵣ_ refl (-ᵣ-rat 0) ∙ +IdR 1)))
 
 
- zz :  (n : ℕ) →
-        1 ℕ.< n →
-        absᵣ ((π-seq (suc (suc n)) -ᵣ π-seq (suc n)) ／ᵣ[
-         π-seq (suc n) -ᵣ π-seq n , inl
-           (x<y→0<y-x _ _ (π-seq-incr n)) ])
-           ≤ᵣ 1 -ᵣ sin 1
- zz zero x = ⊥.rec (ℕ.¬-<-zero x)
- zz (suc zero) x = ⊥.rec (ℕ.¬-<-zero (ℕ.pred-≤-pred x ))
- zz (suc (suc n)) _ =
-   isTrans≡≤ᵣ _ _ _
-     (cong absᵣ (cong₂ _·ᵣ_ refl
-         (sym (invℝ₊≡invℝ (_ ,
-          (x<y→0<y-x _ _ (π-seq-incr (suc (suc n))))) _)) )
-       ∙ absᵣPos _ (snd
-         ((_ , (x<y→0<y-x _ _ (π-seq-incr (suc (suc (suc n))))))
-           ₊·ᵣ invℝ₊ (_ , (x<y→0<y-x _ _ (π-seq-incr (suc (suc n))))))))
-     (invEq (z/y≤x₊≃z≤y₊·x _ _ _)
-       (isTrans≤≡ᵣ _ _ _
-        (π-seq-dist n)
-        (·ᵣComm _ _)))
+  where
+
+
+  zz :  (n : ℕ) →
+         1 ℕ.< n →
+         absᵣ ((π-seq (suc (suc n)) -ᵣ π-seq (suc n)) ／ᵣ[
+          π-seq (suc n) -ᵣ π-seq n , inl
+            (x<y→0<y-x _ _ (π-seq-incr n)) ])
+            ≤ᵣ 1 -ᵣ sin 1
+  zz zero x = ⊥.rec (ℕ.¬-<-zero x)
+  zz (suc zero) x = ⊥.rec (ℕ.¬-<-zero (ℕ.pred-≤-pred x ))
+  zz (suc (suc n)) _ =
+    isTrans≡≤ᵣ _ _ _
+      (cong absᵣ (cong₂ _·ᵣ_ refl
+          (sym (invℝ₊≡invℝ (_ ,
+           (x<y→0<y-x _ _ (π-seq-incr (suc (suc n))))) _)) )
+        ∙ absᵣPos _ (snd
+          ((_ , (x<y→0<y-x _ _ (π-seq-incr (suc (suc (suc n))))))
+            ₊·ᵣ invℝ₊ (_ , (x<y→0<y-x _ _ (π-seq-incr (suc (suc n))))))))
+      (invEq (z/y≤x₊≃z≤y₊·x _ _ _)
+        (isTrans≤≡ᵣ _ _ _
+         (π-seq-dist n)
+         (·ᵣComm _ _)))
 
 π-num : ℝ
 π-num = 2 ·ᵣ π-number/2
@@ -1253,6 +1313,74 @@ uContSin = Lipschitz-ℝ→ℝ→IsUContinuousℙ _ _  Lipschitz-sin
 
 uContCos : ∀ P → IsUContinuousℙ P (λ x₁ _ → cos x₁)
 uContCos = Lipschitz-ℝ→ℝ→IsUContinuousℙ _ _ Lipschitz-cos
+
+
+0≤x<π/2→0<cos[x] : ∀ x → 0 ≤ᵣ x → x <ᵣ π-number/2 → 0 <ᵣ cos x
+0≤x<π/2→0<cos[x] x 0≤x x<π/2 =
+  PT.rec2 (isProp<ᵣ _ _)
+    (λ (ε , 0<ε , ε<) ics →
+     let NN = ics (ε , ℚ.<→0< _ (<ᵣ→<ℚ _ _ 0<ε))  -- ics 
+         z = snd NN (suc (fst NN)) (ℕ.≤-refl {suc (fst NN)})
+         zz = <-o+-cancel _ _ _ $ isTrans≤<ᵣ _ _ _
+          (isTrans≤≡ᵣ _ _ _
+           (≤absᵣ _)
+           (minusComm-absᵣ _ _))
+          (isTrans<ᵣ _ _ _ z ε<)
+     in t<π-seq→0<cos[t] x (fst NN) 0≤x
+        (<ᵣWeaken≤ᵣ _ _ (<ᵣ-ᵣ _ _ zz)))
+    (denseℚinℝ 0 _ (x<y→0<y-x _ _ x<π/2) )
+    π-seq-lim
+    
+x≤π/2→0≤cos[x] : ∀ x → x ∈ intervalℙ 0 π-number/2 → 0 ≤ᵣ cos x
+x≤π/2→0≤cos[x] x x∈ = 
+ isTrans≤≡ᵣ _ _ _
+   (z (x ·ᵣ fst (invℝ₊ (_ , 0<π-number/2))))
+   (cong cos (cong (clampᵣ 0 _) ([x/₊y]·yᵣ _ _) ∙
+    sym (∈ℚintervalℙ→clampᵣ≡ 0 π-number/2 x x∈)))
+  
+
+  where
+  z : (x : ℝ) →
+       0 ≤ᵣ _
+  z = ≤Cont (IsContinuousConst 0)
+        (IsContinuous∘ _ _
+         isContinuousCos 
+         (IsContinuous∘ _ _
+           (IsContinuousClamp 0 (π-number/2))
+           (IsContinuous·ᵣR (π-number/2))))
+           
+             (ℚ.byTrichotomy 1 w )
+    where
+    w : ℚ.TrichotomyRec 1
+         (λ q → 0 ≤ᵣ cos _)
+    w .ℚ.TrichotomyRec.lt-case m m<1 =
+     let ww = max<-lem _ _ _  0<π-number/2
+             (isTrans<≡ᵣ _ _ _ 
+           (
+             (<ᵣ-·ᵣo (rat m) 1 (_ , 0<π-number/2) (<ℚ→<ᵣ _ _ m<1)))
+             (·IdL _))
+
+     in <ᵣWeaken≤ᵣ _ _ (0≤x<π/2→0<cos[x]
+         (clampᵣ 0 π-number/2 (rat m ·ᵣ π-number/2))
+        (≤clampᵣ _ _ _ (<ᵣWeaken≤ᵣ 0 π-number/2 0<π-number/2))
+         (isTrans≡<ᵣ _ (maxᵣ 0 ((rat m ·ᵣ π-number/2))) _
+         (≤→minᵣ _ _ (<ᵣWeaken≤ᵣ _ _ ww))
+         ww)) 
+    w .ℚ.TrichotomyRec.eq-case =
+      ≡ᵣWeaken≤ᵣ _ _ (sym cos[π/2]≡0 ∙
+       cong cos (∈ℚintervalℙ→clampᵣ≡ 0 π-number/2 π-number/2
+         (<ᵣWeaken≤ᵣ _ _ 0<π-number/2 , ≤ᵣ-refl _)
+         ∙ cong (clampᵣ 0 π-number/2) (sym (·IdL _))))
+    w .ℚ.TrichotomyRec.gt-case m 1<m =
+      ≡ᵣWeaken≤ᵣ _ _
+       ((sym cos[π/2]≡0 ∙
+        cong cos (sym ((≤x→clampᵣ≡ 0 π-number/2 (rat m ·ᵣ π-number/2)
+         ((<ᵣWeaken≤ᵣ 0 π-number/2 0<π-number/2))
+          (isTrans≡≤ᵣ _ _ _ (sym (·IdL _))
+           (<ᵣWeaken≤ᵣ _ _
+             (<ᵣ-·ᵣo 1 (rat m) (_ , 0<π-number/2) (<ℚ→<ᵣ _ _ 1<m)))))) ) ))
+
+
 
 module sin-cos-of-sum where
 

@@ -579,3 +579,7 @@ nth-pow-root-iso (2+ n) .Iso.rightInv = Iso.rightInv
 nth-pow-root-iso one .Iso.leftInv _ = ℝ₊≡ (·IdL _)
 nth-pow-root-iso (2+ n) .Iso.leftInv = Iso.leftInv
   (NthRoot.nth-pow-root-iso₊₂ n)
+
+
+isEquiv-₊^ⁿ : ∀ n → isEquiv (_₊^ⁿ ℕ₊₁→ℕ n)
+isEquiv-₊^ⁿ n = isoToIsEquiv (nth-pow-root-iso n)

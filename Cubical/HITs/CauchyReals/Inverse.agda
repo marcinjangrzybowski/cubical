@@ -16,6 +16,7 @@ open import Cubical.Data.Sum as ⊎
 open import Cubical.Data.Unit
 open import Cubical.Data.Int as ℤ using (pos)
 open import Cubical.Data.Sigma
+open import Cubical.Data.Nat
 open import Cubical.Data.NatPlusOne
 
 
@@ -43,7 +44,11 @@ open import Cubical.HITs.CauchyReals.Continuous
 open import Cubical.HITs.CauchyReals.Multiplication
 
 
-Rℝ = (CR.CommRing→Ring (_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ))
+
+ℝring : CR.CommRing ℓ-zero
+ℝring = (_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ)
+
+Rℝ = (CR.CommRing→Ring ℝring)
 module CRℝ = RP.RingStr (snd Rℝ)
 
 module 𝐑 = CR.CommRingTheory (_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ)
@@ -51,7 +56,9 @@ module 𝐑' = RP.RingTheory Rℝ
 
 module 𝐐' = RP.RingTheory (CR.CommRing→Ring ℚCommRing)
 
-module L𝐑 = Lems ((_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ))
+module L𝐑 = Lems ((_ , CR.commringstr 0 1 _+ᵣ_ _·ᵣ_ -ᵣ_ IsCommRingℝ)) 
+
+ 
 
 
 Invᵣ-restrℚ : (η : ℚ₊) →
@@ -1461,6 +1468,8 @@ opaque
                                 (<ᵣWeaken≤ᵣ _ _ (<ℚ→<ᵣ _ _ 0<r'))
                               q'≤m r'≤n) ) 0<m 0<n
 
+
+
 _₊+ᵣ_ : ℝ₊ → ℝ₊ → ℝ₊
 (m , 0<m) ₊+ᵣ (n , 0<n) = m +ᵣ n ,
  isTrans≡<ᵣ _ _ _ (sym (+ᵣ-rat _ _)) (<ᵣMonotone+ᵣ 0 m 0 n 0<m 0<n)
@@ -1471,6 +1480,22 @@ _₊·ᵣ_ : ℝ₊ → ℝ₊  → ℝ₊
 _₊／ᵣ₊_ : ℝ₊ → ℝ₊  → ℝ₊
 (q , 0<q) ₊／ᵣ₊ (r , 0<r) = (q ／ᵣ[ r , inl (0<r) ] ,
   ℝ₊· (q , 0<q) (_ , invℝ-pos r 0<r) )
+
+
+
+0<x^ⁿ : ∀ x n → 0 <ᵣ x → 0 <ᵣ (x ^ⁿ n)
+0<x^ⁿ x zero x₁ = decℚ<ᵣ?
+0<x^ⁿ x (suc n) x₁ = ℝ₊· (_ , 0<x^ⁿ x n x₁) (_ , x₁)
+
+0≤x^ⁿ : ∀ x n → 0 ≤ᵣ x → 0 ≤ᵣ (x ^ⁿ n)
+0≤x^ⁿ x zero _ = decℚ≤ᵣ?
+0≤x^ⁿ x (suc n) 0≤x =
+ isTrans≡≤ᵣ _ _ _ (sym (𝐑'.0RightAnnihilates _))
+   (≤ᵣ-o·ᵣ 0 _ _ (0≤x^ⁿ x n 0≤x) 0≤x)
+
+
+_₊^ⁿ_ : ℝ₊ → ℕ → ℝ₊
+(x , 0<x) ₊^ⁿ n  = (x ^ⁿ n) , 0<x^ⁿ x n 0<x
 
 
 
@@ -1975,3 +2000,41 @@ opaque
               subst2 _≤ᵣ_ (sym (absᵣ-rat _) ∙ cong absᵣ (sym (-ᵣ-rat₂ _ _)))
                 ( sym (absᵣ-rat _) ∙ cong absᵣ (sym (-ᵣ-rat₂ _ _)))
                 (≤ℚ→≤ᵣ _ _ (ℚ.clampDist L L' u u'))
+
+
+Dichotomyℝ' : ∀ x y z → x <ᵣ z →
+              ∥ (y <ᵣ z) ⊎ (x <ᵣ y) ∥₁
+Dichotomyℝ' x y z x<z =
+  PT.map2
+   (λ (q  , x<q  , q<x+Δ)
+      (q' , y-Δ<q' , q'<y)
+     → ⊎.map
+         (λ q'≤q →
+           isTrans<ᵣ _ _ _
+             (a-b<c⇒a<c+b _ _ _ y-Δ<q')
+             (isTrans<≡ᵣ _ _ _
+               (<ᵣ-+o _ _ _
+                 ((isTrans≤<ᵣ _ _ _ (≤ℚ→≤ᵣ q' _ q'≤q)
+                  q<x+Δ )))
+               ((sym (+ᵣAssoc _ _ _)  ∙
+                cong (x +ᵣ_) (sym (·DistL+ _ _ _) ∙
+                 𝐑'.·IdR' _ _ (+ᵣ-rat _ _ ∙ decℚ≡ᵣ?) ))
+                ∙ L𝐑.lem--05 {x} {z})))
+         (λ q<q' →
+           isTrans<ᵣ _ _ _ (isTrans<ᵣ _ _ _
+               x<q
+               (<ℚ→<ᵣ q _ q<q'))
+             q'<y)
+         (ℚ.Dichotomyℚ q' q))
+    (denseℚinℝ x (x +ᵣ (fst Δ₊))
+      (isTrans≡<ᵣ _ _ _
+        (sym (+IdR x)) (<ᵣ-o+ _ _ _ (snd Δ₊))))
+    (denseℚinℝ (y -ᵣ (fst Δ₊)) y
+      (isTrans<≡ᵣ _ _ _
+         (<ᵣ-o+ _ _ _
+           (isTrans<≡ᵣ _ _ _ (-ᵣ<ᵣ _ _ (snd Δ₊)) (-ᵣ-rat 0)))
+         (+IdR y)))
+
+ where
+ Δ₊ : ℝ₊
+ Δ₊ = (z -ᵣ x , x<y→0<y-x _ _ x<z) ₊·ᵣ ℚ₊→ℝ₊ ([ 1 / 2 ] , _)

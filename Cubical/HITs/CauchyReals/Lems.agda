@@ -357,10 +357,15 @@ module Lems (R : CR.CommRing ℓ-zero) where
       + ε · (g'x · (fx - fy))
  lem--091 =
    solve! R
- 
+
+ lem--092 : (x · x) + (x' · x') + ((y · y) + (y' · y'))
+      -
+      (x' · y' - x · - y + (x' · y' - x · - y))
+      ≡ (((x - y) · (x - y)) +  ((x' - y') · (x' - y')) )
+
+ lem--092 = solve! R
+
 open import Cubical.Data.Rationals as ℚ
-
-
 
 module _ where
  open CR.CommRingStr

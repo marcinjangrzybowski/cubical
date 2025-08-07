@@ -65,6 +65,8 @@ IsUContinuous∘ cF cG ε =
 interpℝ : ℝ → ℝ → ℝ → ℝ
 interpℝ a b t = a +ᵣ t ·ᵣ (b -ᵣ a)
 
+
+
 IsUContinuous+ᵣL : ∀ x → IsUContinuous (x +ᵣ_)
 IsUContinuous+ᵣL x ε = ε , λ u v u∼v →
   subst2 (_∼[ ε ]_) (+ᵣComm _ _) (+ᵣComm _ _) $ +ᵣ-∼ u v x ε u∼v
@@ -105,6 +107,14 @@ IsUContinuous∘ℙ P cF cG ε =
   let (η , X) = cF ε ; (δ , Y) = cG η
   in _ , λ _ _ _ _ → X _ _ ∘ Y _ _ _ _
 
+IsUContinuousℙ∘ℙ : ∀ P P' {f g} → (g∈ : ∀ x x∈ → g x x∈ ∈ P')
+  → IsUContinuousℙ P' f → IsUContinuousℙ P g
+
+  → IsUContinuousℙ P (λ x x∈ → f (g x x∈) (g∈ x x∈))
+IsUContinuousℙ∘ℙ P P' g∈ cF cG  ε =
+  let (η , X) = cF ε ; (δ , Y) = cG η
+     in _ , λ _ _ _ _ → X _ _ _ _ ∘ Y _ _ _ _
+  
 
 IsUContinuous-εᵣ : ∀ f → IsUContinuous f →
    ∀ (ε : ℝ₊) → ∃[ δ ∈ ℚ₊ ]
@@ -202,6 +212,11 @@ at_limitOfℙ_,_is_ : (x : ℝ) → (P : ℙ ℝ) →  (∀ r → r ∈ P → x 
 at x limitOfℙ P , f is L =
   ∀ (ε : ℝ₊) → ∃[ δ ∈ ℝ₊ ]
    (∀ r r∈ x＃r → absᵣ (x -ᵣ r) <ᵣ fst δ → absᵣ (L -ᵣ f r r∈ x＃r) <ᵣ fst ε)
+
+at_limitOfℙ_,_is'_ : (x : ℝ) → (P : ℙ ℝ) →  (∀ r → r ∈ P → x ＃ r → ℝ)  → ℝ → Type
+at x limitOfℙ P , f is' L =
+  ∀ (ε : ℚ₊) → Σ[ δ ∈ ℚ₊ ]
+   (∀ r r∈ x＃r → absᵣ (x -ᵣ r) <ᵣ rat (fst δ) → absᵣ (L -ᵣ f r r∈ x＃r) <ᵣ rat (fst ε))
 
 at_limitOf_is'_ : (x : ℝ) → (∀ r → x ＃ r → ℝ)  → ℝ → Type
 at x limitOf f is' L =
@@ -473,6 +488,26 @@ opaque
 ＃ℙ : ℝ → ℙ ℝ
 ＃ℙ r x = r ＃ x , isProp＃ r x
 
+diff-≃ : (P : ℙ ℝ) → (f f' : ∀ r → r ∈ P → ℝ)
+                   → ∀ (ε δ : ℚ₊)
+                  → ∀ x x∈ h h∈ 0＃h
+                  → (absᵣ (f' x x∈ -ᵣ differenceAtℙ P f x h 0＃h x∈ h∈)
+                    <ᵣ rat (fst ε)) ≃
+                     (absᵣ ((f' x x∈ ·ᵣ h) -ᵣ
+                       (f (x +ᵣ h) h∈ -ᵣ f x x∈))
+                    <ᵣ rat (fst ε) ·ᵣ absᵣ h)
+diff-≃ P f f' ε δ x x∈ h h∈ 0＃h =
+        substEquiv (_<ᵣ _) (
+             cong absᵣ (
+                cong₂ _-ᵣ_ (sym ([x·y]/yᵣ _ _ _)) refl
+               ∙ sym (𝐑'.·DistL- _ _ _))
+            ∙∙ ·absᵣ _ _ ∙∙
+            cong₂ _·ᵣ_ refl (absᵣ-invℝ _ _))
+      ∙ₑ z/y<x₊≃z<y₊·x (rat (fst ε)) (absᵣ ((f' x x∈ ·ᵣ  h) -ᵣ
+                       (f (x +ᵣ h) h∈ -ᵣ f x x∈))) 
+          (absᵣ h , 0＃→0<abs h 0＃h)
+      ∙ₑ substEquiv (_ <ᵣ_) (·ᵣComm _ _)
+
 
 uDerivativeOfℙ_,_is_ : (P : ℙ ℝ) → (∀ r → r ∈ P → ℝ)
                                     → (∀ r → r ∈ P → ℝ) → Type
@@ -481,6 +516,8 @@ uDerivativeOfℙ P , f is f' =
    (∀ x x∈ h h∈ 0＃h → absᵣ h <ᵣ rat (fst δ)
     → absᵣ (f' x x∈ -ᵣ differenceAtℙ P f x h 0＃h x∈ h∈) <ᵣ rat (fst ε))
 
+isProp-uDerivativeOfℙ : ∀ P f f' → isProp (uDerivativeOfℙ P , f is f')
+isProp-uDerivativeOfℙ P f f' = isPropΠ λ _ → squash₁
 
 uDerivativeOfℙ-restr : ∀ (P P' : ℙ ℝ) f f' → (P'⊆P : P' ⊆ P)
  → uDerivativeOfℙ P , f is f'

@@ -383,16 +383,6 @@ open ℕ.Minimal
 
 
 
-0<x^ⁿ : ∀ x n → 0 <ᵣ x → 0 <ᵣ (x ^ⁿ n)
-0<x^ⁿ x zero x₁ = decℚ<ᵣ?
-0<x^ⁿ x (suc n) x₁ = ℝ₊· (_ , 0<x^ⁿ x n x₁) (_ , x₁)
-
-0≤x^ⁿ : ∀ x n → 0 ≤ᵣ x → 0 ≤ᵣ (x ^ⁿ n)
-0≤x^ⁿ x zero _ = decℚ≤ᵣ?
-0≤x^ⁿ x (suc n) 0≤x =
- isTrans≡≤ᵣ _ _ _ (sym (𝐑'.0RightAnnihilates _))
-   (≤ᵣ-o·ᵣ 0 _ _ (0≤x^ⁿ x n 0≤x) 0≤x)
-
 
 opaque
  unfolding _<ᵣ_
@@ -1008,9 +998,20 @@ module bⁿ-aⁿ n'  where
            (sym (𝐑'.0RightAnnihilates (bⁿ-aⁿ.S n x y 0<x 0<y)))
             (·ᵣComm (y -ᵣ x) _) z)))
 
--- ^ⁿMonotone⁻¹-with0 : ∀ {x y : ℝ} (n : ℕ) → (0 ℕ.< n) → 0 ≤ᵣ x → 0 <ᵣ y
---  → (x ^ⁿ n) ≤ᵣ (y ^ⁿ n) → x ≤ᵣ y
--- ^ⁿMonotone⁻¹-with0 = {!!}
+
+^ⁿMonotone⁻¹-with0 : ∀ {x y : ℝ} (n : ℕ) → (0 ℕ.< n) → 0 ≤ᵣ x → 0 <ᵣ y
+ → (x ^ⁿ n) ≤ᵣ (y ^ⁿ n) → x ≤ᵣ y
+^ⁿMonotone⁻¹-with0 {x} {y} n 0<n 0≤x 0<y xⁿ≤yⁿ =
+  PT.rec (isProp≤ᵣ _ _)
+    (⊎.rec
+      (<ᵣWeaken≤ᵣ _ _ )
+      (λ y/2<x →
+        ^ⁿMonotone⁻¹ {x} {y} n 0<n
+         (isTrans<ᵣ _ _ _ (snd ((y , 0<y) ₊·ᵣ ℚ₊→ℝ₊ ([ 1 / 2 ] , _)))
+           y/2<x) 0<y xⁿ≤yⁿ))
+    (Dichotomyℝ' (y ·ᵣ rat [ 1 / 2 ]) x y
+      (isTrans<≡ᵣ _ _ _ (<ᵣ-o·ᵣ _ _ (_ , 0<y) decℚ<ᵣ?) (·IdR _) )) 
+
 
 ^ⁿStrictMonotone⁻¹ : ∀ {x y : ℝ} (n : ℕ) → (0 ℕ.< n) → 0 <ᵣ x → 0 <ᵣ y
  → (x ^ⁿ n) <ᵣ (y ^ⁿ n) → x <ᵣ y
@@ -1027,12 +1028,7 @@ module bⁿ-aⁿ n'  where
          (subst2 _<ᵣ_
            (sym (𝐑'.0RightAnnihilates (bⁿ-aⁿ.S n x y 0<x 0<y)))
             (·ᵣComm (y -ᵣ x) _) z))
-
--- ^ⁿStrictMonotone⁻¹-stronger : ∀ {x y : ℝ}
---     (n : ℕ) → (0 ℕ.< n) → 0 <ᵣ y
---  → (x ^ⁿ n) <ᵣ (y ^ⁿ n) → 0 ≤ᵣ x → x <ᵣ y
--- ^ⁿStrictMonotone⁻¹-stronger n 0<n 0<y xⁿ<yⁿ 0≤x = {!!}
-
+ 
 _~seq_ : Seq → Seq → Type
 s ~seq s' = ∀ (ε : ℚ₊) → Σ[ N ∈ ℕ ] (∀ m n → N ℕ.< n → N ℕ.< m →
    absᵣ ((s n) +ᵣ (-ᵣ (s' m))) <ᵣ rat (fst ε)   )

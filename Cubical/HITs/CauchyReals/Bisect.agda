@@ -218,8 +218,6 @@ Invlipschitz-ℝ→ℝℙ K P f =
 
 
 
-ointervalℙ⊆intervalℙ : ∀ a b → ointervalℙ a b ⊆ intervalℙ a b
-ointervalℙ⊆intervalℙ a b x (<x  , x<) = <ᵣWeaken≤ᵣ _ _ <x , <ᵣWeaken≤ᵣ _ _ x<
 
 
 openIintervalℙ : ∀ a b → ⟨ openPred (ointervalℙ a b)  ⟩

@@ -228,6 +228,35 @@ FTOC⇒' a b a≤b f ucf ε = do
                 refl)))
          z) ∣₁
 
+FTOC⇒* : ∀ a b → a ≤ᵣ b 
+          → (f F : ∀ x → x ∈ intervalℙ a b →  ℝ)
+
+          → (ax⊆ab : ∀ x → (x∈ : x ∈ intervalℙ a b) →
+                 ∀ y → y ∈ intervalℙ a x
+                     → y ∈ intervalℙ a b)
+          → (∀ x → (x∈ : x ∈ intervalℙ a b) →
+                on[ a , x ]IntegralOf (λ y ≤y y≤ →
+                  f y (ax⊆ab x x∈ y (≤y , y≤)))
+                 is (F x x∈))
+          → (ucf : IsUContinuousℙ (intervalℙ a b) f)
+          → uDerivativeOfℙ (intervalℙ a b) , F is f
+FTOC⇒* a b a≤b f F ax⊆ab X ucf  =
+  subst
+    (λ F → uDerivativeOfℙ (intervalℙ a b) , F is f)
+    (funExt₂ (λ y y∈ →
+      let p = (λ x x∈ →
+                 cong (f x) (∈-isProp (intervalℙ _ _) _ _ _))
+      in Integrate-UContinuousℙ-≡ _ _ _ _ _ _
+              (IsUContinuousℙ-restr _ _ _ _ ucf)
+               p
+            ∙ (IntegralUniq a y (fst y∈)
+     _ _ _
+     (snd (Integrate-UContinuousℙ a _ _ _ _))
+     (X y y∈)))
+     )
+    (FTOC⇒' a b a≤b f ucf)
+
+
 isCauchySequence-∘+ : ∀ s k
  → IsCauchySequence' s
  → IsCauchySequence' (s ∘ (k ℕ.+_))
@@ -1094,10 +1123,6 @@ FTOC⇐'' a b a<b f F ucf fd x x∈ =
     (Dichotomyℝ' a x b a<b)
 
 
-ointervalℙ⊆intervalℙ : ∀ a b → ointervalℙ a b ⊆ intervalℙ a b
-ointervalℙ⊆intervalℙ a b x z =
- <ᵣWeaken≤ᵣ a x (z .fst) , <ᵣWeaken≤ᵣ x b (z .snd)
-
 uCauchyDer : ∀ a b → a <ᵣ b → ∀ fₙ Fₙ → 
              ∀ (icf : IsUCauchyFSequence (intervalℙ a b) fₙ)
                
@@ -1509,116 +1534,126 @@ sin-ch = IsUConvSeries'onℚIntervals→IsCauchySequence' _ sin-conv
 cos-ch : ∀ x → ∥ IsCauchySequence' (seqΣ (λ x₁ → cosSeries x₁ x)) ∥₁
 cos-ch = IsUConvSeries'onℚIntervals→IsCauchySequence' _ cos-conv
 
-sin cos : ℝ → ℝ
-sin x = fromCauchySequence'₁ (seqΣ (flip sinSeries x)) (sin-ch x)                
-cos x = fromCauchySequence'₁ (seqΣ (flip cosSeries x)) (cos-ch x)
 
-cos0=1 : cos 0 ≡ 1
-cos0=1 = fromCauchySequence'₁≡ (seqΣ (λ x → cosSeries x 0))
-  (cos-ch 0) 1
-   λ ε → ∣ 0 ,
-    (λ { zero <0 → ⊥.rec (ℕ.¬-<-zero <0)
-       ; (suc n) _ → isTrans≡<ᵣ _ _ _
-               (cong absᵣ (𝐑'.+InvR' _ _
-                ( seqSumUpTo≡seqSumUpTo' (λ x → cosSeries x 0) (suc n)
-                 ∙ 𝐑'.+IdR' _ _
-                  (seqΣ'0≡0 _ _
-                    λ n →
-                      -1ⁿ·≡· _ _ ∙
-                       cong₂ _·ᵣ_ refl (sym (expSeq'≡expSeq _ _))
-                       ∙ 𝐑'.0RightAnnihilates' _ _
-                        (𝐑'.0LeftAnnihilates' _ _
-                         (0^ⁿ (suc (n ℕ.· 2)))))))
-                ∙ absᵣ0)
-               (snd (ℚ₊→ℝ₊ ε))
-       }) ∣₁
+opaque
+ sin cos : ℝ → ℝ
+ sin x = fromCauchySequence'₁ (seqΣ (flip sinSeries x)) (sin-ch x)                
+ cos x = fromCauchySequence'₁ (seqΣ (flip cosSeries x)) (cos-ch x)
 
-sin0=0 : sin 0 ≡ 0
-sin0=0 = fromCauchySequence'₁≡ (seqΣ (λ x → sinSeries x 0))
-  (sin-ch 0) 0
-   λ ε → ∣ 0 ,
-     (λ n _ →
-       isTrans≡<ᵣ _ _ _
-               (cong absᵣ (𝐑'.+InvR' _ _
-                ( seqSumUpTo≡seqSumUpTo' (λ x → sinSeries x 0) n
-                 ∙ (seqΣ'0≡0 _ _
-                    λ n →
-                      -1ⁿ·≡· _ _ ∙
-                       cong₂ _·ᵣ_ refl (sym (expSeq'≡expSeq _ _))
-                       ∙ 𝐑'.0RightAnnihilates' _ _
-                        (𝐑'.0LeftAnnihilates' _ _
-                         (0^ⁿ (n ℕ.· 2))))))
-                ∙ absᵣ0)
-               (snd (ℚ₊→ℝ₊ ε))) ∣₁
+ sinImpl : ∀ x → sin x ≡ fromCauchySequence'₁ (seqΣ (flip sinSeries x)) (sin-ch x)
+ sinImpl x = refl
+ cosImpl : ∀ x → cos x ≡ fromCauchySequence'₁ (seqΣ (flip cosSeries x)) (cos-ch x)
+ cosImpl x = refl
 
 
-sin-odd : ∀ x → -ᵣ (sin x) ≡ sin (-ᵣ x)
-sin-odd x =
-  snd (map-fromCauchySequence'₁ _ _ _ (-ᵣ_) -ᵣ-lip)
-   ∙
-   fromCauchySequence'₁-≡ _ _ _ _
-        λ n →
-          (-ᵣ_ ∘ seqΣ (λ x₁ → sinSeries x₁ x)) n
-            ≡⟨ -seqΣ' (λ x₁ → sinSeries x₁ x) n ⟩ 
-          (seqΣ (λ x₁ → -ᵣ (sinSeries x₁ x))) n ≡⟨
-            
-           cong seqΣ (funExt
-             (λ k →  
-                 cong (-ᵣ_) (cong (-1ⁿ· k)
-                     ((sym (expSeq'≡expSeq x (suc (k ℕ.· 2)))))
-                      ∙ -1ⁿ·≡· _ _ )
-               ∙ sym (·-ᵣ _ _) 
-               ∙ sym (-1ⁿ·≡· _ _)               
-               ∙ cong (-1ⁿ· k) (
-                   (sym (-ᵣ· _ _))
-                 ∙ cong₂ _·ᵣ_ (^ⁿ-odd k x) refl
-                 ∙ expSeq'≡expSeq (-ᵣ x) (suc (k ℕ.· 2)))
-              ))
-             ≡$ n
-             ⟩
-           seqΣ (λ x₁ → sinSeries x₁ (-ᵣ x)) n ∎
+ cos0=1 : cos 0 ≡ 1
+ cos0=1 = fromCauchySequence'₁≡ (seqΣ (λ x → cosSeries x 0))
+   (cos-ch 0) 1
+    λ ε → ∣ 0 ,
+     (λ { zero <0 → ⊥.rec (ℕ.¬-<-zero <0)
+        ; (suc n) _ → isTrans≡<ᵣ _ _ _
+                (cong absᵣ (𝐑'.+InvR' _ _
+                 ( seqSumUpTo≡seqSumUpTo' (λ x → cosSeries x 0) (suc n)
+                  ∙ 𝐑'.+IdR' _ _
+                   (seqΣ'0≡0 _ _
+                     λ n →
+                       -1ⁿ·≡· _ _ ∙
+                        cong₂ _·ᵣ_ refl (sym (expSeq'≡expSeq _ _))
+                        ∙ 𝐑'.0RightAnnihilates' _ _
+                         (𝐑'.0LeftAnnihilates' _ _
+                          (0^ⁿ (suc (n ℕ.· 2)))))))
+                 ∙ absᵣ0)
+                (snd (ℚ₊→ℝ₊ ε))
+        }) ∣₁
 
-cos-even : ∀ x → cos x ≡ cos (-ᵣ x)
-cos-even x = fromCauchySequence'₁-≡ _ _ _ _
-        (cong seqΣ (funExt
-         (λ k → cong (-1ⁿ· k)
-          (sym (expSeq'≡expSeq x (k ℕ.· 2)) ∙∙
-           cong₂ _·ᵣ_
-            ( ^ⁿ-even k x)
-            refl
-           ∙∙ expSeq'≡expSeq (-ᵣ x) (k ℕ.· 2))))
-         ≡$_)
+ sin0=0 : sin 0 ≡ 0
+ sin0=0 = fromCauchySequence'₁≡ (seqΣ (λ x → sinSeries x 0))
+   (sin-ch 0) 0
+    λ ε → ∣ 0 ,
+      (λ n _ →
+        isTrans≡<ᵣ _ _ _
+                (cong absᵣ (𝐑'.+InvR' _ _
+                 ( seqSumUpTo≡seqSumUpTo' (λ x → sinSeries x 0) n
+                  ∙ (seqΣ'0≡0 _ _
+                     λ n →
+                       -1ⁿ·≡· _ _ ∙
+                        cong₂ _·ᵣ_ refl (sym (expSeq'≡expSeq _ _))
+                        ∙ 𝐑'.0RightAnnihilates' _ _
+                         (𝐑'.0LeftAnnihilates' _ _
+                          (0^ⁿ (n ℕ.· 2))))))
+                 ∙ absᵣ0)
+                (snd (ℚ₊→ℝ₊ ε))) ∣₁
 
 
-IsUContFSequenceSin :  ∀ a b → (a<b : rat a <ᵣ rat b) →
-   IsUContFSequence (intervalℙ (rat a) (rat b))
-      (λ z x _ → seqΣ (λ x₁ → sinSeries x₁ x) z)
-IsUContFSequenceSin a b a<b =
-  IsUContFSequenceΣSeq _ _
-   (subst (IsUContFSequence (intervalℙ (rat a) (rat b)))
-     (funExt₃ λ _ _ _ → ·ᵣComm _ _ ∙ sym (-1ⁿ·≡· _ _))
-     λ n → IsUContinuousℙC·ᵣ _ (-1ⁿ n) _
-      (isUContFSequenceExpSer a b (<ᵣWeaken≤ᵣ _ _ a<b) (suc (n ℕ.· 2))))
+ sin-odd : ∀ x → -ᵣ (sin x) ≡ sin (-ᵣ x)
+ sin-odd x =
+   snd (map-fromCauchySequence'₁ _ _ _ (-ᵣ_) -ᵣ-lip)
+    ∙
+    fromCauchySequence'₁-≡ _ _ _ _
+         λ n →
+           (-ᵣ_ ∘ seqΣ (λ x₁ → sinSeries x₁ x)) n
+             ≡⟨ -seqΣ' (λ x₁ → sinSeries x₁ x) n ⟩ 
+           (seqΣ (λ x₁ → -ᵣ (sinSeries x₁ x))) n ≡⟨
 
-IsUContFSequenceCos :  ∀ a b → (a<b : rat a <ᵣ rat b) →
-   IsUContFSequence (intervalℙ (rat a) (rat b))
-      (λ z x _ → seqΣ (λ x₁ → cosSeries x₁ x) z)
-IsUContFSequenceCos a b a<b =
-  IsUContFSequenceΣSeq _ _
-   (subst (IsUContFSequence (intervalℙ (rat a) (rat b)))
-     (funExt₃ λ _ _ _ → ·ᵣComm _ _ ∙ sym (-1ⁿ·≡· _ _))
-     λ n → IsUContinuousℙC·ᵣ _ (-1ⁿ n) _
-      (isUContFSequenceExpSer a b (<ᵣWeaken≤ᵣ _ _ a<b) (n ℕ.· 2)))
+            cong seqΣ (funExt
+              (λ k →  
+                  cong (-ᵣ_) (cong (-1ⁿ· k)
+                      ((sym (expSeq'≡expSeq x (suc (k ℕ.· 2)))))
+                       ∙ -1ⁿ·≡· _ _ )
+                ∙ sym (·-ᵣ _ _) 
+                ∙ sym (-1ⁿ·≡· _ _)               
+                ∙ cong (-1ⁿ· k) (
+                    (sym (-ᵣ· _ _))
+                  ∙ cong₂ _·ᵣ_ (^ⁿ-odd k x) refl
+                  ∙ expSeq'≡expSeq (-ᵣ x) (suc (k ℕ.· 2)))
+               ))
+              ≡$ n
+              ⟩
+            seqΣ (λ x₁ → sinSeries x₁ (-ᵣ x)) n ∎
+
+ cos-even : ∀ x → cos x ≡ cos (-ᵣ x)
+ cos-even x = fromCauchySequence'₁-≡ _ _ _ _
+         (cong seqΣ (funExt
+          (λ k → cong (-1ⁿ· k)
+           (sym (expSeq'≡expSeq x (k ℕ.· 2)) ∙∙
+            cong₂ _·ᵣ_
+             ( ^ⁿ-even k x)
+             refl
+            ∙∙ expSeq'≡expSeq (-ᵣ x) (k ℕ.· 2))))
+          ≡$_)
+
+
+ IsUContFSequenceSin :  ∀ a b → (a<b : rat a <ᵣ rat b) →
+    IsUContFSequence (intervalℙ (rat a) (rat b))
+       (λ z x _ → seqΣ (λ x₁ → sinSeries x₁ x) z)
+ IsUContFSequenceSin a b a<b =
+   IsUContFSequenceΣSeq _ _
+    (subst (IsUContFSequence (intervalℙ (rat a) (rat b)))
+      (funExt₃ λ _ _ _ → ·ᵣComm _ _ ∙ sym (-1ⁿ·≡· _ _))
+      λ n → IsUContinuousℙC·ᵣ _ (-1ⁿ n) _
+       (isUContFSequenceExpSer a b (<ᵣWeaken≤ᵣ _ _ a<b) (suc (n ℕ.· 2))))
+
+ IsUContFSequenceCos :  ∀ a b → (a<b : rat a <ᵣ rat b) →
+    IsUContFSequence (intervalℙ (rat a) (rat b))
+       (λ z x _ → seqΣ (λ x₁ → cosSeries x₁ x) z)
+ IsUContFSequenceCos a b a<b =
+   IsUContFSequenceΣSeq _ _
+    (subst (IsUContFSequence (intervalℙ (rat a) (rat b)))
+      (funExt₃ λ _ _ _ → ·ᵣComm _ _ ∙ sym (-1ⁿ·≡· _ _))
+      λ n → IsUContinuousℙC·ᵣ _ (-1ⁿ n) _
+       (isUContFSequenceExpSer a b (<ᵣWeaken≤ᵣ _ _ a<b) (n ℕ.· 2)))
 
 sin'=cos-uder : ∀ a b → (a<b : rat a <ᵣ rat b) →
       uDerivativeOfℙ (intervalℙ (rat a) (rat b)) ,
        (λ x _ → sin x) is (λ x _ → cos x)
 sin'=cos-uder a b a<b =
    subst2 (uDerivativeOfℙ (intervalℙ (rat a) (rat b)) ,_is_)
+    (funExt₂ λ _ _ → 
+      sym (fromCauchySequence'₁≡fromUCauchyFSequence _ _ _ _ _ _ _)
+      ∙ sym (sinImpl _))
     (funExt₂ λ _ _ →
-      sym (fromCauchySequence'₁≡fromUCauchyFSequence _ _ _ _ _ _ _))
-    (funExt₂ λ _ _ →
-      sym (fromCauchySequence'₁≡fromUCauchyFSequence _ _ _ _ _ _ _))
+      sym (fromCauchySequence'₁≡fromUCauchyFSequence _ _ _ _ _ _ _)
+      ∙ sym (cosImpl _))
     (uCauchyDer (rat a) (rat b) a<b
          (λ z x _ → seqΣ (flip cosSeries x) z)
          (λ z x _ → seqΣ (flip sinSeries x) z)
@@ -1661,7 +1696,8 @@ cos'=-sin-uder a b a<b =
             λ n → (suc n) , (ℕ.≤-sucℕ {n})))
            (cos-ch x)))
         ∙
-        sym (fromCauchySequence'₁-∘+  _ 1 _ _)
+        sym (fromCauchySequence'₁-∘+  _ 1 _ _)  
+      ∙ sym (cosImpl _)
       )
     (funExt₂ λ x x∈ →
        sym (fromCauchySequence'₁≡fromUCauchyFSequence _ _ _ _ _ _ _)
@@ -1669,7 +1705,7 @@ cos'=-sin-uder a b a<b =
        sym (snd (map-fromCauchySequence'₁
       1 (λ n → seqΣ (flip sinSeries x) n)
        (sin-ch x)
-        _ -ᵣ-lip)))
+        _ -ᵣ-lip)) ∙ cong -ᵣ_ (sym (sinImpl _)))
       
     (uCauchyDer (rat a) (rat b) a<b _ _
          (isUCauchyFSequence-ᵣ _ _ uconvsin)
@@ -1754,7 +1790,7 @@ sinSeq≤expSeq n x = isTrans≤ᵣ _ _ _
     (1+expSeq (n ℕ.· 2) (absᵣ x) ))
 
 sin≤exp : ∀ x → sin x ≤ᵣ expℝ (absᵣ x)
-sin≤exp x =
+sin≤exp x = isTrans≡≤ᵣ _ _ _ (sinImpl _) $
   PT.elim2
     (λ ich ich' →
        isProp≤ᵣ
@@ -1772,7 +1808,7 @@ sin≤exp x =
     (expℝ-cauchySeq (absᵣ x)) 
 
 cos≤exp : ∀ x → cos x ≤ᵣ expℝ (absᵣ x)
-cos≤exp x =
+cos≤exp x = isTrans≡≤ᵣ _ _ _ (cosImpl _) $
    PT.elim2
     (λ ich ich' →
        isProp≤ᵣ
@@ -1793,7 +1829,7 @@ cos≤exp x =
 -cos≤exp : ∀ x → -ᵣ (cos x) ≤ᵣ expℝ (absᵣ x)
 -cos≤exp x =
    isTrans≡≤ᵣ _ _ _
-    (snd (map-fromCauchySequence'₁
+    (cong -ᵣ_ (cosImpl _) ∙ snd (map-fromCauchySequence'₁
       1 _ _
         _ -ᵣ-lip))
     (PT.elim2
@@ -1864,7 +1900,9 @@ pre-uContSin : ∀ a b → rat a <ᵣ rat b →
 pre-uContSin a b a<b =
  subst (IsUContinuousℙ (intervalℙ (rat a) (rat b)))
    ((funExt₂ λ _ _ →
-      sym (fromCauchySequence'₁≡fromUCauchyFSequence _ _ _ _ _ _ _)))
+      sym (fromCauchySequence'₁≡fromUCauchyFSequence _ _ _ _ _ _ _)
+       ∙ sym (sinImpl _))
+      )
    (snd (fromUCauchyFSequence (intervalℙ (rat a) (rat b)) _
     (Iso.fun (IsoIsUConvSeries'IsCauchy'SequenceSum
          (intervalℙ (rat a) (rat b)) _) (sin-conv a b a<b))
@@ -1876,7 +1914,8 @@ pre-uContCos : ∀ a b → rat a <ᵣ rat b →
 pre-uContCos a b a<b =
  subst (IsUContinuousℙ (intervalℙ (rat a) (rat b)))
    ((funExt₂ λ _ _ →
-      sym (fromCauchySequence'₁≡fromUCauchyFSequence _ _ _ _ _ _ _)))
+      sym (fromCauchySequence'₁≡fromUCauchyFSequence _ _ _ _ _ _ _)
+      ∙ sym (cosImpl _)))
    (snd (fromUCauchyFSequence (intervalℙ (rat a) (rat b)) _
     (Iso.fun (IsoIsUConvSeries'IsCauchy'SequenceSum
          (intervalℙ (rat a) (rat b)) _) (cos-conv a b a<b))
@@ -1998,3 +2037,46 @@ sin²+cos²=1 = ≡Continuous _ _
   h .ℚ.TrichotomyRec.eq-case = refl 
   h .ℚ.TrichotomyRec.gt-case x 0<x =
     sym (h' 0 x (<ℚ→<ᵣ _ _ 0<x)) 
+
+
+sin·sin+cos·cos=1 : ∀ x → ((sin x) ·ᵣ (sin x)) +ᵣ ((cos x) ·ᵣ (cos x)) ≡ 1 
+sin·sin+cos·cos=1 x =
+ cong₂ _+ᵣ_
+   (cong₂ _·ᵣ_ (sym (·IdL _)) refl)
+   (cong₂ _·ᵣ_ (sym (·IdL _)) refl)
+  ∙ sin²+cos²=1 x
+
+cos·cos=1-sin·sin : ∀ x → ((cos x) ·ᵣ (cos x)) ≡ 1 -ᵣ ((sin x) ·ᵣ (sin x)) 
+cos·cos=1-sin·sin x = sym (𝐑'.plusMinus _ _)
+  ∙ cong (_-ᵣ ((sin x) ·ᵣ (sin x))) (+ᵣComm _ _ ∙ sin·sin+cos·cos=1 x)
+
+-- -- extendToEndL : ∀ x₀ fx₀
+-- --    → (f : ∀ x → x₀ <ᵣ x → ℝ)
+-- --    → IsUContinuousℙ (pred> x₀)  f
+-- --    → at x₀ limitOfℙ pred> x₀ , (λ x x∈ _ → f x x∈) is' fx₀
+-- --    → Σ[ g ∈ (ℝ → ℝ) ]
+-- --       (∀ x x∈ → f x x∈ ≡ g x)
+-- --         × (∀ x → x ≤ᵣ x₀ → fx₀ ≡ g x )
+-- -- extendToEndL x₀ fx₀ f fUC limF =
+-- --   (λ x → fst g x _ ) , {!!}
+-- --  where
+
+-- --  fₙ : FSeq ⊤Pred
+-- --  fₙ n x _ = f (maxᵣ (x₀ +ᵣ rat [ 1 / 1+ n ]) x)
+-- --       (isTrans<≤ᵣ _ _ _
+-- --         (isTrans≡<ᵣ _ _ _ (sym (+IdR _))
+-- --           (<ᵣ-o+ _ _ x₀ (<ℚ→<ᵣ _ _ (ℚ.0<pos _ _ ))) )
+-- --         (≤maxᵣ _ _) )
+
+-- --  isCauchy-fₙ : IsUCauchyFSequence ⊤Pred fₙ
+-- --  isCauchy-fₙ ε =
+-- --    let _ = ℚ.reduced {!!}
+-- --        X = limF ε
+-- --    in {!!}
+ 
+-- --  g : Σ[ g ∈ ((x : ℝ) → x ∈ ⊤Pred → ℝ) ] (IsUContinuousℙ ⊤Pred g)
+-- --  g = fromUCauchyFSequence ⊤Pred
+-- --    fₙ
+-- --    isCauchy-fₙ
+-- --    {!!}
+ 

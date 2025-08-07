@@ -55,42 +55,16 @@ open import Cubical.Tactics.CommRingSolver
 
 
 
-Dichotomyℝ' : ∀ x y z → x <ᵣ z →
-              ∥ (y <ᵣ z) ⊎ (x <ᵣ y) ∥₁
-Dichotomyℝ' x y z x<z =
-  PT.map2
-   (λ (q  , x<q  , q<x+Δ)
-      (q' , y-Δ<q' , q'<y)
-     → ⊎.map
-         (λ q'≤q →
-           isTrans<ᵣ _ _ _
-             (a-b<c⇒a<c+b _ _ _ y-Δ<q')
-             (isTrans<≡ᵣ _ _ _
-               (<ᵣ-+o _ _ _
-                 ((isTrans≤<ᵣ _ _ _ (≤ℚ→≤ᵣ q' _ q'≤q)
-                  q<x+Δ )))
-               ((sym (+ᵣAssoc _ _ _)  ∙
-                cong (x +ᵣ_) (sym (·DistL+ _ _ _) ∙
-                 𝐑'.·IdR' _ _ (+ᵣ-rat _ _ ∙ decℚ≡ᵣ?) ))
-                ∙ L𝐑.lem--05 {x} {z})))
-         (λ q<q' →
-           isTrans<ᵣ _ _ _ (isTrans<ᵣ _ _ _
-               x<q
-               (<ℚ→<ᵣ q _ q<q'))
-             q'<y)
-         (ℚ.Dichotomyℚ q' q))
-    (denseℚinℝ x (x +ᵣ (fst Δ₊))
-      (isTrans≡<ᵣ _ _ _
-        (sym (+IdR x)) (<ᵣ-o+ _ _ _ (snd Δ₊))))
-    (denseℚinℝ (y -ᵣ (fst Δ₊)) y
-      (isTrans<≡ᵣ _ _ _
-         (<ᵣ-o+ _ _ _
-           (isTrans<≡ᵣ _ _ _ (-ᵣ<ᵣ _ _ (snd Δ₊)) (-ᵣ-rat 0)))
-         (+IdR y)))
 
- where
- Δ₊ : ℝ₊
- Δ₊ = (z -ᵣ x , x<y→0<y-x _ _ x<z) ₊·ᵣ ℚ₊→ℝ₊ ([ 1 / 2 ] , _)
+≡-byContracdition : ∀ x y → ((ε : ℚ₊) → rat (fst ε) <ᵣ absᵣ (x -ᵣ y) → ⊥ )
+                      → x ≡ y
+≡-byContracdition x y X =
+  eqℝ _ _ λ ε →
+    PT.rec (isProp∼ _ _ _)
+        (⊎.rec (invEq (∼≃abs<ε _ _ ε))
+         (⊥.rec ∘ X (/2₊ ε)) )
+      (Dichotomyℝ' (fst (ℚ₊→ℝ₊ (/2₊ ε))) (absᵣ (x -ᵣ y)) (fst (ℚ₊→ℝ₊ ε))
+       (<ℚ→<ᵣ _ _ (x/2<x ε)))
 
 
 stichFns : (a b : ℝ) → a <ᵣ b

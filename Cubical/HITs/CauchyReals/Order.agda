@@ -760,10 +760,18 @@ intervalℙ a b x = ((a ≤ᵣ x) × (x ≤ᵣ b)) ,
   isProp× (isProp≤ᵣ _ _ )  (isProp≤ᵣ _ _ )
 
 
+pointIntervalℙ : ∀ x y → x ≡ y → isContr (Σ _ (_∈ intervalℙ x y)) 
+pointIntervalℙ x y x≡y = (x , ≤ᵣ-refl x , ≡ᵣWeaken≤ᵣ _ _ x≡y) ,
+  λ (z , x≤z , z≤y) →
+   Σ≡Prop (∈-isProp (intervalℙ x y))
+    (isAntisym≤ᵣ x z x≤z (isTrans≤≡ᵣ _ _ _ z≤y (sym x≡y)))
 
 ointervalℙ : ℝ → ℝ → ℙ ℝ
 ointervalℙ a b x = ((a <ᵣ x) × (x <ᵣ b)) ,
   isProp× (isProp<ᵣ _ _ )  (isProp<ᵣ _ _ )
+
+ointervalℙ⊆intervalℙ : ∀ a b → ointervalℙ a b ⊆ intervalℙ a b
+ointervalℙ⊆intervalℙ a b x (<x  , x<) = <ᵣWeaken≤ᵣ _ _ <x , <ᵣWeaken≤ᵣ _ _ x<
 
 
 pred< : ℝ → ℙ ℝ
@@ -783,3 +791,4 @@ pred≤< a b x = ((a ≤ᵣ x) × (x <ᵣ b)) , isProp× (isProp≤ᵣ _ _) (isP
 
 pred<≤ : ℝ → ℝ → ℙ ℝ
 pred<≤ a b x = ((a <ᵣ x) × (x ≤ᵣ b)) , isProp× (isProp<ᵣ _ _) (isProp≤ᵣ _ _)
+

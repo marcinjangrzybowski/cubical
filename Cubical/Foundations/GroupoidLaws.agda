@@ -136,6 +136,16 @@ lCancelP : {A : I → Type ℓ} → {x : A i0} → {y : A i1} → (p : PathP A x
 lCancelP p = rCancelP (symP p)
 
 
+rCancelRefl : (p : x ≡ x) (q : x ≡ y) →
+           p ∙ q ≡ q → p ≡ refl
+rCancelRefl p q s i j =
+   hcomp
+     (λ k → λ { (i = i0) → compPath-filler p q (~ k) j
+              ; (i = i1) → q (~ k ∧ j) 
+              ; (j = i0) → p i0
+              ; (j = i1) → q (~ k)
+              })
+     (s i j)
 
 assocP : {A : I → Type ℓ} {x : A i0} {y : A i1} {B_i1 : Type ℓ} {B : (A i1) ≡ B_i1} {z : B i1}
   {C_i1 : Type ℓ} {C : (B i1) ≡ C_i1} {w : C i1} (p : PathP A x y) (q : PathP (λ i → B i) y z) (r : PathP (λ i → C i) z w) →

@@ -86,13 +86,13 @@ Integral'-abs≤ : ∀ a b → a ≤ᵣ b → ∀ f s s'
             → absᵣ s ≤ᵣ s'
 Integral'-abs≤ a b a≤b f s s' ∫f ∫∣f∣ =
  x<y+δ→x≤y _ _ λ ε →
-  PT.rec3 (isProp<ᵣ _ _) (w ε)
+  PT.rec3 (isProp<ᵣ _ _) (absIneq ε)
    (∫f (/2₊ (/2₊ ε))) ( ∫∣f∣ (/2₊ (/2₊ ε)))
    (∃RefinableTaggedPartition rtp-1/n a b a≤b)
  where
- w : (ε : ℚ₊) → Σ ℚ₊ _ → Σ ℚ₊ _ → _ →
+ absIneq : (ε : ℚ₊) → Σ ℚ₊ _ → Σ ℚ₊ _ → _ →
       absᵣ s <ᵣ s' +ᵣ rat (fst ε)
- w ε (δ , X) (δ' , X') rtp =
+ absIneq ε (δ , X) (δ' , X') rtp =
    let tp-ab , mesh-ab = tpTP δ⊓δ'
        Y = ((isTrans≡<ᵣ _ _ _
              (minusComm-absᵣ _ _)
@@ -138,13 +138,13 @@ Integral'-≤ : ∀ a b → a ≤ᵣ b → ∀ f f' s s'
             → s ≤ᵣ s'
 Integral'-≤ a b a≤b f f' s s' f≤f' ∫f ∫f' =
  x<y+δ→x≤y _ _ λ ε →
-  PT.rec3 (isProp<ᵣ _ _) (w ε)
+  PT.rec3 (isProp<ᵣ _ _) (ineqForε ε)
    (∫f (/2₊ (/2₊ ε))) (∫f' (/2₊ (/2₊ ε)))
    (∃RefinableTaggedPartition rtp-1/n a b a≤b)
  where
- w : (ε : ℚ₊) → Σ ℚ₊ _ → Σ ℚ₊ _ → _ →
+ ineqForε : (ε : ℚ₊) → Σ ℚ₊ _ → Σ ℚ₊ _ → _ →
       s <ᵣ s' +ᵣ rat (fst ε)
- w ε (δ , X) (δ' , X') rtp =
+ ineqForε ε (δ , X) (δ' , X') rtp =
    let tp-ab , mesh-ab = tpTP δ⊓δ'
        Y = a-b<c⇒a<c+b _ _ _
            (isTrans≤<ᵣ _ _ _ (≤absᵣ _)
@@ -280,13 +280,13 @@ IsUContinuousC·ᵣ f icf C =
                  (isTrans<≡ᵣ _ _ _ Z (absᵣ-rat C)))
           δ , X = icf (invℚ₊ ∣C∣ ℚ₊· ε)
       in δ , λ u v u∼v →
-         let w = fst (∼≃abs<ε _ _ _) (X u v u∼v)
+         let absDiff = fst (∼≃abs<ε _ _ _) (X u v u∼v)
          in invEq (∼≃abs<ε _ _ _)
                (isTrans≡<ᵣ _ _ _
                  (cong absᵣ (sym (𝐑'.·DistR- (rat C) _ _))
                    ∙ ·absᵣ _ _ ∙ cong₂ _·ᵣ_ (absᵣ-rat C) refl )
                  (fst (z<x/y₊≃y₊·z<x _ _ (ℚ₊→ℝ₊ ∣C∣))
-                  (isTrans<≡ᵣ _ _ _ w
+                  (isTrans<≡ᵣ _ _ _ absDiff
                    (rat·ᵣrat (fst (invℚ₊ ∣C∣)) _ ∙ ·ᵣComm _ _ ∙
                     cong (rat (fst ε) ·ᵣ_)
                     (sym (invℝ₊-rat _) ))))))
@@ -301,13 +301,13 @@ IsUContinuous-ᵣ₂ f g fC gC =
 
 
 lim-const : ∀ x y → lim (const x) y ≡ x
-lim-const = Elimℝ-Prop.go w
+lim-const = Elimℝ-Prop.go elimProp
  where
- w : Elimℝ-Prop _
- w .Elimℝ-Prop.ratA x _ =
+ elimProp : Elimℝ-Prop _
+ elimProp .Elimℝ-Prop.ratA x _ =
    eqℝ _ _ λ ε →
      lim-rat _ _ _ (/2₊ ε) _ _ (refl∼ _ (ℚ.<→ℚ₊ (fst (/2₊ ε)) (fst ε) (ℚ.x/2<x ε)) )
- w .Elimℝ-Prop.limA x p x₁ y =
+ elimProp .Elimℝ-Prop.limA x p x₁ y =
    eqℝ _ _ λ ε →
      lim-lim _ _ _ (/2₊ (/2₊ ε)) (/2₊ (/2₊ ε)) _ _
        (subst 0<_
@@ -320,7 +320,7 @@ lim-const = Elimℝ-Prop.go w
            (sym (𝐐'.plusMinus _ _) ∙ cong₂ (ℚ._-_) (ℚ.ε/2+ε/2≡ε (fst ε)) (sym (ℚ.ε/2+ε/2≡ε (fst (/2₊ ε)))) )
             (ℚ.x/2<x (/2₊ ε)))))))
          (refl∼ _ _)))
- w .Elimℝ-Prop.isPropA _ = isPropΠ λ _ → isSetℝ _ _
+ elimProp .Elimℝ-Prop.isPropA _ = isPropΠ λ _ → isSetℝ _ _
 
 ⊎-map-comm-ids : {A B A' B' : Type} (f : A → A') (g : B → B') →
     ∀ x → ⊎.map f (idfun _) (⊎.map (idfun _) g x) ≡
@@ -337,7 +337,7 @@ concatTaggedPartition : ∀ a b c → a ≤ᵣ b → b ≤ᵣ c
                   × (∀ δ → mesh≤ᵣ (fst tp-ab) δ → mesh≤ᵣ (fst tp-bc) δ → mesh≤ᵣ (fst tp-ac) δ ))
 concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
 
-  (w , w') , w'' , w'''
+  (pAC , sampleAC) , rsConcat , mesh-concat
 
  where
 
@@ -375,26 +375,7 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
        isTrans≤ᵣ _ _ _ a≤b (p-bc .a≤pts x) , p-bc .pts≤b x)
 
 
-
-
-  -- isEquivF→⊎ : isEquiv F→⊎
-  -- isEquivF→⊎ = isoToIsEquiv
-  --   (iso _ (⊎.rec injectFin+' (injectFin+ {n = suc n} ∘ ⊎.rec (λ _ → fzero) fsuc))
-  --     (⊎.elim (λ a → {!!}) (⊎.elim {!!} {!!}))
-  --     {!!})
-
   pts* = pts⊎ ∘ F→⊎
-
-  -- module ctp-hlp' (sa : Fin (suc (suc n)) →  ℝ) where
-  --  sa⊎ : Fin (suc (suc n)) ⊎ Fin (suc (suc (len p-bc))) → ℝ
-  --  sa⊎ = ⊎
-   -- (inl x) = sa x
-   -- sa⊎ (inr x) = samples s-bc x
-
-
- -- F→⊎-inl-N : ∀ n u u≤u l p → ctp-hlp.F→⊎ n u u≤u ({!!}) ≡ inr (inl fzero)
- -- F→⊎-inl-N n u u≤u l p = {!!}
-
 
 
  pts⊎-suc' : ∀ n u u≤u v → fst (ctp-hlp.pts⊎ n (λ z → u (fsuc z))
@@ -480,23 +461,21 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
        (pts≤pts p-ab)
 
 
- -- open ctp-hlp' (samples s-ab)
-
- w : Partition[ a , c ]
- w .len = (p-ab .len ℕ.+ suc (suc (p-bc .len)))
- w .pts = fst ∘ pts*
- w .a≤pts = fst ∘ snd ∘ pts*
- w .pts≤b = snd ∘ snd ∘ pts*
- w .pts≤pts = pts⊎≤pts⊎ _ _ (p-ab .pts≤pts)
+ pAC : Partition[ a , c ]
+ pAC .len = (p-ab .len ℕ.+ suc (suc (p-bc .len)))
+ pAC .pts = fst ∘ pts*
+ pAC .a≤pts = fst ∘ snd ∘ pts*
+ pAC .pts≤b = snd ∘ snd ∘ pts*
+ pAC .pts≤pts = pts⊎≤pts⊎ _ _ (p-ab .pts≤pts)
 
 
- pts'-inl* : ∀ x → pts p-ab x ≡ pts w (injectFin+' x)
+ pts'-inl* : ∀ x → pts p-ab x ≡ pts pAC (injectFin+' x)
  pts'-inl* x = cong
    (fst ∘ pts⊎ ∘ F→⊎')
    (Fin+→⊎∘injectFin+' _ _ x)
 
 
- pts'-inl : ∀ (x : Fin (3 ℕ.+ len p-ab)) → pts' p-ab x ≡ pts' w (injectFin+' x)
+ pts'-inl : ∀ (x : Fin (3 ℕ.+ len p-ab)) → pts' p-ab x ≡ pts' pAC (injectFin+' x)
  pts'-inl (zero , zero , p) = ⊥.rec (ℕ.znots (cong predℕ p))
  pts'-inl (zero , suc l , p) = refl
  pts'-inl x@(suc k , zero , p) =
@@ -518,7 +497,7 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
         (Fin+→⊎ (suc (len p-ab)) (suc (suc (len p-bc)))
          (k , ll)))))
          (cong snd (toℕ-injective refl))) ∙
-     cong (pts' w)
+     cong (pts' pAC)
        (toℕ-injective
         {fj = suc k , (suc (suc (len p-bc))) ℕ.+ l ,
           (cong (ℕ._+ suc (suc k))
@@ -527,7 +506,7 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
          refl)
 
  pts'-inr : ∀ (x : Fin (3 ℕ.+ len p-bc)) x<' → pts' p-bc x ≡
-   pts' w (
+   pts' pAC (
      fst (injectFin+ {suc (suc (suc (len p-bc)))}
       {suc (suc (len p-ab))}
       x)
@@ -545,7 +524,7 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
    ⊥.rec (znots (inj-m+ {suc (suc (suc (len p-ab)))} {0} p'))
  pts'-inr (zero , suc l , p) (suc k' , p') =
    pts'-inl flast ∙
-     cong (pts' w)
+     cong (pts' pAC)
        (toℕ-injective
          {_}
           {injectFin+' {suc (suc (len p-bc))}
@@ -574,15 +553,15 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
       (⊎.⊎Iso (idIso {A = Fin (suc (len p-ab))})
              (Iso-Fin+⊎ 1 (suc (len p-bc)))))
 
- <w' : ∀ x → pts' w (finj (Iso.inv (Iso-Fin+⊎ _ _) x)) ≤ᵣ
+ <w' : ∀ x → pts' pAC (finj (Iso.inv (Iso-Fin+⊎ _ _) x)) ≤ᵣ
       ⊎.rec (samples s-ab) (samples s-bc)
        x
  <w' (inl x) = isTrans≡≤ᵣ _ _ _
-   (cong (pts' w) (finj∘inj' x)
+   (cong (pts' pAC) (finj∘inj' x)
     ∙ sym (pts'-inl (finj x)))
    (pts'≤samples s-ab x)
  <w' (inr x) = isTrans≡≤ᵣ _ _ _
-     (cong (pts' w) (finj∘inj {2 ℕ.+ len p-ab} x
+     (cong (pts' pAC) (finj∘inj {2 ℕ.+ len p-ab} x
       (snd (finj (injectFin+ {n = 2 ℕ.+ len p-ab} x))))
        ∙ sym (pts'-inr (finj x)
        ((snd (finj (injectFin+ {n = 2 ℕ.+ len p-ab} x))))))
@@ -590,18 +569,18 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
 
 
  w'< : ∀ x → ⊎.rec (samples s-ab) (samples s-bc) x ≤ᵣ
-     pts' w (fsuc (Iso.inv (Iso-Fin+⊎ _ _) x))
+     pts' pAC (fsuc (Iso.inv (Iso-Fin+⊎ _ _) x))
 
 
  w'< (inl x) =
    isTrans≤≡ᵣ _ _ _
      (samples≤pts' s-ab x)
      (pts'-inl (fsuc x) ∙
-       cong (pts' w) (sym (fsuc∘inj' x)))
+       cong (pts' pAC) (sym (fsuc∘inj' x)))
  w'< (inr x) = isTrans≤≡ᵣ _ _ _
    (samples≤pts' s-bc x)
      (pts'-inr (fsuc x) h ∙
-       cong (pts' w) (sym (fsuc∘inj x
+       cong (pts' pAC) (sym (fsuc∘inj x
         h))  )
    where
     h =
@@ -610,20 +589,20 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
        (cong (suc ∘ suc) (sym (+-suc _ _)))
         (snd (fsuc (injectFin+ {n = 2 ℕ.+ len p-ab} x)))
 
- w' : Sample w
- w' .samples = ⊎.rec (samples s-ab) (samples s-bc) ∘ Fin+→⊎ _ _
- w' .pts'≤samples x =  isTrans≡≤ᵣ _ _ _
-   (cong (pts' w ∘ finj)
+ sampleAC : Sample pAC
+ sampleAC .samples = ⊎.rec (samples s-ab) (samples s-bc) ∘ Fin+→⊎ _ _
+ sampleAC .pts'≤samples x =  isTrans≡≤ᵣ _ _ _
+   (cong (pts' pAC ∘ finj)
      (sym (Iso.leftInv (Iso-Fin+⊎ (suc (suc (p-ab .len))) _) x)))
      (<w' (Iso.fun (Iso-Fin+⊎ _ _) x))
- w' .samples≤pts' x =
+ sampleAC .samples≤pts' x =
    isTrans≤≡ᵣ _ _ _ (w'< (Iso.fun (Iso-Fin+⊎ _ _) x))
-     ((cong (pts' w ∘ fsuc)
+     ((cong (pts' pAC ∘ fsuc)
      (Iso.leftInv (Iso-Fin+⊎ (suc (suc (p-ab .len))) _) x)))
 
- w'' : (f : ℝ → ℝ) →
-        riemannSum' s-ab f +ᵣ riemannSum' s-bc f ≡ riemannSum' w' f
- w'' f =
+ rsConcat : (f : ℝ → ℝ) →
+        riemannSum' s-ab f +ᵣ riemannSum' s-bc f ≡ riemannSum' sampleAC f
+ rsConcat f =
    cong₂ _+ᵣ_
      (riemannSum'-alt-lem s-ab f ∙
       congS {A = Fin (suc (suc ( len p-ab))) → ℝ}
@@ -636,11 +615,11 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
          (cong₂ _-ᵣ_
            (pts'-inl (fsuc x) ∙
              cong {x = (injectFin+' (fsuc x))}
-                   {(fsuc (injectFin+' x))} (pts' w)
+                   {(fsuc (injectFin+' x))} (pts' pAC)
                    (toℕ-injective refl))
            ((pts'-inl (finj x) ∙
              cong {x = (injectFin+' (finj x))}
-                   {(finj (injectFin+' x))} (pts' w)
+                   {(finj (injectFin+' x))} (pts' pAC)
                    (toℕ-injective refl))))
          (cong f (sym (rec⊎-injectFin+' (fst ∘ samplesΣ s-ab) _ x) ))))
      (riemannSum'-alt-lem s-bc f ∙
@@ -654,15 +633,15 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
          (cong₂ _-ᵣ_
            (pts'-inr (fsuc x)
              (x< x)
-             ∙ sym (cong (pts' w) (fsuc∘inj x (x< x))))
+             ∙ sym (cong (pts' pAC) (fsuc∘inj x (x< x))))
            (pts'-inr (finj x) (x<' x) ∙
-              sym (cong (pts' w)
+              sym (cong (pts' pAC)
                 (finj∘inj {n = 2 ℕ.+ len p-ab}  x (x<' x)))))
          (cong f (sym (rec⊎-injectFin+ (fst ∘ samplesΣ s-ab) _ x))))) ∙∙
      sym (foldFin-sum-concat
       (suc (suc (len p-ab)))
       (suc (suc (len p-bc))) _)
-   ∙∙ sym (riemannSum'-alt-lem w' f)
+   ∙∙ sym (riemannSum'-alt-lem sampleAC f)
    where
    x< : (x : Fin (suc (suc (len p-bc)))) →
          _ ℕ.< _
@@ -683,16 +662,15 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
         → Fin (suc (suc (suc (len p-ab)))) ⊎ (Fin (suc (suc (len p-bc))))
  ⊎suc = ⊎.rec (inl ∘ fsuc) (inr ∘ ⊎.rec (λ _ → fzero) (fsuc))
  ⊎inj = ⊎.rec (inl ∘ finj) (⊎.rec (λ _ → inl flast) (inr ∘ finj))
- -- ⊎.rec (inl ∘ finj)
- --   (⊎.rec (λ _ → inl flast) (inr ∘ Fin+→⊎ 1 (suc (len p-bc)) ∘ finj))
 
  ⊎→F''' : Fin (suc (suc (suc (len p-ab)))) ⊎ Fin (suc (suc (len p-bc))) →
            Fin (suc (suc (suc (len p-ab))) ℕ.+ suc (suc (len p-bc)))
  ⊎→F''' = Iso.inv (Iso-Fin+⊎ (suc (suc (suc (len p-ab)))) _)
+ 
  w'''-⊎ : (δ : ℝ) → mesh≤ᵣ p-ab δ → mesh≤ᵣ p-bc δ →
-         ∀ k → (pts' w
+         ∀ k → (pts' pAC
            (⊎→F''' (⊎suc k) ))
-            -ᵣ (pts' w (⊎→F''' (⊎inj k))) ≤ᵣ δ
+            -ᵣ (pts' pAC (⊎→F''' (⊎inj k))) ≤ᵣ δ
  w'''-⊎ δ me me' (inl x) =
     isTrans≡≤ᵣ _ _ _
       (cong₂ _-ᵣ_
@@ -705,7 +683,7 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
            (cong {x = injectFin+ {n = suc (suc (suc (len p-ab)))} fzero}
                  {fst (injectFin+ {suc (suc (len p-bc))}
                   {n = suc (suc (len p-ab))} (fsuc fzero))
-                  , h} (pts' w)
+                  , h} (pts' pAC)
                    (toℕ-injective (cong (2 ℕ.+_) (sym (+-suc _ _))))
              ∙ sym (pts'-inr (fsuc fzero)
             (h)))
@@ -720,11 +698,11 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
 
     isTrans≡≤ᵣ _ _ _
       (cong₂ _-ᵣ_
-           (cong (pts' w) p1 ∙ sym (pts'-inr (fsuc (fsuc x))
+           (cong (pts' pAC) p1 ∙ sym (pts'-inr (fsuc (fsuc x))
              (subst (suc (suc (len p-ab ℕ.+ fst (fsuc (fsuc x)))) ℕ.<_)
        (cong (suc ∘ suc) (+-suc _ _))
        (ℕ.<-k+ {k = suc (suc (len p-ab))} (ℕ.<-k+ {k = 2} (snd x))))))
-           (cong (pts' w) p2
+           (cong (pts' pAC) p2
             ∙ sym (pts'-inr (finj (fsuc x))
              (subst (suc (suc (len p-ab ℕ.+ fst (finj (fsuc x)))) ℕ.<_)
        (cong (suc ∘ suc) (+-suc _ _))
@@ -755,11 +733,6 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
           (⊎.⊎Iso idIso
              (Iso-Fin+⊎ 1 _)))
 
--- (Fin (suc (suc (len p-ab)) ℕ.+ (suc (suc (len p-bc)))))
---         (Fin (suc (suc (len p-ab))) ⊎ (Fin 1 ⊎ Fin (suc (len p-bc))))
-
---  F→⊎''' = {!!}
-
 
  w'''-F→⊎→F-fsuc : ∀ k → fsuc (F→⊎'''.inv k) ≡ ⊎→F''' (⊎suc k)
  w'''-F→⊎→F-fsuc (inl x) = toℕ-injective refl
@@ -780,14 +753,14 @@ concatTaggedPartition a b c a≤b b≤c (p-ab , s-ab) (p-bc , s-bc) =
   (cong (2 ℕ.+_) (+-suc _ _))
 
 
- w''' : (δ : ℝ) → mesh≤ᵣ p-ab δ → mesh≤ᵣ p-bc δ →
-         ∀ k → pts' w (fsuc k) -ᵣ pts' w (finj k) ≤ᵣ δ
- w''' δ me me' k =
+ mesh-concat : (δ : ℝ) → mesh≤ᵣ p-ab δ → mesh≤ᵣ p-bc δ →
+         ∀ k → pts' pAC (fsuc k) -ᵣ pts' pAC (finj k) ≤ᵣ δ
+ mesh-concat δ me me' k =
    isTrans≡≤ᵣ _ _ _
      (cong₂ _-ᵣ_
-       (cong (pts' w) (cong fsuc (sym (F→⊎'''.leftInv k))
+       (cong (pts' pAC) (cong fsuc (sym (F→⊎'''.leftInv k))
         ∙ w'''-F→⊎→F-fsuc (F→⊎'''.fun k)))
-       (cong (pts' w) (cong finj (sym (F→⊎'''.leftInv k))
+       (cong (pts' pAC) (cong finj (sym (F→⊎'''.leftInv k))
         ∙ w'''-F→⊎→F-finj (F→⊎'''.fun k))))
      (w'''-⊎ δ me me' (F→⊎'''.fun k))
 
@@ -819,11 +792,11 @@ Integral'-additive : ∀ a b c → a ≤ᵣ b → b ≤ᵣ c → ∀ f s s' s+s'
   s +ᵣ s' ≡ s+s'
 
 Integral'-additive a b c a≤b b≤c f s s' s+s' S S' S+S' =
-  eqℝ _ _ (invEq (∼≃abs<ε _ _ _) ∘ w)
+  eqℝ _ _ (invEq (∼≃abs<ε _ _ _) ∘ integralDifference)
 
  where
- w : (ε : ℚ₊) → absᵣ (s +ᵣ s' +ᵣ -ᵣ s+s') <ᵣ rat (fst ε)
- w ε =
+ integralDifference : (ε : ℚ₊) → absᵣ (s +ᵣ s' +ᵣ -ᵣ s+s') <ᵣ rat (fst ε)
+ integralDifference ε =
    PT.rec3
     (isProp<ᵣ _ _)
     (λ (δ , X) (δ' , X') (δ'' , X'') →

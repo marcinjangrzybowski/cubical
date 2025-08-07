@@ -515,10 +515,6 @@ boundedLipsch-coh f B B' bl bl' =
                         sym (BoundedLipsch.𝒇-rat f B' bl' r)
 
 
-_₊^ⁿ_ : ℝ₊ → ℕ → ℝ₊
-(x , 0<x) ₊^ⁿ n  = (x ^ⁿ n) , 0<x^ⁿ x n 0<x
-
-
 IsContinuous₊^ⁿ : ∀ n → IsContinuousWithPred
          (λ x → _ , isProp<ᵣ _ _)
          λ x 0<x →  fst ((x , 0<x) ₊^ⁿ n)

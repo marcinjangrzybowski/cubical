@@ -979,6 +979,15 @@ minᵣ₊ : ℝ₊ → ℝ₊ → ℝ₊
 minᵣ₊ (x , 0<x) (y , 0<y) =
   minᵣ x y , <min-lem _ _ _ 0<x 0<y
 
+minᵣ₀₊ : ℝ₀₊ → ℝ₀₊ → ℝ₀₊
+minᵣ₀₊ (x , 0≤x) (y , 0≤y) =
+  minᵣ x y , ≤min-lem _ _ _ 0≤x 0≤y
+
+maxᵣ₀₊ : ℝ₀₊ → ℝ₀₊ → ℝ₀₊
+maxᵣ₀₊ (x , 0≤x) (y , 0≤y) =
+  maxᵣ x y , isTrans≤ᵣ _ _ _ 0≤x (≤maxᵣ x y)
+
+
 opaque
  unfolding _≤ᵣ_ absᵣ
 
