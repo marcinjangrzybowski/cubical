@@ -54,6 +54,25 @@ open import Cubical.HITs.CauchyReals.Exponentiation
 open import Cubical.HITs.CauchyReals.Uniform
 
 
+≤ᵣ→≯ᵣ : ∀ x y →  x ≤ᵣ y → (y <ᵣ x) → ⊥
+≤ᵣ→≯ᵣ x y x≤y y<x = 
+ let x=y = isAntisym≤ᵣ x y x≤y (<ᵣWeaken≤ᵣ _ _ y<x)
+ in isAsym<ᵣ y x y<x (subst2 _<ᵣ_ (sym x=y) x=y y<x)
+
+  
+
+≯ᵣ→≤ᵣ : ∀ x y →  ((y <ᵣ x) → ⊥) → x ≤ᵣ y
+≯ᵣ→≤ᵣ x y f = x<y+δ→x≤y _ _
+  λ ε → PT.rec (isProp<ᵣ _ _)
+      (⊎.rec (idfun _) (⊥.rec ∘ f ))
+       (Dichotomyℝ' y x (y +ᵣ (rat (fst ε)))
+        (isTrans≡<ᵣ _ _ _ (sym (+IdR _)) (<ᵣ-o+ _ _ _ (snd (ℚ₊→ℝ₊ ε)))))
+
+≤ᵣ≃≯ᵣ : ∀ x y →  (x ≤ᵣ y) ≃ ((y <ᵣ x) → ⊥) 
+≤ᵣ≃≯ᵣ _ _ = propBiimpl→Equiv (isProp≤ᵣ _ _)
+  (isPropΠ λ _ → isProp⊥)
+  (≤ᵣ→≯ᵣ _ _) (≯ᵣ→≤ᵣ _ _)
+  
 0≤ᵣx² : ∀ x → 0 ≤ᵣ (x ^ⁿ 2)
 0≤ᵣx² = ≤Cont
  (IsContinuousConst 0)
@@ -968,11 +987,6 @@ t<π-seq→0<cos[t] t n@(suc n-1) 0≤t t≤ =
       (≡ᵣWeaken≤ᵣ _ _ ∘ cong π-seq)
   ∘ ℕ.≤-split
 
-
-≤ᵣ→≯ᵣ : ∀ x y →  x ≤ᵣ y → (y <ᵣ x) → ⊥
-≤ᵣ→≯ᵣ x y x≤y y<x = 
- let x=y = isAntisym≤ᵣ x y x≤y (<ᵣWeaken≤ᵣ _ _ y<x)
- in isAsym<ᵣ y x y<x (subst2 _<ᵣ_ (sym x=y) x=y y<x)
 
 π-seq1=1 : π-seq 1 ≡ 1
 π-seq1=1 = (+IdL _) ∙ cos0=1

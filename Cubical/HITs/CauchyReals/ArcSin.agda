@@ -326,13 +326,6 @@ sin-strictMonotone x y x∈ y∈ x<y =
 --      is λ x x∈ → fst (invℝ₊ ((x , (fst x∈)) ₊^ⁿ 2))
 -- DerivativeUℙ-invℝ₊ q = {!!}
 
-
-absᵣ-triangle-midpt
-       : (x z y : ℝ) →  absᵣ (x -ᵣ y) ≤ᵣ absᵣ (x -ᵣ z) +ᵣ absᵣ (z -ᵣ y)
-absᵣ-triangle-midpt x z y =
-  isTrans≡≤ᵣ _ _ _
-    (cong absᵣ (sym L𝐑.lem--074))
-    (absᵣ-triangle (x -ᵣ z) (z -ᵣ y))
     
 -- TODO : if we switch to bishop definition of derivative,
 -- we can ditch injectivity of f

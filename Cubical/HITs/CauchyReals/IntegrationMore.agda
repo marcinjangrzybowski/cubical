@@ -247,6 +247,13 @@ opaque
  IsUContinuousAbsᵣ : IsUContinuous absᵣ
  IsUContinuousAbsᵣ = Lipschitiz→IsUContinuous 1 absᵣ (snd (absᵣL))
 
+opaque
+ IsUContinuousMaxᵣ : ∀ x → IsUContinuous (maxᵣ x)
+ IsUContinuousMaxᵣ x = Lipschitiz→IsUContinuous 1 (maxᵣ x)
+   λ u v ε x₁ → NonExpanding₂-Lemmas.NE.go∼R _ maxR x u v (1 ℚ₊· ε)
+     (subst∼ (sym (ℚ.·IdL _)) x₁) 
+
+
 IsUContinuous+ᵣ₂ : ∀ f g → IsUContinuous f → IsUContinuous g →
    IsUContinuous λ x → f x +ᵣ g x
 IsUContinuous+ᵣ₂ f g fC gC ε =

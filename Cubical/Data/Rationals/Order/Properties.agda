@@ -687,7 +687,6 @@ boundℕ q with ≤→≡⊎< 0 (abs q) (0≤abs q)
           (+Comm f _ ∙ e)
            (ℕ+→ℚ+ 1 k) ((<-+o f 1 [ pos k / 1+ 0 ] e'')))
 
-
 isSetℚ₊ : isSet ℚ₊
 isSetℚ₊ = isSetΣ isSetℚ λ q → isProp→isSet (snd (0<ₚ q))
 
@@ -804,6 +803,7 @@ invℚ₊Dist· = uncurry (flip ∘ uncurry ∘ ElimProp2.go w)
                ℤ.+
                 pos (y .snd .ℕ₊₁.n ℕ.+ x .snd .ℕ₊₁.n ℕ.· suc (y .snd .ℕ₊₁.n))
              ℤ.· qq i))
+
 
 
 
@@ -1754,3 +1754,12 @@ invℚ₊-≤-invℚ₊ q r =
      invEquiv (Σ≡PropEquiv (snd ∘ 0<ₚ_) {u = invℚ₊ r} {v = invℚ₊ q}
         ∙ₑ isoToEquiv symIso )) (invℚ₊-<-invℚ₊ q r)
    ∙ₑ (invEquiv (≤≃≡⊎< _ _))
+
+
+lowerBoundℕ⁻¹ : ∀ (q : ℚ₊) → Σ[ k ∈ ℕ₊₁ ] ([ 1 , k ] < fst q)
+lowerBoundℕ⁻¹ q = 
+ map-snd (subst ([ 1 , _ ] <_) (cong (fst ∘ invℚ₊)
+   (ℚ₊≡ {abs (fst (invℚ₊ q)) , 
+     (subst (0<_) (sym (absPos _ (0<ℚ₊ (invℚ₊ q))))
+      (snd (invℚ₊ q)))}
+    (absPos _ (0<ℚ₊ (invℚ₊ q)))) ∙ invℚ₊-invol q)  ∘S fst (invℚ₊-<-invℚ₊ _ _)) (boundℕ (fst (invℚ₊ q)))
