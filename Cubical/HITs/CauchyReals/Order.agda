@@ -384,7 +384,7 @@ opaque
 
  isAntisym≤ᵣ : BinaryRelation.isAntisym _≤ᵣ_
  isAntisym≤ᵣ a b a≤b b≤a = sym b≤a ∙∙ maxᵣComm _ _ ∙∙ a≤b
- 
+
  -ᵣR : Σ (ℝ → ℝ) (Lipschitz-ℝ→ℝ (1 , tt))
  -ᵣR = fromLipschitz (1 , _)
    ((rat ∘ ℚ.-_ ) , λ q r ε x x₁ →
@@ -631,6 +631,31 @@ opaque
 
  denseℚinℝ : ∀ u v → u <ᵣ v → ∃[ q ∈ ℚ ] ((u <ᵣ rat q) × (rat q <ᵣ v))
  denseℚinℝ u v =
+  PT.map λ ((p , q) , u≤p , p<q , q≤v) →
+  let
+    m = (p ℚ.+ q) ℚ.· [ 1 / 2 ]
+    p<m = subst2 ℚ._<_ (
+      p ℚ.· [ 1 / 2 ] ℚ.+ p ℚ.· [ 1 / 2 ] ≡⟨ sym $ ℚ.·DistL+ p [ 1 / 2 ] [ 1 / 2 ] ⟩
+      p ℚ.· [ 4 / 4 ]                      ≡⟨ cong (p ℚ.·_) (ℚ.[n/n]≡[m/m] 3 0) ⟩
+      p ℚ.· [ 1 / 1 ]                      ≡⟨ ℚ.·IdR p ⟩
+      p                                    ∎)
+      (sym (ℚ.·DistR+ p q [ 1 / 2 ]))
+      (ℚ.<-o+ (p ℚ.· [ 1 / 2 ]) (q ℚ.· [ 1 / 2 ]) (p ℚ.· [ 1 / 2 ])
+        (ℚ.<-·o p q [ 1 / 2 ] (ℚ.0<pos 0 2) p<q))
+    m<q = subst2 ℚ._<_
+      (sym (ℚ.·DistR+ p q [ 1 / 2 ]))
+      (
+      q ℚ.· [ 1 / 2 ] ℚ.+ q ℚ.· [ 1 / 2 ] ≡⟨ sym $ ℚ.·DistL+ q [ 1 / 2 ] [ 1 / 2 ] ⟩
+      q ℚ.· [ 4 / 4 ]                      ≡⟨ cong (q ℚ.·_) (ℚ.[n/n]≡[m/m] 3 0) ⟩
+      q ℚ.· [ 1 / 1 ]                      ≡⟨ ℚ.·IdR q ⟩
+      q                                    ∎)
+      (ℚ.<-+o (p ℚ.· [ 1 / 2 ]) (q ℚ.· [ 1 / 2 ]) (q ℚ.· [ 1 / 2 ])
+        ((ℚ.<-·o p q [ 1 / 2 ] (ℚ.0<pos 0 2) p<q)))
+  in
+    m , ∣ (p , m) , u≤p , p<m , ≤ᵣ-refl _ ∣₁ , ∣ (m , q) , ≤ᵣ-refl _ , m<q , q≤v ∣₁
+{-
+ denseℚinℝ : ∀ u v → u <ᵣ v → ∃[ q ∈ ℚ ] ((u <ᵣ rat q) × (rat q <ᵣ v))
+ denseℚinℝ u v =
    PT.map λ ((u , v) , (z , (z' , z''))) →
              u ℚ.+ ((v ℚ.- u) ℚ.· [ 1 / 2 ]) ,
                ∣ (u , u ℚ.+ ((v ℚ.- u) ℚ.· [ 1 / 4 ]))
@@ -693,7 +718,7 @@ opaque
                     subst ((v ℚ.- ((v ℚ.- u) ℚ.· [ pos 1 / 1+ 3 ])) ℚ.<_)
                      (ℚ.+IdR v) (ℚ.<-o+ (ℚ.- ((v ℚ.- u) ℚ.· [ 1 / 4 ])) 0 v
                         (ℚ.-ℚ₊<0 (ℚ.<→ℚ₊ u v z' ℚ₊· ([ pos 1 / 1+ 3 ] , _)))) , z'')) ∣₁
-
+-}
 
 
 
@@ -760,7 +785,7 @@ intervalℙ a b x = ((a ≤ᵣ x) × (x ≤ᵣ b)) ,
   isProp× (isProp≤ᵣ _ _ )  (isProp≤ᵣ _ _ )
 
 
-pointIntervalℙ : ∀ x y → x ≡ y → isContr (Σ _ (_∈ intervalℙ x y)) 
+pointIntervalℙ : ∀ x y → x ≡ y → isContr (Σ _ (_∈ intervalℙ x y))
 pointIntervalℙ x y x≡y = (x , ≤ᵣ-refl x , ≡ᵣWeaken≤ᵣ _ _ x≡y) ,
   λ (z , x≤z , z≤y) →
    Σ≡Prop (∈-isProp (intervalℙ x y))
@@ -791,4 +816,3 @@ pred≤< a b x = ((a ≤ᵣ x) × (x <ᵣ b)) , isProp× (isProp≤ᵣ _ _) (isP
 
 pred<≤ : ℝ → ℝ → ℙ ℝ
 pred<≤ a b x = ((a <ᵣ x) × (x ≤ᵣ b)) , isProp× (isProp<ᵣ _ _) (isProp≤ᵣ _ _)
-
