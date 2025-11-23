@@ -1,9 +1,13 @@
-{-# OPTIONS --cubical --safe #-}
+{-# OPTIONS --cubical #-}
 module Cubical.Data.Nat.Mod where
 
+open import Agda.Builtin.Nat using () renaming (
+  div-helper to hdiv ;
+  mod-helper to hmod)
 open import Cubical.Foundations.Prelude
 open import Cubical.Data.Nat
 open import Cubical.Data.Nat.Order
+open import Cubical.Data.Empty
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sum as ⊎
 
@@ -36,6 +40,7 @@ mod< n =
      λ x ind → fst ind
               , cong (λ x → fst ind + suc x)
                      (modIndStep n x) ∙ snd ind
+
 
 <→mod : (n x : ℕ) → x < (suc n) → x mod (suc n) ≡ x
 <→mod = modIndBase
@@ -191,6 +196,92 @@ quotient x / suc n =
           ∙∙ cong (_+ suc n) ind
            ∙ +-comm x (suc n)
 
+-- Alternative definitions of quotient_/_ and remainder_/_
+
+-- helper lemmas to prove some of their properties
+private
+  div-mod-lemma : ∀ accᵐ accᵈ d n →
+    accᵐ + accᵈ · suc (accᵐ + n) + d
+    ≡
+    hmod accᵐ (accᵐ + n) d n + hdiv accᵈ (accᵐ + n) d n · suc (accᵐ + n)
+  div-mod-lemma accᵐ accᵈ zero    n       = +-zero _
+  div-mod-lemma accᵐ accᵈ (suc d) zero    =
+    (accᵐ + accᵈ · suc (accᵐ + zero)) + suc d          ≡⟨ step0 ⟩
+    suc (accᵐ + accᵈ · suc (accᵐ + zero)) + d          ≡⟨⟩
+    ((suc accᵐ) + accᵈ · suc (accᵐ + zero)) + d        ≡⟨ step1 ⟩
+    ((suc accᵐ) + accᵈ · (suc accᵐ)) + d               ≡⟨⟩
+    0 + (suc accᵈ) · suc (0 + accᵐ) + d                ≡⟨ step2 ⟩
+    hmod 0 (0 + accᵐ) d accᵐ +
+    hdiv (suc accᵈ) (0 + accᵐ) d accᵐ · suc (0 + accᵐ) ≡⟨⟩
+    hmod 0 accᵐ d accᵐ +
+    hdiv (suc accᵈ) accᵐ d accᵐ · suc accᵐ             ≡⟨⟩
+    hmod accᵐ accᵐ (suc d) 0 +
+    hdiv accᵈ accᵐ (suc d) 0 · suc accᵐ                ≡⟨ step3 ⟩
+    hmod accᵐ (accᵐ + 0) (suc d) 0 +
+    hdiv accᵈ (accᵐ + 0) (suc d) 0 · suc (accᵐ + 0)    ∎
+      where
+        step0 = +-suc _ d
+        step1 = λ i → ((suc accᵐ) + accᵈ · suc (+-zero accᵐ i)) + d
+        step2 = div-mod-lemma 0 (suc accᵈ) d accᵐ
+        step3 = cong (λ p → hmod accᵐ p (suc d) 0 + hdiv accᵈ p (suc d) 0 · suc p)
+                     (sym (+-zero accᵐ))
+  div-mod-lemma accᵐ accᵈ (suc d) (suc n) =
+    (accᵐ + accᵈ · suc (accᵐ + suc n)) + suc d          ≡⟨ step0 ⟩
+    (suc (accᵐ + accᵈ · suc (accᵐ + suc n))) + d        ≡⟨⟩
+    ((suc accᵐ) + accᵈ · suc (accᵐ + suc n)) + d        ≡⟨ step1 ⟩
+    ((suc accᵐ) + accᵈ · suc ((suc accᵐ) + n)) + d      ≡⟨ step2 ⟩
+    hmod (suc accᵐ) (suc accᵐ + n) d n +
+    hdiv accᵈ (suc accᵐ + n) d n · suc (suc accᵐ + n)   ≡⟨ step3 ⟩
+    hmod (suc accᵐ) (accᵐ + suc n) d n +
+    hdiv accᵈ (accᵐ + suc n) d n · suc (accᵐ + suc n)   ≡⟨⟩
+    hmod accᵐ (accᵐ + suc n) (suc d) (suc n) +
+    hdiv accᵈ (accᵐ + suc n) (suc d) (suc n) · suc (accᵐ + suc n) ∎
+      where
+        step0 = +-suc _ d
+        step1 = λ i → ((suc accᵐ) + accᵈ · suc (+-suc accᵐ n i)) + d
+        step2 = div-mod-lemma (suc accᵐ) accᵈ d n
+        step3 = cong (λ p → hmod (suc accᵐ) p d n + hdiv accᵈ p d n · suc p)
+                     (sym (+-suc accᵐ n))
+
+  mod-lemma-≤ : ∀ acc d n → hmod acc (acc + n) d n ≤ acc + n
+  mod-lemma-≤ acc zero    n       = ≤SumLeft
+  mod-lemma-≤ acc (suc d) zero    = mod-lemma-≤ 0 d (acc + 0)
+  mod-lemma-≤ acc (suc d) (suc n) =
+    hmod acc (acc + suc n) (suc d) (suc n) ≡≤⟨ step0 ⟩
+    hmod acc (suc acc + n) (suc d) (suc n) ≡≤⟨ refl ⟩
+    hmod (suc acc) (suc acc + n) d n       ≤≡⟨ step1 ⟩
+    suc acc + n                            ≡⟨ step2 ⟩
+    acc + (suc n)                          ∎
+    where
+      open <-Reasoning
+      step0 = λ i → hmod acc (+-suc acc n i) (suc d) (suc n)
+      step1 = mod-lemma-≤ (suc acc) d n
+      step2 = sym (+-suc acc n)
+
+remainder'_/_ : (x n : ℕ) → ℕ
+remainder' x / zero = x
+remainder' x / suc n = hmod 0 n x n
+
+quotient'_/_ : (x n : ℕ) → ℕ
+quotient' x / zero = 0
+quotient' x / suc n = hdiv 0 n x n
+
+≡remainder'+quotient' : (n x : ℕ)
+  → (remainder' x / n) + n · (quotient' x / n) ≡ x
+≡remainder'+quotient' zero    x = +-zero x
+≡remainder'+quotient' (suc n) x =
+  remainder' x / suc n + suc n · (quotient' x / suc n)  ≡⟨ step0 ⟩
+  remainder' x / suc n + quotient' x / suc n · suc n    ≡⟨⟩
+  hmod 0 n x n + hdiv 0 n x n · suc n                   ≡⟨⟩
+  hmod 0 (0 + n) x n + hdiv 0 (0 + n) x n · suc (0 + n) ≡⟨ step1 ⟩
+  x                                                     ∎
+    where
+      step0 = cong (remainder' x / suc n +_) (·-comm (suc n) (quotient' x / suc n))
+      step1 = sym ( div-mod-lemma 0 0 x n )
+
+mod'< : ∀ n x → remainder' x / suc n < suc n
+mod'< n x = suc-≤-suc (mod-lemma-≤ 0 x n)
+
 private
   test₀ : 100 mod 81 ≡ 19
   test₀ = refl
@@ -266,48 +357,44 @@ private
              (2≤x→1<quotient[x/2] n)) )
       (≤SumRight {_} {(remainder 2 + n / 2)}))
 
+open Minimal
 
--- -- TODO: shoulld be easy to generalise to other nuumbers than 2
+log2ℕ : ∀ n → Σ _ (Least (λ k → n < 2 ^ k))
+log2ℕ n = w n n ≤-refl
+ where
 
--- log2ℕ : ∀ n → Σ _ (Minimal.Least (λ k → n < 2 ^ k))
--- log2ℕ n = w n n ≤-refl
---  where
-
---   w : ∀ N n → n ≤ N
---           → Σ _ (Minimal.Least (λ k → n < 2 ^ k))
---   w N zero x = 0 , (≤-refl , λ k' q → ⊥.rec (¬-<-zero q))
---   w N (suc zero) x = 1 , (≤-refl ,
---      λ { zero q → <-asym (suc-≤-suc ≤-refl)
---       ; (suc k') q → ⊥.rec (¬-<-zero (pred-≤-pred q))})
---   w zero (suc (suc n)) x = ⊥.rec (¬-<-zero x)
---   w (suc N) (suc (suc n)) x =
---    let (k , (X , Lst)) = w N
---           (quotient 2 + n / 2)
---           (≤-trans (pred-≤-pred (2≤x→quotient[x/2]<x n))
---              (pred-≤-pred x))
---        z = ≡remainder+quotient 2 (2 + n)
---        zz = <-+-≤ X X
---        zzz : suc (suc n) < (2 ^ suc k)
---        zzz = subst2 (_<_)
---            (+-comm ({!remainder 2 + n / 2!} +
---                      (({!!})))
---                       ({!!})
---               ∙ sym (+-assoc _ _ _)
---                ∙ cong ((remainder 2 + n / 2) +_)
---              ((cong ((quotient 2 + n / 2) +_)
---               (sym (+-zero (quotient 2 + n / 2)))))
---              ∙ z)
---            (cong ((2 ^ k) +_) (sym (+-zero (2 ^ k))))
---            ((≤<-trans
---              (≤-k+ {k = _}
---                (≤-+k {k = {!!}} (pred-≤-pred (mod< 1 (2 + n))))) zz))
---    in (suc k)
---        , zzz
---         , λ { zero 0'<sk 2+n<2^0' →
---                 ⊥.rec (¬-<-zero (pred-≤-pred 2+n<2^0'))
---             ; (suc k') k'<sk 2+n<2^k' →
---                Lst k' (pred-≤-pred k'<sk)
---                 (<-·sk-cancel {k = 1}
---                     (subst2 _<_ (·-comm _ _) (·-comm _ _)
---                       (≤<-trans (_ , z)
---                          2+n<2^k' )))}
+  w : ∀ N n → n ≤ N
+          → Σ _ (Least (λ k → n < 2 ^ k))
+  w N zero x = 0 , (≤-refl , λ k' q → ⊥.rec (¬-<-zero q))
+  w N (suc zero) x = 1 , (≤-refl ,
+     λ { zero q → <-asym (suc-≤-suc ≤-refl)
+      ; (suc k') q → ⊥.rec (¬-<-zero (pred-≤-pred q))})
+  w zero (suc (suc n)) x = ⊥.rec (¬-<-zero x)
+  w (suc N) (suc (suc n)) x =
+   let (k , (X , Lst)) = w N
+          (quotient 2 + n / 2)
+          (≤-trans (pred-≤-pred (2≤x→quotient[x/2]<x n))
+             (pred-≤-pred x))
+       z = ≡remainder+quotient 2 (2 + n)
+       zz = <-+-≤ X X
+       zzz : suc (suc n) < (2 ^ suc k)
+       zzz = subst2 (_<_)
+           (+-comm (quotient 2 + n / 2) ((remainder 2 + n / 2) + (quotient 2 + n / 2))
+              ∙ sym (+-assoc ((remainder 2 + n / 2)) (quotient 2 + n / 2) (quotient 2 + n / 2))
+               ∙ cong ((remainder 2 + n / 2) +_)
+             ((cong ((quotient 2 + n / 2) +_)
+              (sym (+-zero (quotient 2 + n / 2)))))
+             ∙ z)
+           (cong ((2 ^ k) +_) (sym (+-zero (2 ^ k))))
+           (≤<-trans
+             (≤-k+ (≤-+k (pred-≤-pred (mod< 1 (2 + n))))) zz)
+   in (suc k)
+       , zzz
+        , λ { zero 0'<sk 2+n<2^0' →
+                ⊥.rec (¬-<-zero (pred-≤-pred 2+n<2^0'))
+            ; (suc k') k'<sk 2+n<2^k' →
+               Lst k' (pred-≤-pred k'<sk)
+                (<-·sk-cancel {k = 1}
+                    (subst2 _<_ (·-comm 2 (quotient 2 + n / 2)) (·-comm 2 (2 ^ k'))
+                      (≤<-trans  ((remainder 2 + n / 2) , z)
+                         2+n<2^k' )))}

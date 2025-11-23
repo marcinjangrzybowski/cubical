@@ -22,7 +22,7 @@ open import Cubical.Data.Int.Properties as ℤ using ()
 open import Cubical.Data.Int.Order as ℤ using ()
 open import Cubical.Data.Int.Divisibility as ℤ
 open import Cubical.Data.Rationals.Base as ℚ
-open import Cubical.Data.Rationals.Properties as ℚ
+open import Cubical.Data.Rationals.Properties
 open import Cubical.Data.Nat as ℕ using (ℕ; suc; zero;znots)
 open import Cubical.Data.Nat.Mod as ℕ
 import Cubical.Data.Nat.Order as ℕ
@@ -75,7 +75,7 @@ neg≤pos n m =
   (isTrans≤ _ 0 (fromNat m) ((minus-≤ 0 (fromNat n) (0≤pos n 1))) (0≤pos m 1))
 
 floor-lemma : ∀ p q → fromNat (ℕ.quotient p / (suc q))
-                   ℚ.+ [ ℤ.pos (ℕ.remainder p / (suc q)) / 1+ q ]
+                   + [ ℤ.pos (ℕ.remainder p / (suc q)) / 1+ q ]
                    ≡ [ ℤ.pos p / 1+ q ]
 floor-lemma p q = eq/ _ _
      (cong (ℤ._· q') w ∙ cong (ℤ.pos p ℤ.·_)
@@ -212,13 +212,13 @@ ceil-[1-frac]ℚ₊ x =
       (λ p → (fl , 0) ,
         (+IdR _ ∙ sym e ∙ cong  ((fromNat fl) +_) (sym p) ∙ (+IdR _)) ,
           (isRefl≤ 0 , decℚ<?))
-      (λ p → (suc fl , (1 ℚ.- fr)) ,
-          (cong₂ (_+_) (sym e) (ℚ.+Comm [ ℤ.pos 1 / 1+ 0 ] (- fr)) ∙
-            sym (ℚ.+Assoc _ _ _) ∙
+      (λ p → (suc fl , (1 - fr)) ,
+          (cong₂ (_+_) (sym e) (+Comm [ ℤ.pos 1 / 1+ 0 ] (- fr)) ∙
+            sym (+Assoc _ _ _) ∙
               cong  ((fromNat fl) +_)
-                (ℚ.+Assoc _ _ _
+                (+Assoc _ _ _
                   ∙∙ cong (_+ 1) (+InvR _) ∙∙ +IdL 1)
-               ∙ ℚ.+Comm (fromNat fl) 1 ∙ ℕ+→ℚ+ _ _) ,
+               ∙ +Comm (fromNat fl) 1 ∙ ℕ+→ℚ+ _ _) ,
                <Weaken≤ 0 _ (-< fr 1 e'') ,
                  (<-o+ _ _ 1 (
                    (⊎.rec (⊥.rec ∘ p) (minus-< 0 fr) (≤→≡⊎< 0 fr e')))))
@@ -251,8 +251,8 @@ floor-frac x with 0 ≟ x
 ceilℚ₊ : (q : ℚ₊) → Σ[ k ∈ ℕ₊₁ ] (fst q) < fromNat (ℕ₊₁→ℕ k)
 ceilℚ₊ q = 1+ (fst (fst (floor-fracℚ₊ q))) ,
    subst2 (_<_) --  (fromNat (suc (fst (fst (floor-fracℚ₊ q)))))
-      (ℚ.+Comm _ _ ∙ fst (snd (floor-fracℚ₊ q)))
-      (ℚ.ℕ+→ℚ+ _ _)
+      (+Comm _ _ ∙ fst (snd (floor-fracℚ₊ q)))
+      (ℕ+→ℚ+ _ _)
        (<-+o _ _ (fromNat (fst (fst (floor-fracℚ₊ q))))
          (snd (snd (snd (floor-fracℚ₊ q)))))
 
@@ -345,10 +345,10 @@ sign = Rec.go w
  let ((y , _) , (y' , _) , (y'' , _)) = <≃sign x
  in (y , y' , y'')
 
-abs≡sign· : ∀ x → ℚ.abs x ≡ x ℚ.· (sign x)
+abs≡sign· : ∀ x → abs x ≡ x · (sign x)
 abs≡sign· x = abs'≡abs x ∙ ElimProp.go w x
  where
- w : ElimProp (λ z → abs' z ≡ z ℚ.· sign z)
+ w : ElimProp (λ z → abs' z ≡ z · sign z)
  w .ElimProp.isPropB _ = isSetℚ _ _
  w .ElimProp.f x@(ℤ.pos zero , snd₁) = decℚ?
  w .ElimProp.f x@(ℤ.pos (suc n) , snd₁) =
@@ -360,7 +360,7 @@ abs≡sign· x = abs'≡abs x ∙ ElimProp.go w x
       (cong ℕ₊₁→ℤ (·₊₁-identityʳ (snd₁)))
 
 absPos : ∀ x → 0 < x → abs x ≡ x
-absPos x 0<x = abs≡sign· x ∙∙ cong (x ℚ.·_) (fst (<→sign x) 0<x)  ∙∙ (ℚ.·IdR x)
+absPos x 0<x = abs≡sign· x ∙∙ cong (x ·_) (fst (<→sign x) 0<x)  ∙∙ (·IdR x)
 
 absNonNeg : ∀ x → 0 ≤ x → abs x ≡ x
 absNonNeg x 0<x with x ≟ 0
@@ -371,8 +371,8 @@ absNonNeg x 0<x with x ≟ 0
 
 
 absNeg : ∀ x → x < 0 → abs x ≡ - x
-absNeg x x<0 = abs≡sign· x ∙∙ cong (x ℚ.·_) (snd (snd (<→sign x)) x<0)
-                 ∙∙ ℚ.·Comm x -1
+absNeg x x<0 = abs≡sign· x ∙∙ cong (x ·_) (snd (snd (<→sign x)) x<0)
+                 ∙∙ ·Comm x -1
 
 
 
@@ -383,119 +383,119 @@ absNeg x x<0 = abs≡sign· x ∙∙ cong (x ℚ.·_) (snd (snd (<→sign x)) x<
 ... | gt x₁ = subst (0 ≤_) (sym (absPos x x₁)) (<Weaken≤ 0 x x₁)
 
 
-abs+pos : ∀ x y → 0 < x → abs (x ℚ.+ y) ≤ x ℚ.+ abs y
+abs+pos : ∀ x y → 0 < x → abs (x + y) ≤ x + abs y
 abs+pos x y x₁ with y ≟ 0
 ... | lt x₂ =
  let xx = (≤-o+ y (- y) x
             (<Weaken≤ y (- y) $ isTrans< y 0 (- y) x₂ ((minus-< y 0 x₂))))
- in subst (λ yy → abs (x ℚ.+ y) ≤ x ℚ.+ yy)
-        (sym (absNeg y x₂)) (absFrom≤×≤ (x ℚ.- y) _
-          (subst (_≤ x ℚ.+ y)
+ in subst (λ yy → abs (x + y) ≤ x + yy)
+        (sym (absNeg y x₂)) (absFrom≤×≤ (x - y) _
+          (subst (_≤ x + y)
             (sym (-Distr' x y)) (≤-+o (- x) x y
              (<Weaken≤ (- x) x $ isTrans< (- x) 0 x (minus-< 0 x x₁) x₁))) xx)
 ... | eq x₂ = subst2 _≤_ (sym (absPos x x₁)
-        ∙ cong abs (sym (ℚ.+IdR x) ∙ cong (x ℚ.+_) ( (sym x₂))))
-   (sym (ℚ.+IdR x) ∙ cong (x ℚ.+_) (cong abs (sym x₂))  ) (isRefl≤ x)
+        ∙ cong abs (sym (+IdR x) ∙ cong (x +_) ( (sym x₂))))
+   (sym (+IdR x) ∙ cong (x +_) (cong abs (sym x₂))  ) (isRefl≤ x)
 ... | gt x₂ = subst2 _≤_ (sym (absPos _ (<Monotone+ 0 x 0 y x₁ x₂)))
-    (cong (x ℚ.+_) (sym (absPos y x₂)))
-   $ isRefl≤ (x ℚ.+ y)
+    (cong (x +_) (sym (absPos y x₂)))
+   $ isRefl≤ (x + y)
 
-abs+≤abs+abs : ∀ x y → ℚ.abs (x ℚ.+ y) ≤ ℚ.abs x ℚ.+ ℚ.abs y
+abs+≤abs+abs : ∀ x y → abs (x + y) ≤ abs x + abs y
 abs+≤abs+abs x y with (x ≟ 0) | (y ≟ 0)
 ... | _ | gt x₁ = subst2 (_≤_)
-                   (cong ℚ.abs (ℚ.+Comm y x))
-            ((ℚ.+Comm y (ℚ.abs x)) ∙ cong ((ℚ.abs x) ℚ.+_ ) (sym (absPos y x₁)))
+                   (cong abs (+Comm y x))
+            ((+Comm y (abs x)) ∙ cong ((abs x) +_ ) (sym (absPos y x₁)))
              (abs+pos y x x₁)
-... | eq x₁ | _ = subst2 _≤_ (cong ℚ.abs (sym (ℚ.+IdL y) ∙
-    cong (ℚ._+ y) (sym x₁) ))
-                    (sym (ℚ.+IdL (ℚ.abs y)) ∙
-                     cong (ℚ._+ (ℚ.abs y)) (cong ℚ.abs (sym x₁)))
-                      (isRefl≤ (ℚ.abs y))
-... | gt x₁ | _ = subst (ℚ.abs (x ℚ.+ y) ≤_)
-            (cong (ℚ._+ (ℚ.abs y)) (sym (absPos x x₁)))
+... | eq x₁ | _ = subst2 _≤_ (cong abs (sym (+IdL y) ∙
+    cong (_+ y) (sym x₁) ))
+                    (sym (+IdL (abs y)) ∙
+                     cong (_+ (abs y)) (cong abs (sym x₁)))
+                      (isRefl≤ (abs y))
+... | gt x₁ | _ = subst (abs (x + y) ≤_)
+            (cong (_+ (abs y)) (sym (absPos x x₁)))
               (abs+pos x y x₁)
 ... | lt x₁ | lt x₂ =
-  subst2 _≤_ (sym (-Distr x y) ∙ sym (absNeg (x ℚ.+ y)
+  subst2 _≤_ (sym (-Distr x y) ∙ sym (absNeg (x + y)
     (<Monotone+ x 0 y 0 x₁ x₂)))
-     (cong₂ ℚ._+_ (sym (absNeg x x₁)) (sym (absNeg y x₂))) (isRefl≤ ((- x) - y) )
+     (cong₂ _+_ (sym (absNeg x x₁)) (sym (absNeg y x₂))) (isRefl≤ ((- x) - y) )
 ... | lt x₁ | eq x₂ =
-  subst2 _≤_ ((cong ℚ.abs (sym (ℚ.+IdR x) ∙
-    cong (x ℚ.+_) (sym x₂))))
-     (sym (ℚ.+IdR (ℚ.abs x)) ∙
-                     cong ((ℚ.abs x) ℚ.+_ ) (cong ℚ.abs (sym x₂)))
-    ((isRefl≤ (ℚ.abs x)))
+  subst2 _≤_ ((cong abs (sym (+IdR x) ∙
+    cong (x +_) (sym x₂))))
+     (sym (+IdR (abs x)) ∙
+                     cong ((abs x) +_ ) (cong abs (sym x₂)))
+    ((isRefl≤ (abs x)))
 
 data Trichotomy0· (m n : ℚ) : Type₀ where
-  eqₘ₌₀ : m ≡ 0 → m ℚ.· n ≡ 0  → Trichotomy0· m n
-  eqₙ₌₀ : n ≡ 0 → m ℚ.· n ≡ 0 → Trichotomy0· m n
-  lt-lt : m < 0 → n < 0 → 0 < m ℚ.· n  → Trichotomy0· m n
-  lt-gt : m < 0 → 0 < n → m ℚ.· n < 0  → Trichotomy0· m n
-  gt-lt : 0 < m → n < 0 → m ℚ.· n < 0  → Trichotomy0· m n
-  gt-gt : 0 < m → 0 < n → 0 < m ℚ.· n  → Trichotomy0· m n
+  eqₘ₌₀ : m ≡ 0 → m · n ≡ 0  → Trichotomy0· m n
+  eqₙ₌₀ : n ≡ 0 → m · n ≡ 0 → Trichotomy0· m n
+  lt-lt : m < 0 → n < 0 → 0 < m · n  → Trichotomy0· m n
+  lt-gt : m < 0 → 0 < n → m · n < 0  → Trichotomy0· m n
+  gt-lt : 0 < m → n < 0 → m · n < 0  → Trichotomy0· m n
+  gt-gt : 0 < m → 0 < n → 0 < m · n  → Trichotomy0· m n
 
 trichotomy0· : ∀ m n → Trichotomy0· m n
 trichotomy0· m n with m ≟ 0 | n ≟ 0
-... | eq p | _    = eqₘ₌₀ p (cong (ℚ._· n) p ∙ ℚ.·AnnihilL n)
-... | _    | eq p = eqₙ₌₀ p (cong (m ℚ.·_) p ∙ ℚ.·AnnihilR m)
+... | eq p | _    = eqₘ₌₀ p (cong (_· n) p ∙ ·AnnihilL n)
+... | _    | eq p = eqₙ₌₀ p (cong (m ·_) p ∙ ·AnnihilR m)
 ... | lt x₁ | lt x₂ = lt-lt x₁ x₂
   (subst (0 <_) (-·- m n)
     (0<-m·n (- m) (- n) (minus-< m 0 x₁) (minus-< n 0 x₂)))
 ... | lt x₁ | gt x₂ = lt-gt x₁ x₂
- ((subst (m ℚ.· n <_) (ℚ.·AnnihilL n) $ <-·o m 0 n x₂ x₁ ))
+ ((subst (m · n <_) (·AnnihilL n) $ <-·o m 0 n x₂ x₁ ))
 ... | gt x₁ | lt x₂ = gt-lt x₁ x₂
- (subst (m ℚ.· n <_) (ℚ.·AnnihilR m) $ <-o· n 0 m x₁ x₂ )
+ (subst (m · n <_) (·AnnihilR m) $ <-o· n 0 m x₁ x₂ )
 ... | gt x₁ | gt x₂ = gt-gt x₁ x₂ (0<-m·n m n x₁ x₂)
 
-sign·sign : ∀ x y → sign x ℚ.· sign y ≡ sign (x ℚ.· y)
+sign·sign : ∀ x y → sign x · sign y ≡ sign (x · y)
 sign·sign x y = h $ trichotomy0· x y
 
  where
 
  x' = <→sign x
  y' = <→sign y
- x·y' = <→sign (x ℚ.· y)
+ x·y' = <→sign (x · y)
 
- h : Trichotomy0· x y → _ -- ℚ.·AnnihilL
+ h : Trichotomy0· x y → _ -- ·AnnihilL
  h (eqₘ₌₀ p p₁) =
-  cong (ℚ._· sign y) (fst (snd x') (sym p))
-   ∙∙ ℚ.·AnnihilL _ ∙∙ sym (fst (snd x·y') (sym p₁))
- h (eqₙ₌₀ p p₁) =   cong (sign x ℚ.·_) (fst (snd y') (sym p))
-   ∙∙ ℚ.·AnnihilR _ ∙∙ sym (fst (snd x·y') (sym p₁))
- h (lt-lt p p₁ p₂) = cong₂ ℚ._·_ (snd (snd x') p) (snd (snd y') p₁)
+  cong (_· sign y) (fst (snd x') (sym p))
+   ∙∙ ·AnnihilL _ ∙∙ sym (fst (snd x·y') (sym p₁))
+ h (eqₙ₌₀ p p₁) =   cong (sign x ·_) (fst (snd y') (sym p))
+   ∙∙ ·AnnihilR _ ∙∙ sym (fst (snd x·y') (sym p₁))
+ h (lt-lt p p₁ p₂) = cong₂ _·_ (snd (snd x') p) (snd (snd y') p₁)
   ∙ (sym $ fst x·y' p₂)
- h (lt-gt p p₁ p₂) = cong₂ ℚ._·_  (snd (snd x') p) (fst y' p₁)
+ h (lt-gt p p₁ p₂) = cong₂ _·_  (snd (snd x') p) (fst y' p₁)
           ∙ sym (snd (snd x·y') p₂)
- h (gt-lt p p₁ p₂) = cong₂ ℚ._·_ (fst x' p) (snd (snd y') p₁)
+ h (gt-lt p p₁ p₂) = cong₂ _·_ (fst x' p) (snd (snd y') p₁)
           ∙ sym (snd (snd x·y') p₂)
- h (gt-gt p p₁ p₂) = cong₂ ℚ._·_ (fst x' p) (fst y' p₁)
+ h (gt-gt p p₁ p₂) = cong₂ _·_ (fst x' p) (fst y' p₁)
   ∙ (sym $ fst x·y' p₂)
 
-0≤x² : ∀ x → 0 ≤ x ℚ.· x
+0≤x² : ∀ x → 0 ≤ x · x
 0≤x² = ElimProp.go w
  where
- w : ElimProp (λ z → 0 ≤ z ℚ.· z)
+ w : ElimProp (λ z → 0 ≤ z · z)
  w .ElimProp.isPropB _ = isProp≤ _ _
  w .ElimProp.f (p , q) = subst (0 ℤ.≤_) (sym (ℤ.·IdR _)) (ℤ.0≤x² p)
 
-signX·signX : ∀ x → 0 # x → sign x ℚ.· sign x ≡ 1
+signX·signX : ∀ x → 0 # x → sign x · sign x ≡ 1
 signX·signX x y = sign·sign x x ∙
-   fst (fst (<≃sign (x ℚ.· x)))
+   fst (fst (<≃sign (x · x)))
     (⊎.rec (λ z → 0<-m·n _ _ z z)
       ((λ z → subst (0 <_) (-·- _ _) (0<-m·n _ _ z z)) ∘S minus-< x 0) y)
 
-abs·abs : ∀ x y → abs x ℚ.· abs y ≡ abs (x ℚ.· y)
-abs·abs x y = cong₂ ℚ._·_ (abs≡sign· x) (abs≡sign· y)
- ∙∙ (sym (ℚ.·Assoc _ _ _)) ∙∙
-  cong (x ℚ.·_) (( (ℚ.·Assoc _ _ _)) ∙∙
-  cong (ℚ._· sign y) (ℚ.·Comm (sign x) y) ∙∙ (sym (ℚ.·Assoc _ _ _))) ∙∙ (ℚ.·Assoc _ _ _)
- ∙∙ (λ i → x ℚ.· y ℚ.· sign·sign x y i) ∙ sym (abs≡sign· (x ℚ.· y))
+abs·abs : ∀ x y → abs x · abs y ≡ abs (x · y)
+abs·abs x y = cong₂ _·_ (abs≡sign· x) (abs≡sign· y)
+ ∙∙ (sym (·Assoc _ _ _)) ∙∙
+  cong (x ·_) (( (·Assoc _ _ _)) ∙∙
+  cong (_· sign y) (·Comm (sign x) y) ∙∙ (sym (·Assoc _ _ _))) ∙∙ (·Assoc _ _ _)
+ ∙∙ (λ i → x · y · sign·sign x y i) ∙ sym (abs≡sign· (x · y))
 
-abs'·abs' : ∀ x y → abs' x ℚ.· abs' y ≡ abs' (x ℚ.· y)
-abs'·abs' x y = cong₂ ℚ._·_ (sym (abs'≡abs _)) (sym (abs'≡abs _))
+abs'·abs' : ∀ x y → abs' x · abs' y ≡ abs' (x · y)
+abs'·abs' x y = cong₂ _·_ (sym (abs'≡abs _)) (sym (abs'≡abs _))
   ∙∙ abs·abs x y ∙∙ abs'≡abs _
 
-pos·abs : ∀ x y → 0 ≤ x →  abs (x ℚ.· y) ≡ x ℚ.· (abs y)
-pos·abs x y 0≤x = sym (abs·abs x y) ∙ cong (ℚ._· (abs y))
+pos·abs : ∀ x y → 0 ≤ x →  abs (x · y) ≡ x · (abs y)
+pos·abs x y 0≤x = sym (abs·abs x y) ∙ cong (_· (abs y))
   (absNonNeg x 0≤x)
 
 clamp≤ : ∀ L L' x → clamp L L' x ≤ L'
@@ -540,70 +540,70 @@ max< = elimBy≤
   λ x y x≤y z x<z y<z →
     subst (_< z) (sym (≤→max x y x≤y)) y<z
 
-maxDistMin : ∀ x y z → ℚ.min (ℚ.max x y) z ≡ ℚ.max (ℚ.min x z) (ℚ.min y z)
+maxDistMin : ∀ x y z → min (max x y) z ≡ max (min x z) (min y z)
 maxDistMin = elimBy≤
- (λ x y p z → cong (flip ℚ.min z) (ℚ.maxComm y x)  ∙∙ p z ∙∙
-                ℚ.maxComm _ _ )
- λ x y p z → cong (flip ℚ.min z) (≤→max x y p) ∙
-   sym (≤→max (ℚ.min x z) (ℚ.min y z) (≤MonotoneMin x y z z p (isRefl≤ z) ))
+ (λ x y p z → cong (flip min z) (maxComm y x)  ∙∙ p z ∙∙
+                maxComm _ _ )
+ λ x y p z → cong (flip min z) (≤→max x y p) ∙
+   sym (≤→max (min x z) (min y z) (≤MonotoneMin x y z z p (isRefl≤ z) ))
 
 
 
-minDistMax : ∀ x y y' → ℚ.max x (ℚ.min y y') ≡ ℚ.min (ℚ.max x y) (ℚ.max x y')
+minDistMax : ∀ x y y' → max x (min y y') ≡ min (max x y) (max x y')
 minDistMax x = elimBy≤
-  (λ y y' X → cong (ℚ.max x) (ℚ.minComm _ _) ∙∙ X ∙∙ ℚ.minComm _ _)
-  λ y y' y≤y' → cong (ℚ.max x) (≤→min _ _ y≤y') ∙
-    sym (≤→min (ℚ.max x y) (ℚ.max x y')
+  (λ y y' X → cong (max x) (minComm _ _) ∙∙ X ∙∙ minComm _ _)
+  λ y y' y≤y' → cong (max x) (≤→min _ _ y≤y') ∙
+    sym (≤→min (max x y) (max x y')
       (≤MonotoneMax x x y y' (isRefl≤ x) y≤y'))
 
 ≤clamp : ∀ L L' x → L ≤ L' →  L ≤ clamp L L' x
 ≤clamp L L' x y =
- subst (L ≤_) (cong (λ y → ℚ.max y _) (sym $ ≤→min L L' y)
-      ∙ sym (maxDistMin L x L')) (≤max L (ℚ.min x L'))
+ subst (L ≤_) (cong (λ y → max y _) (sym $ ≤→min L L' y)
+      ∙ sym (maxDistMin L x L')) (≤max L (min x L'))
 
 clamped≤ : ∀ L L' x → L ≤ x → clamp L L' x ≤ x
 clamped≤ L L' x L≤x = subst (_≤ x)
   (cong (flip min L') (sym (≤→max L x L≤x))) (min≤ x L')
 
-absComm- : ∀ x y → ℚ.abs (x ℚ.- y) ≡ ℚ.abs (y ℚ.- x)
-absComm- x y i = ℚ.maxComm (-[x-y]≡y-x y x (~ i)) (-[x-y]≡y-x x y i) i
+absComm- : ∀ x y → abs (x - y) ≡ abs (y - x)
+absComm- x y i = maxComm (-[x-y]≡y-x y x (~ i)) (-[x-y]≡y-x x y i) i
 
-abs'Comm- : ∀ x y → ℚ.abs' (x ℚ.- y) ≡ ℚ.abs' (y ℚ.- x)
+abs'Comm- : ∀ x y → abs' (x - y) ≡ abs' (y - x)
 abs'Comm- x y = sym (abs'≡abs _) ∙∙ absComm- x y ∙∙ abs'≡abs _
 
 ≤MonotoneClamp : ∀ L L' x y → x ≤ y → clamp L L' x ≤ clamp L L' y
 ≤MonotoneClamp L L' x y p =
  ≤MonotoneMin
-  (ℚ.max L x) (ℚ.max L y) L'
+  (max L x) (max L y) L'
    L' (≤MonotoneMax L L x y (isRefl≤ L) p) (isRefl≤ L')
 
 
 
 inClamps : ∀ L L' x → L ≤ x → x ≤ L' → clamp L L' x ≡ x
 inClamps L L' x u v =
-  cong (λ y → ℚ.min y L') (≤→max L x u)
+  cong (λ y → min y L') (≤→max L x u)
     ∙ ≤→min x L' v
 
 ≤abs : ∀ x → x ≤ abs x
-≤abs x = ≤max x (ℚ.- x)
+≤abs x = ≤max x (- x)
 
 ≤abs' : ∀ x → x ≤ abs' x
 ≤abs' x = subst (x ≤_) (abs'≡abs x) (≤abs x)
 
 
--abs : ∀ x → ℚ.abs x ≡ ℚ.abs (ℚ.- x)
--abs x = ℚ.maxComm _ _
-  ∙ cong (ℚ.max (ℚ.- x)) (sym (ℚ.-Invol x))
+-abs : ∀ x → abs x ≡ abs (- x)
+-abs x = maxComm _ _
+  ∙ cong (max (- x)) (sym (-Invol x))
 
--abs' : ∀ x → ℚ.abs' x ≡ ℚ.abs' (ℚ.- x)
--abs' x = sym (ℚ.abs'≡abs x) ∙∙ -abs x ∙∙ ℚ.abs'≡abs (ℚ.- x)
+-abs' : ∀ x → abs' x ≡ abs' (- x)
+-abs' x = sym (abs'≡abs x) ∙∙ -abs x ∙∙ abs'≡abs (- x)
 
 
--≤abs' : ∀ x → ℚ.- x ≤ abs' x
--≤abs' x = subst (- x ≤_) (sym (-abs' x)) (≤abs' (ℚ.- x))
+-≤abs' : ∀ x → - x ≤ abs' x
+-≤abs' x = subst (- x ≤_) (sym (-abs' x)) (≤abs' (- x))
 
--≤abs : ∀ x → ℚ.- x ≤ abs x
--≤abs x = subst (- x ≤_) (sym (-abs x)) (≤abs (ℚ.- x))
+-≤abs : ∀ x → - x ≤ abs x
+-≤abs x = subst (- x ≤_) (sym (-abs x)) (≤abs (- x))
 
 
 absTo≤×≤ : ∀ ε q
@@ -618,16 +618,16 @@ absTo≤×≤ ε q abs[q]≤ε .snd = isTrans≤ _ _ _ (≤abs q) abs[q]≤ε
 Dichotomyℚ : ∀ (n m : ℚ) → (n ≤ m) ⊎ (m < n)
 Dichotomyℚ n m = decRec inr (inl ∘ ≮→≥ _ _) (<Dec m n)
 
-sign·abs : ∀ x → abs x ℚ.· (sign x) ≡ x
+sign·abs : ∀ x → abs x · (sign x) ≡ x
 sign·abs x with 0 ≟ x
 ... | lt x₁ =
- cong₂ ℚ._·_ (absPos x x₁) (fst (<→sign x) x₁)
-    ∙ ℚ.·IdR x
-... | eq x₁ = cong (abs x ℚ.·_) ( (fst (snd (<→sign x)) x₁))
+ cong₂ _·_ (absPos x x₁) (fst (<→sign x) x₁)
+    ∙ ·IdR x
+... | eq x₁ = cong (abs x ·_) ( (fst (snd (<→sign x)) x₁))
  ∙ ·AnnihilR (abs x) ∙ x₁
 ... | gt x₁ =
-  cong₂ ℚ._·_ (absNeg x x₁) (snd (snd (<→sign x)) x₁)
-    ∙ -·- _ _ ∙ ℚ.·IdR x
+  cong₂ _·_ (absNeg x x₁) (snd (snd (<→sign x)) x₁)
+    ∙ -·- _ _ ∙ ·IdR x
 
 
 0#→0<abs' : ∀ q → 0 # q → 0 < abs' q
@@ -639,17 +639,17 @@ sign·abs x with 0 ≟ x
 0#→ℚ₊ : ∀ q → 0 # q → ℚ₊
 0#→ℚ₊ q x = abs' q , <→0< _ (0#→0<abs' q x)
 
-·Monotone0# : ∀ q q' → 0 # q → 0 # q' → 0 # (q ℚ.· q')
+·Monotone0# : ∀ q q' → 0 # q → 0 # q' → 0 # (q · q')
 ·Monotone0# q q' (inl x) (inl x₁) =
  inl (0<→< _ (·0< q q' (<→0< q x) (<→0< q' x₁)))
 ·Monotone0# q q' (inl x) (inr x₁) =
-  inr (minus-<' 0 (q ℚ.· q')
-        (subst (0 <_) (((ℚ.·Comm  q (- q')) ∙ sym (ℚ.·Assoc -1 q' q))
-         ∙ cong (-_) (ℚ.·Comm _ _))
+  inr (minus-<' 0 (q · q')
+        (subst (0 <_) (((·Comm  q (- q')) ∙ sym (·Assoc -1 q' q))
+         ∙ cong (-_) (·Comm _ _))
          (0<→< _ (·0< q (- q') (<→0< q x) (<→0< _ (minus-< q' 0 x₁)))) ))
 ·Monotone0# q q' (inr x) (inl x₁) =
-  inr (minus-<' 0 (q ℚ.· q')
-     (subst (0 <_) (sym (ℚ.·Assoc -1 q q'))
+  inr (minus-<' 0 (q · q')
+     (subst (0 <_) (sym (·Assoc -1 q q'))
        ((0<→< _ (·0< (- q) q' (<→0< _ (minus-< q 0 x)) (<→0< q' x₁))))))
 ·Monotone0# q q' (inr x) (inr x₁) =
  inl (subst (0 <_) (-·- _ _) (0<→< _
@@ -686,7 +686,6 @@ boundℕ q with ≤→≡⊎< 0 (abs q) (0≤abs q)
  in (1+ k , subst2 (_<_)
           (+Comm f _ ∙ e)
            (ℕ+→ℚ+ 1 k) ((<-+o f 1 [ pos k / 1+ 0 ] e'')))
-
 
 isSetℚ₊ : isSet ℚ₊
 isSetℚ₊ = isSetΣ isSetℚ λ q → isProp→isSet (snd (0<ₚ q))
@@ -804,6 +803,7 @@ invℚ₊Dist· = uncurry (flip ∘ uncurry ∘ ElimProp2.go w)
                ℤ.+
                 pos (y .snd .ℕ₊₁.n ℕ.+ x .snd .ℕ₊₁.n ℕ.· suc (y .snd .ℕ₊₁.n))
              ℤ.· qq i))
+
 
 
 
@@ -1754,3 +1754,12 @@ invℚ₊-≤-invℚ₊ q r =
      invEquiv (Σ≡PropEquiv (snd ∘ 0<ₚ_) {u = invℚ₊ r} {v = invℚ₊ q}
         ∙ₑ isoToEquiv symIso )) (invℚ₊-<-invℚ₊ q r)
    ∙ₑ (invEquiv (≤≃≡⊎< _ _))
+
+
+lowerBoundℕ⁻¹ : ∀ (q : ℚ₊) → Σ[ k ∈ ℕ₊₁ ] ([ 1 , k ] < fst q)
+lowerBoundℕ⁻¹ q =
+ map-snd (subst ([ 1 , _ ] <_) (cong (fst ∘ invℚ₊)
+   (ℚ₊≡ {abs (fst (invℚ₊ q)) ,
+     (subst (0<_) (sym (absPos _ (0<ℚ₊ (invℚ₊ q))))
+      (snd (invℚ₊ q)))}
+    (absPos _ (0<ℚ₊ (invℚ₊ q)))) ∙ invℚ₊-invol q)  ∘S fst (invℚ₊-<-invℚ₊ _ _)) (boundℕ (fst (invℚ₊ q)))

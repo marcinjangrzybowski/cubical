@@ -1,4 +1,4 @@
-{-# OPTIONS --no-exact-split --safe #-}
+{-# OPTIONS --no-exact-split #-}
 module Cubical.Data.Nat.Order where
 
 open import Cubical.Foundations.Prelude
@@ -9,6 +9,8 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum as ⊎
+
+open import Cubical.Data.Bool.Base hiding (_≟_)
 
 open import Cubical.Data.Nat.Base
 open import Cubical.Data.Nat.Properties
@@ -98,6 +100,9 @@ suc-< p = pred-≤-pred (≤-suc p)
 ≤-predℕ : predℕ n ≤ n
 ≤-predℕ {zero} = ≤-refl
 ≤-predℕ {suc n} = ≤-suc ≤-refl
+
+≤-reflexive : {m n : ℕ} → m ≡ n → m ≤ n
+≤-reflexive p = 0 , p
 
 ≤-trans : k ≤ m → m ≤ n → k ≤ n
 ≤-trans {k} {m} {n} (i , p) (j , q) = i + j , l2 ∙ (l1 ∙ q)
@@ -212,6 +217,19 @@ predℕ-≤-predℕ {suc m} {suc n} ineq = pred-≤-pred ineq
 <-+-≤ : m < n → k ≤ l → m + k < n + l
 <-+-≤ p q = <≤-trans (<-+k p) (≤-k+ q)
 
+
+≤-+-< : m ≤ n → k < l → m + k < n + l
+≤-+-< p q = ≤<-trans (≤-+k p) (<-k+ q)
+
+<-suc : {n : ℕ} → n < suc n
+<-suc = 0 , refl
+
+<SumLeft : {n k : ℕ} → n < n + suc k
+<SumLeft {n} {k} = k , +-suc k n ∙ +-comm (suc k) n
+
+<SumRight : {n k : ℕ} → n < suc k + n
+<SumRight {n} {k} = k , +-suc k n
+
 ¬squeeze< : {n m : ℕ} → ¬ (n < m) × (m < suc n)
 ¬squeeze< {n = n} ((zero , p) , t) = ¬m<m (subst (_< suc n) (sym p) t)
 ¬squeeze< {n = n}  ((suc diff1 , p) , q) =
@@ -272,22 +290,73 @@ predℕ-≤-predℕ {suc m} {suc n} ineq = pred-≤-pred ineq
 left-≤-max : m ≤ max m n
 left-≤-max {zero} {n} = zero-≤
 left-≤-max {suc m} {zero} = ≤-refl
-left-≤-max {suc m} {suc n} = suc-≤-suc left-≤-max
+left-≤-max {suc m} {suc n} = subst (_ ≤_) (sym maxSuc) $ suc-≤-suc $ left-≤-max {m} {n}
 
 right-≤-max : n ≤ max m n
 right-≤-max {zero} {m} = zero-≤
 right-≤-max {suc n} {zero} = ≤-refl
-right-≤-max {suc n} {suc m} = suc-≤-suc right-≤-max
+right-≤-max {suc n} {suc m} = subst (_ ≤_) (sym maxSuc) $ suc-≤-suc $ right-≤-max {n} {m}
 
 min-≤-left : min m n ≤ m
 min-≤-left {zero} {n} = ≤-refl
 min-≤-left {suc m} {zero} = zero-≤
-min-≤-left {suc m} {suc n} = suc-≤-suc min-≤-left
+min-≤-left {suc m} {suc n} = subst (_≤ _) (sym minSuc) $ suc-≤-suc $ min-≤-left {m} {n}
 
 min-≤-right : min m n ≤ n
 min-≤-right {zero} {n} = zero-≤
 min-≤-right {suc m} {zero} = ≤-refl
-min-≤-right {suc m} {suc n} = suc-≤-suc min-≤-right
+min-≤-right {suc m} {suc n} = subst (_≤ _) (sym minSuc) $ suc-≤-suc $ min-≤-right {m} {n}
+
+maxLUB : ∀ {x} → m ≤ x → n ≤ x → max m n ≤ x
+maxLUB {zero}  {n}     _    n≤x  = n≤x
+maxLUB {suc m} {zero}  sm≤x _    = sm≤x
+maxLUB {suc m} {suc n} sm≤x sn≤x with m <ᵇ n
+... | false = sm≤x
+... | true  = sn≤x
+
+minGLB : ∀ {x} → x ≤ m → x ≤ n → x ≤ min m n
+minGLB {zero}  {n}     x≤0 _     = x≤0
+minGLB {suc m} {zero}  _   x≤0   = x≤0
+minGLB {suc m} {suc n} x≤sm x≤sn with m <ᵇ n
+... | false = x≤sn
+... | true  = x≤sm
+
+-- Boolean order relations and their conversions to/from ≤ and <
+
+_≤ᵇ_ : ℕ → ℕ → Bool
+m ≤ᵇ n = m <ᵇ suc n
+
+_≥ᵇ_ : ℕ → ℕ → Bool
+m ≥ᵇ n = n ≤ᵇ m
+
+_>ᵇ_ : ℕ → ℕ → Bool
+m >ᵇ n = n <ᵇ m
+
+private
+  ≤ᵇ-∸-+-cancel : ∀ m n → Bool→Type (m ≤ᵇ n) → (n ∸ m) + m ≡ n
+  ≤ᵇ-∸-+-cancel zero    zero    t = refl
+  ≤ᵇ-∸-+-cancel zero    (suc n) t = +-zero (suc n)
+  ≤ᵇ-∸-+-cancel (suc m) (suc n) t = +-suc (n ∸ m) m ∙ cong suc (≤ᵇ-∸-+-cancel m n t)
+
+<ᵇ→< : Bool→Type (m <ᵇ n) → m < n
+<ᵇ→< {m} {suc n} t .fst = n ∸ m
+<ᵇ→< {m} {suc n} t .snd =
+  n ∸ m + suc m   ≡⟨ +-suc (n ∸ m) m ⟩
+  suc (n ∸ m + m) ≡⟨ cong suc (≤ᵇ-∸-+-cancel m n t) ⟩
+  suc n           ∎
+
+<→<ᵇ : m < n → Bool→Type (m <ᵇ n)
+<→<ᵇ {m}     {zero}  m<0   = ¬-<-zero m<0
+<→<ᵇ {zero}  {suc n} 0<sn  = tt
+<→<ᵇ {suc m} {suc n} sm<sn = <→<ᵇ (pred-≤-pred sm<sn)
+
+≤ᵇ→≤ : Bool→Type (m ≤ᵇ n) → m ≤ n
+≤ᵇ→≤ {zero}  {n}     t = zero-≤
+≤ᵇ→≤ {suc m} {suc n} t = <ᵇ→< t
+
+≤→≤ᵇ : m ≤ n → Bool→Type (m ≤ᵇ n)
+≤→≤ᵇ {zero}  {n} 0≤n  = tt
+≤→≤ᵇ {suc m} {n} sm≤n = <→<ᵇ sm≤n
 
 ≤Dec : ∀ m n → Dec (m ≤ n)
 ≤Dec zero n = yes (n , +-zero _)
@@ -310,11 +379,27 @@ Trichotomy-suc (lt m<n) = lt (suc-≤-suc m<n)
 Trichotomy-suc (eq m=n) = eq (cong suc m=n)
 Trichotomy-suc (gt n<m) = gt (suc-≤-suc n<m)
 
+private
+  ∸→>ᵇ : ∀ m n → caseNat ⊥.⊥ Unit (m ∸ n) → Bool→Type (m >ᵇ n)
+  ∸→>ᵇ (suc m) zero    t = tt
+  ∸→>ᵇ (suc m) (suc n) t = ∸→>ᵇ m n t
+
 _≟_ : ∀ m n → Trichotomy m n
-zero ≟ zero = eq refl
-zero ≟ suc n = lt (n , +-comm n 1)
-suc m ≟ zero = gt (m , +-comm m 1)
-suc m ≟ suc n = Trichotomy-suc (m ≟ n)
+m ≟ n with m ∸ n UsingEq | n ∸ m UsingEq
+... | zero  , p | zero  , q = eq (∸≡0→≡ p q)
+... | zero  , p | suc _ , q = lt (<ᵇ→< $ ∸→>ᵇ n m $ subst (caseNat ⊥.⊥ Unit) (sym q) tt)
+... | suc _ , p | zero  , q = gt (<ᵇ→< $ ∸→>ᵇ m n $ subst (caseNat ⊥.⊥ Unit) (sym p) tt)
+... | suc _ , p | suc _ , q = ⊥.rec $ ¬m<m {m} $ <-trans
+  (<ᵇ→< $ ∸→>ᵇ n m $ subst (caseNat ⊥.⊥ Unit) (sym q) tt)
+  (<ᵇ→< $ ∸→>ᵇ m n $ subst (caseNat ⊥.⊥ Unit) (sym p) tt)
+
+--  Alternative version of ≟, defined without builtin primitives
+
+_≟'_ : ∀ m n → Trichotomy m n
+zero ≟' zero = eq refl
+zero ≟' suc n = lt (n , +-comm n 1)
+suc m ≟' zero = gt (m , +-comm m 1)
+suc m ≟' suc n = Trichotomy-suc (m ≟' n)
 
 Dichotomyℕ : ∀ (n m : ℕ) → (n ≤ m) ⊎ (n > m)
 Dichotomyℕ n m with (n ≟ m)
@@ -345,7 +430,10 @@ splitℕ-< m n with m ≟ n
 <-split : m < suc n → (m < n) ⊎ (m ≡ n)
 <-split {n = zero} = inr ∘ snd ∘ m+n≡0→m≡0×n≡0 ∘ snd ∘ pred-≤-pred
 <-split {zero} {suc n} = λ _ → inl (suc-≤-suc zero-≤)
-<-split {suc m} {suc n} = ⊎.map suc-≤-suc (cong suc) ∘ <-split ∘ pred-≤-pred
+<-split {suc m} {suc n} sm<ssn with m ≟ n
+... | lt m<n = inl (suc-≤-suc m<n)
+... | eq m≡n = inr (cong suc m≡n)
+... | gt n<m = ⊥.rec $ ¬m<m {suc (suc n)} $ ≤-trans (suc-≤-suc (suc-≤-suc n<m)) sm<ssn
 
 ≤-split : m ≤ n → (m < n) ⊎ (m ≡ n)
 ≤-split p = <-split (suc-≤-suc p)
@@ -578,6 +666,7 @@ pattern s<s {m} {n} m<n = s≤s {m} {n} m<n
 ≤-∸-≥  zero   (suc l) (suc k) r = ≤-refl
 ≤-∸-≥ (suc n) (suc l) (suc k) r = ≤-∸-≥ n l k (pred-≤-pred r)
 
+
 elimBy≤ : ∀ {ℓ} {A : ℕ → ℕ → Type ℓ}
   → (∀ x y → A x y → A y x)
   → (∀ x y → x ≤ y → A x y)
@@ -681,22 +770,74 @@ a ≲ᵉ b = Σ[ N ∈ ℕ ] (∀ n → N ≤ n → a (suc n) + b n ≤ b (suc n
 _≺ᵉ_ : (ℕ → ℕ) → (ℕ → ℕ) → Type₀
 a ≺ᵉ b = Σ[ N ∈ ℕ ] (∀ n → N ≤ n → a (suc n) + b n < b (suc n) + a n)
 
--- eventualGrowth⇒eventualLarger :
+0<! : ∀ n → 0 < n !
+0<! zero = zero-<-suc
+0<! (suc n) = <monotone· (zero-<-suc {n}) (0<! n)
+
+StrictMonotone! : m < n → suc m ! < suc n !
+StrictMonotone! {m} {zero} = ⊥.rec ∘ ¬-<-zero
+StrictMonotone! {zero} {suc zero} _ = ≤-refl {2}
+StrictMonotone! {zero} {suc (suc n)} 0<ssn =
+ <monotone· (suc-≤-suc 0<ssn)
+   (StrictMonotone! {zero} {suc n} (zero-<-suc {n}))
+StrictMonotone! {suc m} {suc n} sm<sn =
+  <monotone· (suc-≤-suc sm<sn)
+    (StrictMonotone! {m} {n} (pred-≤-pred sm<sn))
+
+StrictMonotone!' : 0 < m → m < n → m ! < n !
+StrictMonotone!' {m} {zero} _ m<0 = ⊥.rec (¬-<-zero m<0)
+StrictMonotone!' {zero} {suc n} 0<0 _ = ⊥.rec (¬-<-zero 0<0)
+StrictMonotone!' {suc m} {suc n} _ m<n = StrictMonotone! (pred-≤-pred m<n)
+
+Monotone! : m ≤ n → m ! ≤ n !
+Monotone! {zero} {n} _ = 0<! n
+Monotone! {suc m} {zero} m≤n = ⊥.rec (¬-<-zero m≤n)
+Monotone! {suc m} {suc n} sm≤sn =
+  ≤monotone· (sm≤sn)
+    (Monotone! {m} {n} (pred-≤-pred sm≤sn))
+
+
+-- eventualGrowth⇒eventuallyLarger :
 --   ∀ {a b : ℕ → ℕ} →
 --   a ≺ᵉ b →
 --   Σ[ N ∈ ℕ ] (∀ n → N ≤ n → a n < b n)
--- eventualGrowth⇒eventualLarger = {!!}
+-- eventualGrowth⇒eventuallyLarger = {!!}
 
--- ℕε<kⁿ : ∀ p q r s → 0 < q →  s < r → Σ[ n ∈ ℕ ]
---            p · s ^ n < q · r ^ n
--- ℕε<kⁿ p q zero s 0<q s<r = ⊥.rec (¬-<-zero s<r)
--- ℕε<kⁿ p zero (suc r) zero 0<q s<r = ⊥.rec (¬-<-zero 0<q)
--- ℕε<kⁿ p (suc q) (suc r) zero 0<q s<r = {!!}
--- ℕε<kⁿ p q (suc r) (suc s) 0<q s<r = {!!}
+--  -- where
 
---  where
---   ΔLHS : ℕ → ℕ
---   ΔLHS n = (p · s) · ((suc s) ^ n)
+-- -- Σk-m<snᵏ : Σ[ k ∈ ℕ ] (m < (suc (suc n)) ^ k)
+-- -- Σk-m<snᵏ {zero} = 1 , zero-<-suc
+-- -- Σk-m<snᵏ {suc m} {n} = {!n!}
+-- --  -- {!!} , {!sn<ssm^sn m ?!}
 
---   ΔRHS : ℕ → ℕ
---   ΔRHS n = (q · r) · ((suc r) ^ n)
+
+-- Some facts about increasing functions
+
+isStrictlyIncreasing : (f : ℕ → ℕ) → Type
+isStrictlyIncreasing f = {m n : ℕ} → (m < n) → f m < f n
+
+isIncreasing : (f : ℕ → ℕ) → Type
+isIncreasing f = {m n : ℕ} → m ≤ n → f m ≤ f n
+
+strictlyIncreasing→Increasing : {f : ℕ → ℕ} → isStrictlyIncreasing f → isIncreasing f
+strictlyIncreasing→Increasing {f} fInc {m} {n} m≤n = case (≤-split m≤n) of
+  λ { (inl m<n) → <-weaken  (fInc m<n)
+    ; (inr m=n) → ≤-reflexive (cong f m=n) }
+
+module _ (f : ℕ → ℕ) (fInc : ((n : ℕ) → f n < f (suc n))) where
+  open <-Reasoning
+  sucIncreasing→StrictlyIncreasing : isStrictlyIncreasing f
+  sucIncreasing→StrictlyIncreasing {m = m} {n = n} (k , m+k+1=n) =
+    sucIncreasing→strictlyIncreasing' m n k m+k+1=n
+      where
+      sucIncreasing→strictlyIncreasing' :
+        (m : ℕ) → (n : ℕ) → (k : ℕ) → (k + suc m ≡ n) → f m < f n
+      sucIncreasing→strictlyIncreasing' m _ zero m+1=n =
+        subst (λ n' → f m < f n') m+1=n (fInc m)
+      sucIncreasing→strictlyIncreasing' m _ (suc k) sk+sm=n =
+        subst (λ n' → f m < f n') sk+sm=n $
+          f m
+            <⟨ sucIncreasing→strictlyIncreasing' m (k + suc m) k refl ⟩
+          f (k + suc m)
+            <≡⟨ fInc (k + suc m) ⟩
+          f (suc k + suc m) ∎

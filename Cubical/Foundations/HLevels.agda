@@ -7,7 +7,6 @@ Basic theory about h-levels/n-types:
 - Hedberg's theorem can be found in Cubical/Relation/Nullary/Properties
 
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Foundations.HLevels where
 
 open import Cubical.Foundations.Prelude
@@ -818,6 +817,13 @@ module _ (isSet-A : isSet A) (isSet-A' : isSet A') where
       rightInv ww b = equivEq refl
       leftInv ww a = SetsIso≡ refl refl
 
+  SetsIso≡fun : ∀ {a b : Iso A A'}
+              → (Iso.fun a ≡ Iso.fun b)
+              → a ≡ b
+  SetsIso≡fun {a} {b} p =
+      SetsIso≡-ext (funExt⁻ p) λ x' →
+        sym (leftInv b _) ∙ cong (inv b)
+               (sym (p ≡$ (inv a x')) ∙ (rightInv a _))
 
   isSet→isEquiv-isoToPath : isEquiv isoToEquiv
   isSet→isEquiv-isoToPath = isoToIsEquiv isSet→Iso-Iso-≃

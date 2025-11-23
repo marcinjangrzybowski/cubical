@@ -690,4 +690,3 @@ x+x≡2x x = cong₂ _+_
     (sym (·IdL x))
     (sym (·IdL x))
     ∙ sym (·DistR+ 1 1 x)
-

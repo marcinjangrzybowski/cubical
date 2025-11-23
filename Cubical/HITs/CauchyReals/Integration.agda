@@ -44,747 +44,8 @@ open import Cubical.HITs.CauchyReals.Multiplication
 open import Cubical.HITs.CauchyReals.Inverse
 open import Cubical.HITs.CauchyReals.Sequence
 open import Cubical.HITs.CauchyReals.Derivative
+open import Cubical.HITs.CauchyReals.Summation
 
-private
-  variable
-    ℓ : Level
-    A A' B B' : Type ℓ
-
-clampCases : ∀ a b → a ℚ.≤ b → ∀ u v → u ℚ.≤ v →
-            (ℚ.clamp a b v ℚ.- ℚ.clamp a b u ≡ 0)
-              ⊎ ((a ℚ.≤ v) × (u ℚ.≤ b))
-clampCases a b a≤b u v u≤v =
-  ⊎.rec (λ a≤v →
-     ⊎.rec (λ u≤b → inr (a≤v , u≤b))
-       (λ b<u → inl (𝐐'.+InvR' (ℚ.clamp a b v) (ℚ.clamp a b u)
-         (ℚ.minComm (ℚ.max a v) b ∙∙
-           ℚ.≤→min _ (ℚ.max a v) ((ℚ.isTrans≤ b u _ (ℚ.<Weaken≤ b u b<u)
-            (ℚ.isTrans≤ u v _ u≤v (ℚ.≤max' a v )))) ∙
-            sym (ℚ.≤→min b (ℚ.max a u)
-              ((ℚ.isTrans≤ b u _ (ℚ.<Weaken≤ b u b<u)
-            ((ℚ.≤max' a u )))))
-             ∙∙ ℚ.minComm b (ℚ.max a u)  )) )
-      (ℚ.Dichotomyℚ u b))
-   (λ v<a → inl (𝐐'.+InvR' (ℚ.clamp a b v) (ℚ.clamp a b u)
-      (ℚ.minComm (ℚ.max a v) b ∙∙
-        cong (ℚ.min b) (ℚ.maxComm a v ∙ ℚ.≤→max v a (ℚ.<Weaken≤ v a v<a) ∙
-          sym (ℚ.≤→max u a (ℚ.isTrans≤  u v _ u≤v (ℚ.<Weaken≤ v a v<a)))
-           ∙ ℚ.maxComm u a )
-       ∙∙ ℚ.minComm b (ℚ.max a u))))
-   (ℚ.Dichotomyℚ a v)
-
-
-⊎-⊎-×-rec : A ⊎ B → A' ⊎ B' → (A ⊎ A') ⊎ (B × B')
-⊎-⊎-×-rec (inl x) _ = inl (inl x)
-⊎-⊎-×-rec (inr _) (inl x) = inl (inr x)
-⊎-⊎-×-rec (inr x) (inr x₁) = inr (x , x₁)
-
-≤x→clamp : ∀ L L' x → L' ℚ.≤ x → ℚ.clamp L L' x ≡ L'
-≤x→clamp L L' x L'≤x = ℚ.minComm (ℚ.max L x) L'
-  ∙ ℚ.≤→min L' (ℚ.max L x) (ℚ.isTrans≤ L' x _ L'≤x (ℚ.≤max' L x))
-
-x≤→clamp : ∀ L L' x → L ℚ.≤ L' → x ℚ.≤ L → ℚ.clamp L L' x ≡ L
-x≤→clamp L L' x L≤L' x≤L = ℚ.≤→min (ℚ.max L x) L'
-  (subst (ℚ.max L x ℚ.≤_) (ℚ.maxIdem L')
-   (ℚ.≤MonotoneMax L L' x L' L≤L' (ℚ.isTrans≤ x L L' x≤L L≤L')) ) ∙
-  ℚ.maxComm L x ∙ ℚ.≤→max x L x≤L
-
-
-clampDegen : ∀ a b x → b ℚ.≤ a → ℚ.clamp a b x ≡ b
-clampDegen a b x b≤a =
-  ℚ.minComm (ℚ.max a x) b ∙
-   ℚ.≤→min _ _ (ℚ.isTrans≤ b a _ b≤a (ℚ.≤max a x))
-
-
-
-ℚclampInterval-delta : ∀ a b a' b'
-          → a  ℚ.≤ b
-          → a' ℚ.≤ b'
-               → ℚ.clamp a  b  b' ℚ.- ℚ.clamp a  b  a'
-               ≡ ℚ.clamp a' b' b  ℚ.- ℚ.clamp a' b' a
-ℚclampInterval-delta a b a' b' a≤b a'≤b' =
- ⊎.rec (⊎.rec
-         (hhh a b a' b' a≤b a'≤b'  )
-         (sym ∘ hhh a' b' a b a'≤b' a≤b))
-       (λ (a≤b' , a'≤b) →
-          hhh' a b a' b' a≤b a'≤b' a≤b' a'≤b
-           ∙∙ cong₂ ℚ._-_ (ℚ.minComm b' b) (ℚ.maxComm a a') ∙∙
-           sym (hhh' a' b' a b a'≤b' a≤b a'≤b a≤b') )
-       (⊎-⊎-×-rec
-          (ℚ.≤cases b' a)
-          (ℚ.≤cases b a'))
-
-  where
-
-  hhh' : ∀ a b a' b'
-         → a  ℚ.≤ b
-         → a' ℚ.≤ b'
-         → a ℚ.≤ b' → a' ℚ.≤ b
-              → ℚ.clamp a  b  b' ℚ.- ℚ.clamp a  b  a'
-              ≡ ℚ.min b' b ℚ.- ℚ.max a a'
-  hhh' a b a' b' a≤b a'≤b' a≤b' a'≤b =
-    cong₂ ℚ._-_ (cong (flip ℚ.min b) (ℚ.≤→max a b' a≤b'))
-            (ℚ.≤→min (ℚ.max a a') b
-             (subst (ℚ.max a a' ℚ.≤_) (ℚ.maxIdem b)
-              (ℚ.≤MonotoneMax a b a' b a≤b a'≤b)) )
-
-
-
-  hhh : ∀ a b a' b'
-         → a  ℚ.≤ b
-         → a' ℚ.≤ b'
-         → b' ℚ.≤ a
-              → ℚ.clamp a  b  b' ℚ.- ℚ.clamp a  b  a'
-              ≡ ℚ.clamp a' b' b  ℚ.- ℚ.clamp a' b' a
-  hhh a b a' b' a≤b a'≤b' b'≤a =
-     cong₂ ℚ._-_ (x≤→clamp a b b' a≤b b'≤a)
-                 (x≤→clamp a b a' a≤b (ℚ.isTrans≤ a' b' a a'≤b' b'≤a))
-      ∙∙ ℚ.+InvR a ∙ sym (ℚ.+InvR b') ∙∙
-      cong₂ ℚ._-_
-        (sym (≤x→clamp a' b' b (ℚ.isTrans≤ b' a b b'≤a a≤b)))
-        (sym (≤x→clamp a' b' a b'≤a))
-
-clamp-dist : ∀ a b x y →
-  ℚ.abs (ℚ.clamp a b x ℚ.- ℚ.clamp a b y) ℚ.≤ ℚ.abs (b ℚ.- a)
-clamp-dist a b =
-  ⊎.rec
-    (λ a≤b →
-      ℚ.elimBy≤
-       (λ x y X →
-         subst (ℚ._≤ ℚ.abs (b ℚ.- a))
-          (ℚ.absComm- (ℚ.clamp a b x) (ℚ.clamp a b y)) X)
-       λ x y x≤y →
-         subst (ℚ._≤ ℚ.abs (b ℚ.- a))
-           (cong ℚ.abs
-             (sym (ℚclampInterval-delta a b x y a≤b x≤y))
-           ∙ ℚ.absComm- (ℚ.clamp a b y) (ℚ.clamp a b x))
-           (ℚ.clampDist x y a b))
-    (λ b≤a x y →
-      subst (ℚ._≤ ℚ.abs (b ℚ.- a))
-       (cong ℚ.abs (sym (𝐐'.+InvR' _ _
-         (clampDegen a b x b≤a ∙ sym (clampDegen a b y b≤a)))))
-       (ℚ.0≤abs (b ℚ.- a)) )
-   (ℚ.≤cases a b)
-
-clampᵣ-dist : ∀ a b x y → absᵣ (clampᵣ a b x -ᵣ clampᵣ a b y) ≤ᵣ absᵣ (b -ᵣ a)
-clampᵣ-dist a b x y = ≤Cont₂
- {f₀ x y} {λ a b → absᵣ (b -ᵣ a)}
- (cont∘₂ IsContinuousAbsᵣ
-        (IsContinuous-₂∘ (IsContinuousClamp₂ _) (IsContinuousClamp₂ _)))
-   ((cont∘₂ IsContinuousAbsᵣ
-        (IsContinuous-₂∘
-
-          ((λ _ → IsContinuousId) , ((λ _ → IsContinuousConst _)))
-          (((λ _ → IsContinuousConst _)) ,
-            (λ _ → IsContinuousId))) ))
-  (λ aℚ bℚ →  let a = (rat aℚ) ; b = (rat bℚ) in
-    ≤Cont₂ {λ x y → f₀ x y a b} {λ _ _ → absᵣ (b -ᵣ a)}
-      (cont∘₂ IsContinuousAbsᵣ
-        (IsContinuous-₂∘
-          (((λ _ → IsContinuousConst _)) ,
-            (λ _ → IsContinuousClamp a b))
-          ((λ _ → IsContinuousClamp a b) , ((λ _ → IsContinuousConst _)))) )
-        ((λ _ → IsContinuousConst _) , (λ _ → IsContinuousConst _))
-      (λ x y → subst2 _≤ᵣ_
-        (sym (absᵣ-rat _) ∙
-           cong absᵣ (sym (-ᵣ-rat₂ _ _) ))
-        (sym (absᵣ-rat _) ∙ cong absᵣ (sym (-ᵣ-rat₂ _ _) ))
-        (≤ℚ→≤ᵣ _ _ (clamp-dist aℚ bℚ x y))) x y)
- a b
- where
- f₀ : ℝ → ℝ → ℝ → ℝ → ℝ
- f₀ x y a b  = absᵣ (clampᵣ a b x -ᵣ clampᵣ a b y)
-
-
--- mkℝfun : (f : ℚ → ℝ) → (fc : ℚ₊ → ℚ₊)
---        → (∀ x y → fst x ℚ.≤ fst y → fst (fc x) ℚ.≤ fst (fc y) )
---        → (gG : ∀ (ε : ℚ₊) → Σ[ φ ∈ ℚ₊ ] fst (fc φ) ℚ.≤ fst ε)
---        → ((∀ δ ε → fst (fst (gG δ) ℚ₊+ fst (gG ε)) ℚ.≤ fst (fst (gG (δ ℚ₊+ ε)))))
---        → (∀ (ε δ δ' : ℚ₊) →
---              (0<ε-[Δ+Δ'] : 0< (fst ε ℚ.- (fst δ ℚ.+ fst δ')))
---              → Σ[ (σ , σ') ∈ (ℚ₊ × ℚ₊) ]
---                   ((0< (fst (fc ε) ℚ.- (fst σ ℚ.+ fst σ')))
---                    ×  (fst
---                     (fc (fst (gG σ) ℚ₊+ δ) ℚ₊+
---                      (fc ((fst ε ℚ.- (fst δ ℚ.+ fst δ')) , 0<ε-[Δ+Δ']) ℚ₊+
---                       fc (δ' ℚ₊+ fst (gG σ'))))
---                     ℚ.≤ (fc ε .fst ℚ.- (fst σ ℚ.+ fst σ')))))
---        → ((q r : ℚ) (ε : ℚ₊) → ℚ.abs (q ℚ.- r) ℚ.< fst ε → f q ∼[ fc ε ] f r)
---        →  (ℝ → ℝ)
--- mkℝfun f fc fcMon cvf gConvex fp fC = go w
---  where
---   open Elimℝ
---   g = fst ∘ cvf
---   G : ∀ ε → fst (fc (g ε)) ℚ.≤ fst ε
---   G = snd ∘ cvf
-
---   w : Elimℝ (λ _ → ℝ)
---        λ {x} {x'} fx fx' ε x∼x' → fx ∼[ fc ε ] fx'
---   w .ratA = f
---   w .limA x p a R =
---     lim (a ∘ g)
---       λ δ ε →
---         ∼-monotone≤
---          (ℚ.isTrans≤ _ _ _ (fcMon _ _ (gConvex _ _)) (G (δ ℚ₊+ ε)))
---           (R (g δ) (g ε))
-
---   w .eqA p a a' _ X =
---     eqℝ _ _ (∼-monotone≤ (G _) ∘ X ∘ g)
-
---   w .rat-rat-B q r ε x x₁ =
---      fC q r ε (ℚ.absFrom<×< (fst ε) (q ℚ.- r) x x₁)
---   w .rat-lim-B = {!!}
---   w .lim-rat-B _ r ε δ p v u v' u' x₁ =
---     {!!}
---   w .lim-lim-B _ _ ε δ δ' _ _ 0<ε-[Δ+Δ'] _ v u v' u' X  =
---     let (σ , σ') , S , Y = fp ε δ δ' 0<ε-[Δ+Δ']
---     in lim-lim _ _ _ σ σ' _ _ S
---            (∼-monotone≤ Y
---               (triangle∼ (u (g σ) δ)
---                 (triangle∼ X (u' δ' (g σ')))))
-
-
-
---   w .isPropB a a' ε _ = isProp∼ _ _ _
-
-
--- fromLLipschitz : ∀ f → LLipschitz-ℚ→ℝ f
---   → Σ[ fᵣ ∈ (ℝ → ℝ) ] IsContinuous fᵣ × (∀ x → fᵣ (rat x) ≡ f x )
--- fromLLipschitz f lli = {!!}
---  -- fᵣ , {!!}
---  -- where
---  -- fᵣ : ℝ → ℝ
---  -- fᵣ x  =
---  --  rec→Set isSetℝ
---  --    ff {!!}
---  --    (lli x)
---  --  where
---  --   ff : (Σ[ (L , ε) ∈ (ℚ₊ × ℚ₊) ]
---  --           ∀ q r → absᵣ (rat q -ᵣ x) <ᵣ rat (fst ε)
---  --            → absᵣ (rat r -ᵣ x) <ᵣ rat (fst ε)
---  --              → f q ∼[ L ℚ₊· ε  ] f r)
---  --              → ℝ
-
---  --   ff ((L , ε) , X) = {!!}
---  --     where
---  --     zz : {!!}
---  --     zz = extend-Lipshitzℚ→ℝ L {!!} {!!} {!!}  {!!}
---  --            {!!}
-
-
---  --   cf : {!!}
---  --   cf = {!!}
-
-ℕ₊₁→ℕ-lem : ∀ n m → n ≡ ℕ₊₁→ℕ m → (1+ predℕ n) ≡ m
-ℕ₊₁→ℕ-lem zero m x = ⊥.rec (ℕ.znots x )
-ℕ₊₁→ℕ-lem (suc n) m x = cong 1+_ (ℕ.injSuc x)
-
-
-
-
-
-
-foldlFin : ∀ {n} → (B → A → B) → B → (Fin n → A) → B
-foldlFin {n = zero} f b v = b
-foldlFin {n = suc n} f b v = foldlFin {n = n} f (f b (v fzero)) (v ∘ fsuc)
-
-substFin : ∀ {n} {m} → n ≡ m → Fin n → Fin m
-substFin p = map-snd (subst (_ ℕ.<_) p)
-
-foldFin+ᵣ : ∀ n V (f : A → ℝ) x x' →
-  foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ f y) (x +ᵣ x') V ≡
-   x +ᵣ foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ f y) x' V
-foldFin+ᵣ zero V f x x' = refl
-foldFin+ᵣ (suc n) V f x x' =
-  foldFin+ᵣ n (V ∘ fsuc) _ (x +ᵣ x') (f (V fzero)) ∙
-   sym (+ᵣAssoc x _ _) ∙
-   cong (x +ᵣ_) (sym (foldFin+ᵣ n (V ∘ fsuc) f x' (f (V fzero))))
-
-foldFin+0ᵣ : ∀ n V (f : A → ℝ) x →
-  foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ f y) x V ≡
-   x +ᵣ foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ f y) 0 V
-foldFin+0ᵣ n V f x =
- cong (λ x → foldlFin (λ a y → a +ᵣ f y) x V) (sym (+IdR _))
- ∙ foldFin+ᵣ n V f x 0
-
-
-zip-foldFin+ᵣ : ∀ n V V' (f : A → ℝ) (f' : A' → ℝ) x x' →
-  foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ f y) x V
-    +ᵣ foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ f' y) x' V' ≡
-   foldlFin {B = ℝ} {n = n} (λ a (y , y') → a +ᵣ (f y +ᵣ f' y')) (x +ᵣ x')
-    λ x → V x , V' x
-zip-foldFin+ᵣ zero V V' f f' _ _ = refl
-zip-foldFin+ᵣ (suc n) V V' f f' x x' =
-  zip-foldFin+ᵣ n (V ∘ fsuc) (V' ∘ fsuc) f f'
-     (x +ᵣ f (V fzero)) (x' +ᵣ f' (V' fzero))
-   ∙ cong (λ xx → foldlFin
-      _
-      xx
-      (λ x₁ → V (fsuc x₁) , V' (fsuc x₁)))
-      (L𝐑.lem--087 {x} {f (V fzero)} {x'} {f' (V' fzero)})
-
-zip-foldFin+ᵣ' : ∀ n V (f : A → ℝ) (f' : A → ℝ) x x' →
-  foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ f y) x V
-    +ᵣ foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ f' y) x' V ≡
-   foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ (f y +ᵣ f' y)) (x +ᵣ x')
-    V
-zip-foldFin+ᵣ' zero V f f' _ _ = refl
-zip-foldFin+ᵣ' (suc n) V  f f' x x' =
-  zip-foldFin+ᵣ' n (V ∘ fsuc) f f'
-     (x +ᵣ f (V fzero)) (x' +ᵣ f' (V fzero))
-   ∙ cong (λ xx → foldlFin
-      _
-      xx
-      (V ∘ fsuc) )
-      (L𝐑.lem--087 {x} {f (V fzero)} {x'} {f' (V fzero)})
-
-
-foldFin·DistL : ∀ n (f : A → ℝ) α x V →
-  foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ α ·ᵣ f y) (α ·ᵣ x) V
-      ≡ α ·ᵣ foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ f y) (x) V
-foldFin·DistL zero f α x V = refl
-foldFin·DistL (suc n) f α x V =
-  cong (λ z → foldlFin (λ a y → a +ᵣ α ·ᵣ f y) z
-      (λ x₁ → V (fsuc x₁)))
-       (sym (·DistL+ _ _ _))
-  ∙ foldFin·DistL n f α (x +ᵣ f (V fzero)) (V ∘ fsuc)
-
-
-foldFin+map : ∀ n x (f : A → ℝ) (g : B → A) V →
-  foldlFin {B = ℝ} {A = A} {n = n} (λ a y → a +ᵣ f y) x (g ∘ V)
-    ≡ foldlFin {B = ℝ} {A = B} {n = n} (λ a y → a +ᵣ f (g y)) x V
-foldFin+map zero x f g V = refl
-foldFin+map (suc n) x f g V =
- foldFin+map n (x +ᵣ f ((g ∘ V) fzero)) f g (V ∘ fsuc)
-
-
-foldFin+transpose : ∀ n n' (f : Fin n → Fin n' → ℝ) x →
-  foldlFin {B = ℝ} {n = n} (λ a k → a +ᵣ
-      foldlFin {B = ℝ} {n = n'} (λ a k' → a +ᵣ
-      f k k') (fromNat zero) (idfun _)) x (idfun _)
-      ≡ foldlFin {B = ℝ} {n = n'} (λ a k' → a +ᵣ
-           foldlFin {B = ℝ} {n = n} (λ a k → a +ᵣ
-           f k k') (fromNat zero) (idfun _)) x (idfun _)
-foldFin+transpose zero zero f x = refl
-foldFin+transpose (suc n) zero f x =
-   foldFin+map n (x +ᵣ 0) _ fsuc (idfun _) ∙
-    foldFin+transpose n zero (f ∘ fsuc) _ ∙ +IdR x
-foldFin+transpose n (suc n') f x =
-     ((cong (foldlFin {n = n})
-        (funExt₂ λ a k →
-           cong (a +ᵣ_)
-            ((λ i → foldFin+map _ (+IdL (f k (idfun (Fin (suc n')) fzero)) i)
-             (λ k' → f k k') fsuc (idfun _) i)
-              ∙ foldFin+0ᵣ n' (idfun _) _ _))
-         ≡$ x) ≡$ (idfun (Fin n)))
-   ∙ ((λ i → foldFin+map n (+IdL x (~ i))
-     (λ z →
-        f (z .fst) 0 +ᵣ
-        foldlFin (λ a₁ k' → a₁ +ᵣ f (z .snd) (fsuc k')) 0 (idfun (Fin n')))
-     (λ x → x , x) (idfun _) (~ i))
-   ∙ sym (zip-foldFin+ᵣ n _ _ _ _ 0 x)
-   ∙ sym (foldFin+ᵣ n _ _
-      (foldlFin (λ a k → a +ᵣ f k 0) 0 (idfun _)) x))
-    ∙ (cong (foldlFin {n = n}
-       (λ a k →
-          a +ᵣ
-          foldlFin (λ a₁ k' → a₁ +ᵣ f k (fsuc k')) 0
-          (idfun _)))
-           (+ᵣComm _ _) ≡$ (idfun (Fin n)))
-  ∙ foldFin+transpose n n' _ _
-  ∙ sym (foldFin+map n' _ _ fsuc (idfun _))
-
-
-
-foldFin·DistL' : ∀ n (f : A → ℝ) α V →
-  foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ α ·ᵣ f y) 0 V
-      ≡ α ·ᵣ foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ f y) 0 V
-foldFin·DistL' n f α V =
- cong  (λ x →   foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ α ·ᵣ f y) x V)
-     (sym (𝐑'.0RightAnnihilates _))
- ∙ foldFin·DistL n f α 0 V
-
-
-
-zip-foldFin-ᵣ : ∀ n V V' (f : A → ℝ) (f' : A' → ℝ) x x' →
-  foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ f y) x V
-    -ᵣ foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ f' y) x' V' ≡
-   foldlFin {B = ℝ} {n = n} (λ a (y , y') → a +ᵣ (f y -ᵣ f' y')) (x -ᵣ x')
-    λ x → V x , V' x
-zip-foldFin-ᵣ n V V' f f' x x' =
- cong ((foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ f y) x V) +ᵣ_)
-  (-ᵣ≡[-1·ᵣ] (foldlFin {B = ℝ} {n = n} (λ a y → a +ᵣ f' y) x' V')
-   ∙ sym (foldFin·DistL n _ (-1) _ _)) ∙
-  zip-foldFin+ᵣ n V V' f _ _ _ ∙
-   ((cong₂ foldlFin (funExt₂ λ a u → cong ((a +ᵣ_) ∘ (f (fst u) +ᵣ_))
-    (sym (-ᵣ≡[-1·ᵣ] _)))
-     (cong (x +ᵣ_) (sym (-ᵣ≡[-1·ᵣ] _)))) ≡$ (λ x₁ → V x₁ , V' x₁))
-
-
-foldFin+≤ : ∀ n x x' (f : A → ℝ) (f' : A' → ℝ) V V' →
-   x ≤ᵣ x' →
-  (∀ k → f (V k) ≤ᵣ f' (V' k)) →
-  foldlFin {B = ℝ} {A = A} {n = n} (λ a y → a +ᵣ f y) x V
-    ≤ᵣ foldlFin {B = ℝ} {A = A'} {n = n} (λ a y → a +ᵣ f' y) x' V'
-
-foldFin+≤ zero x x' f f' V V' x≤x' f≤f' = x≤x'
-foldFin+≤ (suc n) x x' f f' V V' x≤x' f≤f' =
-  foldFin+≤ n _ _ f f' (V ∘ fsuc) (V' ∘ fsuc)
-    (≤ᵣMonotone+ᵣ _ _ _ _ x≤x' (f≤f' fzero)) (f≤f' ∘ fsuc)
-
-
-foldFin+< : ∀ n x x' (f : A → ℝ) (f' : A' → ℝ) V V' →
-   x ≤ᵣ x' →
-  (∀ k → f (V k) <ᵣ f' (V' k)) →
-  foldlFin {B = ℝ} {A = A} {n = (suc n)} (λ a y → a +ᵣ f y) x V
-    <ᵣ foldlFin {B = ℝ} {A = A'} {n = (suc n)} (λ a y → a +ᵣ f' y) x' V'
-
-foldFin+< zero x x' f f' V V' x≤x' X = ≤<ᵣMonotone+ᵣ _ _ _ _ x≤x' (X fzero)
-foldFin+< (suc n) x x' f f' V V' x≤x' X =
- foldFin+< n _ _ f f' (V ∘ fsuc) (V' ∘ fsuc)
-          (≤ᵣMonotone+ᵣ _ _ _ _ x≤x' (<ᵣWeaken≤ᵣ _ _ $ X fzero)) (X ∘ fsuc)
-
-
-foldFin+<-abs : ∀ n → zero ℕ.< n → ∀ x x' (f : A → ℝ) (f' : A' → ℝ) V V'  →
-   absᵣ x ≤ᵣ x' →
-  (∀ k → absᵣ (f (V k)) <ᵣ f' (V' k)) →
-  absᵣ (foldlFin {B = ℝ} {A = A} {n = n} (λ a y → a +ᵣ f y) x V)
-    <ᵣ foldlFin {B = ℝ} {A = A'} {n = n} (λ a y → a +ᵣ f' y) x' V'
-
-foldFin+<-abs zero 0<n x x' f f' V V' x≤x' X = ⊥.rec (ℕ.¬-<-zero 0<n)
-
-foldFin+<-abs (suc zero) 0<n x x' f f' V V' x≤x' X =
- isTrans≤<ᵣ _ _ _ (absᵣ-triangle _ _) (≤<ᵣMonotone+ᵣ _ _ _ _ x≤x' (X fzero))
-foldFin+<-abs (suc (suc n)) 0<n x x' f f' V V' x₁ X =
-  foldFin+<-abs (suc n) ℕ.zero-<-suc (x +ᵣ f (V fzero)) (x' +ᵣ f' (V' fzero))
-    f f' (V ∘ fsuc) (V' ∘ fsuc)
-     (isTrans≤ᵣ _ _ _ (absᵣ-triangle _ _)
-       (≤ᵣMonotone+ᵣ _ _ _ _ x₁ (<ᵣWeaken≤ᵣ _ _ $ X fzero)))
-       (X ∘ fsuc)
-
-foldFin+≤-abs : ∀ n → ∀ x x' (f : A → ℝ) (f' : A' → ℝ) V V'  →
-   absᵣ x ≤ᵣ x' →
-  (∀ k → absᵣ (f (V k)) ≤ᵣ f' (V' k)) →
-  absᵣ (foldlFin {B = ℝ} {A = A} {n = n} (λ a y → a +ᵣ f y) x V)
-    ≤ᵣ foldlFin {B = ℝ} {A = A'} {n = n} (λ a y → a +ᵣ f' y) x' V'
-
-foldFin+≤-abs zero x x' f f' V V' x≤x' X = x≤x'
-
-foldFin+≤-abs (suc zero) x x' f f' V V' x≤x' X =
- isTrans≤ᵣ _ _ _ (absᵣ-triangle _ _) (≤ᵣMonotone+ᵣ _ _ _ _ x≤x' (X fzero))
-foldFin+≤-abs (suc (suc n)) x x' f f' V V' x₁ X =
-  foldFin+≤-abs (suc n)  (x +ᵣ f (V fzero)) (x' +ᵣ f' (V' fzero))
-    f f' (V ∘ fsuc) (V' ∘ fsuc)
-     (isTrans≤ᵣ _ _ _ (absᵣ-triangle _ _)
-       (≤ᵣMonotone+ᵣ _ _ _ _ x₁ (X fzero)))
-       (X ∘ fsuc)
-
-
-foldFin+Const : ∀ n x V →
-  foldlFin {B = ℝ} {A = A} {n = n} (λ a y → a +ᵣ x) 0 V
-    ≡ fromNat n ·ᵣ x
-foldFin+Const zero x V = sym (𝐑'.0LeftAnnihilates _)
-foldFin+Const (suc n) x V =
-      (λ i → foldFin+0ᵣ n (V ∘ fsuc) (λ _ → x) (+IdL x i) i)
-   ∙∙ cong₂ (_+ᵣ_) (sym (·IdL x)) (foldFin+Const n x (V ∘ fsuc))
-   ∙∙ (sym (·DistR+ 1 (fromNat n) x)
-      ∙ cong (_·ᵣ x) (+ᵣ-rat _ _  ∙ cong rat (ℚ.ℕ+→ℚ+ 1 n )))
-
-foldlFin-substN : ∀ {n n'} → (p : n ≡ n') → ∀ f b v →
-            foldlFin {B = B} {A = A} {n} f b v ≡
-              foldlFin {B = B} {A = A} {n'} f b (v ∘ substFin (sym p))
-foldlFin-substN {n = n} = J (λ n' p → ∀ f b v →
-            foldlFin f b v ≡
-              foldlFin f b (v ∘ substFin (sym p)))
-               λ f b v → cong (foldlFin {n = n} f b)
-                 (funExt λ x → cong v (sym (transportRefl _)))
-
-
-deltas-sum : ∀ n (f : Fin (suc n) → ℝ) →
- foldlFin {n = n} (λ a k → a +ᵣ (f (fsuc k) -ᵣ f (finj k))) 0 (idfun _) ≡
-   f flast -ᵣ f fzero
-deltas-sum zero f = sym (𝐑'.+InvR' _ _ (cong f (toℕ-injective refl)))
-deltas-sum (suc n) f =
- foldFin+0ᵣ n (fsuc) _ _
-  ∙ cong₂ _+ᵣ_
-    (+IdL _)
-    (foldFin+map n 0 _ fsuc (idfun _) ∙
-       (cong (foldlFin {n = n})
-        (funExt₂ (λ s k' →
-            cong ((s +ᵣ_) ∘ (_-ᵣ_ (f (fsuc (fsuc k')))) ∘ f)
-              (toℕ-injective refl)))
-        ≡$ 0 ≡$ (idfun _))
-     ∙ deltas-sum n (f ∘ fsuc))
-  ∙ L𝐑.lem--061 ∙ cong₂ _-ᵣ_ (cong f (toℕ-injective refl)) (cong f (toℕ-injective refl))
-
-
-ℕ^+ : ∀ k n m → k ℕ.^ (n ℕ.+ m) ≡ (k ℕ.^ n) ℕ.· (k ℕ.^ m)
-ℕ^+ k zero m = sym (ℕ.+-zero _)
-ℕ^+ k (suc n) m = cong (k ℕ.·_) (ℕ^+ k n m) ∙ ℕ.·-assoc k _ _
-
-
-2^ : ℕ → ℕ
-2^ zero = 1
-2^ (suc x) = (2^ x) ℕ.+ (2^ x)
-
-2^-^ : ∀ n → 2^ n ≡ 2 ^ n
-2^-^ zero = refl
-2^-^ (suc n) = cong₂ ℕ._+_ (2^-^ n) (2^-^ n)
- ∙ cong ((2 ^ n) ℕ.+_) (sym (ℕ.+-zero _))
-
-2^+ : ∀ n m → 2^ (n ℕ.+ m) ≡ (2^ n) ℕ.· (2^ m)
-2^+ zero m = sym (ℕ.+-zero (2^ m))
-2^+ (suc n) m = cong₂ ℕ._+_ (2^+ n m) (2^+ n m)
- ∙ ·-distribʳ (2^ n) _ (2^ m)
-
-injectFin+ : {m n : ℕ} → Fin m → Fin (n ℕ.+ m)
-injectFin+ {n = n} x = (n ℕ.+ fst x) ,  ℕ.<-k+ {k = n} (snd x)
--- injectFin+ {n = suc n} x = fsuc (injectFin+ x)
-
-
-injectFin+' : {m n : ℕ} → Fin n → Fin (n ℕ.+ m)
-injectFin+' {m} {n = n} x = fst x , ℕ.<≤-trans (snd x) ℕ.≤SumLeft
-
-fsuc∘inj' : {n m : ℕ} → ∀ x → fsuc (injectFin+' {suc m} {n} x) ≡
-                 injectFin+' (fsuc x)
-fsuc∘inj' {n} x = toℕ-injective refl
-
-finj∘inj' : {n m : ℕ} → ∀ x → finj (injectFin+' {m} {n} x) ≡
-            injectFin+' {m} {suc n} (finj x)
-finj∘inj' x = toℕ-injective refl
-
-
-fsuc∘inj : {n m : ℕ} → ∀ x p →
-                 fsuc (injectFin+ {m} {n} x) ≡
-                 (fst (injectFin+ {suc m} {n} (fsuc x))
-                   , p)
-fsuc∘inj x p = toℕ-injective (sym (+-suc _ _))
-
-finj∘inj : {n m : ℕ} → ∀ x p → finj (injectFin+ {m} {n} x) ≡
-            (fst (injectFin+ {suc m} {n} (finj x)) , p)
-finj∘inj x p = toℕ-injective refl
-
-
-
-
-Fin+→⊎ : ∀ n m → Fin (n ℕ.+ m) → (Fin n ⊎ Fin m)
-Fin+→⊎ zero m = inr
-Fin+→⊎ (suc n) m (zero , snd₁) = inl fzero
-Fin+→⊎ (suc n) m (suc k , l , p) =
- ⊎.map fsuc
-  (idfun _) (Fin+→⊎ n m (k , l ,
-   cong predℕ (sym (ℕ.+-suc l (suc k)) ∙ p)))
-
-
-rec⊎-injectFin+' : ∀ {A : Type} {m} {n} f g x →
-  ⊎.rec {C = A} f g (Fin+→⊎ n m (injectFin+' {m} {n} x))
-                       ≡ f x
-rec⊎-injectFin+' {n = zero} f g x = ⊥.rec (¬Fin0 x)
-rec⊎-injectFin+' {n = suc n} f g (zero , snd₁) = cong f (toℕ-injective refl)
-rec⊎-injectFin+' {m = m} {n = suc n} f g (suc k , l , p) =
-      (cong (λ k → ⊎.rec f g
-      (⊎.map fsuc (λ x → x)
-       (Fin+→⊎ n m k))) (toℕ-injective refl)
-       ∙ (rec-map f g fsuc (idfun _) (Fin+→⊎ n m (injectFin+' k'))))
-    ∙∙ rec⊎-injectFin+' {n = n} (f ∘ fsuc) g k'
-    ∙∙ cong f (toℕ-injective refl)
- where
- k' = (k , l , cong predℕ (sym (ℕ.+-suc l (suc k)) ∙ p))
-
-
-Fin+→⊎∘injectFin+' : ∀ n m x → inl x ≡ Fin+→⊎ n m (injectFin+' {m} {n} x)
-Fin+→⊎∘injectFin+' zero m x = ⊥.rec (¬Fin0 x)
-Fin+→⊎∘injectFin+' (suc n) m (zero , _) =
-  cong inl (toℕ-injective refl)
-Fin+→⊎∘injectFin+' (suc n) m (suc k , l , p) =
-  cong inl (toℕ-injective refl) ∙∙ cong (⊎.map fsuc (λ x → x))
-    (Fin+→⊎∘injectFin+' n m (k , l ,
-     injSuc (sym (+-suc l (suc k)) ∙ p)))
-    ∙∙ cong (λ p → ⊎.map fsuc (λ x → x)
-      (Fin+→⊎ n m
-       (k ,
-        l ℕ.+ m , p)))
-         (isSetℕ _ _ _ _)
-
-Fin+→⊎∘injectFin+ : ∀ n m x → inr x ≡ Fin+→⊎ n m (injectFin+ {m} {n} x)
-Fin+→⊎∘injectFin+ zero m x = cong inr (toℕ-injective refl)
-Fin+→⊎∘injectFin+ (suc n) m x =
-  cong (⊎.map fsuc (λ x → x)) (Fin+→⊎∘injectFin+ n m x
-   ∙ cong (Fin+→⊎ n m) (toℕ-injective refl))
-
-rec⊎-injectFin+ : ∀ {A : Type} {m} {n} f g x →
-  ⊎.rec {C = A} f g (Fin+→⊎ n m (injectFin+ {m} {n} x))
-                       ≡ g x
-rec⊎-injectFin+ {n = zero} f g x = cong g (toℕ-injective refl)
-rec⊎-injectFin+ {m = m} {n = suc n} f g x =
-
-  cong (λ k → ⊎.rec f g
-      (⊎.map fsuc (λ x₁ → x₁)
-       (Fin+→⊎ n m k))) (toℕ-injective refl)
-   ∙ (rec-map f g fsuc (idfun _) (Fin+→⊎ n m (injectFin+ x)))
-  ∙ rec⊎-injectFin+ {n = n} (f ∘ fsuc) g x
-
-injectFin+'-flast : ∀ n m k p p' →
-  Fin+→⊎ n m (injectFin+' {m} {n} (k , zero , p)) ≡
-    inl (k , zero , p')
-
-injectFin+'-flast zero m k p p' = ⊥.rec (ℕ.snotz p)
-injectFin+'-flast (suc n) m zero p p' = cong inl (toℕ-injective refl)
-injectFin+'-flast (suc n) m (suc k) p p' =
-  cong (⊎.map fsuc (λ x → x))
-    (cong (Fin+→⊎ n m) (toℕ-injective refl)
-     ∙ injectFin+'-flast n m k (ℕ.injSuc p) (ℕ.injSuc p'))
-   ∙ cong inl (toℕ-injective refl)
-
-
-Iso-Fin+⊎-leftInv : ∀ n m a → ⊎.rec injectFin+' injectFin+ (Fin+→⊎ n m a) ≡ a
-Iso-Fin+⊎-leftInv zero m a = toℕ-injective refl
-Iso-Fin+⊎-leftInv (suc n) m (zero , l , p) = toℕ-injective refl
-Iso-Fin+⊎-leftInv (suc n) m (suc k , l , p) =
-     h
-       (Fin+→⊎ n m
-        (k , l , (λ i → predℕ (((λ i₁ → +-suc l (suc k) (~ i₁)) ∙ p) i))))
-  ∙∙ cong fsuc
-     (Iso-Fin+⊎-leftInv n m (k , l , injSuc (sym (+-suc l (suc k)) ∙ p)))
-  ∙∙ toℕ-injective refl
- where
-
- h : ∀ x →
-       ⊎.rec (injectFin+' {m} {suc n}) (injectFin+ {m} {suc n})
-           (⊎.map fsuc (idfun (Fin m)) x)
-       ≡
-       fsuc (⊎.rec injectFin+' injectFin+ x)
- h (inl x) = toℕ-injective refl
- h (inr x) = toℕ-injective refl
-
-Iso-Fin+⊎ : ∀ n m → Iso (Fin (n ℕ.+ m)) (Fin n ⊎ Fin m)
-Iso-Fin+⊎ n m .Iso.fun = Fin+→⊎ n m
-Iso-Fin+⊎ n m .Iso.inv = ⊎.rec (injectFin+' {m} {n}) (injectFin+ {m} {n})
-Iso-Fin+⊎ n m .Iso.rightInv (inl x) = sym (Fin+→⊎∘injectFin+' _ _ _)
-Iso-Fin+⊎ n m .Iso.rightInv (inr x) = sym (Fin+→⊎∘injectFin+ _ _ _)
-Iso-Fin+⊎ n m .Iso.leftInv = Iso-Fin+⊎-leftInv n m
-
-injectFin+'-flast≡injectFin+-fzero :
- ∀ n m →
-  fst (injectFin+' {m} {suc n} flast) ≡
-  fst (injectFin+ {suc m} {n} fzero)
-injectFin+'-flast≡injectFin+-fzero n m = sym (+-zero _)
-
-injectFin+'-flast-S : ∀ n m k p →
-     inr fzero ≡ Fin+→⊎ (suc n) (suc (suc m))
-       (k , suc m , p)
-injectFin+'-flast-S n m zero p =
-  ⊥.rec (ℕ.znots {n}
-   (ℕ.inj-+m {m = suc (suc m)} (cong suc (sym (+-comm m 1)) ∙ p)))
-injectFin+'-flast-S zero m (suc zero) p =
- cong inr (toℕ-injective refl)
-injectFin+'-flast-S zero m (suc (suc k)) p =
- ⊥.rec (ℕ.snotz {k} (ℕ.inj-+m {m = suc (suc (suc m))}
-       (cong suc (
-         (ℕ.+-assoc k 3 m ∙
-          cong (ℕ._+ m) (+-comm k 3))
-        ∙ +-comm (suc (suc (suc k))) m) ∙ p)))
-
-injectFin+'-flast-S (suc n) m (suc k) p =
- cong (⊎.map fsuc (λ x → x)) (injectFin+'-flast-S n m k _)
-
-foldFin·2 : ∀ n m → (f : B → A → B) → (b : B) →
-              (V : Fin (n ℕ.+ m) → A) →
-             foldlFin {n = n ℕ.+ m} f b V ≡
-               foldlFin {n = m} f
-                 (foldlFin {n = n} f b (V ∘ injectFin+'))
-                  (V ∘ injectFin+)
-foldFin·2 zero m f b V =
- cong (foldlFin {n = m} f b)
-  (funExt λ x → cong V (toℕ-injective refl) )
-foldFin·2 {B = B} {A = A} (suc n) m f b V =
- foldFin·2 n m f (f b (V fzero)) (V ∘ fsuc)
-  ∙ cong₂ (foldlFin {_} {B} {_} {A} {m} f)
-    (cong₂ (foldlFin {_} {B} {_} {A} {n} f)
-      (cong (f b) (cong V (toℕ-injective refl)))
-        (funExt λ x → cong V (toℕ-injective refl)))
-     (funExt λ x → cong V (toℕ-injective refl))
-
-
-foldFin-sum-concat : ∀ n m → (f : Fin (n ℕ.+ m) → ℝ) →
-     foldlFin (λ a y → a +ᵣ f y) 0 (idfun _)
-      ≡ foldlFin (λ a y → a +ᵣ f (injectFin+' {m} {n} y)) 0 (idfun _)
-      +ᵣ foldlFin (λ a y → a +ᵣ f (injectFin+ {m} {n} y)) 0 (idfun _)
-
-foldFin-sum-concat n m f =
-  foldFin·2 n m (λ a y → a +ᵣ f y) 0 (idfun _)
-   ∙ foldFin+0ᵣ m (idfun _  ∘ injectFin+) f _
-   ∙ cong₂ _+ᵣ_
-     (foldFin+map n _ _ injectFin+' (idfun _))
-     (foldFin+map m _ _ injectFin+ (idfun _))
-
-0<2^ : ∀ n → 0 ℕ.< 2^ n
-0<2^ zero = ℕ.zero-<-suc
-0<2^ (suc n) = ℕ.<-+-< (0<2^ n) (0<2^ n)
-
-
-Fin^2· : ∀ n m → (Fin (2^ n) × Fin (2^ m))
-                      → (Fin (2^ (n ℕ.+ m)))
-Fin^2· n m ((l , l<) , (k , k<)) =
- (((2^ m) ℕ.· l) ℕ.+ k) ,
-  (2^ m ℕ.· l ℕ.+ k
-      <≤⟨ ℕ.<-k+ {k = 2^ m ℕ.· l} k< ⟩
-     _ ≡≤⟨ (λ i → ℕ.+-comm (ℕ.·-comm (2^ m) l i) (2^ m) i) ⟩
-    _ ≤≡⟨ ℕ.≤-·k {k = 2^ m} l< ⟩
-         sym (2^+ n m))
-
- where open ℕ.<-Reasoning
-
-Fin^2·-injectFin+' : ∀ n m x y →
-  (injectFin+' (Fin^2· n m (x , y))) ≡
-    (Fin^2· (suc n) m (injectFin+' x , y))
-Fin^2·-injectFin+' n m (fst₁ , snd₁) y = toℕ-injective refl
-
-Fin^2·-injectFin+ : ∀ n m x y → (injectFin+ (Fin^2· n m (x , y)))
-    ≡ (Fin^2· (suc n) m (injectFin+ x , y))
-Fin^2·-injectFin+ n m x y =
- toℕ-injective
-  (cong (ℕ._+ (2^ m ℕ.· x .fst ℕ.+ y .fst)) (2^+ n m ∙ ℕ.·-comm (2^ n) (2^ m) )
-    ∙ (ℕ.+-assoc (2^ m ℕ.· 2^ n) _ (fst y) ∙
-      cong (ℕ._+ fst y) (·-distribˡ (2^ m) _ _)))
-
-foldFin·2^ : ∀ n m → (f : B → A → B) → (b : B) →
-              (V : Fin (2^ (n ℕ.+ m)) → A) →
-             foldlFin f b V ≡
-               foldlFin {n = 2^ n} (foldlFin {n = 2^ m} f)
-                 b (curry (V ∘ Fin^2· n m ))
-foldFin·2^ zero m f b V = cong (foldlFin {n = 2^ m} f b)
-  (funExt λ x → cong V (toℕ-injective
-    (cong (ℕ._+ fst x) (ℕ.0≡m·0 (2^ m)))))
-foldFin·2^ (suc n) m f b V =
-  foldFin·2 (2^ (n ℕ.+ m)) (2^ (n ℕ.+ m)) f b V
-   ∙ foldFin·2^ n m _ _ _
-    ∙ cong {x = (foldlFin {n = 2^ (n ℕ.+ m)}
-            f b (V ∘ injectFin+'))} (λ z → foldlFin (foldlFin f) z
-         (curry ((V ∘ injectFin+) ∘ Fin^2· n m)))
-         (foldFin·2^ n m _ _ _)
-
-    ∙ (λ i → foldlFin {n = 2^ n} ff'
-       (foldlFin {n = 2^ n} ff' b
-        (λ x y → V (Fin^2·-injectFin+' n m x y i)))
-       (λ x y → V (Fin^2·-injectFin+ n m x y i))) ∙
-      sym (foldFin·2 (2^ n) (2^ n) ff' _ _)
- where
- ff' = (foldlFin {n = 2^ m} f)
-
-
-record ElimFinSS (A : Type) (n : ℕ) : Type where
- no-eta-equality
- field
-  a₀ : A
-  f : Fin (suc n) → A
-  aₙ : A
-
- go : Fin (3 ℕ.+ n) → A
- go (zero , l , p) = a₀
- go (suc k , zero , p) = aₙ
- go (suc k , suc l , p) =
-   f (k , l , cong (predℕ ∘ predℕ) (sym (ℕ.+-suc (suc l) (suc k)) ∙ p))
 
 record Partition[_,_] (a b : ℝ) : Type₀ where
  field
@@ -803,12 +64,12 @@ record Partition[_,_] (a b : ℝ) : Type₀ where
  a≤b : a ≤ᵣ b
  a≤b = isTrans≤ᵣ a _ _ (a≤pts fzero) (pts≤b fzero)
 
- pts'Σ-R : ElimFinSS (Σ-syntax ℝ (λ p → (a ≤ᵣ p) × (p ≤ᵣ b))) len
+ pts'Σ-R : ElimFinSS (Σ _ (_∈ intervalℙ a b))  (suc len)
  pts'Σ-R .ElimFinSS.a₀ = a , ≤ᵣ-refl a , a≤b
  pts'Σ-R .ElimFinSS.f k = pts k , a≤pts _ , pts≤b _
  pts'Σ-R .ElimFinSS.aₙ = b , a≤b , ≤ᵣ-refl b
 
- pts'Σ : Fin (3 ℕ.+ len) → Σ[ p ∈ ℝ ] (a ≤ᵣ p) × (p ≤ᵣ b)
+ pts'Σ : Fin (3 ℕ.+ len) → (Σ _ (_∈ intervalℙ a b))
  pts'Σ = ElimFinSS.go pts'Σ-R
 
  pts' : Fin (3 ℕ.+ len) → ℝ
@@ -871,11 +132,46 @@ record Partition[_,_] (a b : ℝ) : Type₀ where
     (λ S ((t , a≤t , t≤b) , b-a) → S +ᵣ b-a ·ᵣ (f t) ) 0
      (λ k →  samplesΣ k , pts' (fsuc k) -ᵣ pts' (finj k))
 
+  riemannSum'≡ : (f g : ℝ → ℝ) → (∀ x → x ∈ intervalℙ a b → f x ≡ g x) →
+                     riemannSum' f ≡ riemannSum' g
+  riemannSum'≡ f g f≡g =
+    cong (λ g → foldlFin {n = 2 ℕ.+ len}
+        g 0)
+        (funExt₂ (λ S ((t , a≤t , t≤b) , b-a) →
+           cong ((S +ᵣ_) ∘ (b-a ·ᵣ_))
+               (f≡g t (a≤t , t≤b))))
+         ≡$ (λ k →  samplesΣ k , pts' (fsuc k) -ᵣ pts' (finj k))
+
+  riemannSum-clamp : (f : ∀ r → r ∈ intervalℙ a b → ℝ)
+    → riemannSum (curry ∘ f) ≡
+      riemannSum'
+      (λ x₁ →  f (clampᵣ a b x₁) (clampᵣ∈ℚintervalℙ a b a≤b x₁))
+  riemannSum-clamp f =
+    cong (λ g → foldlFin {n = 2 ℕ.+ len}
+        g 0)
+        (funExt₂ (λ S ((t , a≤t , t≤b) , b-a) →
+           cong ((S +ᵣ_) ∘ (b-a ·ᵣ_))
+             (cong (uncurry f)
+               (Σ≡Prop (∈-isProp (intervalℙ a b))
+                (∈ℚintervalℙ→clampᵣ≡ a b t (a≤t , t≤b))))))
+         ≡$ (λ k →  samplesΣ k , pts' (fsuc k) -ᵣ pts' (finj k))
 
   riemannSum'+ : (f g : ℝ → ℝ) →
     riemannSum' f +ᵣ riemannSum' g
       ≡ riemannSum' (λ x → f x +ᵣ g x)
   riemannSum'+ f g = zip-foldFin+ᵣ' (2 ℕ.+ len)
+    (λ k →  samplesΣ k , pts' (fsuc k) -ᵣ pts' (finj k))
+    _ _ 0 0
+   ∙ (cong₂ foldlFin (funExt₂
+    λ S y → cong (S +ᵣ_) (sym (·DistL+ _ _ _)))
+   (+ᵣ-rat 0 0)
+    ≡$ (λ k →  samplesΣ k , pts' (fsuc k) -ᵣ pts' (finj k)))
+
+
+  riemannSum+ : ∀ f g →
+    riemannSum f +ᵣ riemannSum g
+      ≡ riemannSum (λ x ≤x x≤  → f x ≤x x≤ +ᵣ g x ≤x x≤)
+  riemannSum+ f g = zip-foldFin+ᵣ' (2 ℕ.+ len)
     (λ k →  samplesΣ k , pts' (fsuc k) -ᵣ pts' (finj k))
     _ _ 0 0
    ∙ (cong₂ foldlFin (funExt₂
@@ -894,10 +190,11 @@ record Partition[_,_] (a b : ℝ) : Type₀ where
        (≤ᵣ-refl 0) λ x → ≤ᵣ-o·ᵣ _ _ _ (x≤y→0≤y-x _ _ (pts'≤pts' x))
          (f≤g _ (a≤samples x) (samples≤b x))
 
+
+
   riemannSum'C· : ∀ C (f : ℝ → ℝ) →
     riemannSum' (λ x → C ·ᵣ f x)
      ≡ C ·ᵣ riemannSum' f
-
   riemannSum'C· C f =
     (cong foldlFin (funExt₂
     λ S y → cong (S +ᵣ_)
@@ -907,6 +204,41 @@ record Partition[_,_] (a b : ℝ) : Type₀ where
     ≡$ (λ k →  samplesΣ k , pts' (fsuc k) -ᵣ pts' (finj k)))
     ∙ foldFin·DistL' (2 ℕ.+ len) _ _
     (λ k →  samplesΣ k , pts' (fsuc k) -ᵣ pts' (finj k))
+
+  riemannSumC· : ∀ C f →
+    riemannSum (λ x ≤x x≤ → C ·ᵣ f x ≤x x≤)
+     ≡ C ·ᵣ riemannSum f
+  riemannSumC· C f =
+    (cong foldlFin (funExt₂
+    λ S y → cong (S +ᵣ_)
+      (·ᵣAssoc _ _ _ ∙∙ cong (_·ᵣ f (y .fst .fst) _ _) (·ᵣComm _ _)
+       ∙∙ sym (·ᵣAssoc _ _ _)))
+    ≡$ 0
+    ≡$ (λ k →  samplesΣ k , pts' (fsuc k) -ᵣ pts' (finj k)))
+    ∙ foldFin·DistL' (2 ℕ.+ len) _ _
+    (λ k →  samplesΣ k , pts' (fsuc k) -ᵣ pts' (finj k))
+
+
+  riemannSum'- : (f g : ℝ → ℝ) →
+    riemannSum' f -ᵣ riemannSum' g
+      ≡ riemannSum' (λ x → f x -ᵣ g x)
+  riemannSum'- f g =
+      cong₂ _+ᵣ_ refl
+        (-ᵣ≡[-1·ᵣ] _
+         ∙ sym (riemannSum'C· -1 _)
+         ∙ cong riemannSum' (funExt λ _ → sym (-ᵣ≡[-1·ᵣ] _)))
+    ∙ riemannSum'+ _ _
+
+
+  riemannSum- : ∀ f g →
+    riemannSum f -ᵣ riemannSum g
+      ≡ riemannSum (λ x ≤x x≤ → f x ≤x x≤ -ᵣ g x ≤x x≤)
+  riemannSum- f g =
+      cong₂ _+ᵣ_ refl
+        (-ᵣ≡[-1·ᵣ] _
+         ∙ sym (riemannSumC· -1 _)
+         ∙ cong riemannSum (funExt₃ λ _ _ _ → sym (-ᵣ≡[-1·ᵣ] _)))
+    ∙ riemannSum+ _ _
 
 
 
@@ -921,6 +253,23 @@ record Partition[_,_] (a b : ℝ) : Type₀ where
    foldFin+map (2 ℕ.+ len) 0 _
     (λ k →  samplesΣ k , pts' (fsuc k) -ᵣ pts' (finj k))
     (idfun _)
+
+
+  riemannSum-empty : (f : ∀ r → r ∈ intervalℙ a b → ℝ)
+    → a ≡ b
+    → 0 ≡ riemannSum (curry ∘ f)
+
+  riemannSum-empty f a≡b =
+      sym (𝐑'.0RightAnnihilates _)
+    ∙ sym (foldFin+Const (2 ℕ.+ len) 0 (idfun _))
+    ∙ (cong (foldlFin {n = 2 ℕ.+ len}) (funExt₂
+      (λ S y → cong (S +ᵣ_) ((sym (𝐑'.0LeftAnnihilates' _ _
+        (𝐑'.+InvR' _ _ (
+         cong fst (isContr→isProp (pointIntervalℙ a b a≡b)
+          (pts'Σ (fsuc y)) (pts'Σ (finj y))))))))))
+       ≡$ 0 ≡$ idfun _)
+    ∙ sym (riemannSum'-alt-lem _)
+    ∙ sym (riemannSum-clamp f)
 
 
   riemannSum'-absᵣ≤ : (f : ℝ → ℝ) →
@@ -991,6 +340,7 @@ on[ a , b ]IntegralOf f is s =
      ∀ ((p , t) : TaggedPartition[ a , b ]) →
      (mesh≤ᵣ p (rat (fst δ)) →
        absᵣ (riemannSum t f -ᵣ s) <ᵣ rat (fst ε))
+
 
 on[_,_]IntegralOf_is'_ : ∀ a b → (ℝ → ℝ) → ℝ → Type
 on[ a , b ]IntegralOf f is' s =
@@ -1198,10 +548,40 @@ Integral'Uniq a b a≤b f s s' S S' =
        (S (/2₊ ε)) (S' (/2₊ ε))
 
 
+
+IntegralUniq : ∀ a b → (a ≤ᵣ b) → ∀ f s s'
+  → on[ a , b ]IntegralOf f is s
+  → on[ a , b ]IntegralOf f is s'
+  → s ≡ s'
+IntegralUniq a b a≤b f s s' S S' =
+  eqℝ _ _
+    λ ε →
+      PT.rec2 (isProp∼ _ _ _ )
+       (λ (δ , X) (δ' , X') →
+         let δ⊔δ' = ℚ.min₊ δ δ'
+         in PT.rec (isProp∼ _ _ _)
+             (λ (TP , TP<) → subst∼ (ℚ.ε/2+ε/2≡ε (fst ε))
+              (triangle∼ {ε = /2₊ ε} {/2₊ ε}
+                (sym∼ _ _ _ (invEq (∼≃abs<ε _ _ _)
+                 (X TP λ k → isTrans≤ᵣ _ _ _ (TP< k)
+                  (≤ℚ→≤ᵣ _ _ (ℚ.min≤ (fst δ) (fst δ'))))))
+                (invEq (∼≃abs<ε _ _ _)
+                  (X' TP λ k → isTrans≤ᵣ _ _ _ (TP< k)
+                   (≤ℚ→≤ᵣ _ _ (ℚ.min≤' (fst δ) (fst δ')))))))
+                (∃Partition< a b a≤b δ⊔δ'))
+       (S (/2₊ ε)) (S' (/2₊ ε))
+
+
 IntegratedProp : ∀ a b → a ≤ᵣ b → ∀ f → isProp (Σ _ on[ a , b ]IntegralOf f is'_)
 IntegratedProp a b a≤b f (s , S) (s' , S')  =
   Σ≡Prop (λ _ → isPropΠ λ _ → squash₁ )
    (Integral'Uniq a b a≤b f s s' S S')
+
+IntegratedℙPropℙ : ∀ a b → a ≤ᵣ b → ∀ f → isProp (Σ _ on[ a , b ]IntegralOf f is_)
+IntegratedℙPropℙ a b a≤b f (s , S) (s' , S')  =
+  Σ≡Prop (λ _ → isPropΠ λ _ → squash₁ )
+   (IntegralUniq a b a≤b f s s' S S')
+
 
 
 module Partition-pre+ (a b : ℝ) (α : ℝ) where
@@ -1532,7 +912,7 @@ module _ (a b : ℝ) (α : ℝ) (0<α : 0 <ᵣ α) where
 
 
 opaque
- unfolding _+ᵣ_
+ unfolding _+ᵣ_ maxᵣ
 
  clamp-Δ-·f : ∀ a b → a ≤ᵣ b → ∀ f
        → IsContinuous f
@@ -1865,51 +1245,55 @@ opaque
  --      --           )))
  --      --  (clampCases a b a≤b u v u≤v)
 
-clamp-interval-Δ-swap : ∀ a b a' b'
-           → a  ≤ᵣ b
-           → a' ≤ᵣ b'
-                → clampᵣ a  b  b' -ᵣ clampᵣ a  b  a'
-                ≡ clampᵣ a' b' b  -ᵣ clampᵣ a' b' a
-clamp-interval-Δ-swap a b a' b' a≤b a'≤b' =
-  subst2 (λ b' b → clampᵣ a  b  b' -ᵣ clampᵣ a  b  a'
-                ≡ clampᵣ a' b' b  -ᵣ clampᵣ a' b' a)
-      (≤→maxᵣ _ _ a'≤b') (≤→maxᵣ _ _ a≤b)
-      (≡Cont₂ {f₀ = λ a b → f a b a' b'}
-              {f₁ = λ a b → f a' b' a b}
-         (fC' a' b')
-         (fC a' b')
-         (λ aℚ bℚ → let a = (rat aℚ) ; b = (rat bℚ) in
-            ≡Cont₂ {f₀ = λ a' b' → f a b a' b'}
-                   {f₁ = λ a' b' → f a' b' a b}
-             (fC (rat aℚ) (rat bℚ))
-             (fC' (rat aℚ) (rat bℚ))
-             (λ aℚ' bℚ' →
-                -ᵣ-rat₂ _ _ ∙∙ cong rat
-                   (ℚclampInterval-delta aℚ _ aℚ' _ (ℚ.≤max aℚ bℚ) (ℚ.≤max aℚ' bℚ'))
-                 ∙∙ sym (-ᵣ-rat₂ _ _))
-             a' b')
-         a b)
+
+
+opaque
+ unfolding maxᵣ
+ clamp-interval-Δ-swap : ∀ a b a' b'
+            → a  ≤ᵣ b
+            → a' ≤ᵣ b'
+                 → clampᵣ a  b  b' -ᵣ clampᵣ a  b  a'
+                 ≡ clampᵣ a' b' b  -ᵣ clampᵣ a' b' a
+ clamp-interval-Δ-swap a b a' b' a≤b a'≤b' =
+   subst2 (λ b' b → clampᵣ a  b  b' -ᵣ clampᵣ a  b  a'
+                 ≡ clampᵣ a' b' b  -ᵣ clampᵣ a' b' a)
+       (≤→maxᵣ _ _ a'≤b') (≤→maxᵣ _ _ a≤b)
+       (≡Cont₂ {f₀ = λ a b → f a b a' b'}
+               {f₁ = λ a b → f a' b' a b}
+          (fC' a' b')
+          (fC a' b')
+          (λ aℚ bℚ → let a = (rat aℚ) ; b = (rat bℚ) in
+             ≡Cont₂ {f₀ = λ a' b' → f a b a' b'}
+                    {f₁ = λ a' b' → f a' b' a b}
+              (fC (rat aℚ) (rat bℚ))
+              (fC' (rat aℚ) (rat bℚ))
+              (λ aℚ' bℚ' →
+                 -ᵣ-rat₂ _ _ ∙∙ cong rat
+                    (ℚclampInterval-delta aℚ _ aℚ' _ (ℚ.≤max aℚ bℚ) (ℚ.≤max aℚ' bℚ'))
+                  ∙∙ sym (-ᵣ-rat₂ _ _))
+              a' b')
+          a b)
 
 
 
- where
+  where
 
- f : ℝ → ℝ → ℝ → ℝ → ℝ
- f a b a' b' = clampᵣ a (maxᵣ a b) (maxᵣ a' b') -ᵣ clampᵣ a (maxᵣ a b) a'
+  f : ℝ → ℝ → ℝ → ℝ → ℝ
+  f a b a' b' = clampᵣ a (maxᵣ a b) (maxᵣ a' b') -ᵣ clampᵣ a (maxᵣ a b) a'
 
- fC : ∀ a b → IsContinuous₂ (f a b)
- fC a b = IsContinuous-₂∘
-    (cont∘₂ (IsContinuousClamp a (maxᵣ a b)) (contNE₂ maxR))
-    (cont∘₂ (IsContinuousClamp a (maxᵣ a b))
-     ((λ _ → IsContinuousConst _) ,  (λ _ → IsContinuousId)))
+  fC : ∀ a b → IsContinuous₂ (f a b)
+  fC a b = IsContinuous-₂∘
+     (cont∘₂ (IsContinuousClamp a (maxᵣ a b)) (contNE₂ maxR))
+     (cont∘₂ (IsContinuousClamp a (maxᵣ a b))
+      ((λ _ → IsContinuousConst _) ,  (λ _ → IsContinuousId)))
 
- fC' : ∀ a b → IsContinuous₂ (λ a' b' → f a' b' a b)
- fC' a' b' = IsContinuous-₂∘
-    (IsContinuousClamp₂∘ (maxᵣ a' b')
-     (((λ _ → IsContinuousConst _) ,  (λ _ → IsContinuousId)))
-     (contNE₂ maxR))
-    (IsContinuousClamp₂∘ a'
-     ((λ _ → IsContinuousConst _) ,  (λ _ → IsContinuousId)) (contNE₂ maxR))
+  fC' : ∀ a b → IsContinuous₂ (λ a' b' → f a' b' a b)
+  fC' a' b' = IsContinuous-₂∘
+     (IsContinuousClamp₂∘ (maxᵣ a' b')
+      (((λ _ → IsContinuousConst _) ,  (λ _ → IsContinuousId)))
+      (contNE₂ maxR))
+     (IsContinuousClamp₂∘ a'
+      ((λ _ → IsContinuousConst _) ,  (λ _ → IsContinuousId)) (contNE₂ maxR))
 
 
 llll : absᵣ (rat [ pos 0 / 1+ 0 ] -ᵣ rat [ pos 0 / 1+ 0 ]) ≤ᵣ
@@ -2111,217 +1495,224 @@ module Resample where
         clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k)) (P'.pts' (finj k')))
 
 
-    zzzz :
-      P.mesh≤ᵣ (rat (fst (/4₊ δ))) →
-      P'.mesh≤ᵣ (rat (fst (/4₊ δ))) →
-      absᵣ (S.riemannSum' f -ᵣ S'.riemannSum' f) ≤ᵣ
-      rat (fst ε)
-    zzzz m-pa< m-pa'< =
-       isTrans≡≤ᵣ _ _ _
-        (cong absᵣ
-         (cong (_-ᵣ_ (S.riemannSum' f))
-           (sym (resample a b a≤b pa' pa sa' f))
-           ∙ zip-foldFin-ᵣ (2 ℕ.+ len pa)
-
-             (λ k →  S.samplesΣ k , P.pts' (fsuc k) -ᵣ P.pts' (finj k))
-             (idfun _)
-             _ _ _ _))
-        (isTrans≤ᵣ _ _ _ (isTrans≤≡ᵣ _ _ _
-
-          (foldFin+≤-abs (2 ℕ.+ len pa) _ 0
-            _ (λ k → (fst η ·ᵣ pts' pa (fsuc k) -ᵣ fst η ·ᵣ pts' pa (finj k))
-                         )
-                          (λ k →
-                            (S.samplesΣ k ,
-                             P.pts' (fsuc k) -ᵣ P.pts' (finj k)) , k)
-                          (idfun _)
-           llll
-           ruc
-           )
-          (deltas-sum (2 ℕ.+ len pa) ((fst η ·ᵣ_) ∘ pts' pa)
-           ∙ sym (𝐑'.·DistR- _ _ _)))
-            (isTrans≤≡ᵣ _ _ _
-              (≤ᵣ-o·ᵣ _ _ _ (<ᵣWeaken≤ᵣ _ _ (snd η))
-               (isTrans≤≡ᵣ _ _ _ (≤maxᵣ (b -ᵣ a) 1) (maxᵣComm (b -ᵣ a) 1)) )
-              ([x/₊y]·yᵣ _ σ)))
-
-     where
-
--- ruc
-
-      ruc' : ∀ k k' →
-             absᵣ
-         (f (S.samplesΣ k .fst) ·ᵣ ruc'Δ k k' -ᵣ
-           ruc'Δ k k' ·ᵣ f (S'.samplesΣ k' .fst))
-         ≤ᵣ fst η ·ᵣ ruc'Δ k k'
-      ruc' k k' =
-       isTrans≡≤ᵣ _ _ _
-
-        (cong absᵣ (cong₂ _-ᵣ_
-         (·ᵣComm _ _)
-         ((clamp-Δ-·f _ _ (P.pts'≤pts' k)
-           f cf (/2₊ (/2₊ δ)) _ _ (P'.pts'≤pts' k')
-             (isTrans≤≡ᵣ _ _ _ (m-pa'< k')
-               (cong rat (ℚ./4₊≡/2₊/2₊ δ))) _
-                (S'.pts'≤samples k' ,
-                 S'.samples≤pts' k' )))
-
-                 ∙
-              sym (𝐑'.·DistR- (ruc'Δ k k') _ f') ) ∙
-               ·absᵣ _ _ ∙
-                cong (_·ᵣ (absᵣ (f (S.samplesΣ k .fst) -ᵣ
-                     f'))) (absᵣNonNeg _ hh
-                       ) ∙ ·ᵣComm _ _)
-        (≤ᵣ-·ᵣo _ _ _ hh (<ᵣWeaken≤ᵣ _ _ (X _ _ smpl-δ)))
-        where
-         δ/4<δ/2 = (isTrans≡<ᵣ _ _ _
-                           (cong rat (ℚ.·Assoc (fst δ) _ _))
-                           (<ℚ→<ᵣ (fst (/2₊ (/2₊ δ))) (fst (/2₊ δ)) (ℚ.x/2<x (/2₊ δ))))
-
-         f' = _
-         hh = (x≤y→0≤y-x _ _
-                        (clamp-monotone-≤ᵣ
-                         (P.pts' (finj k))
-                         (P.pts' (fsuc k))
-                         _ _ (P'.pts'≤pts' k')))
-
-         xzxd : absᵣ
-             (P.pts' (fsuc k) +ᵣ rat (fst (/2₊ (/2₊ δ))) +ᵣ -ᵣ P.pts' (finj k))
-             +ᵣ absᵣ (-ᵣ (-ᵣ rat (fst (/2₊ (/2₊ δ)))))
-             <ᵣ rat (fst δ)
-         xzxd =
-           a<b-c⇒a+c<b _ _ _
-           (subst2 _<ᵣ_
-            (sym (absᵣPos _
-               (isTrans≡<ᵣ _ _ _
-                (sym (+ᵣ-rat 0 0))
-                (<≤ᵣMonotone+ᵣ _ _ _ _
-                 (snd (ℚ₊→ℝ₊ (/2₊ (/2₊ δ))))
-                 (x≤y→0≤y-x _ _ (P.pts'≤pts' k)))))
-              ∙ cong absᵣ
-              (+ᵣAssoc _ _ _ ∙ cong (_+ᵣ (-ᵣ P.pts' (finj k))) (+ᵣComm _ _ )))
-              (cong rat (𝐐'.·DistR- (fst δ) 1 _) ∙ sym (-ᵣ-rat₂ (fst δ ℚ.· 1) _) ∙
-                cong₂ (_-ᵣ_)
-                   (cong rat (ℚ.·IdR _))
-                   ((cong rat (ℚ./4₊≡/2₊/2₊ δ)) ∙ sym (absᵣPos _ (snd (ℚ₊→ℝ₊ (/2₊ (/2₊ δ)))))
-                     ∙ cong absᵣ (sym (-ᵣInvol _))))
-            (isTrans≤<ᵣ _ _ _
-              (≤ᵣMonotone+ᵣ _ _ _ _
-               (≡ᵣWeaken≤ᵣ _ _ (cong rat (sym (ℚ./4₊≡/2₊/2₊ δ)))) (m-pa< k))
-              (isTrans≡<ᵣ _ _ _
-                (+ᵣ-rat _ _ ∙ cong rat (sym ((ℚ.·DistL+ (fst δ) _ _))))
-                (<ℚ→<ᵣ _ _
-                  ((ℚ.<-o· ([ 1 / 4 ] ℚ.+ [ 1 / 4 ])
-                    (1 ℚ.- [ 1 / 4 ]) (fst δ) (ℚ.0<ℚ₊ δ)
-                     (ℚ.decℚ<? {[ 1 / 4 ] ℚ.+ [ 1 / 4 ]}
-                        {1 ℚ.- [ 1 / 4 ]})))))))
-
-         smpl-δ : S.samplesΣ k .fst ∼[ δ ]
-              clampᵣ (P.pts' (finj k) -ᵣ rat (fst (/2₊ (/2₊ δ))))
-                     (P.pts' (fsuc k) +ᵣ rat (fst (/2₊ (/2₊ δ))))
-              (fst (S'.samplesΣ k'))
-         smpl-δ =
-           invEq (∼≃abs<ε _ _ _)
-           ((isTrans≤<ᵣ _ _ _
-             (isTrans≡≤ᵣ _ _ _
-               (cong absᵣ
-                ((cong₂ _-ᵣ_
-                  (∈ℚintervalℙ→clampᵣ≡ (P.pts' (finj k) -ᵣ rat (fst (/2₊ (/2₊ δ))))
-                   (P.pts' (fsuc k) +ᵣ rat (fst (/2₊ (/2₊ δ))))
-                    (fst (S.samplesΣ k))
-
-                     ((isTrans≤ᵣ _ _ _
-                       (isTrans≤≡ᵣ _ _ _
-                         (≤ᵣ-o+ _ _ (P.pts' (finj k))
-                          (-ᵣ≤ᵣ _ _ (≤ℚ→≤ᵣ 0 _ (ℚ.0≤ℚ₊ (/2₊ (/2₊ δ))))))
-                         (𝐑'.+IdR' _ _ (-ᵣ-rat 0)))
-                       (S.pts'≤samples k)) ,
-                        isTrans≤ᵣ _ _ _
-                        (S.samples≤pts' k)
-                        (isTrans≡≤ᵣ _ _ _ (sym (𝐑'.+IdR' _ _ refl))
-                          (≤ᵣ-o+ _ _ (P.pts' (fsuc k))
-                          (≤ℚ→≤ᵣ 0 _ (ℚ.0≤ℚ₊ (/2₊ (/2₊ δ))))))
-                       )
-                       )
-                  refl)))
-                 (clampᵣ-dist (P.pts' (finj k) -ᵣ rat (fst (/2₊ (/2₊ δ))))
-                  (P.pts' (fsuc k) +ᵣ rat (fst (/2₊ (/2₊ δ))))
-                    _ _))
-                 (isTrans≤<ᵣ _ _ _
-                  (isTrans≡≤ᵣ _ _ _ (cong absᵣ
-                   (cong ((P.pts' (fsuc k) +ᵣ rat (fst (/2₊ (/2₊ δ)))) +ᵣ_) ( -ᵣDistr _ _) ∙ +ᵣAssoc _ _ _))
-                    (absᵣ-triangle _ _))
-                     xzxd)))
-      ruc : ∀ k →
-          absᵣ
-        ((P.pts' (fsuc k) -ᵣ P.pts' (finj k)) ·ᵣ f (S.samplesΣ k .fst) -ᵣ
-         foldlFin
-         (λ s ((t , a≤t , t≤b) , b-a) → s +ᵣ b-a ·ᵣ f t) 0
-         (λ k₁ →
-            P'.samplesΣ sa' k₁ ,
-            clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k)) (P'.pts' (fsuc k₁))
-            -ᵣ clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k)) (P'.pts' (finj k₁))))
-        ≤ᵣ
-        (fst η ·ᵣ P.pts' (fsuc k) -ᵣ fst η ·ᵣ P.pts' (finj k))
-
-      ruc k =
+    opaque
+     unfolding maxᵣ minᵣ
+     zzzz :
+       P.mesh≤ᵣ (rat (fst (/4₊ δ))) →
+       P'.mesh≤ᵣ (rat (fst (/4₊ δ))) →
+       absᵣ (S.riemannSum' f -ᵣ S'.riemannSum' f) ≤ᵣ
+       rat (fst ε)
+     zzzz m-pa< m-pa'< =
         isTrans≡≤ᵣ _ _ _
-          (cong (absᵣ ∘ (_-ᵣ (foldlFin
-         (λ s ((t , a≤t , t≤b) , b-a) → s +ᵣ b-a ·ᵣ f t) 0
-         (λ k₁ →
-            P'.samplesΣ sa' k₁ ,
-            clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k)) (P'.pts' (fsuc k₁))
-            -ᵣ clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k)) (P'.pts' (finj k₁))
-            ))))
-             (cong (_·ᵣ f (S.samplesΣ k .fst))
-               (partitionClamp a b
-                 (P.pts' (finj k))
-                 (P.pts' (fsuc k))
-                  (P.pts'≤pts' k)
-                 (P.a≤pts' (finj k)) (P.pts'≤b (fsuc k)) pa'
-                 ) ∙ ·ᵣComm _ _ ∙
-                  sym (foldFin·DistL (2 ℕ.+ len pa') _ _ _
-                   (idfun _))) ∙
-                  cong absᵣ
-                   (zip-foldFin-ᵣ (2 ℕ.+ len pa')
-                   (idfun _)
-                    (λ k₁ →
-                      (samplesΣ sa' k₁ ,
+         (cong absᵣ
+          (cong (_-ᵣ_ (S.riemannSum' f))
+            (sym (resample a b a≤b pa' pa sa' f))
+            ∙ zip-foldFin-ᵣ (2 ℕ.+ len pa)
+
+              (λ k →  S.samplesΣ k , P.pts' (fsuc k) -ᵣ P.pts' (finj k))
+              (idfun _)
+              _ _ _ _))
+         (isTrans≤ᵣ _ _ _ (isTrans≤≡ᵣ _ _ _
+
+           (foldFin+≤-abs (2 ℕ.+ len pa) _ 0
+             _ (λ k → (fst η ·ᵣ pts' pa (fsuc k) -ᵣ fst η ·ᵣ pts' pa (finj k))
+                          )
+                           (λ k →
+                             (S.samplesΣ k ,
+                              P.pts' (fsuc k) -ᵣ P.pts' (finj k)) , k)
+                           (idfun _)
+            llll
+            ruc
+            )
+           (deltas-sum (2 ℕ.+ len pa) ((fst η ·ᵣ_) ∘ pts' pa)
+            ∙ sym (𝐑'.·DistR- _ _ _)))
+             (isTrans≤≡ᵣ _ _ _
+               (≤ᵣ-o·ᵣ _ _ _ (<ᵣWeaken≤ᵣ _ _ (snd η))
+                (isTrans≤≡ᵣ _ _ _ (≤maxᵣ (b -ᵣ a) 1) (maxᵣComm (b -ᵣ a) 1)) )
+               ([x/₊y]·yᵣ _ σ)))
+
+      where
+
+ -- ruc
+
+       ruc' : ∀ k k' →
+              absᵣ
+          (f (S.samplesΣ k .fst) ·ᵣ ruc'Δ k k' -ᵣ
+            ruc'Δ k k' ·ᵣ f (S'.samplesΣ k' .fst))
+          ≤ᵣ fst η ·ᵣ ruc'Δ k k'
+       ruc' k k' =
+        isTrans≡≤ᵣ _ _ _
+
+         (cong absᵣ (cong₂ _-ᵣ_
+          (·ᵣComm _ _)
+          ((clamp-Δ-·f _ _ (P.pts'≤pts' k)
+            f cf (/2₊ (/2₊ δ)) _ _ (P'.pts'≤pts' k')
+              (isTrans≤≡ᵣ _ _ _ (m-pa'< k')
+                (cong rat (ℚ./4₊≡/2₊/2₊ δ))) _
+                 (S'.pts'≤samples k' ,
+                  S'.samples≤pts' k' )))
+
+                  ∙
+               sym (𝐑'.·DistR- (ruc'Δ k k') _ f') ) ∙
+                ·absᵣ _ _ ∙
+                 cong (_·ᵣ (absᵣ (f (S.samplesΣ k .fst) -ᵣ
+                      f'))) (absᵣNonNeg _ hh
+                        ) ∙ ·ᵣComm _ _)
+         (≤ᵣ-·ᵣo _ _ _ hh (<ᵣWeaken≤ᵣ _ _ (X _ _ smpl-δ)))
+         where
+          δ/4<δ/2 : rat (fst δ ℚ.· ([ 1 / 2 ] ℚ.· [ 1 / 2 ])) <ᵣ
+             rat (fst (/2₊ δ))
+          δ/4<δ/2 = (isTrans≡<ᵣ _ _ _
+                            (cong rat (ℚ.·Assoc (fst δ) _ _))
+                            (<ℚ→<ᵣ (fst (/2₊ (/2₊ δ))) (fst (/2₊ δ)) (ℚ.x/2<x (/2₊ δ))))
+
+          f' : ℝ
+          f' = _
+          hh : 0 ≤ᵣ clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k)) (P'.pts' (fsuc k'))
+                -ᵣ clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k)) (P'.pts' (finj k'))
+          hh = (x≤y→0≤y-x _ _
+                         (clamp-monotone-≤ᵣ
+                          (P.pts' (finj k))
+                          (P.pts' (fsuc k))
+                          _ _ (P'.pts'≤pts' k')))
+
+          xzxd : absᵣ
+              (P.pts' (fsuc k) +ᵣ rat (fst (/2₊ (/2₊ δ))) +ᵣ -ᵣ P.pts' (finj k))
+              +ᵣ absᵣ (-ᵣ (-ᵣ rat (fst (/2₊ (/2₊ δ)))))
+              <ᵣ rat (fst δ)
+          xzxd =
+            a<b-c⇒a+c<b _ _ _
+            (subst2 _<ᵣ_
+             (sym (absᵣPos _
+                (isTrans≡<ᵣ _ _ _
+                 (sym (+ᵣ-rat 0 0))
+                 (<≤ᵣMonotone+ᵣ _ _ _ _
+                  (snd (ℚ₊→ℝ₊ (/2₊ (/2₊ δ))))
+                  (x≤y→0≤y-x _ _ (P.pts'≤pts' k)))))
+               ∙ cong absᵣ
+               (+ᵣAssoc _ _ _ ∙ cong (_+ᵣ (-ᵣ P.pts' (finj k))) (+ᵣComm _ _ )))
+               (cong rat (𝐐'.·DistR- (fst δ) 1 _) ∙ sym (-ᵣ-rat₂ (fst δ ℚ.· 1) _) ∙
+                 cong₂ (_-ᵣ_)
+                    (cong rat (ℚ.·IdR _))
+                    ((cong rat (ℚ./4₊≡/2₊/2₊ δ)) ∙ sym (absᵣPos _ (snd (ℚ₊→ℝ₊ (/2₊ (/2₊ δ)))))
+                      ∙ cong absᵣ (sym (-ᵣInvol _))))
+             (isTrans≤<ᵣ _ _ _
+               (≤ᵣMonotone+ᵣ _ _ _ _
+                (≡ᵣWeaken≤ᵣ _ _ (cong rat (sym (ℚ./4₊≡/2₊/2₊ δ)))) (m-pa< k))
+               (isTrans≡<ᵣ _ _ _
+                 (+ᵣ-rat _ _ ∙ cong rat (sym ((ℚ.·DistL+ (fst δ) _ _))))
+                 (<ℚ→<ᵣ _ _
+                   ((ℚ.<-o· ([ 1 / 4 ] ℚ.+ [ 1 / 4 ])
+                     (1 ℚ.- [ 1 / 4 ]) (fst δ) (ℚ.0<ℚ₊ δ)
+                      (ℚ.decℚ<? {[ 1 / 4 ] ℚ.+ [ 1 / 4 ]}
+                         {1 ℚ.- [ 1 / 4 ]})))))))
+
+          smpl-δ : S.samplesΣ k .fst ∼[ δ ]
+               clampᵣ (P.pts' (finj k) -ᵣ rat (fst (/2₊ (/2₊ δ))))
+                      (P.pts' (fsuc k) +ᵣ rat (fst (/2₊ (/2₊ δ))))
+               (fst (S'.samplesΣ k'))
+          smpl-δ =
+            invEq (∼≃abs<ε _ _ _)
+            ((isTrans≤<ᵣ _ _ _
+              (isTrans≡≤ᵣ _ _ _
+                (cong absᵣ
+                 ((cong₂ _-ᵣ_
+                   (∈ℚintervalℙ→clampᵣ≡ (P.pts' (finj k) -ᵣ rat (fst (/2₊ (/2₊ δ))))
+                    (P.pts' (fsuc k) +ᵣ rat (fst (/2₊ (/2₊ δ))))
+                     (fst (S.samplesΣ k))
+
+                      ((isTrans≤ᵣ _ _ _
+                        (isTrans≤≡ᵣ _ _ _
+                          (≤ᵣ-o+ _ _ (P.pts' (finj k))
+                           (-ᵣ≤ᵣ _ _ (≤ℚ→≤ᵣ 0 _ (ℚ.0≤ℚ₊ (/2₊ (/2₊ δ))))))
+                          (𝐑'.+IdR' _ _ (-ᵣ-rat 0)))
+                        (S.pts'≤samples k)) ,
+                         isTrans≤ᵣ _ _ _
+                         (S.samples≤pts' k)
+                         (isTrans≡≤ᵣ _ _ _ (sym (𝐑'.+IdR' _ _ refl))
+                           (≤ᵣ-o+ _ _ (P.pts' (fsuc k))
+                           (≤ℚ→≤ᵣ 0 _ (ℚ.0≤ℚ₊ (/2₊ (/2₊ δ))))))
+                        )
+                        )
+                   refl)))
+                  (clampᵣ-dist (P.pts' (finj k) -ᵣ rat (fst (/2₊ (/2₊ δ))))
+                   (P.pts' (fsuc k) +ᵣ rat (fst (/2₊ (/2₊ δ))))
+                     _ _))
+                  (isTrans≤<ᵣ _ _ _
+                   (isTrans≡≤ᵣ _ _ _ (cong absᵣ
+                    (cong ((P.pts' (fsuc k) +ᵣ rat (fst (/2₊ (/2₊ δ)))) +ᵣ_) ( -ᵣDistr _ _) ∙ +ᵣAssoc _ _ _))
+                     (absᵣ-triangle _ _))
+                      xzxd)))
+       ruc : ∀ k →
+           absᵣ
+         ((P.pts' (fsuc k) -ᵣ P.pts' (finj k)) ·ᵣ f (S.samplesΣ k .fst) -ᵣ
+          foldlFin
+          (λ s ((t , a≤t , t≤b) , b-a) → s +ᵣ b-a ·ᵣ f t) 0
+          (λ k₁ →
+             P'.samplesΣ sa' k₁ ,
+             clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k)) (P'.pts' (fsuc k₁))
+             -ᵣ clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k)) (P'.pts' (finj k₁))))
+         ≤ᵣ
+         (fst η ·ᵣ P.pts' (fsuc k) -ᵣ fst η ·ᵣ P.pts' (finj k))
+
+       ruc k =
+         isTrans≡≤ᵣ _ _ _
+           (cong (absᵣ ∘ (_-ᵣ (foldlFin
+          (λ s ((t , a≤t , t≤b) , b-a) → s +ᵣ b-a ·ᵣ f t) 0
+          (λ k₁ →
+             P'.samplesΣ sa' k₁ ,
+             clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k)) (P'.pts' (fsuc k₁))
+             -ᵣ clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k)) (P'.pts' (finj k₁))
+             ))))
+              (cong (_·ᵣ f (S.samplesΣ k .fst))
+                (partitionClamp a b
+                  (P.pts' (finj k))
+                  (P.pts' (fsuc k))
+                   (P.pts'≤pts' k)
+                  (P.a≤pts' (finj k)) (P.pts'≤b (fsuc k)) pa'
+                  ) ∙ ·ᵣComm _ _ ∙
+                   sym (foldFin·DistL (2 ℕ.+ len pa') _ _ _
+                    (idfun _))) ∙
+                   cong absᵣ
+                    (zip-foldFin-ᵣ (2 ℕ.+ len pa')
+                    (idfun _)
+                     (λ k₁ →
+                       (samplesΣ sa' k₁ ,
+                           clampᵣ (P.pts' (finj k))
+                            (P.pts' (fsuc k)) (P'.pts' (fsuc k₁))
+                        -ᵣ clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k))
+                            (P'.pts' (finj k₁))))
+                       _ _ _
+                     0))
+              (isTrans≤≡ᵣ _ _ _
+               (foldFin+≤-abs (2 ℕ.+ len pa')
+                  _ 0 _
+                   (λ kk →  fst η ·ᵣ
+                    (clampᵣ (P.pts' (finj k)) ((P.pts' (fsuc k)))
+                     (P'.pts' (fsuc kk)) -ᵣ
+                      clampᵣ (P.pts' (finj k)) ((P.pts' (fsuc k)))
+                       (P'.pts' (finj kk)))
+                            )
+                   ((λ k₁ → k₁ ,
+                       (samplesΣ sa' k₁ ,
                           clampᵣ (P.pts' (finj k))
                            (P.pts' (fsuc k)) (P'.pts' (fsuc k₁))
-                       -ᵣ clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k))
-                           (P'.pts' (finj k₁))))
-                      _ _ _
-                    0))
-             (isTrans≤≡ᵣ _ _ _
-              (foldFin+≤-abs (2 ℕ.+ len pa')
-                 _ 0 _
-                  (λ kk →  fst η ·ᵣ
-                   (clampᵣ (P.pts' (finj k)) ((P.pts' (fsuc k)))
-                    (P'.pts' (fsuc kk)) -ᵣ
-                     clampᵣ (P.pts' (finj k)) ((P.pts' (fsuc k)))
-                      (P'.pts' (finj kk)))
-                           )
-                  ((λ k₁ → k₁ ,
-                      (samplesΣ sa' k₁ ,
-                         clampᵣ (P.pts' (finj k))
-                          (P.pts' (fsuc k)) (P'.pts' (fsuc k₁))
-                            -ᵣ clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k))
-                            (P'.pts' (finj k₁)))))
-                  (idfun _)
-                  (isTrans≡≤ᵣ _ _ _
-                     (cong absᵣ (cong (_-ᵣ 0) (𝐑'.0RightAnnihilates _)))
-                     llll)
-                (ruc' k))
-              ((foldFin·DistL' (2 ℕ.+ len pa') _ _ (idfun _) ∙
-               cong (fst η ·ᵣ_) (deltas-sum (2 ℕ.+ P'.len )
-                (clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k)) ∘ (P'.pts'))
-                 ∙ cong₂ _-ᵣ_
-                   (≤x→clampᵣ≡ (P.pts' (finj k)) (P.pts' (fsuc k)) (P'.pts' flast)
-                     (P.pts'≤pts' k) (P.pts'≤b (fsuc k)) )
-                   (x≤→clampᵣ≡ (P.pts' (finj k)) (P.pts' (fsuc k)) (P'.pts' fzero)
-                    (P.pts'≤pts' k) (P.a≤pts' (finj k))))
-               ) ∙ 𝐑'.·DistR- _ _ _) )
+                             -ᵣ clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k))
+                             (P'.pts' (finj k₁)))))
+                   (idfun _)
+                   (isTrans≡≤ᵣ _ _ _
+                      (cong absᵣ (cong (_-ᵣ 0) (𝐑'.0RightAnnihilates _)))
+                      llll)
+                 (ruc' k))
+               ((foldFin·DistL' (2 ℕ.+ len pa') _ _ (idfun _) ∙
+                cong (fst η ·ᵣ_) (deltas-sum (2 ℕ.+ P'.len )
+                 (clampᵣ (P.pts' (finj k)) (P.pts' (fsuc k)) ∘ (P'.pts'))
+                  ∙ cong₂ _-ᵣ_
+                    (≤x→clampᵣ≡ (P.pts' (finj k)) (P.pts' (fsuc k)) (P'.pts' flast)
+                      (P.pts'≤pts' k) (P.pts'≤b (fsuc k)) )
+                    (x≤→clampᵣ≡ (P.pts' (finj k)) (P.pts' (fsuc k)) (P'.pts' fzero)
+                     (P.pts'≤pts' k) (P.a≤pts' (finj k))))
+                ) ∙ 𝐑'.·DistR- _ _ _) )
 
 ∃enclosingℚInterval : ∀ a b →
                       ∃[ (A , B) ∈ (ℚ × ℚ) ]
@@ -2484,18 +1875,21 @@ module PreIntegration a b (a≤b : a ≤ᵣ b) (A B : ℚ)
   η : ℝ₊
   η = ℚ₊→ℝ₊ (/2₊ ε) ₊·ᵣ invℝ₊ σ
 
-  η'≤η : rat (fst η') ≤ᵣ fst η
-  η'≤η = isTrans≡≤ᵣ _ _ _ (rat·ᵣrat _ _)
-             (≤ᵣ-o·ᵣ _ _ _
-              (<ᵣWeaken≤ᵣ _ _ (snd (ℚ₊→ℝ₊ (/2₊ ε))))
-              (isTrans≡≤ᵣ _ _ _
-               (sym (invℝ₊-rat σ'))
-               (invEq (invℝ₊-≤-invℝ₊ _ _)
-                 ((max-monotone-≤ᵣ 1 (b -ᵣ a) (rat (B ℚ.- A))
-                   (isTrans≤≡ᵣ _ _ _
-                    (a+d≤c+b⇒a-b≤c-d b a (rat B) (rat A)
-                    (≤ᵣMonotone+ᵣ _ _ _ _
-                     b≤B A≤a)) (-ᵣ-rat₂ _ _))))  )))
+
+  opaque
+   unfolding maxᵣ
+   η'≤η : rat (fst η') ≤ᵣ fst η
+   η'≤η = isTrans≡≤ᵣ _ _ _ (rat·ᵣrat _ _)
+              (≤ᵣ-o·ᵣ _ _ _
+               (<ᵣWeaken≤ᵣ _ _ (snd (ℚ₊→ℝ₊ (/2₊ ε))))
+               (isTrans≡≤ᵣ _ _ _
+                (sym (invℝ₊-rat σ'))
+                (invEq (invℝ₊-≤-invℝ₊ _ _)
+                  ((max-monotone-≤ᵣ 1 (b -ᵣ a) (rat (B ℚ.- A))
+                    (isTrans≤≡ᵣ _ _ _
+                     (a+d≤c+b⇒a-b≤c-d b a (rat B) (rat A)
+                     (≤ᵣMonotone+ᵣ _ _ _ _
+                      b≤B A≤a)) (-ᵣ-rat₂ _ _))))  )))
 
 
  IsCauchySequence'-∫-seq : IsCauchySequence' ∫-seq

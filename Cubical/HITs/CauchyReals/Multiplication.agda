@@ -418,12 +418,13 @@ opaque
     <n⊓ : absᵣ (lim x p) <ᵣ rat [ pos (suc n⊓) / 1+ 0 ]
     <n⊓ =
      let z = <min-rr _ _ _ n< n<'
-     in subst (absᵣ (lim x p) <ᵣ_)
+     in  subst (absᵣ (lim x p) <ᵣ_)
        (cong (rat ∘ [_/ 1+ 0 ]) (
         cong₂ ℤ.min (cong (1 ℤ.+_) (ℤ.·IdR (pos n))
-          ∙ sym (ℤ.pos+ 1 n)) ((cong (1 ℤ.+_) (ℤ.·IdR (pos n'))
-          ∙ sym (ℤ.pos+ 1 n')))
-         ∙ ℤ.min-pos-pos (suc n) (suc n'))) z
+         ∙ sym (ℤ.pos+ 1 n)) (cong (1 ℤ.+_) (ℤ.·IdR (pos n'))
+          ∙ sym (ℤ.pos+ 1 n')) ∙
+           cong ℤ.sucℤ (ℤ.min-pos-pos n n'))) z
+
 
     ww : ∀ ε → absᵣ (lim x p) Σ<ᵣ
                 rat [ pos (suc n⊓) / 1+ 0 ]
@@ -475,20 +476,24 @@ opaque
                          (subst (fst δ ℚ.≤_) (ℚ.·IdL (fst θ))
                           (ℚ.≤-·o ([ pos (suc (suc n)) / 1+ (suc n⊔) ]) 1
                              (fst θ) (ℚ.0≤ℚ₊ θ)
+
                                (subst2 ℤ._≤_ (sym (ℤ.·IdR _))
-                                (ℤ.max-pos-pos (suc (suc n)) (suc (suc n'))
-                                   ∙ sym (ℤ.·IdL _))
+                                ((ℤ.max-pos-pos (suc (suc n)) (suc (suc n')))
+                                      ∙ cong pos (maxSuc ∙ cong suc maxSuc ))
                                    (ℤ.≤max {pos (suc (suc n))}
-                                      {pos (suc (suc n'))}))))
+                                      {pos (suc (suc n'))}))
+                                      ))
                          (subst (fst η ℚ.≤_) (ℚ.·IdL (fst θ))
                           ((ℚ.≤-·o ([ pos (suc (suc n')) / 1+ (suc n⊔) ]) 1
                              (fst θ) (ℚ.0≤ℚ₊ θ)
+
                               ((subst2 ℤ._≤_ (sym (ℤ.·IdR _))
-                                (ℤ.maxComm _ _
-                                  ∙ ℤ.max-pos-pos (suc (suc n)) (suc (suc n'))
-                                  ∙ sym (ℤ.·IdL _))
+                                (ℤ.max-pos-pos (suc (suc n')) (suc (suc n))
+                                  ∙ cong pos (maxComm _ _ ∙
+                                   maxSuc ∙ cong suc maxSuc))
                                    (ℤ.≤max {pos (suc (suc n'))}
-                                      {pos (suc (suc n))}))))))))
+                                      {pos (suc (suc n))})))
+                                      )))))
                     z' = ℚ.<≤Monotone+
                           0 (fst θ)
                          (fst δ ℚ.+ (fst η))  (fst θ ℚ.+ (fst θ))
@@ -546,17 +551,21 @@ opaque
         ν<n : absᵣ (x υ) <ᵣ fromNat (suc n)
         ν<n = isTrans<≤ᵣ (absᵣ (x υ)) (fromNat (suc n⊓)) (fromNat (suc n))
                  ν<n⊓ (≤ℚ→≤ᵣ _ _
+
                    (subst (λ n* → [ n* / 1+ 0 ] ℚ.≤ (fromNat (suc n)))
-                     (ℤ.min-pos-pos (suc n) (suc n'))
-                      (ℚ.≤ℤ→≤ℚ _ _ (ℤ.min≤ {pos (suc n)} {pos (suc n')})) ))
+                     (cong ℤ.sucℤ (ℤ.min-pos-pos n n'))
+                      (ℚ.≤ℤ→≤ℚ _ _ (ℤ.min≤ {pos (suc n)} {pos (suc n')})) )
+                      )
 
         ν<n' : absᵣ (x υ) <ᵣ fromNat (suc n')
         ν<n' = isTrans<≤ᵣ (absᵣ (x υ)) (fromNat (suc n⊓)) (fromNat (suc n'))
                  ν<n⊓ (≤ℚ→≤ᵣ _ _
+
                    (subst (λ n* → [ n* / 1+ 0 ] ℚ.≤ (fromNat (suc n')))
-                     (ℤ.minComm (pos (suc n')) (pos (suc n))
-                       ∙ ℤ.min-pos-pos (suc n) (suc n'))
-                      (ℚ.≤ℤ→≤ℚ _ _ (ℤ.min≤ {pos (suc n')} {pos (suc n)})) ))
+                     (cong ℤ.sucℤ (ℤ.min-pos-pos n' n) ∙
+                       cong (pos ∘ suc) (minComm _ _))
+                      (ℚ.≤ℤ→≤ℚ _ _ (ℤ.min≤ {pos (suc n')} {pos (suc n)})) )
+                      )
 
 
       ll : fst (clampedSq (suc n))
@@ -794,23 +803,24 @@ x+x≡2x x = cong₂ _+ᵣ_
     ∙ sym (·DistR+ 1 1 x)
     ∙ cong (_·ᵣ x) (+ᵣ-rat _ _)
 
-
-·ᵣMaxDistrPos : ∀ x y z → 0 ℚ.≤ z →  (maxᵣ x y) ·ᵣ (rat z) ≡ maxᵣ (x ·ᵣ rat z) (y ·ᵣ rat z)
-·ᵣMaxDistrPos x y z 0<z =
-  ≡Continuous _ _
-     (IsContinuous∘ _ _ (IsContinuous·ᵣR (rat z)) (IsContinuousMaxR y))
-     (IsContinuous∘ _ _ (IsContinuousMaxR
-       (y ·ᵣ (rat z))) (IsContinuous·ᵣR (rat z)))
-     (λ x' →
-       ≡Continuous _ _
-         (IsContinuous∘ _ _ (IsContinuous·ᵣR (rat z)) (IsContinuousMaxL (rat x')))
-         ((IsContinuous∘ _ _ (IsContinuousMaxL (rat x' ·ᵣ (rat z)))
-                                (IsContinuous·ᵣR (rat z))))
-         (λ y' → sym (rat·ᵣrat _ _)
-             ∙∙ cong rat (ℚ.·MaxDistrℚ' x' y' z 0<z) ∙∙
-              (cong₂ maxᵣ (rat·ᵣrat x' z) (rat·ᵣrat y' z)))
-         y)
-     x
+opaque
+ unfolding maxᵣ
+ ·ᵣMaxDistrPos : ∀ x y z → 0 ℚ.≤ z →  (maxᵣ x y) ·ᵣ (rat z) ≡ maxᵣ (x ·ᵣ rat z) (y ·ᵣ rat z)
+ ·ᵣMaxDistrPos x y z 0<z =
+   ≡Continuous _ _
+      (IsContinuous∘ _ _ (IsContinuous·ᵣR (rat z)) (IsContinuousMaxR y))
+      (IsContinuous∘ _ _ (IsContinuousMaxR
+        (y ·ᵣ (rat z))) (IsContinuous·ᵣR (rat z)))
+      (λ x' →
+        ≡Continuous _ _
+          (IsContinuous∘ _ _ (IsContinuous·ᵣR (rat z)) (IsContinuousMaxL (rat x')))
+          ((IsContinuous∘ _ _ (IsContinuousMaxL (rat x' ·ᵣ (rat z)))
+                                 (IsContinuous·ᵣR (rat z))))
+          (λ y' → sym (rat·ᵣrat _ _)
+              ∙∙ cong rat (ℚ.·MaxDistrℚ' x' y' z 0<z) ∙∙
+               (cong₂ maxᵣ (rat·ᵣrat x' z) (rat·ᵣrat y' z)))
+          y)
+      x
 
 
 

@@ -64,8 +64,11 @@ ointervalℙ⊆-max n m x (≤x , x≤) =
     (≤ℚ→≤ᵣ _ _ (ℚ.≤ℤ→≤ℚ _ _ (ℤ.ℕ≥→negsuc-≤-negsuc _ _ ℕ.left-≤-max)))
     ≤x)
   , isTrans<≤ᵣ _ _ _ x≤
-       (≤ℚ→≤ᵣ _ _ (ℚ.≤ℤ→≤ℚ _ _ (ℤ.ℕ≤→pos-≤-pos _ _
-         (ℕ.left-≤-max {suc n} {suc m}))))
+       (≤ℚ→≤ᵣ _ _
+         (ℚ.≤ℤ→≤ℚ _ _
+          (ℤ.ℕ≤→pos-≤-pos _ _ (ℕ.≤-k+ {_} {_} {1} $ ℕ.left-≤-max {n} {m})))
+
+         )
 
 
 ointervalℙ⊆-max' : ∀ n m →
@@ -81,7 +84,7 @@ ointervalℙ⊆-max' n m x (≤x , x≤) =
     ≤x)
   , isTrans<≤ᵣ _ _ _ x≤
        (≤ℚ→≤ᵣ _ _ (ℚ.≤ℤ→≤ℚ _ _ (ℤ.ℕ≤→pos-≤-pos _ _
-         (ℕ.right-≤-max {suc m} {suc n}))))
+         (ℕ.≤-k+ {_} {_} {1} $ ℕ.right-≤-max {m} {n}))))
 
 
 module RestrℝIso (a b fa fb : ℝ)
@@ -302,24 +305,31 @@ module _ (f : ℚ → ℝ) (B : ℕ → ℚ₊)  where
 
   Seq⊆→Power : Seq⊆→ ℝ Seq⊆-abs<N
   Seq⊆→Power .Seq⊆→.fun x n _ = fst (fst (flₙ n)) x
-  Seq⊆→Power .Seq⊆→.fun⊆ x n m x∈@(<x , x<) x'∈@(<x' , x'<) n<m =
-    (cong (fst (fst (flₙ n))) (∈ℚintervalℙ→clampᵣ≡ _ _ _
-      (<ᵣWeaken≤ᵣ _ _ <x , <ᵣWeaken≤ᵣ _ _ x<)) ∙∙
-    ≡Continuous _ _
-       (IsContinuous∘ _ _ (snd (flₙ n))
-         (IsContinuousClamp (fromNeg (suc n)) (fromNat (suc n)) ))
-       (IsContinuous∘ _ _ (snd (flₙ m))
-         (IsContinuousClamp (fromNeg (suc n)) (fromNat (suc n)) ))
-        (λ x →
-         cong f
-          (sym (clamp-contained-agree _ _ _ _ _
-          (ℚ.≤ℤ→≤ℚ _ _ (ℤ.ℕ≥→negsuc-≤-negsuc _ _ (ℕ.<-weaken n<m)))
-           (ℚ.≤ℤ→≤ℚ _ _ (ℤ.ℕ≤→pos-≤-pos _ _ (ℕ.≤-suc n<m)))
-           (clam∈ℚintervalℙ _ _ (ℚ.≤ℤ→≤ℚ _ _ ℤ.negsuc<pos) _))))
-             x
-    ∙∙ cong (fst (fst (flₙ m))) (
-       sym (∈ℚintervalℙ→clampᵣ≡ _ _ _
-      (<ᵣWeaken≤ᵣ _ _ <x , <ᵣWeaken≤ᵣ _ _ x<))))
+  Seq⊆→Power .Seq⊆→.fun⊆ x n m x∈@(<x , x<) x'∈@(<x' , x'<) n<m = ww
+   where
+
+   opaque
+    unfolding maxᵣ
+
+    ww : fst (fst (flₙ n)) x ≡ fst (fst (flₙ m)) x
+    ww =
+      (cong (fst (fst (flₙ n))) (∈ℚintervalℙ→clampᵣ≡ _ _ _
+        (<ᵣWeaken≤ᵣ _ _ <x , <ᵣWeaken≤ᵣ _ _ x<)) ∙∙
+      ≡Continuous _ _
+         (IsContinuous∘ _ _ (snd (flₙ n))
+           (IsContinuousClamp (fromNeg (suc n)) (fromNat (suc n)) ))
+         (IsContinuous∘ _ _ (snd (flₙ m))
+           (IsContinuousClamp (fromNeg (suc n)) (fromNat (suc n)) ))
+          (λ x →
+           cong f
+            (sym (clamp-contained-agree _ _ _ _ _
+            (ℚ.≤ℤ→≤ℚ _ _ (ℤ.ℕ≥→negsuc-≤-negsuc _ _ (ℕ.<-weaken n<m)))
+             (ℚ.≤ℤ→≤ℚ _ _ (ℤ.ℕ≤→pos-≤-pos _ _ (ℕ.≤-suc n<m)))
+             (clam∈ℚintervalℙ _ _ (ℚ.≤ℤ→≤ℚ _ _ ℤ.negsuc<pos) _))))
+               x
+      ∙∙ cong (fst (fst (flₙ m))) (
+         sym (∈ℚintervalℙ→clampᵣ≡ _ _ _
+        (<ᵣWeaken≤ᵣ _ _ <x , <ᵣWeaken≤ᵣ _ _ x<))))
 
 
   open Seq⊆→.FromIntersection Seq⊆→Power
@@ -327,6 +337,7 @@ module _ (f : ℚ → ℝ) (B : ℕ → ℚ₊)  where
 
   𝒇 : ℝ → ℝ
   𝒇 x = ∩$ x _
+
 
 
 
@@ -434,7 +445,7 @@ module _ (f : ℚ → ℝ) (B : ℕ → ℚ₊)  where
                 (rat [ pos (suc n) / 1+ 0 ]) v
 
          opaque
-          unfolding _+ᵣ_
+          unfolding _+ᵣ_ maxᵣ
           bil-clamp : absᵣ (u +ᵣ -ᵣ v) ≤ᵣ
                        fst (ℚ₊→ℝ₊ (K n)) ·ᵣ
                        absᵣ (fst (fst (flₙ n)) u +ᵣ -ᵣ fst (fst (flₙ n)) v)
@@ -513,10 +524,6 @@ boundedLipsch-coh f B B' bl bl' =
                     λ r →
                       BoundedLipsch.𝒇-rat f B bl r ∙
                         sym (BoundedLipsch.𝒇-rat f B' bl' r)
-
-
-_₊^ⁿ_ : ℝ₊ → ℕ → ℝ₊
-(x , 0<x) ₊^ⁿ n  = (x ^ⁿ n) , 0<x^ⁿ x n 0<x
 
 
 IsContinuous₊^ⁿ : ∀ n → IsContinuousWithPred
@@ -753,6 +760,15 @@ _₀₊+ᵣ_ : ℝ₊ → ℝ₀₊ → ℝ₊
 (x , 0<x) ₀₊+ᵣ (y , 0≤y) = x +ᵣ y ,
  (isTrans≡<ᵣ _ _ _ (sym (+ᵣ-rat _ _)) $ <≤ᵣMonotone+ᵣ _ _ _ _ 0<x 0≤y)
 
+_₀₊+₀₊ᵣ_ : ℝ₀₊ → ℝ₀₊ → ℝ₀₊
+(x , 0≤x) ₀₊+₀₊ᵣ (y , 0≤y) = x +ᵣ y ,
+ (isTrans≡≤ᵣ _ _ _ (sym (+ᵣ-rat _ _)) $ ≤ᵣMonotone+ᵣ _ _ _ _ 0≤x 0≤y)
+
+_₀₊·₀₊ᵣ_ : ℝ₀₊ → ℝ₀₊ → ℝ₀₊
+(x , 0≤x) ₀₊·₀₊ᵣ (y , 0≤y) = x ·ᵣ y ,
+ (isTrans≡≤ᵣ _ _ _ (rat·ᵣrat 0 0)
+   $ ≤ᵣ₊Monotone·ᵣ _ _ _ _ 0≤x (≤ᵣ-refl 0) 0≤x 0≤y)
+
 
 
 opaque
@@ -864,7 +880,7 @@ opaque
      (+IdR _)
 
 opaque
- unfolding _+ᵣ_
+ unfolding _+ᵣ_ minᵣ
  nth-root-slope-incr : ∀ n (x : ℚ₊) (Δ : ℚ₊)
     → fst (root (1+ n) ((ℚ₊→ℝ₊ x) ₊+ᵣ (ℚ₊→ℝ₊ Δ)))
        -ᵣ fst (root (1+ n) (ℚ₊→ℝ₊ x))

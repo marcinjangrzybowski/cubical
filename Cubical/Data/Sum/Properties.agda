@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.Data.Sum.Properties where
 
 open import Cubical.Foundations.Prelude
@@ -372,3 +371,15 @@ rec-map : (f : C → F) (g : D → F) (h : A → C) (k : B → D)
         → ⊎.rec f g (⊎.map h k x) ≡ ⊎.rec (f ∘ h) (g ∘ k) x
 rec-map f g h k (inl a) = refl
 rec-map f g h k (inr b) = refl
+
+Lift⊎Iso : ∀ (ℓ : Level)
+  → Iso (Lift {j = ℓ} A ⊎ Lift {j = ℓ} B)
+         (Lift {j = ℓ} (A ⊎ B))
+fun (Lift⊎Iso ℓD) (inl x) = liftFun inl x
+fun (Lift⊎Iso ℓD) (inr x) = liftFun inr x
+inv (Lift⊎Iso ℓD) (lift (inl x)) = inl (lift x)
+inv (Lift⊎Iso ℓD) (lift (inr x)) = inr (lift x)
+rightInv (Lift⊎Iso ℓD) (lift (inl x)) = refl
+rightInv (Lift⊎Iso ℓD) (lift (inr x)) = refl
+leftInv (Lift⊎Iso ℓD) (inl x) = refl
+leftInv (Lift⊎Iso ℓD) (inr x) = refl

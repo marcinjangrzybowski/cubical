@@ -1,6 +1,5 @@
 -- This is the preferred version of the integers in the library. Other
 -- versions can be found in the MoreInts directory.
-{-# OPTIONS --safe #-}
 module Cubical.Data.Int.Base where
 
 open import Cubical.Foundations.Prelude
@@ -42,6 +41,11 @@ isOdd (negsuc n) = isEvenℕ n
 abs : ℤ → ℕ
 abs (pos n) = n
 abs (negsuc n) = suc n
+
+sign : ℤ → ℤ
+sign (pos zero) = pos zero
+sign (pos (suc n)) = pos (suc zero)
+sign (negsuc n) = negsuc zero
 
 _ℕ-_ : ℕ → ℕ → ℤ
 a ℕ- 0 = pos a

@@ -41,7 +41,8 @@ open import Cubical.HITs.CauchyReals.Lems
 open import Cubical.HITs.CauchyReals.Closeness
 open import Cubical.HITs.CauchyReals.Lipschitz
 
-
+open import Cubical.Relation.Binary.Order.Poset
+open import Cubical.Relation.Binary.Order.Proset
 
 sumR : NonExpanding₂ ℚ._+_
 sumR .NonExpanding₂.cL q r s =
@@ -62,6 +63,10 @@ opaque
  +ᵣ-∼ : ∀ u v r ε → u ∼[ ε ] v → (u +ᵣ r) ∼[ ε ] (v +ᵣ r)
  +ᵣ-∼ u v r =
    NonExpanding₂.go∼L sumR r u v
+
+ +ᵣ-∼' : ∀ u v r ε → u ∼[ ε ] v → (r +ᵣ u) ∼[ ε ] (r +ᵣ v)
+ +ᵣ-∼' u v r =
+   NonExpanding₂.go∼R sumR r u v
 
  +ᵣ-rat : ∀ p q → rat p +ᵣ rat q ≡ rat (p ℚ.+ q)
  +ᵣ-rat p q = refl
@@ -143,14 +148,43 @@ maxR = w
         (ℚ.maxComm r q) (ℚ.maxComm s q)
          (w' r s q)
 
-minᵣ = NonExpanding₂.go minR
-maxᵣ = NonExpanding₂.go maxR
+opaque
+ minᵣ : ℝ → ℝ → ℝ
+ minᵣ = NonExpanding₂.go minR
+
+ maxᵣ : ℝ → ℝ → ℝ
+ maxᵣ = NonExpanding₂.go maxR
+
+ minᵣ-rat : ∀ a b → minᵣ (rat a) (rat b) ≡ rat (ℚ.min a b)
+ minᵣ-rat _ _ = refl
+
+ maxᵣ-rat : ∀ a b → maxᵣ (rat a) (rat b) ≡ rat (ℚ.max a b)
+ maxᵣ-rat _ _ = refl
+
+
+
+ maxᵣComm : ∀ x y → maxᵣ x y ≡ maxᵣ y x
+ maxᵣComm x y =
+   nonExpanding₂Ext ℚ.max (flip ℚ.max)
+     maxR (NonExpanding₂-flip ℚ.max maxR) ℚ.maxComm x y ∙
+    (NonExpanding₂-flip-go ℚ.max maxR
+      (NonExpanding₂-flip ℚ.max maxR) x y )
+
+ minᵣComm : ∀ x y → minᵣ x y ≡ minᵣ y x
+ minᵣComm x y =
+   nonExpanding₂Ext ℚ.min (flip ℚ.min)
+     minR (NonExpanding₂-flip ℚ.min minR) ℚ.minComm x y ∙
+    (NonExpanding₂-flip-go ℚ.min minR
+      (NonExpanding₂-flip ℚ.min minR) x y )
+
 
 clampᵣ : ℝ → ℝ → ℝ → ℝ
 clampᵣ d u x = minᵣ (maxᵣ d x) u
 
-clampᵣ-rat : ∀ a b x → clampᵣ (rat a) (rat b) (rat x) ≡ rat (ℚ.clamp a b x)
-clampᵣ-rat a b x = refl
+opaque
+ unfolding maxᵣ minᵣ
+ clampᵣ-rat : ∀ a b x → clampᵣ (rat a) (rat b) (rat x) ≡ rat (ℚ.clamp a b x)
+ clampᵣ-rat a b x = refl
 
 Lipschitz-ℝ→ℝ-1→NonExpanding : ∀ f
   → Lipschitz-ℝ→ℝ 1 f → ⟨ NonExpandingₚ f ⟩
@@ -158,28 +192,19 @@ Lipschitz-ℝ→ℝ-1→NonExpanding f x _ _ _ =
   subst∼ (ℚ.·IdL _) ∘S x _ _ _
 
 
-maxᵣComm : ∀ x y → NonExpanding₂.go maxR x y ≡ NonExpanding₂.go maxR y x
-maxᵣComm x y =
-  nonExpanding₂Ext ℚ.max (flip ℚ.max)
-    maxR (NonExpanding₂-flip ℚ.max maxR) ℚ.maxComm x y ∙
-   (NonExpanding₂-flip-go ℚ.max maxR
-     (NonExpanding₂-flip ℚ.max maxR) x y )
-
-minᵣComm : ∀ x y → NonExpanding₂.go minR x y ≡ NonExpanding₂.go minR y x
-minᵣComm x y =
-  nonExpanding₂Ext ℚ.min (flip ℚ.min)
-    minR (NonExpanding₂-flip ℚ.min minR) ℚ.minComm x y ∙
-   (NonExpanding₂-flip-go ℚ.min minR
-     (NonExpanding₂-flip ℚ.min minR) x y )
-
+opaque
+ unfolding maxᵣ minᵣ
+ clamp-limΣ : ∀ d u x y →
+          Σ _ (λ y' →
+           clampᵣ d u (lim x y) ≡ lim (λ ε → clampᵣ d u (x ε)) y')
+ clamp-limΣ d u x y = _ , cong (flip minᵣ u) (maxᵣComm _ _)
+   ∙ congLim' _ _ _ λ _ → cong (flip minᵣ u) (maxᵣComm _ _)
 
 
 clamp-lim : ∀ d u x y →
-         clampᵣ d u (lim x y) ≡ lim (λ ε → clampᵣ d u (x ε)) _
-clamp-lim d u x y = cong (flip minᵣ u) (maxᵣComm _ _)
-  ∙ congLim' _ _ _ λ _ → cong (flip minᵣ u) (maxᵣComm _ _)
 
-
+           clampᵣ d u (lim x y) ≡ lim (λ ε → clampᵣ d u (x ε)) _
+clamp-lim d u x y = snd (clamp-limΣ d u x y)
 
 inj-rat : ∀ q r → rat q ≡ rat r → q ≡ r
 inj-rat q r x with (ℚ.discreteℚ q r)
@@ -193,38 +218,39 @@ inj-rat q r x with (ℚ.discreteℚ q r)
           zz zz'))
 
 
+opaque
+ unfolding maxᵣ minᵣ
+ maxᵣIdem : ∀ x → maxᵣ x x ≡ x
+ maxᵣIdem = Elimℝ-Prop.go w
+  where
+  w : Elimℝ-Prop (λ z → maxᵣ z z ≡ z)
+  w .Elimℝ-Prop.ratA = cong rat ∘ ℚ.maxIdem
+  w .Elimℝ-Prop.limA x p x₁ =
+    snd (NonExpanding₂.β-lim-lim/2 maxR x p x p)
+     ∙ eqℝ _ _
+        λ ε → lim-lim _ _ _ (/2₊ ε)
+                  (/2₊ (/2₊ ε)) _ _
+                    (subst ℚ.0<_ (cong₂ ℚ._-_
+                             (ℚ.·IdR (fst ε))
+                             (cong (fst ε ℚ.·_) ℚ.decℚ? ∙∙
+                                ℚ.·DistL+ (fst ε) _ _  ∙∙
+                                 cong ((fst (/2₊ ε) ℚ.+_))
+                                   (ℚ.·Assoc (fst ε) ℚ.[ 1 / 2 ]
+                                      ℚ.[ 1 / 2 ])))
+                      (snd (ℚ.<→ℚ₊ ((fst ε) ℚ.· (ℚ.[ 3 / 4 ]))
+                          (fst ε ℚ.· 1)
+                        (ℚ.<-o· _ _ (fst ε)
+                          (ℚ.0<ℚ₊ ε) ℚ.decℚ<?))))
+                   (invEq (∼≃≡  _ _ ) (x₁ (/2₊ (/2₊ ε))) _)
 
-maxᵣIdem : ∀ x → maxᵣ x x ≡ x
-maxᵣIdem = Elimℝ-Prop.go w
- where
- w : Elimℝ-Prop (λ z → maxᵣ z z ≡ z)
- w .Elimℝ-Prop.ratA = cong rat ∘ ℚ.maxIdem
- w .Elimℝ-Prop.limA x p x₁ =
-   snd (NonExpanding₂.β-lim-lim/2 maxR x p x p)
-    ∙ eqℝ _ _
-       λ ε → lim-lim _ _ _ (/2₊ ε)
-                 (/2₊ (/2₊ ε)) _ _
-                   (subst ℚ.0<_ (cong₂ ℚ._-_
-                            (ℚ.·IdR (fst ε))
-                            (cong (fst ε ℚ.·_) ℚ.decℚ? ∙∙
-                               ℚ.·DistL+ (fst ε) _ _  ∙∙
-                                cong ((fst (/2₊ ε) ℚ.+_))
-                                  (ℚ.·Assoc (fst ε) ℚ.[ 1 / 2 ]
-                                     ℚ.[ 1 / 2 ])))
-                     (snd (ℚ.<→ℚ₊ ((fst ε) ℚ.· (ℚ.[ 3 / 4 ]))
-                         (fst ε ℚ.· 1)
-                       (ℚ.<-o· _ _ (fst ε)
-                         (ℚ.0<ℚ₊ ε) ℚ.decℚ<?))))
-                  (invEq (∼≃≡  _ _ ) (x₁ (/2₊ (/2₊ ε))) _)
-
- w .Elimℝ-Prop.isPropA _ = isSetℝ _ _
+  w .Elimℝ-Prop.isPropA _ = isSetℝ _ _
 
 infix 4 _≤ᵣ_ _<ᵣ_
 
 open ℚ.HLP
 
 opaque
-
+ unfolding maxᵣ minᵣ
  _≤ᵣ_ : ℝ → ℝ → Type
  u ≤ᵣ v = maxᵣ u v ≡ v
 
@@ -378,6 +404,8 @@ opaque
             r<q = ℚ.isTrans<≤ _ _ _ y' (≤ᵣ→≤ℚ _ _ (isTrans≤ᵣ _ _ _ y'' x))
         in ℚ.isAsym< _ _ q<r r<q
 
+ isAntisym≤ᵣ : BinaryRelation.isAntisym _≤ᵣ_
+ isAntisym≤ᵣ a b a≤b b≤a = sym b≤a ∙∙ maxᵣComm _ _ ∙∙ a≤b
 
  -ᵣR : Σ (ℝ → ℝ) (Lipschitz-ℝ→ℝ (1 , tt))
  -ᵣR = fromLipschitz (1 , _)
@@ -754,10 +782,18 @@ intervalℙ a b x = ((a ≤ᵣ x) × (x ≤ᵣ b)) ,
   isProp× (isProp≤ᵣ _ _ )  (isProp≤ᵣ _ _ )
 
 
+pointIntervalℙ : ∀ x y → x ≡ y → isContr (Σ _ (_∈ intervalℙ x y))
+pointIntervalℙ x y x≡y = (x , ≤ᵣ-refl x , ≡ᵣWeaken≤ᵣ _ _ x≡y) ,
+  λ (z , x≤z , z≤y) →
+   Σ≡Prop (∈-isProp (intervalℙ x y))
+    (isAntisym≤ᵣ x z x≤z (isTrans≤≡ᵣ _ _ _ z≤y (sym x≡y)))
 
 ointervalℙ : ℝ → ℝ → ℙ ℝ
 ointervalℙ a b x = ((a <ᵣ x) × (x <ᵣ b)) ,
   isProp× (isProp<ᵣ _ _ )  (isProp<ᵣ _ _ )
+
+ointervalℙ⊆intervalℙ : ∀ a b → ointervalℙ a b ⊆ intervalℙ a b
+ointervalℙ⊆intervalℙ a b x (<x  , x<) = <ᵣWeaken≤ᵣ _ _ <x , <ᵣWeaken≤ᵣ _ _ x<
 
 
 pred< : ℝ → ℙ ℝ
@@ -777,3 +813,23 @@ pred≤< a b x = ((a ≤ᵣ x) × (x <ᵣ b)) , isProp× (isProp≤ᵣ _ _) (isP
 
 pred<≤ : ℝ → ℝ → ℙ ℝ
 pred<≤ a b x = ((a <ᵣ x) × (x ≤ᵣ b)) , isProp× (isProp<ᵣ _ _) (isProp≤ᵣ _ _)
+
+
+
+isPosetℝ : IsPoset _≤ᵣ_
+isPosetℝ .IsPoset.is-set = isSetℝ
+isPosetℝ .IsPoset.is-prop-valued = isProp≤ᵣ
+isPosetℝ .IsPoset.is-refl = ≤ᵣ-refl
+isPosetℝ .IsPoset.is-trans = isTrans≤ᵣ
+isPosetℝ .IsPoset.is-antisym = isAntisym≤ᵣ
+
+
+
+supremumℙ : ∀ (P : ℙ ℝ) → (f : ∀ x → x ∈ P → ℝ) → Type
+supremumℙ P f =
+  Σ _ (isSupremum (isPoset→isProset isPosetℝ) (uncurry f))
+
+infimumℙ : ∀ (P : ℙ ℝ) → (f : ∀ x → x ∈ P → ℝ) → Type
+infimumℙ P f =
+  Σ _ (isInfimum (isPoset→isProset isPosetℝ) (uncurry f))
+

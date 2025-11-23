@@ -392,20 +392,21 @@ intervalℙ→dist< a b x y (a≤x , x≤b) (a≤y , y≤b) =
    (ℚ.Dichotomyℚ 1 (fst x))
 
 
-
-1≤x⊔1/x : ∀ x → 1 ≤ᵣ maxᵣ (fst x) (fst (invℝ₊ x))
-1≤x⊔1/x =
-  uncurry (<→≤ContPos'pred {0}
-    (AsContinuousWithPred _ _
-      (IsContinuousConst _))
-       (contDiagNE₂WP maxR _ _ _
-         (AsContinuousWithPred _ _
-           IsContinuousId) (snd invℝ'))
-             λ u 0<u →
-               subst (1 ≤ᵣ_) (cong (maxᵣ (rat u))
-                 (sym (invℝ'-rat _ _ _)))
-                 (≤ℚ→≤ᵣ _ _ (
-                  (ℚ1≤x⊔1/x (u , ℚ.<→0< u (<ᵣ→<ℚ _ _ 0<u))))))
+opaque
+ unfolding maxᵣ
+ 1≤x⊔1/x : ∀ x → 1 ≤ᵣ maxᵣ (fst x) (fst (invℝ₊ x))
+ 1≤x⊔1/x =
+   uncurry (<→≤ContPos'pred {0}
+     (AsContinuousWithPred _ _
+       (IsContinuousConst _))
+        (contDiagNE₂WP maxR _ _ _
+          (AsContinuousWithPred _ _
+            IsContinuousId) (snd invℝ'))
+              λ u 0<u →
+                subst (1 ≤ᵣ_) (cong (maxᵣ (rat u))
+                  (sym (invℝ'-rat _ _ _)))
+                  (≤ℚ→≤ᵣ _ _ (
+                   (ℚ1≤x⊔1/x (u , ℚ.<→0< u (<ᵣ→<ℚ _ _ 0<u))))))
 
 
 0<pos[sucN]² : ∀ n → 0 ℤ.< (ℤ.pos (suc n)) ℤ.· (ℤ.pos (suc n))
@@ -669,19 +670,20 @@ monotone^ℚ' q q' q'' q≤q' q'≤q'' u 0<u =
    (ℚ.Dichotomyℚ 1 u)
 
 
-
-monotone^ℚ : ∀ q q' q''
- → q ℚ.≤ q'
- → q' ℚ.≤ q''
- → ∀ z
- → minᵣ (fst (z ^ℚ q)) (fst (z ^ℚ q'')) ≤ᵣ fst (z ^ℚ q')
-monotone^ℚ q q' q'' q≤q' q'≤q'' =
-  uncurry (<→≤ContPos'pred {0}
-    (contDiagNE₂WP minR _ _ _
-      (IsContinuous^ℚ q)
-      (IsContinuous^ℚ q''))
-    (IsContinuous^ℚ q')
-    λ u 0<u → monotone^ℚ' q q' q'' q≤q' q'≤q'' u 0<u)
+opaque
+ unfolding minᵣ
+ monotone^ℚ : ∀ q q' q''
+  → q ℚ.≤ q'
+  → q' ℚ.≤ q''
+  → ∀ z
+  → minᵣ (fst (z ^ℚ q)) (fst (z ^ℚ q'')) ≤ᵣ fst (z ^ℚ q')
+ monotone^ℚ q q' q'' q≤q' q'≤q'' =
+   uncurry (<→≤ContPos'pred {0}
+     (contDiagNE₂WP minR _ _ _
+       (IsContinuous^ℚ q)
+       (IsContinuous^ℚ q''))
+     (IsContinuous^ℚ q')
+     λ u 0<u → monotone^ℚ' q q' q'' q≤q' q'≤q'' u 0<u)
 
 -- module BDL (z : ℝ₊) (Z : ℕ)
 --           (z≤Z : fst z ≤ᵣ fromNat (suc (suc Z)))
@@ -766,30 +768,31 @@ isNondecrasingℙᵣ : (P : ℙ ℝ) → (∀ (x : ℝ) → x ∈ P → ℝ) →
 isNondecrasingℙᵣ P f =
  ∀ (x : ℝ) (x∈ : x ∈ P) (y : ℝ) (y∈ : y ∈ P) → x ≤ᵣ y → f x x∈ ≤ᵣ f y y∈
 
-
-∈interval→≤ContPos'pred : {x₀ x₁ : ℚ} → (x₀ ℚ.≤ x₁)
-         → {f₀ f₁ : ∀ x → x ∈ intervalℙ (rat x₀) (rat x₁)   → ℝ}
-         → IsContinuousWithPred (intervalℙ (rat x₀) (rat x₁)) f₀
-         → IsContinuousWithPred (intervalℙ (rat x₀) (rat x₁)) f₁
-         → (∀ u x₀<u<x₁ → f₀ (rat u) x₀<u<x₁
-                    ≤ᵣ f₁ (rat u) x₀<u<x₁ )
-             → ∀ x x₀<x<x₁ → f₀ x x₀<x<x₁ ≤ᵣ f₁ x x₀<x<x₁
-∈interval→≤ContPos'pred {x₀} {x₁} x₀≤x₁ {f₀} {f₁} f₀C f₁C X x (≤x , x≤) =
-  subst (λ (u , u∈) → f₀ u u∈ ≤ᵣ f₁ u u∈)
-   (Σ≡Prop (∈-isProp ((intervalℙ (rat x₀) (rat x₁))))
-     (sym (∈ℚintervalℙ→clampᵣ≡ _ _ _ (≤x , x≤))))
-   $ ≤Cont
-     {λ x → f₀ (clampᵣ (rat x₀) (rat x₁) x)
-       (clampᵣ∈ℚintervalℙ _ _ (≤ℚ→≤ᵣ _ _ x₀≤x₁) _)}
-     {λ x → f₁ (clampᵣ (rat x₀) (rat x₁) x)
-      ((clampᵣ∈ℚintervalℙ _ _ (≤ℚ→≤ᵣ _ _ x₀≤x₁) _))}
-     (IsContinuousWithPred∘IsContinuous _ _ _
-         _ f₀C (IsContinuousClamp (rat x₀) (rat x₁)))
-     (IsContinuousWithPred∘IsContinuous _ _ _
-         _ f₁C (IsContinuousClamp (rat x₀) (rat x₁)))
-     (λ u →
-        X (ℚ.clamp x₀ x₁ u) (clampᵣ∈ℚintervalℙ (rat x₀) (rat x₁) (≤ℚ→≤ᵣ x₀ x₁ x₀≤x₁) (rat u)))
-     x
+opaque
+ unfolding minᵣ maxᵣ
+ ∈interval→≤ContPos'pred : {x₀ x₁ : ℚ} → (x₀ ℚ.≤ x₁)
+          → {f₀ f₁ : ∀ x → x ∈ intervalℙ (rat x₀) (rat x₁)   → ℝ}
+          → IsContinuousWithPred (intervalℙ (rat x₀) (rat x₁)) f₀
+          → IsContinuousWithPred (intervalℙ (rat x₀) (rat x₁)) f₁
+          → (∀ u x₀<u<x₁ → f₀ (rat u) x₀<u<x₁
+                     ≤ᵣ f₁ (rat u) x₀<u<x₁ )
+              → ∀ x x₀<x<x₁ → f₀ x x₀<x<x₁ ≤ᵣ f₁ x x₀<x<x₁
+ ∈interval→≤ContPos'pred {x₀} {x₁} x₀≤x₁ {f₀} {f₁} f₀C f₁C X x (≤x , x≤) =
+   subst (λ (u , u∈) → f₀ u u∈ ≤ᵣ f₁ u u∈)
+    (Σ≡Prop (∈-isProp ((intervalℙ (rat x₀) (rat x₁))))
+      (sym (∈ℚintervalℙ→clampᵣ≡ _ _ _ (≤x , x≤))))
+    $ ≤Cont
+      {λ x → f₀ (clampᵣ (rat x₀) (rat x₁) x)
+        (clampᵣ∈ℚintervalℙ _ _ (≤ℚ→≤ᵣ _ _ x₀≤x₁) _)}
+      {λ x → f₁ (clampᵣ (rat x₀) (rat x₁) x)
+       ((clampᵣ∈ℚintervalℙ _ _ (≤ℚ→≤ᵣ _ _ x₀≤x₁) _))}
+      (IsContinuousWithPred∘IsContinuous _ _ _
+          _ f₀C (IsContinuousClamp (rat x₀) (rat x₁)))
+      (IsContinuousWithPred∘IsContinuous _ _ _
+          _ f₁C (IsContinuousClamp (rat x₀) (rat x₁)))
+      (λ u →
+         X (ℚ.clamp x₀ x₁ u) (clampᵣ∈ℚintervalℙ (rat x₀) (rat x₁) (≤ℚ→≤ᵣ x₀ x₁ x₀≤x₁) (rat u)))
+      x
 
 module BDL (z : ℝ₊) (Z : ℕ)
           (z≤Z : fst z ≤ᵣ fromNat (suc (suc Z)))
@@ -1016,82 +1019,85 @@ module BDL (z : ℝ₊) (Z : ℕ)
      (sym (𝒇-rat q'))
      (monotone^ℚ q q' q'' q≤q' q'≤q'' _)
 
-
- 0<𝒇 : ∀ x → 0 <ᵣ 𝒇 x
- 0<𝒇 x = PT.rec (isProp<ᵣ _ _)
-  (λ ((q , q') , q'-q<1 , q<x , x<q') →
-    let q⊓q' = (minᵣ₊ (z ^ℚ q) (z ^ℚ q'))
-    in PT.rec (isProp<ᵣ _ _)
-       (λ (ε , 0<ε , ε<q⊓q') →
-         PT.rec (isProp<ᵣ _ _)
-         (λ (δ , X) →
+ opaque
+  unfolding minᵣ maxᵣ
+  0<𝒇 : ∀ x → 0 <ᵣ 𝒇 x
+  0<𝒇 x = PT.rec (isProp<ᵣ _ _)
+   (λ ((q , q') , q'-q<1 , q<x , x<q') →
+     let q⊓q' = (minᵣ₊ (z ^ℚ q) (z ^ℚ q'))
+     in PT.rec (isProp<ᵣ _ _)
+        (λ (ε , 0<ε , ε<q⊓q') →
           PT.rec (isProp<ᵣ _ _)
-            (λ (r , r-x≤δ , x≤r) →
-               let r' = ℚ.clamp q q' r
-                   r'-x≤δ = isTrans≤ᵣ _ _ _
-                             (≤ᵣ-+o _ _ (-ᵣ x)
-                               (≤ℚ→≤ᵣ _ _
-                            (ℚ.clamped≤ q q' r
-                              (ℚ.<Weaken≤ _ _
-                                (<ᵣ→<ℚ _ _ (isTrans<≤ᵣ _ _ _ q<x x≤r))))) ) r-x≤δ
-                   x≤r' = ≤min-lem _ (rat (ℚ.max q r)) (rat q')
-                            (isTrans≤ᵣ _ _ _ x≤r
-                             (≤ℚ→≤ᵣ _ _ (ℚ.≤max' q r)))
-                            (<ᵣWeaken≤ᵣ _ _ x<q')
-                   |fx-fr|<ε = fst (∼≃abs<ε _ _ _)
-                       (sym∼ _ _ _ (X (rat r') (sym∼ _ _ _
-                         ((invEq (∼≃abs<ε _ _ _)
-                        (isTrans≡<ᵣ _ _ _
-                          (absᵣNonNeg _ (x≤y→0≤y-x _ _ x≤r'))
-                           (isTrans≤<ᵣ _ _ _
-                               r'-x≤δ (<ℚ→<ᵣ _ _ (x/2<x δ))))))) ))
-                   zzz =
-                        mid-𝒇 q r' q'
-                         (≤ᵣ→≤ℚ _ _ (isTrans≤ᵣ _ _ _
-                          (<ᵣWeaken≤ᵣ _ _ q<x) x≤r'))
-                         (ℚ.clamp≤ q q' r)
-                   zzz' = isTrans<≤ᵣ _ _ _
-                            (isTrans<≡ᵣ _ _ _ ε<q⊓q'
-                              (cong₂ minᵣ
-                                (sym (𝒇-rat _)) (sym (𝒇-rat _))))
-                             zzz
-               in isTrans≡<ᵣ _ _ _ (sym (CRℝ.+InvR _)) (a-b<c⇒a-c<b _ _ _
-                     (isTrans≤<ᵣ _ _ _ (≤absᵣ _)
-                    (isTrans<ᵣ _ _ _ |fx-fr|<ε zzz')))
-              ) (∃rationalApprox≤ x (/2₊ δ)))
+          (λ (δ , X) →
+           PT.rec (isProp<ᵣ _ _)
+             (λ (r , r-x≤δ , x≤r) →
+                let r' = ℚ.clamp q q' r
+                    r'-x≤δ = isTrans≤ᵣ _ _ _
+                              (≤ᵣ-+o _ _ (-ᵣ x)
+                                (≤ℚ→≤ᵣ _ _
+                             (ℚ.clamped≤ q q' r
+                               (ℚ.<Weaken≤ _ _
+                                 (<ᵣ→<ℚ _ _ (isTrans<≤ᵣ _ _ _ q<x x≤r))))) ) r-x≤δ
+                    x≤r' = ≤min-lem _ (rat (ℚ.max q r)) (rat q')
+                             (isTrans≤ᵣ _ _ _ x≤r
+                              (≤ℚ→≤ᵣ _ _ (ℚ.≤max' q r)))
+                             (<ᵣWeaken≤ᵣ _ _ x<q')
+                    |fx-fr|<ε = fst (∼≃abs<ε _ _ _)
+                        (sym∼ _ _ _ (X (rat r') (sym∼ _ _ _
+                          ((invEq (∼≃abs<ε _ _ _)
+                         (isTrans≡<ᵣ _ _ _
+                           (absᵣNonNeg _ (x≤y→0≤y-x _ _ x≤r'))
+                            (isTrans≤<ᵣ _ _ _
+                                r'-x≤δ (<ℚ→<ᵣ _ _ (x/2<x δ))))))) ))
+                    zzz =
+                         mid-𝒇 q r' q'
+                          (≤ᵣ→≤ℚ _ _ (isTrans≤ᵣ _ _ _
+                           (<ᵣWeaken≤ᵣ _ _ q<x) x≤r'))
+                          (ℚ.clamp≤ q q' r)
+                    zzz' = isTrans<≤ᵣ _ _ _
+                             (isTrans<≡ᵣ _ _ _ ε<q⊓q'
+                               (cong₂ minᵣ
+                                 (sym (𝒇-rat _)) (sym (𝒇-rat _))))
+                              zzz
+                in isTrans≡<ᵣ _ _ _ (sym (CRℝ.+InvR _)) (a-b<c⇒a-c<b _ _ _
+                      (isTrans≤<ᵣ _ _ _ (≤absᵣ _)
+                     (isTrans<ᵣ _ _ _ |fx-fr|<ε zzz')))
+               ) (∃rationalApprox≤ x (/2₊ δ)))
 
-         (𝒇-cont x (ε , ℚ.<→0< _ (<ᵣ→<ℚ _ _ 0<ε)))
-         )
-      (denseℚinℝ 0 _ (snd q⊓q')) )
-   (∃rationalApprox x 1)
+          (𝒇-cont x (ε , ℚ.<→0< _ (<ᵣ→<ℚ _ _ 0<ε)))
+          )
+       (denseℚinℝ 0 _ (snd q⊓q')) )
+    (∃rationalApprox x 1)
 
  𝒇₊ : ℝ → ℝ₊
  𝒇₊ x = 𝒇 x , 0<𝒇 x
 
- flₙ≡𝒇 : ∀ x n → (x ∈ intervalℙ (fromNeg (suc n)) (fromNat (suc n)))
-           →  fst (fst (flₙ n)) x ≡ 𝒇 x
- flₙ≡𝒇 x n x∈ = ≡Continuous (fst (fst (flₙ n)))
-           (𝒇 ∘ clampᵣ (fromNeg (suc n)) (fromNat (suc n)))
-     (snd (flₙ n)) (IsContinuous∘ _ _ 𝒇-cont
-          (IsContinuousClamp (fromNeg (suc n)) (fromNat (suc n))))
-       (λ r → sym (𝒇-rat _))
-       x
-   ∙ cong 𝒇 (sym (∈ℚintervalℙ→clampᵣ≡ _ _ x x∈))
+ opaque
+  unfolding minᵣ maxᵣ
+  flₙ≡𝒇 : ∀ x n → (x ∈ intervalℙ (fromNeg (suc n)) (fromNat (suc n)))
+            →  fst (fst (flₙ n)) x ≡ 𝒇 x
+  flₙ≡𝒇 x n x∈ = ≡Continuous (fst (fst (flₙ n)))
+            (𝒇 ∘ clampᵣ (fromNeg (suc n)) (fromNat (suc n)))
+      (snd (flₙ n)) (IsContinuous∘ _ _ 𝒇-cont
+           (IsContinuousClamp (fromNeg (suc n)) (fromNat (suc n))))
+        (λ r → sym (𝒇-rat _))
+        x
+    ∙ cong 𝒇 (sym (∈ℚintervalℙ→clampᵣ≡ _ _ x x∈))
 
 
- 𝒇-monotone : 1 ≤ᵣ fst z → ∀ x y → x ≤ᵣ y → 𝒇 x ≤ᵣ 𝒇 y
- 𝒇-monotone 1≤z x y x≤y =
-  ≡→≤ᵣ ((≡Cont₂ (cont₂∘ (contNE₂ maxR) 𝒇-cont 𝒇-cont)
-    (cont∘₂ 𝒇-cont (contNE₂ maxR) )
-    (ℚ.elimBy≤
-       (λ u u' X → maxᵣComm _ _ ∙∙ X ∙∙ cong 𝒇 (maxᵣComm _ _))
-       λ u u' u≤u' →
-         cong₂ maxᵣ (𝒇-rat _) (𝒇-rat _)
-          ∙∙ ≤ᵣ→≡ (^ℚ-MonotoneR u u' u≤u' 1≤z) ∙
-           cong (fst ∘ (z ^ℚ_)) (sym (ℚ.≤→max u u' u≤u')) ∙∙
-          sym (𝒇-rat _))
-        x y)
-   ∙ cong 𝒇 (≤ᵣ→≡ x≤y))
+  𝒇-monotone : 1 ≤ᵣ fst z → ∀ x y → x ≤ᵣ y → 𝒇 x ≤ᵣ 𝒇 y
+  𝒇-monotone 1≤z x y x≤y =
+   ≡→≤ᵣ ((≡Cont₂ (cont₂∘ (contNE₂ maxR) 𝒇-cont 𝒇-cont)
+     (cont∘₂ 𝒇-cont (contNE₂ maxR) )
+     (ℚ.elimBy≤
+        (λ u u' X → maxᵣComm _ _ ∙∙ X ∙∙ cong 𝒇 (maxᵣComm (rat u) (rat u')))
+        λ u u' u≤u' →
+          cong₂ maxᵣ (𝒇-rat _) (𝒇-rat _)
+           ∙∙ ≤ᵣ→≡ (^ℚ-MonotoneR u u' u≤u' 1≤z) ∙
+            cong (fst ∘ (z ^ℚ_)) (sym (ℚ.≤→max u u' u≤u')) ∙∙
+           sym (𝒇-rat _))
+         x y)
+    ∙ cong 𝒇 (≤ᵣ→≡ x≤y))
 
 
  opaque
@@ -1258,7 +1264,7 @@ seq-^-intervals∈Pos x 0<x =
                (isTrans≤≡ᵣ _ _ _
                  (((≤ℚ→≤ᵣ (fromNat (suc n')) (fromNat (suc (suc (ℕ.max n n'))))
                       ((ℚ.≤ℤ→≤ℚ _ _
-                       (ℤ.ℕ≤→pos-≤-pos _ _ (ℕ.≤-suc (ℕ.right-≤-max {suc n'} {suc n}))))))))
+                       (ℤ.ℕ≤→pos-≤-pos _ _ (ℕ.suc-≤-suc (ℕ.≤-suc (ℕ.right-≤-max {n'} {n})))))))))
                         (sym (invℝ₊-rat _))))
 
               ,
@@ -1267,7 +1273,8 @@ seq-^-intervals∈Pos x 0<x =
                  (≤absᵣ _) (<ᵣWeaken≤ᵣ _ _ N))
 
                  (((≤ℚ→≤ᵣ (fromNat (suc n)) _
-                      (ℚ.≤ℤ→≤ℚ _ _ (ℤ.ℕ≤→pos-≤-pos _ _ (ℕ.≤-suc (ℕ.left-≤-max {suc n} {suc n'})))))))
+                      (ℚ.≤ℤ→≤ℚ _ _ (ℤ.ℕ≤→pos-≤-pos _ _ (ℕ.≤-suc $ ℕ.suc-≤-suc (ℕ.left-≤-max {n} {n'})))))))
+
                )
     (getClamps x) (getClamps (fst (invℝ₊ (x , 0<x))))
 
@@ -1661,38 +1668,41 @@ rootₙ→1 x α 1<α =
 -- clamp d u x = ℚ.min (ℚ.max d x) u
 
 
-ℚ-clamp-<-cases : ∀ L L' x y → L ℚ.< L' → x ℚ.< y →
-                    (ℚ.clamp L L' x ≡ ℚ.clamp L L' y) ⊎
-                       (ℚ.clamp L L' x ℚ.< ℚ.clamp L L' y)
-ℚ-clamp-<-cases L L' x y L<L' x<y =
-  w (ℚ.Dichotomyℚ y L) (ℚ.Dichotomyℚ L' x)
- where
- w : _ → _ → _
- w _ (inl L'≤x) = inl (ℚ.minComm _ _ ∙ ℚ.≤→min _ _ (ℚ.isTrans≤ _ _ _ L'≤x (ℚ.≤max' _ _))
-      ∙ sym ((ℚ.minComm _ _ ∙ ℚ.≤→min _ _
-       (ℚ.isTrans≤ _ _ _ (ℚ.isTrans≤ _ _ _ L'≤x (ℚ.<Weaken≤ _ _ x<y)) (ℚ.≤max' _ _)))))
- w (inl y≤L) _ = inl
-   (cong (flip ℚ.min _) (ℚ.maxComm _ _ ∙
-    (ℚ.≤→max _ _ (ℚ.isTrans≤ _ _ _  (ℚ.<Weaken≤ _ _ x<y) y≤L)))
-     ∙ cong (flip ℚ.min _) (sym (ℚ.≤→max _ _ y≤L) ∙ ℚ.maxComm _ _))
+opaque
+ unfolding maxᵣ
+ ℚ-clamp-<-cases : ∀ L L' x y → L ℚ.< L' → x ℚ.< y →
+                     (ℚ.clamp L L' x ≡ ℚ.clamp L L' y) ⊎
+                        (ℚ.clamp L L' x ℚ.< ℚ.clamp L L' y)
+ ℚ-clamp-<-cases L L' x y L<L' x<y =
+   w (ℚ.Dichotomyℚ y L) (ℚ.Dichotomyℚ L' x)
+  where
+  w : (y ℚ.≤ L) ⊎ (L ℚ.< y) → (L' ℚ.≤ x) ⊎ (x ℚ.< L') → (ℚ.clamp L L' x ≡ ℚ.clamp L L' y) ⊎
+                        (ℚ.clamp L L' x ℚ.< ℚ.clamp L L' y)
+  w _ (inl L'≤x) = inl (ℚ.minComm _ _ ∙ ℚ.≤→min _ _ (ℚ.isTrans≤ _ _ _ L'≤x (ℚ.≤max' _ _))
+       ∙ sym ((ℚ.minComm _ _ ∙ ℚ.≤→min _ _
+        (ℚ.isTrans≤ _ _ _ (ℚ.isTrans≤ _ _ _ L'≤x (ℚ.<Weaken≤ _ _ x<y)) (ℚ.≤max' _ _)))))
+  w (inl y≤L) _ = inl
+    (cong (flip ℚ.min _) (ℚ.maxComm _ _ ∙
+     (ℚ.≤→max _ _ (ℚ.isTrans≤ _ _ _  (ℚ.<Weaken≤ _ _ x<y) y≤L)))
+      ∙ cong (flip ℚ.min _) (sym (ℚ.≤→max _ _ y≤L) ∙ ℚ.maxComm _ _))
 
- w (inr L<y) (inr x<L') = inr
-  (ℚ.isTrans≤< _ _ _
-    (ℚ.min≤ _ _)
-      (ℚ.isTrans<≤ (ℚ.max L x) (ℚ.min y L') _
-        (<ᵣ→<ℚ _ _ (<min-lem (rat y) (rat L') (maxᵣ (rat L) (rat x))
-             (max<-lem _ _ _ (<ℚ→<ᵣ _ _ L<y) (<ℚ→<ᵣ _ _ x<y))
-             (max<-lem _ _ _ ((<ℚ→<ᵣ _ _ L<L')) (<ℚ→<ᵣ _ _ x<L'))))
-        (ℚ.≡Weaken≤ _ _ (cong (flip ℚ.min L') (sym (ℚ.≤→max L y (ℚ.<Weaken≤ _ _ L<y)))))))
+  w (inr L<y) (inr x<L') = inr
+   (ℚ.isTrans≤< _ _ _
+     (ℚ.min≤ _ _)
+       (ℚ.isTrans<≤ (ℚ.max L x) (ℚ.min y L') _
+         (<ᵣ→<ℚ _ _ (<min-lem (rat y) (rat L') (maxᵣ (rat L) (rat x))
+              (max<-lem _ _ _ (<ℚ→<ᵣ _ _ L<y) (<ℚ→<ᵣ _ _ x<y))
+              (max<-lem _ _ _ ((<ℚ→<ᵣ _ _ L<L')) (<ℚ→<ᵣ _ _ x<L'))))
+         (ℚ.≡Weaken≤ _ _ (cong (flip ℚ.min L') (sym (ℚ.≤→max L y (ℚ.<Weaken≤ _ _ L<y)))))))
 
-ℚ-clamp-<-casesᵣ : ∀ L L' x y → L ℚ.< L' →  x ℚ.< y →
-                    (clampᵣ (rat L) (rat L') (rat x)
-                      ≡ clampᵣ (rat L) (rat L') (rat y)) ⊎
-                       (clampᵣ (rat L) (rat L') (rat x)
-                        <ᵣ clampᵣ (rat L) (rat L') (rat y))
-ℚ-clamp-<-casesᵣ L L' x y L<L' x<y =
- (⊎.map (cong rat) (<ℚ→<ᵣ _ _)
-    (ℚ-clamp-<-cases L L' x y L<L' x<y))
+ ℚ-clamp-<-casesᵣ : ∀ L L' x y → L ℚ.< L' →  x ℚ.< y →
+                     (clampᵣ (rat L) (rat L') (rat x)
+                       ≡ clampᵣ (rat L) (rat L') (rat y)) ⊎
+                        (clampᵣ (rat L) (rat L') (rat x)
+                         <ᵣ clampᵣ (rat L) (rat L') (rat y))
+ ℚ-clamp-<-casesᵣ L L' x y L<L' x<y =
+  (⊎.map (cong rat) (<ℚ→<ᵣ _ _)
+     (ℚ-clamp-<-cases L L' x y L<L' x<y))
 
 eventually-lnSeq[x]<lnSeq'[x+Δ] : ∀ (x Δ : ℝ₊) → 1 <ᵣ fst x →
   ∃[ k ∈ ℕ ] lnSeq x k <ᵣ lnSeq' (x ₊+ᵣ Δ) k
