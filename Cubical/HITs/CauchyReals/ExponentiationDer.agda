@@ -150,52 +150,6 @@ slope-monotone-ₙ√ n a b a' b' a<b a'<b' a≤a' b≤b' =
        ((ₙ√-Monotone {b} {b'} (1+ n) b≤b'))
 
 
-cauchySequenceSpeedup : ∀ s
-    → (ics : IsCauchySequence' s)
-    → (spd : ℚ₊ → ℕ)
-    → (∀ ε → fst (ics ε) ℕ.≤ spd ε)
-
-    → IsCauchySequence' s
-cauchySequenceSpeedup s  ics spd ≤spd ε =
- let (N , X) = ics ε
- in spd ε ,
-     λ m n spdN<n spdN<m →
-
-        X m n (ℕ.≤<-trans (≤spd ε) spdN<n)
-               (ℕ.≤<-trans (≤spd ε) spdN<m)
-opaque
- unfolding _≤ᵣ_
- cauchySequenceSpeedup≡ : ∀ s ics spd ≤spd →
-   fromCauchySequence' s ics ≡
-    fromCauchySequence' s (cauchySequenceSpeedup s ics spd ≤spd   )
- cauchySequenceSpeedup≡ s ics spd ≤spd =
-   fromCauchySequence'-≡-lem _ _ _
-
- fromCauchySequence'≤ : ∀ s ics s' ics'
-   → (∀ n → s n ≤ᵣ s' n)
-   → fromCauchySequence' s ics ≤ᵣ fromCauchySequence' s' ics'
- fromCauchySequence'≤ s ics s' ics' x =
-   cong₂ maxᵣ
-      (cauchySequenceSpeedup≡ s  ics
-         (λ ε → ℕ.max (ℕ.max (fst (ics ε)) (fst (ics' ε))) ((fst (ics' (2 ℚ₊· ε)))))
-           λ ε → ℕ.≤-trans ℕ.left-≤-max ℕ.left-≤-max)
-      (cauchySequenceSpeedup≡ s' ics'
-         ((λ ε → ℕ.max (ℕ.max (fst (ics ε)) (fst (ics' ε))) ((fst (ics' (2 ℚ₊· ε))))))
-           λ ε → ℕ.≤-trans ℕ.right-≤-max ℕ.left-≤-max) ∙
-   snd (NonExpanding₂.β-lim-lim/2 maxR _ _ _ _) ∙
-     (congLim _ _ _ _
-      λ q →  x (suc (fastS q)))
-      ∙
-       sym (cauchySequenceSpeedup≡ s' ics'
-         fastS λ ε → subst (ℕ._≤ fastS ε) (cong (fst ∘ ics')
-           ((ℚ₊≡ (cong (2 ℚ.·_) (ℚ.·Comm _ _) ∙ ℚ.y·[x/y] 2 _)))) ℕ.right-≤-max)
-
-  where
-   fastS : ℚ₊ → ℕ
-   fastS ε = ℕ.max (ℕ.max (fst (ics (/2₊ ε)))
-        (fst (ics' (/2₊ ε))))
-               (fst (ics' (2 ℚ₊· /2₊ ε)))
-
 ·-limℙ : ∀ P x f g F G
         → at x limitOfℙ P , f is F
         → at x limitOfℙ P , g is G
@@ -1248,39 +1202,6 @@ opaque
 
 
 
-mapNE-fromCauchySequence' : ∀ {h} (ne : NonExpanding₂ h) s ics s' ics' →
-    Σ (IsCauchySequence'
-         λ k → NonExpanding₂.go ne (s k) (s' k)) λ icsf →
-      NonExpanding₂.go ne
-        (fromCauchySequence' s ics)
-        (fromCauchySequence' s' ics')
-          ≡
-           fromCauchySequence' _ icsf
-mapNE-fromCauchySequence' ne s ics s' ics' =
- (λ  ε →
-  let (N , X) = ics (/2₊ ε)
-      (N' , X') = ics' (/2₊ ε)
-  in ℕ.max N N' , λ m n <n <m →
-       isTrans<≡ᵣ _ _ _ (fst (∼≃abs<ε _ _ _) (go∼₂ (/2₊ ε) (/2₊ ε)
-           (invEq (∼≃abs<ε _ _ _)
-             (X m n (ℕ.≤<-trans ℕ.left-≤-max <n)
-                    (ℕ.≤<-trans ℕ.left-≤-max <m)))
-           (invEq (∼≃abs<ε _ _ _)
-              ((X' m n (ℕ.≤<-trans ℕ.right-≤-max <n)
-                       (ℕ.≤<-trans ℕ.right-≤-max <m)))))
-          ) (cong rat (ℚ.ε/2+ε/2≡ε (fst ε))))
-   , cong₂ go
-       (cauchySequenceSpeedup≡ _ _
-          (λ ε → ℕ.max (fst (ics ε)) (fst (ics' ε)))
-            λ _ → ℕ.left-≤-max)
-       (cauchySequenceSpeedup≡ _ _
-          (λ ε → ℕ.max (fst (ics ε)) (fst (ics' ε)))
-            λ _ → ℕ.right-≤-max)
-      ∙ snd (β-lim-lim/2 _ _ _ _)
-         ∙ congLim _ _ _ _ λ _ → refl
-
- where
- open NonExpanding₂ ne
 
 Lipschitz-·R : ∀ q a → absᵣ a ≤ᵣ rat (fst q) → Lipschitz-ℝ→ℝ q (_·ᵣ a)
 Lipschitz-·R q a a<q u v ε u∼v =
@@ -1350,42 +1271,45 @@ module expPreDer (Z : ℕ) where
           (lnSeq'[z]≡lnSeq[1/x] n (ℚ₊→ℝ₊ (r , 0<r)))
           (lnSeq[z]≡lnSeq'[1/x] n (ℚ₊→ℝ₊ (r , 0<r)))
 
-     w-r : ∀ n r 0<r → diff (ℚ₊→ℝ₊ (r , 0<r)) n ≡
-                        diff (maxᵣ₊ (ℚ₊→ℝ₊ (r , 0<r)) (ℚ₊→ℝ₊ (invℚ₊ (r , 0<r)))) n
-     w-r n r 0<r = ⊎.rec
-         (λ ≤r → cong (flip diff n)
-                  (ℝ₊≡ {ℚ₊→ℝ₊ (r , 0<r)}
-                       {maxᵣ₊ (ℚ₊→ℝ₊ (r , 0<r)) (ℚ₊→ℝ₊ (invℚ₊ (r , 0<r)))}
-                    ((sym (maxᵣComm (fst ((ℚ₊→ℝ₊ (r , 0<r))))
-                               (fst (ℚ₊→ℝ₊ (invℚ₊ (r , 0<r))))
-                     ∙ ≤ᵣ→≡ (≤ℚ→≤ᵣ _ _ ≤r)))))) -- ≤ℚ→≤ᵣ _ _ ≤r
 
-          (λ r≤ → w-r<1 n r 0<r ∙
+     opaque
+      unfolding maxᵣ
+      w-r : ∀ n r 0<r → diff (ℚ₊→ℝ₊ (r , 0<r)) n ≡
+                         diff (maxᵣ₊ (ℚ₊→ℝ₊ (r , 0<r)) (ℚ₊→ℝ₊ (invℚ₊ (r , 0<r)))) n
+      w-r n r 0<r = ⊎.rec
+          (λ ≤r → cong (flip diff n)
+                   (ℝ₊≡ {ℚ₊→ℝ₊ (r , 0<r)}
+                        {maxᵣ₊ (ℚ₊→ℝ₊ (r , 0<r)) (ℚ₊→ℝ₊ (invℚ₊ (r , 0<r)))}
+                     ((sym (maxᵣComm (fst ((ℚ₊→ℝ₊ (r , 0<r))))
+                                (fst (ℚ₊→ℝ₊ (invℚ₊ (r , 0<r))))
+                      ∙ ≤ᵣ→≡ (≤ℚ→≤ᵣ _ _ ≤r)))))) -- ≤ℚ→≤ᵣ _ _ ≤r
 
-           cong (flip diff n) (ℝ₊≡
-            (invℝ₊-rat _ ∙ sym (≤ᵣ→≡  (≤ℚ→≤ᵣ r _  r≤))))
-            )
-         (ℚ.≤cases (fst (invℚ₊ (r , 0<r))) r)
+           (λ r≤ → w-r<1 n r 0<r ∙
 
-     w' : ∀ n z → diff z n ≡ diff (maxᵣ₊ z (invℝ₊ z)) n
-     w' n (z , 0<z) =
-      ≡ContinuousWithPred
-                 pred0< pred0< (openPred< 0) (openPred< 0) _ _ (wC n)
-                 (IsContinuousWP∘ pred0< pred0< _ _
-                   (λ r x → snd (maxᵣ₊ (r , x) (invℝ₊ (r , x))))  (wC n)
-                   ((contDiagNE₂WP maxR _ _ _
-                   (AsContinuousWithPred _ _ (IsContinuousId))
-                     (snd invℝ'))))
-                 (λ r r∈ r∈' → cong (flip diff n) (ℝ₊≡ refl)
-                      ∙ w-r n r (ℚ.<→0< _ (<ᵣ→<ℚ _ _ r∈'))
-                  ∙ cong (flip diff n)
-                   (cong₂ maxᵣ₊
-                     (ℝ₊≡ refl)
-                     (ℝ₊≡ {_} {_ , snd ((invℝ₊ (fst (ℚ₊→ℝ₊
-                      (r , ℚ.<→0< r (<ᵣ→<ℚ [ pos 0 / 1 ] r r∈'))) , r∈')))}
-                      (sym (invℝ₊-rat _) ∙ cong (fst ∘ invℝ₊)
-                       (ℝ₊≡ refl) ))) )
-                 z 0<z 0<z
+            cong (flip diff n) (ℝ₊≡
+             (invℝ₊-rat _ ∙ sym (≤ᵣ→≡  (≤ℚ→≤ᵣ r _  r≤))))
+             )
+          (ℚ.≤cases (fst (invℚ₊ (r , 0<r))) r)
+
+      w' : ∀ n z → diff z n ≡ diff (maxᵣ₊ z (invℝ₊ z)) n
+      w' n (z , 0<z) =
+       ≡ContinuousWithPred
+                  pred0< pred0< (openPred< 0) (openPred< 0) _ _ (wC n)
+                  (IsContinuousWP∘ pred0< pred0< _ _
+                    (λ r x → snd (maxᵣ₊ (r , x) (invℝ₊ (r , x))))  (wC n)
+                    ((contDiagNE₂WP maxR _ _ _
+                    (AsContinuousWithPred _ _ (IsContinuousId))
+                      (snd invℝ'))))
+                  (λ r r∈ r∈' → cong (flip diff n) (ℝ₊≡ refl)
+                       ∙ w-r n r (ℚ.<→0< _ (<ᵣ→<ℚ _ _ r∈'))
+                   ∙ cong (flip diff n)
+                    (cong₂ maxᵣ₊
+                      (ℝ₊≡ refl)
+                      (ℝ₊≡ {_} {_ , snd ((invℝ₊ (fst (ℚ₊→ℝ₊
+                       (r , ℚ.<→0< r (<ᵣ→<ℚ [ pos 0 / 1 ] r r∈'))) , r∈')))}
+                       (sym (invℝ₊-rat _) ∙ cong (fst ∘ invℝ₊)
+                        (ℝ₊≡ refl) ))) )
+                  z 0<z 0<z
 
   -- lnSeq-∼ : (ε : ℚ₊) → ∀ {!!}
   -- lnSeq-∼ = {!!}

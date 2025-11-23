@@ -6,6 +6,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Powerset
 
 open import Cubical.Data.Sum as ⊎
 open import Cubical.Data.Int as ℤ
@@ -671,3 +672,8 @@ fromLipshitzβLim : ∀ L f (fl : Lipschitz-ℚ→ℝ L f) x y →
     lim (λ x₁ → Elimℝ.go _ (x (invℚ₊ L ℚ₊· x₁)))
      _
 fromLipshitzβLim L f fl x y = refl
+
+Lipschitz-ℝ→ℝℙ : ℚ₊ → (P : ℙ ℝ) → (∀ x → x ∈ P  → ℝ) → Type
+Lipschitz-ℝ→ℝℙ L P f =
+    (∀ u u∈ v v∈ → (ε : ℚ₊) →
+        u ∼[ ε  ] v → f u u∈ ∼[ L ℚ₊· ε  ] f v v∈)

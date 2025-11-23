@@ -14,6 +14,7 @@ open import Cubical.Data.Sigma hiding (Path)
 open import Cubical.Data.Rationals as ℚ
 open import Cubical.Data.Rationals.Order as ℚ
 open import Cubical.Data.Rationals.Order.Properties as ℚ
+open import Cubical.Relation.Binary.Properties
 
 open import Cubical.HITs.PropositionalTruncation as PT
 
@@ -71,10 +72,10 @@ sym∼ r r' ε (isProp∼ .r .ε .r' x x₁ i) =
 
 -- HoTT Theorem (11.3.9)
 isSetℝ : isSet ℝ
-isSetℝ = lem722 (λ r r' → ∀ ε →  r ∼[ ε ] r')
+isSetℝ = reflPropRelImpliesIdentity→isSet _
+  refl∼
   (λ _ _ → isPropΠ λ _ → isProp∼ _ _ _)
-   eqℝ
-   refl∼
+  (eqℝ _ _)
 
 ∼≃≡ : ∀ r r' → (∀ ε → r ∼[ ε ] r') ≃  (r ≡ r')
 ∼≃≡ r r' = propBiimpl→Equiv (isPropΠ λ _ → isProp∼ _ _ _) (isSetℝ _ _) (eqℝ _ _)

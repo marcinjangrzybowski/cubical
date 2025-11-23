@@ -82,10 +82,6 @@ Lipschitz-ℚ→ℝℙ<→Lipschitz-ℚ→ℝℙ L P f X = (flip ∘
         (<ℚ→<ᵣ _ _  (ℚ.<-o· _ _ (fst L) (ℚ.0<ℚ₊ L)
           (subst (ℚ._< fst ε) (ℚ.absPos _ ((ℚ.-< _ _ x₁))) u)) )))
 
-Lipschitz-ℝ→ℝℙ : ℚ₊ → (P : ℙ ℝ) → (∀ x → x ∈ P  → ℝ) → Type
-Lipschitz-ℝ→ℝℙ L P f =
-    (∀ u u∈ v v∈ → (ε : ℚ₊) →
-        u ∼[ ε  ] v → f u u∈ ∼[ L ℚ₊· ε  ] f v v∈)
 
 
 Lipschitz-ℚ→ℝ' : ℚ₊ → (ℚ → ℝ) → Type
@@ -222,8 +218,6 @@ Invlipschitz-ℝ→ℝℙ K P f =
 
 
 
-ointervalℙ⊆intervalℙ : ∀ a b → ointervalℙ a b ⊆ intervalℙ a b
-ointervalℙ⊆intervalℙ a b x (<x  , x<) = <ᵣWeaken≤ᵣ _ _ <x , <ᵣWeaken≤ᵣ _ _ x<
 
 
 openIintervalℙ : ∀ a b → ⟨ openPred (ointervalℙ a b)  ⟩
@@ -316,24 +310,26 @@ elimInClamps2ᵣ L L' L≤L' X x y =
   X _ _ (clampᵣ∈ℚintervalℙ L L' L≤L' x) (clampᵣ∈ℚintervalℙ L L' L≤L' y)
 
 
-cont-f∈ : ∀ (f : ℝ → ℝ) → IsContinuous f
-          → ∀ a b → (a ℚ.≤ b) → ∀ a' b' → a' ≤ᵣ b'
-          → (∀ x → rat x ∈ intervalℙ (rat a) (rat b)
-                 → f (rat x) ∈ intervalℙ a' b')
-          → ∀ x → x ∈ intervalℙ (rat a) (rat b) → f x ∈ intervalℙ a' b'
-cont-f∈ f fc a b a≤b a' b' a'≤b' X = elimInClampsᵣ (rat a) (rat b)
-  λ x → ≡clampᵣ→∈intervalℙ a' b' a'≤b'
-    (f (clampᵣ (rat a)  (rat b) x))
-      ((≡Continuous _ _
-          (IsContinuous∘ _ _ fc (IsContinuousClamp (rat a)  (rat b)))
-        (IsContinuous∘ _ _ (IsContinuousClamp a' b')
-          (IsContinuous∘ _ _ fc (IsContinuousClamp (rat a)  (rat b))))
-         (elimInClamps {P = λ (r : ℚ) →
-                   f (rat r) ≡ (clampᵣ a' b' (f (rat r)))}
-           a b a≤b λ r → ∈ℚintervalℙ→clampᵣ≡ a' b' (f (rat r))
-                 ∘S X r
-                 ∘S ∈ℚintervalℙ→∈intervalℙ a b r  )
-         ) _)
+opaque
+ unfolding minᵣ
+ cont-f∈ : ∀ (f : ℝ → ℝ) → IsContinuous f
+           → ∀ a b → (a ℚ.≤ b) → ∀ a' b' → a' ≤ᵣ b'
+           → (∀ x → rat x ∈ intervalℙ (rat a) (rat b)
+                  → f (rat x) ∈ intervalℙ a' b')
+           → ∀ x → x ∈ intervalℙ (rat a) (rat b) → f x ∈ intervalℙ a' b'
+ cont-f∈ f fc a b a≤b a' b' a'≤b' X = elimInClampsᵣ (rat a) (rat b)
+   λ x → ≡clampᵣ→∈intervalℙ a' b' a'≤b'
+     (f (clampᵣ (rat a)  (rat b) x))
+       ((≡Continuous _ _
+           (IsContinuous∘ _ _ fc (IsContinuousClamp (rat a)  (rat b)))
+         (IsContinuous∘ _ _ (IsContinuousClamp a' b')
+           (IsContinuous∘ _ _ fc (IsContinuousClamp (rat a)  (rat b))))
+          (elimInClamps {P = λ (r : ℚ) →
+                    f (rat r) ≡ (clampᵣ a' b' (f (rat r)))}
+            a b a≤b λ r → ∈ℚintervalℙ→clampᵣ≡ a' b' (f (rat r))
+                  ∘S X r
+                  ∘S ∈ℚintervalℙ→∈intervalℙ a b r  )
+          ) _)
 
 
 
@@ -850,54 +846,6 @@ fromBilpschitz-ℚ→ℚℙ L K 1/K≤L a b a<b f incrF l il =
 open ℚ.HLP
 
 
-map-fromCauchySequence' : ∀ L s ics f → (Lipschitz-ℝ→ℝ L f) →
-    Σ _ λ icsf →
-      f (fromCauchySequence' s ics) ≡ fromCauchySequence' (f ∘ s) icsf
-map-fromCauchySequence' L s ics f lf =
-  icsf , sym (fromCauchySequence'≡ _ _ _ h)
-
- where
-
- icsf : IsCauchySequence' (f ∘ s)
- icsf ε = map-snd
-   (λ X m n <m <n →
-      let z = X m n <m <n
-          z' = lf (s n) (s m) (invℚ₊ L ℚ₊· ε)
-                (invEq (∼≃abs<ε _ _ _) z)
-       in fst (∼≃abs<ε _ _ ε) (subst∼ (ℚ.y·[x/y] L (fst ε)) z'))
-   (ics (invℚ₊ L ℚ₊· ε))
-
- h : (ε : ℚ₊) →
-       ∃-syntax ℕ
-       (λ N →
-          (n : ℕ) →
-          N ℕ.< n →
-          absᵣ ((f ∘ s) n -ᵣ f (fromCauchySequence' s ics)) <ᵣ rat (fst ε))
- h ε =
-   let (N , X) = ics ((invℚ₊ L ℚ₊· (/4₊ ε)))
-       (N' , X') = icsf (/4₊ ε)
-       midN = suc (ℕ.max N N')
-       midV = f (s midN)
-
-   in ∣ midN , (λ n midN<n →
-        let 3ε/4<ε = subst (ℚ._< (fst ε))
-                 (cong (fst (/4₊ ε) ℚ.+_)
-                   (sym (ℚ.y·[x/y] L _)
-                    ∙ cong (fst L ℚ.·_) (ℚ.·DistL+ _ _ _) ))
-                    distℚ<! ε [ ((ge[ ℚ.[ 1 / 4 ] ]) +ge
-                        (ge[ ℚ.[ 1 / 4 ] ] +ge ge[ ℚ.[ 1 / 4 ] ]))
-                        < ge1 ]
-            z' = invEq (∼≃abs<ε _ _ (/4₊ ε)) (X' ((suc N')) n
-                 (ℕ.<-trans (ℕ.suc-≤-suc ℕ.right-≤-max) midN<n)
-                  ℕ.≤-refl )
-
-            zzzz' =
-                (𝕣-lim-self _ (fromCauchySequence'-isCA s ics)
-                      ((invℚ₊ L ℚ₊· (/4₊ ε))) ( (invℚ₊ L ℚ₊· (/4₊ ε))))
-
-        in fst (∼≃abs<ε _ _ ε)
-             (∼-monotone< 3ε/4<ε
-                (triangle∼ z' (lf _ _ _ zzzz')))) ∣₁
 
 
 
@@ -1252,19 +1200,22 @@ record IsBilipschitz a b  (a<b : a ℚ.< b) f : Type where
  isCont𝒇 = (Lipschitz→IsContinuous L (fst fl-ebl) (snd fl-ebl))
  isCont𝒇⁻¹ = (Lipschitz→IsContinuous K (fst f⁻¹R-L) (snd f⁻¹R-L))
 
- 𝒇∘𝒇⁻¹' : ∀ y
-            → fst fl-ebl (fst f⁻¹R-L (clampᵣ (rat fa) (rat fb) y)) ≡
-               (clampᵣ (rat fa) (rat fb) y)
- 𝒇∘𝒇⁻¹' = ≡Continuous _ _ (IsContinuous∘ _ _
-        (IsContinuous∘ _ _
-          isCont𝒇
-          isCont𝒇⁻¹)
-       (IsContinuousClamp (rat fa) (rat fb)))
-  (IsContinuousClamp (rat fa) (rat fb))
-    λ r → (cong (fst fl-ebl) (snd (snd ext-f⁻¹) _
-          ((∈ℚintervalℙ→∈intervalℙ _ _ _ (clam∈ℚintervalℙ fa fb
-             (ℚ.<Weaken≤ _ _ fa<fb) r)))))
-         ∙ f∘f⁻¹ _ _
+
+ opaque
+  unfolding maxᵣ
+  𝒇∘𝒇⁻¹' : ∀ y
+             → fst fl-ebl (fst f⁻¹R-L (clampᵣ (rat fa) (rat fb) y)) ≡
+                (clampᵣ (rat fa) (rat fb) y)
+  𝒇∘𝒇⁻¹' = ≡Continuous _ _ (IsContinuous∘ _ _
+         (IsContinuous∘ _ _
+           isCont𝒇
+           isCont𝒇⁻¹)
+        (IsContinuousClamp (rat fa) (rat fb)))
+   (IsContinuousClamp (rat fa) (rat fb))
+     λ r → (cong (fst fl-ebl) (snd (snd ext-f⁻¹) _
+           ((∈ℚintervalℙ→∈intervalℙ _ _ _ (clam∈ℚintervalℙ fa fb
+              (ℚ.<Weaken≤ _ _ fa<fb) r)))))
+          ∙ f∘f⁻¹ _ _
 
 
  𝒇∘𝒇⁻¹ : ∀ y → y ∈ intervalℙ (rat fa) (rat fb)

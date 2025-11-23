@@ -50,6 +50,7 @@ open ℚ.HLP
 ⊤Pred = (λ _ → Unit , isPropUnit )
 
 
+
 ∼→≤ : ∀ u q → u ≤ᵣ (rat q) → ∀ v ε → u ∼'[ ε ] v → v ≤ᵣ rat (q ℚ.+ fst ε)
 ∼→≤ u q u≤q v ε u∼v = xxx
 
@@ -412,12 +413,12 @@ getClamps = Elimℝ-Prop.go w
 
 
 
+eqℝ≃< : ∀ x y → (x ≡ y) ≃ (∀ ε → absᵣ (x -ᵣ y) <ᵣ rat (fst ε))
+eqℝ≃< x y = invEquiv (∼≃≡ _ _ ) ∙ₑ equivΠCod λ ε → ∼≃abs<ε _ _ _
+
 lim≡≃∼ : ∀ x y a → (lim x y ≡ a)
                     ≃ (∀ ε → absᵣ (lim x y -ᵣ a) <ᵣ rat (fst ε) )
-lim≡≃∼ x y r =
-  invEquiv (∼≃≡ _ _ ) ∙ₑ
-    equivΠCod λ ε →
-      ∼≃abs<ε _ _ _
+lim≡≃∼ _ _ _ = eqℝ≃< _ _
 
 
 restrSq : ∀ n → Lipschitz-ℚ→ℚ-restr (fromNat (suc n))
@@ -558,12 +559,13 @@ openPred : (P : ℝ → hProp ℓ-zero) → hProp ℓ-zero
 openPred P = (∀ x → ⟨ P x ⟩ → ∃[ δ ∈ ℚ₊ ] (∀ y → x ∼[ δ ] y → ⟨ P y ⟩ ) )
    , isPropΠ2 λ _ _ → squash₁
 
-
-<min-rr : ∀ p q r → p <ᵣ (rat q) → p <ᵣ (rat r) → p <ᵣ minᵣ (rat q) (rat r)
-<min-rr p =
- ℚ.elimBy≤ (λ x y R a b → subst (p <ᵣ_) (minᵣComm (rat x) (rat y)) (R b a))
-   λ x y x≤y p<x _ → subst ((p <ᵣ_) ∘ rat)
-    (sym (ℚ.≤→min _ _ x≤y) ) (p<x)
+opaque
+ unfolding maxᵣ minᵣ
+ <min-rr : ∀ p q r → p <ᵣ (rat q) → p <ᵣ (rat r) → p <ᵣ minᵣ (rat q) (rat r)
+ <min-rr p =
+  ℚ.elimBy≤ (λ x y R a b → subst (p <ᵣ_) (minᵣComm (rat x) (rat y)) (R b a))
+    λ x y x≤y p<x _ → subst ((p <ᵣ_) ∘ rat)
+     (sym (ℚ.≤→min _ _ x≤y) ) (p<x)
 
 
 m·n/m : ∀ m n → [ pos (suc m) / 1 ] ℚ.· [ pos n / 1+ m ] ≡ [ pos n / 1 ]
@@ -635,22 +637,23 @@ abs'q≤Δ₁' q n n< = (ℚ.isTrans≤ (ℚ.abs' q) (fromNat (suc n)) _
 IsContinuousAbsᵣ : IsContinuous absᵣ
 IsContinuousAbsᵣ = Lipschitz→IsContinuous _ _ absᵣ-lip
 
+opaque
+ unfolding maxᵣ minᵣ
+ IsContinuousMaxR : ∀ x → IsContinuous (λ u → maxᵣ u x)
+ IsContinuousMaxR x u ε =
+  ∣ ε , (λ v → NonExpanding₂.go∼L maxR _ _ _ ε) ∣₁
 
-IsContinuousMaxR : ∀ x → IsContinuous (λ u → maxᵣ u x)
-IsContinuousMaxR x u ε =
- ∣ ε , (λ v → NonExpanding₂.go∼L maxR _ _ _ ε) ∣₁
+ IsContinuousMaxL : ∀ x → IsContinuous (maxᵣ x)
+ IsContinuousMaxL x u ε =
+  ∣ ε , (λ v → NonExpanding₂.go∼R maxR _ _ _ ε) ∣₁
 
-IsContinuousMaxL : ∀ x → IsContinuous (maxᵣ x)
-IsContinuousMaxL x u ε =
- ∣ ε , (λ v → NonExpanding₂.go∼R maxR _ _ _ ε) ∣₁
+ IsContinuousMinR : ∀ x → IsContinuous (λ u → minᵣ u x)
+ IsContinuousMinR x u ε =
+  ∣ ε , (λ v → NonExpanding₂.go∼L minR _ _ _ ε) ∣₁
 
-IsContinuousMinR : ∀ x → IsContinuous (λ u → minᵣ u x)
-IsContinuousMinR x u ε =
- ∣ ε , (λ v → NonExpanding₂.go∼L minR _ _ _ ε) ∣₁
-
-IsContinuousMinL : ∀ x → IsContinuous (minᵣ x)
-IsContinuousMinL x u ε =
- ∣ ε , (λ v → NonExpanding₂.go∼R minR _ _ _ ε) ∣₁
+ IsContinuousMinL : ∀ x → IsContinuous (minᵣ x)
+ IsContinuousMinL x u ε =
+  ∣ ε , (λ v → NonExpanding₂.go∼R minR _ _ _ ε) ∣₁
 
 IsContinuousClamp : ∀ a b → IsContinuous (clampᵣ a b)
 IsContinuousClamp a b =
@@ -709,14 +712,17 @@ opaque
  IsContinuous+ᵣL x u ε =
   ∣ ε , (λ v → NonExpanding₂.go∼R sumR _ _ _ ε) ∣₁
 
+opaque
+ unfolding maxᵣ
+ cont₂maxᵣ : ∀ f g → (IsContinuous f) → (IsContinuous g)
+   → IsContinuous (λ x → maxᵣ (f x) (g x))
+ cont₂maxᵣ = contDiagNE₂ maxR
 
-cont₂maxᵣ : ∀ f g → (IsContinuous f) → (IsContinuous g)
-  → IsContinuous (λ x → maxᵣ (f x) (g x))
-cont₂maxᵣ = contDiagNE₂ maxR
-
-cont₂minᵣ : ∀ f g → (IsContinuous f) → (IsContinuous g)
-  → IsContinuous (λ x → minᵣ (f x) (g x))
-cont₂minᵣ = contDiagNE₂ minR
+opaque
+ unfolding minᵣ
+ cont₂minᵣ : ∀ f g → (IsContinuous f) → (IsContinuous g)
+   → IsContinuous (λ x → minᵣ (f x) (g x))
+ cont₂minᵣ = contDiagNE₂ minR
 
 
 
@@ -756,7 +762,7 @@ IsContinuousConst x u ε = ∣ ε , (λ _ _ → refl∼ _ _ ) ∣₁
 
 
 opaque
- unfolding _+ᵣ_
+ unfolding _+ᵣ_ minᵣ maxᵣ
  +IdL : ∀ x → 0 +ᵣ x ≡ x
  +IdL = ≡Continuous _ _ (IsContinuous+ᵣL 0) IsContinuousId
    (cong rat ∘ ℚ.+IdL)
@@ -979,6 +985,15 @@ minᵣ₊ : ℝ₊ → ℝ₊ → ℝ₊
 minᵣ₊ (x , 0<x) (y , 0<y) =
   minᵣ x y , <min-lem _ _ _ 0<x 0<y
 
+minᵣ₀₊ : ℝ₀₊ → ℝ₀₊ → ℝ₀₊
+minᵣ₀₊ (x , 0≤x) (y , 0≤y) =
+  minᵣ x y , ≤min-lem _ _ _ 0≤x 0≤y
+
+maxᵣ₀₊ : ℝ₀₊ → ℝ₀₊ → ℝ₀₊
+maxᵣ₀₊ (x , 0≤x) (y , 0≤y) =
+  maxᵣ x y , isTrans≤ᵣ _ _ _ 0≤x (≤maxᵣ x y)
+
+
 opaque
  unfolding _≤ᵣ_ absᵣ
 
@@ -1047,6 +1062,18 @@ cont₂-snd = (λ _ → IsContinuousId) , (λ _ → IsContinuousConst _)
 cont₂-id : ∀ x → IsContinuous₂ (λ _ _ → x)
 cont₂-id _ = (λ _ → IsContinuousConst _) , (λ _ → IsContinuousConst _)
 
+asIsContinuous₂-fst : ∀ f
+  → IsContinuous f
+  → IsContinuous₂ (λ x _ → f x)
+asIsContinuous₂-fst f cf = (λ _ → IsContinuousConst _) , λ _ → cf
+
+
+asIsContinuous₂-snd : ∀ f
+  → IsContinuous f
+  → IsContinuous₂ (λ _ x → f x)
+asIsContinuous₂-snd f cf = (λ _ → cf) , (λ _ → IsContinuousConst _)
+
+
 ≡Cont₂ : {f₀ f₁ : ℝ → ℝ → ℝ}
          → IsContinuous₂ f₀
          → IsContinuous₂ f₁
@@ -1100,17 +1127,21 @@ IsContinuousClamp₂ : ∀ x → IsContinuous₂ λ a b → clampᵣ a b x
 IsContinuousClamp₂ x = (λ _ → IsContinuousMinL _) ,
    λ _ → IsContinuous∘ _ _ (IsContinuousMinR _) (IsContinuousMaxR _)
 
-IsContinuousClamp₂∘ : ∀ {f₀} {f₁} x → IsContinuous₂ f₀ → IsContinuous₂ f₁ →
-         IsContinuous₂ λ a b → clampᵣ (f₀ a b) (f₁ a b) x
-IsContinuousClamp₂∘ x =
-  contNE₂∘ minR ∘
-    (flip (contNE₂∘ maxR) ((λ _ → IsContinuousConst _) , (λ _ → IsContinuousConst _)))
+opaque
+ unfolding minᵣ
+ IsContinuousClamp₂∘ : ∀ {f₀} {f₁} x → IsContinuous₂ f₀ → IsContinuous₂ f₁ →
+          IsContinuous₂ λ a b → clampᵣ (f₀ a b) (f₁ a b) x
+ IsContinuousClamp₂∘ x =
+   contNE₂∘ minR ∘
+     (flip (contNE₂∘ maxR) ((λ _ → IsContinuousConst _) , (λ _ → IsContinuousConst _)))
 
-IsContinuousClamp₂∘' : ∀ {f₀} {f₁} {f₂} →
-         IsContinuous₂ f₀ → IsContinuous₂ f₁ → IsContinuous₂ f₂ →
-         IsContinuous₂ λ a b → clampᵣ (f₀ a b) (f₁ a b) (f₂ a b)
-IsContinuousClamp₂∘' f₀C f₁C f₂C =
-  contNE₂∘ minR (contNE₂∘ maxR f₀C f₂C) f₁C
+opaque
+ unfolding maxᵣ
+ IsContinuousClamp₂∘' : ∀ {f₀} {f₁} {f₂} →
+          IsContinuous₂ f₀ → IsContinuous₂ f₁ → IsContinuous₂ f₂ →
+          IsContinuous₂ λ a b → clampᵣ (f₀ a b) (f₁ a b) (f₂ a b)
+ IsContinuousClamp₂∘' f₀C f₁C f₂C =
+   contNE₂∘ minR (contNE₂∘ maxR f₀C f₂C) f₁C
 
 
 opaque
@@ -1286,20 +1317,24 @@ opaque
     λ u v →
        cong rat (sym (ℚ.abs'≡abs _) ∙∙ ℚabs-min-max u v ∙∙ ℚ.abs'≡abs _)
 
-maxMonotoneᵣ : ∀ m n o s → m ≤ᵣ n → o ≤ᵣ s → maxᵣ m o ≤ᵣ maxᵣ n s
-maxMonotoneᵣ _ _ _ _ m≤n o≤s =
-  max≤-lem _ _ _
-    (isTrans≤ᵣ _ _ _ m≤n (≤maxᵣ _ _))
-    (isTrans≤ᵣ _ _ _ o≤s
-      (isTrans≤≡ᵣ _ _ _  (≤maxᵣ _ _) (maxᵣComm _ _) ))
+opaque
+ unfolding maxᵣ
+ maxMonotoneᵣ : ∀ m n o s → m ≤ᵣ n → o ≤ᵣ s → maxᵣ m o ≤ᵣ maxᵣ n s
+ maxMonotoneᵣ _ _ _ _ m≤n o≤s =
+   max≤-lem _ _ _
+     (isTrans≤ᵣ _ _ _ m≤n (≤maxᵣ _ _))
+     (isTrans≤ᵣ _ _ _ o≤s
+       (isTrans≤≡ᵣ _ _ _  (≤maxᵣ _ _) (maxᵣComm _ _) ))
 
-minMonotoneᵣ : ∀ m n o s → m ≤ᵣ n → o ≤ᵣ s → minᵣ m o ≤ᵣ minᵣ n s
-minMonotoneᵣ m n o s m≤n o≤s =
-  ≤min-lem _ _ _
-    (isTrans≤ᵣ _ _ _
-     (min≤ᵣ _ _) m≤n)
-    (isTrans≤ᵣ _ _ _
-     (isTrans≡≤ᵣ _ _ _ (minᵣComm _ _) (min≤ᵣ _ _)) o≤s)
+opaque
+ unfolding minᵣ
+ minMonotoneᵣ : ∀ m n o s → m ≤ᵣ n → o ≤ᵣ s → minᵣ m o ≤ᵣ minᵣ n s
+ minMonotoneᵣ m n o s m≤n o≤s =
+   ≤min-lem _ _ _
+     (isTrans≤ᵣ _ _ _
+      (min≤ᵣ _ _) m≤n)
+     (isTrans≤ᵣ _ _ _
+      (isTrans≡≤ᵣ _ _ _ (minᵣComm _ _) (min≤ᵣ _ _)) o≤s)
 
 opaque
  unfolding _≤ᵣ_ absᵣ
@@ -1317,21 +1352,23 @@ opaque
         (isTrans≤≡ᵣ _ _ _  (≤maxᵣ _ _) (maxᵣComm _ _))))
      (maxᵣIdem _)
 
-incr→≤min : (f : ∀ x → 0 <ᵣ x → ℝ)
-       → (∀ x 0<x y 0<y → x ≤ᵣ y → f x 0<x ≤ᵣ f y 0<y)
-      → ∀ u v 0<u 0<v →
-           (f (minᵣ u v) (snd (minᵣ₊ (u , 0<u) (v , 0<v))))
-            ≤ᵣ  minᵣ (f u 0<u) (f v 0<v)
-incr→≤min f incr u v 0<u 0<v =
-  isTrans≡≤ᵣ _ _ _
-    (sym (minᵣIdem _))
-     (minMonotoneᵣ _ _ _ _
-       (incr (minᵣ u v) (snd (minᵣ₊ (u , 0<u) (v , 0<v)))
-           u 0<u
-          (min≤ᵣ _ _))
-       (incr (minᵣ u v) (snd (minᵣ₊ (u , 0<u) (v , 0<v)))
-           v 0<v
-          (isTrans≡≤ᵣ _ _ _  (minᵣComm _ _) (min≤ᵣ _ _))))
+opaque
+ unfolding minᵣ
+ incr→≤min : (f : ∀ x → 0 <ᵣ x → ℝ)
+        → (∀ x 0<x y 0<y → x ≤ᵣ y → f x 0<x ≤ᵣ f y 0<y)
+       → ∀ u v 0<u 0<v →
+            (f (minᵣ u v) (snd (minᵣ₊ (u , 0<u) (v , 0<v))))
+             ≤ᵣ  minᵣ (f u 0<u) (f v 0<v)
+ incr→≤min f incr u v 0<u 0<v =
+   isTrans≡≤ᵣ _ _ _
+     (sym (minᵣIdem _))
+      (minMonotoneᵣ _ _ _ _
+        (incr (minᵣ u v) (snd (minᵣ₊ (u , 0<u) (v , 0<v)))
+            u 0<u
+           (min≤ᵣ _ _))
+        (incr (minᵣ u v) (snd (minᵣ₊ (u , 0<u) (v , 0<v)))
+            v 0<v
+           (isTrans≡≤ᵣ _ _ _  (minᵣComm _ _) (min≤ᵣ _ _))))
 
 absᵣ-monotoneOnNonNeg : (x y : ℝ₀₊) →
  fst x ≤ᵣ fst y → absᵣ (fst x) ≤ᵣ absᵣ (fst y)
@@ -1400,6 +1437,7 @@ IsUContinuousℙ : (P : ℙ ℝ) → (∀ x → x ∈ P → ℝ) → Type
 IsUContinuousℙ P f =
   ∀ (ε : ℚ₊) → Σ[ δ ∈ ℚ₊ ]
      (∀ u v u∈ v∈ → u ∼[ δ ] v  → f u u∈ ∼[ ε ] f v v∈)
+
 
 ℚApproxℙ'' : (P Q : ℙ ℝ) (f : ∀ x → x ∈ P → Σ ℝ (_∈ Q)) → Type
 ℚApproxℙ'' P Q f =
@@ -1515,13 +1553,14 @@ IsUContinuousℙ P f =
 
 
 
-
-≤clampᵣ : ∀ L L' x → L ≤ᵣ L' →  L ≤ᵣ clampᵣ L L' x
-≤clampᵣ L L' x y =
-  isTrans≤≡ᵣ _ _ _ (≤maxᵣ L (minᵣ x L'))
-    (cong₂ maxᵣ (sym (≤→minᵣ _ _ y) ∙ minᵣComm _ _) (minᵣComm _ _)
-     ∙∙ sym (maxDistMin L' L x) ∙∙
-     minᵣComm _ _ )
+opaque
+ unfolding minᵣ
+ ≤clampᵣ : ∀ L L' x → L ≤ᵣ L' →  L ≤ᵣ clampᵣ L L' x
+ ≤clampᵣ L L' x y =
+   isTrans≤≡ᵣ _ _ _ (≤maxᵣ L (minᵣ x L'))
+     (cong₂ maxᵣ (sym (≤→minᵣ _ _ y) ∙ minᵣComm _ _) (minᵣComm _ _)
+      ∙∙ sym (maxDistMin L' L x) ∙∙
+      minᵣComm _ _ )
 
 
 clamp≤ᵣ : ∀ L L' x →  clampᵣ L L' x ≤ᵣ L'

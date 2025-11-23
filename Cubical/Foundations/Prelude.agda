@@ -20,7 +20,6 @@ This file proves a variety of basic results about paths:
 - Export universe lifting
 
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Foundations.Prelude where
 
 open import Cubical.Core.Primitives public
@@ -311,10 +310,6 @@ subst2 : ∀ {ℓ' ℓ''} {B : Type ℓ'} {z w : B} (C : A → B → Type ℓ'')
         (p : x ≡ y) (q : z ≡ w) → C x z → C y w
 subst2 B p q b = transport (λ i → B (p i) (q i)) b
 
-subst3 : ∀ {ℓ' ℓ'' ℓ'''} {B : Type ℓ'} {C : Type ℓ''} {z w : B} {u v : C} (D : A → B → C → Type ℓ''')
-        (p : x ≡ y) (q : z ≡ w) (r : u ≡ v) → D x z u → D y w v
-subst3 D p q r b = transport (λ i → D (p i) (q i) (r i)) b
-
 substRefl : ∀ {B : A → Type ℓ} {x} → (px : B x) → subst B refl px ≡ px
 substRefl px = transportRefl px
 
@@ -502,6 +497,23 @@ isContrSinglP : (A : I → Type ℓ) (a : A i0) → isContr (singlP A a)
 isContrSinglP A a .fst = _ , transport-filler (λ i → A i) a
 isContrSinglP A a .snd (x , p) i =
   _ , λ j → fill A (λ j → λ {(i = i0) → transport-filler (λ i → A i) a j; (i = i1) → p j}) (inS a) j
+
+-- Helpers for carrying equalities into with-abstractions
+-- see `discreteℕ` in Data.Nat.Properties for an example of usage
+
+infixl 0 _UsingEq
+infixl 0 _i0:>_UsingEqP
+
+-- Similar to `inspect`, but more convenient when `a` is not a function
+-- application, or when the applied function is not relevant
+-- Note: when defining a term with `UsingEq`, it's still possible to prove its properties
+-- using a with-abstraction without `UsingEq`, but not the other way around.
+-- See `min`/`max` and their properties in Data.Nat.Properties for examples of this.
+_UsingEq : (a : A) → singl a
+a UsingEq = isContrSingl a .fst
+
+_i0:>_UsingEqP : (A : I → Type ℓ) (a : A i0) → singlP A a
+A i0:> a UsingEqP = isContrSinglP A a .fst
 
 -- Higher cube types
 

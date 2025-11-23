@@ -1,6 +1,4 @@
-{-# OPTIONS --safe --v=tc.conv:20 #-}
 module Cubical.Data.Int.Properties where
-
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
@@ -12,10 +10,11 @@ open import Cubical.Relation.Nullary
 
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Bool
-open import Cubical.Data.Nat as ℕ
-  hiding   (+-assoc ; +-comm ; min ; max ; minComm ; maxComm)
+open import Cubical.Data.Nat
+  hiding   (+-assoc ; +-comm ; minComm ; maxComm)
   renaming (_·_ to _·ℕ_; _+_ to _+ℕ_ ; ·-assoc to ·ℕ-assoc ;
-            ·-comm to ·ℕ-comm ; isEven to isEvenℕ ; isOdd to isOddℕ)
+            ·-comm to ·ℕ-comm ; isEven to isEvenℕ ; isOdd to isOddℕ ;
+            min to ℕmin ; max to ℕmax )
 open import Cubical.Data.Sum
 open import Cubical.Data.Fin.Inductive.Base
 open import Cubical.Data.Fin.Inductive.Properties
@@ -679,8 +678,7 @@ neg+ (suc m) (suc n) = neg (suc m +ℕ suc n)      ≡⟨ negsuc+ m (suc n) ⟩
 ℕ-AntiComm zero zero       = refl
 ℕ-AntiComm zero (suc n)    = refl
 ℕ-AntiComm (suc m) zero    = refl
-ℕ-AntiComm (suc m) (suc n) = suc m ℕ- suc n  ≡⟨ ℕ-AntiComm m n ⟩
-                          - (suc n ℕ- suc m) ∎
+ℕ-AntiComm (suc m) (suc n) = ℕ-AntiComm m n
 
 pos- : ∀ m n → m ℕ- n ≡ pos m - pos n
 pos- zero zero       = refl
@@ -1457,6 +1455,11 @@ abs· (negsuc m) (pos n) =
   cong abs (negsuc·pos m n) ∙ abs- (pos (suc m) · pos n) ∙ absPos·Pos (suc m) n
 abs· (negsuc m) (negsuc n) = cong abs (negsuc·negsuc m n) ∙ absPos·Pos (suc m) (suc n)
 
+sign·abs : ∀ m → sign m · pos (abs m) ≡ m
+sign·abs (pos zero) = refl
+sign·abs (pos (suc n)) = refl
+sign·abs (negsuc n) = refl
+
 -- ℤ is integral domain
 
 isIntegralℤPosPos : (c m : ℕ) → pos c · pos m ≡ 0 → ¬ c ≡ 0 → m ≡ 0
@@ -1507,41 +1510,34 @@ sumFinℤHom : {n : ℕ} (f g : Fin n → ℤ)
   → sumFinℤ {n = n} (λ x → f x + g x) ≡ sumFinℤ {n = n} f + sumFinℤ {n = n} g
 sumFinℤHom {n = n} = sumFinGenHom _+_ 0 (λ _ → refl) +Comm +Assoc n
 
+{- clamp negative numbers to 0 -}
+
+clamp : ℤ → ℕ
+clamp (pos n) = n
+clamp (negsuc n) = zero
+
+
 abs-max : ∀ n → pos (abs n) ≡ max n (- n)
 abs-max (pos zero) = refl
 abs-max (pos (suc n)) = refl
 abs-max (negsuc n) = refl
 
-min-pos-pos : ∀ m n → min (pos m) (pos n) ≡ pos (ℕ.min m n)
+min-pos-pos : ∀ m n → min (pos m) (pos n) ≡ pos (ℕmin m n)
 min-pos-pos zero n = refl
 min-pos-pos (suc m) zero = refl
-min-pos-pos (suc m) (suc n) = cong sucℤ (min-pos-pos m n)
+min-pos-pos (suc m) (suc n) = cong sucℤ (min-pos-pos m n) ∙ sym (cong pos (minSuc {m} {n}))
 
-max-pos-pos : ∀ m n → max (pos m) (pos n) ≡ pos (ℕ.max m n)
+max-pos-pos : ∀ m n → max (pos m) (pos n) ≡ pos (ℕmax m n)
 max-pos-pos zero n = refl
 max-pos-pos (suc m) zero = refl
-max-pos-pos (suc m) (suc n) = cong sucℤ (max-pos-pos m n)
+max-pos-pos (suc m) (suc n) = cong sucℤ (max-pos-pos m n) ∙ sym (cong pos (maxSuc {m} {n}))
 
+-- sign : ℤ → ℤ
+-- sign (pos zero) = 0
+-- sign (pos (suc n)) = 1
+-- sign (negsuc n) = -1
 
-sign : ℤ → ℤ
-sign (pos zero) = 0
-sign (pos (suc n)) = 1
-sign (negsuc n) = -1
-
-sign·abs : ∀ m → sign m · pos (abs m) ≡ m
-sign·abs (pos zero) = refl
-sign·abs (pos (suc n)) = refl
-sign·abs (negsuc n) = refl
-
--- abs[sign[m]·pos[n]]≡n : ∀ m n → abs (sign m · pos n) ≡ n
--- abs[sign[m]·pos[n]]≡n m n = {!!}
-
-
--- ·'≡· : ∀ n m → n · m ≡ n ·' m
--- ·'≡· (pos n) (pos n₁) = sym (pos·pos n n₁)
--- ·'≡· (pos zero) (negsuc n₁) = refl
--- ·'≡· (pos (suc n)) (negsuc n₁) = {!!}
--- ·'≡· (negsuc n) (pos zero) = ·AnnihilR (negsuc n)
--- ·'≡· (negsuc n) (pos (suc n₁)) = negsuc·pos n (suc n₁) ∙
---   {!!}
--- ·'≡· (negsuc n) (negsuc n₁) = negsuc·negsuc n n₁ ∙ sym (pos·pos (suc n) (suc n₁))
+-- sign·abs : ∀ m → sign m · pos (abs m) ≡ m
+-- sign·abs (pos zero) = refl
+-- sign·abs (pos (suc n)) = refl
+-- sign·abs (negsuc n) = refl
