@@ -892,25 +892,29 @@ infimumℙ P f =
 ⊤Pred = (λ _ → Unit , isPropUnit )
 
 
+opaque
+ unfolding _≤ᵣ_
+ ∼→≤ : ∀ u q → u ≤ᵣ (rat q) → ∀ v ε → u ∼'[ ε ] v → v ≤ᵣ rat (q ℚ.+ fst ε)
+ ∼→≤ u q u≤q' v ε u∼v = cong (maxᵣ v ∘ rat) (sym (ℚ.≤→max q (q ℚ.+ fst ε)
+           (ℚ.≤+ℚ₊ q q ε (ℚ.isRefl≤ q )))) ∙∙
+             (maxᵣAssoc v (rat q) (rat (q ℚ.+ fst ε)))  ∙∙
+              Elimℝ-Prop.go w (maxᵣ v ((rat q))) ε (∼→∼' _ _ _ maxLip)
 
-∼→≤ : ∀ u q → u ≤ᵣ (rat q) → ∀ v ε → u ∼'[ ε ] v → v ≤ᵣ rat (q ℚ.+ fst ε)
-∼→≤ u q u≤q v ε u∼v = xxx
 
- where
+  where
 
- opaque
-  unfolding _≤ᵣ_
-  ∼→≤-rat-u : ∀ u q → rat u ≤ᵣ (rat q) → ∀  v ε
-              → rat u ∼'[ ε ] v → v ≤ᵣ rat (q ℚ.+ fst ε)
-  ∼→≤-rat-u r q u≤q = Elimℝ-Prop.go w
-   where
+   maxLip : ((rat q)) ∼[ ε ] maxᵣ v ((rat q))
+   maxLip =
+             subst (_∼[ ε ] maxᵣ v ((rat q)))
+               u≤q' $ NonExpanding₂.go∼L maxR ((rat q)) u v ε (∼'→∼ _ _ _ u∼v)
+
+
    w : Elimℝ-Prop λ v → ∀ ε
-              → rat r ∼'[ ε ] v → v ≤ᵣ rat (q ℚ.+ fst ε)
+              → rat q ∼'[ ε ] v → v ≤ᵣ rat (q ℚ.+ fst ε)
    w .Elimℝ-Prop.ratA x ε (u , v) = ≤ℚ→≤ᵣ x _
-     (subst (ℚ._≤ q ℚ.+ fst ε) ℚ!! $ ℚ.≤Monotone+ r q (x ℚ.- r) (fst ε)
-       (≤ᵣ→≤ℚ r q u≤q)
-       (ℚ.<Weaken≤ _ _ (ℚ.minus-<'  (fst ε) (x ℚ.- r)
-       $ subst ((ℚ.- fst ε) ℚ.<_) (sym (ℚ.-[x-y]≡y-x x r)) u)))
+     (subst (ℚ._≤ q ℚ.+ fst ε) ℚ!! $ ℚ.≤-o+ (x ℚ.- q) (fst ε) q
+       (ℚ.<Weaken≤ _ _ (ℚ.minus-<'  (fst ε) (x ℚ.- q)
+       $ subst ((ℚ.- fst ε) ℚ.<_) (sym (ℚ.-[x-y]≡y-x x q)) u)))
    w .Elimℝ-Prop.limA x y x₁ ε =
         PT.rec (isProp≤ᵣ (lim x y) _)
       (uncurry λ θ →
@@ -918,29 +922,26 @@ infimumℙ P f =
          (uncurry λ θ<ε →
            PT.rec (isProp≤ᵣ (lim x y) _)
              λ (η , xx , xx') →
-               let xx'* : rat r
+               let xx'* : rat q
                         ∼'[ (((ε .fst ℚ.- fst θ) ℚ.- fst η) , xx) ] x η
                    xx'* = xx'
 
                    yy : (δ : ℚ₊) → fst δ ℚ.< fst θ →
-                           rat r ∼[ ε ] x δ
-                   yy δ δ<θ =
-                     let z = triangle∼ {rat r}
+                           rat q ∼[ ε ] x δ
+                   yy δ δ<θ = subst∼ ℚ!! (triangle∼ {rat q}
                                {x η} {x δ}
                                  {(((ε .fst ℚ.- fst θ) ℚ.- fst η) , xx)}
                                     { θ ℚ₊+  η  }
                               (∼'→∼ _ _
                                ((((ε .fst ℚ.- fst θ) ℚ.- fst η) , xx))
-                                xx')
-                                 let uu = (y η δ)
-                                  in ∼-monotone<
+                                xx') (∼-monotone<
                                         (subst (ℚ._< fst (θ ℚ₊+ η))
                                            (ℚ.+Comm (fst δ) (fst η))
                                            (ℚ.<-+o
                                              (fst δ)
                                              (fst θ) (fst η)
-                                             δ<θ)) uu
-                     in subst∼ ℚ!! z
+                                             δ<θ)) (y η δ)))
+
 
                in
                  sym (eqℝ _ _ λ ε' →
@@ -963,21 +964,12 @@ infimumℙ P f =
                                (sym zzz) (refl∼ (rat (q ℚ.+ fst ε))
                               ((fst ε' ℚ.- fst ε*) , ε*<ε'))) )
                               ))
-     ∘ fst (rounded∼' (rat r) (lim x y) ε)
+     ∘ fst (rounded∼' (rat q) (lim x y) ε)
+
 
    w .Elimℝ-Prop.isPropA v = isPropΠ2 λ _ _ → isProp≤ᵣ v _
 
-  maxLip : ((rat q)) ∼[ ε ] maxᵣ v ((rat q))
-  maxLip =
-         subst (_∼[ ε ] maxᵣ v ((rat q)))
-           u≤q $ NonExpanding₂.go∼L maxR ((rat q)) u v ε (∼'→∼ _ _ _ u∼v)
 
-  -- zzz =
-  xxx : v ≤ᵣ rat (q ℚ.+ fst ε)
-  xxx = cong (maxᵣ v ∘ rat) (sym (ℚ.≤→max q (q ℚ.+ fst ε)
-          (ℚ.≤+ℚ₊ q q ε (ℚ.isRefl≤ q )))) ∙∙
-            (maxᵣAssoc v (rat q) (rat (q ℚ.+ fst ε)))  ∙∙
-              ∼→≤-rat-u q q (≤ᵣ-refl (rat q)) (maxᵣ v ((rat q))) ε (∼→∼' _ _ _ maxLip)
 
 
 
@@ -991,14 +983,6 @@ infimumℙ P f =
                  ≤ℚ→≤ᵣ (r' ℚ.+ fst ε) (q ℚ.+ fst ε)
                    (ℚ.≤-+o r' q (fst ε) (≤ᵣ→≤ℚ r' q z'')))))
             (fst (<ᵣ-impl _ _) u<q))
-
-  -- PT.map (λ ((q' , r') , z , z' , z'') →
-  --           ((q' ℚ.+ fst ε) , (r' ℚ.+ fst ε)) ,
-  --              (∼→≤ u q' z v ε x  , ((ℚ.<-+o q' r' (fst ε) z') ,
-  --                ≤ℚ→≤ᵣ (r' ℚ.+ fst ε) (q ℚ.+ fst ε)
-  --                  (ℚ.≤-+o r' q (fst ε) (≤ᵣ→≤ℚ r' q z'')))))
-  --           u<q
-
 
 
 
