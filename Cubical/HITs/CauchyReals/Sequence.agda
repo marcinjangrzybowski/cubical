@@ -1,4 +1,4 @@
--- {-# OPTIONS --safe --lossy-unification #-}
+{-# OPTIONS --safe --lossy-unification #-}
 
 module Cubical.HITs.CauchyReals.Sequence where
 
@@ -247,32 +247,32 @@ Dichotomyℝ ε x x' =
 Seq : Type
 Seq = ℕ → ℝ
 
--- /nᵣ-L : (n : ℕ₊₁) → Σ _ (Lipschitz-ℝ→ℝ _)
--- /nᵣ-L n = (fromLipschitz ([ 1 / n ] , _)
---   (_ , Lipschitz-rat∘ ([ 1 / n ] , _) (ℚ._· [ 1 / n ])
---    λ q r ε x →
---      subst (ℚ._< ([ 1 / n ]) ℚ.· (fst ε))
---       (sym (ℚ.pos·abs [ 1 / n ] (q ℚ.- r)
---        (ℚ.<Weaken≤ 0 [ 1 / n ]
---            ( (ℚ.0<→< [ 1 / n ] _))))
---        ∙ cong ℚ.abs (ℚ.·Comm _ _ ∙ ℚ.·DistR+ q (ℚ.- r) [ 1 / n ]
---         ∙ cong ((q ℚ.· [ 1 / n ]) ℚ.+_)
---             (sym (ℚ.·Assoc -1 r [ 1 / n ]))))
---       (ℚ.<-o· (ℚ.abs (q ℚ.- r)) (fst ε) [ 1 / n ]
---        ((ℚ.0<→< [ 1 / n ] _))
---        x)))
+/nᵣ-L : (n : ℕ₊₁) → Σ _ (Lipschitz-ℝ→ℝ ([ 1 / n ] , tt))
+/nᵣ-L n = (fromLipschitz ([ 1 / n ] , _)
+  (_ , Lipschitz-rat∘ ([ 1 / n ] , _) (ℚ._· [ 1 / n ])
+   λ q r ε x →
+     subst (ℚ._< ([ 1 / n ]) ℚ.· (fst ε))
+      (sym (ℚ.pos·abs [ 1 / n ] (q ℚ.- r)
+       (ℚ.<Weaken≤ 0 [ 1 / n ]
+           ( (ℚ.0<→< [ 1 / n ] _))))
+       ∙ cong ℚ.abs (ℚ.·Comm _ _ ∙ ℚ.·DistR+ q (ℚ.- r) [ 1 / n ]
+        ∙ cong ((q ℚ.· [ 1 / n ]) ℚ.+_)
+            (sym (ℚ.·Assoc -1 r [ 1 / n ]))))
+      (ℚ.<-o· (ℚ.abs (q ℚ.- r)) (fst ε) [ 1 / n ]
+       ((ℚ.0<→< [ 1 / n ] _))
+       x)))
 
--- /nᵣ : ℕ₊₁ → ℝ → ℝ
--- /nᵣ = fst ∘ /nᵣ-L
+/nᵣ : ℕ₊₁ → ℝ → ℝ
+/nᵣ = fst ∘ /nᵣ-L
 
--- /nᵣ-／ᵣ : ∀ n x (p : 0 ＃ fromNat (ℕ₊₁→ℕ n))
---             → /nᵣ n x ≡ (x ／ᵣ[ fromNat (ℕ₊₁→ℕ n) , p ] )
--- /nᵣ-／ᵣ n x p = ≡Continuous _ _
---   (Lipschitz→IsContinuous _ (fst (/nᵣ-L n)) (snd (/nᵣ-L n)))
---    (IsContinuous·ᵣR _)
---   (λ r → cong rat (cong (r ℚ.·_) (cong [ 1 /_] (sym (·₊₁-identityˡ _))))
---     ∙ rat·ᵣrat _ _ ∙
---       cong (rat r ·ᵣ_) (sym (invℝ-rat _ _ (fst (rat＃ _ _) p)) )) x
+/nᵣ-／ᵣ : ∀ n x (p : 0 ＃ fromNat (ℕ₊₁→ℕ n))
+            → /nᵣ n x ≡ (x ／ᵣ[ fromNat (ℕ₊₁→ℕ n) , p ] )
+/nᵣ-／ᵣ n x p = ≡Continuous _ _
+  (Lipschitz→IsContinuous _ (fst (/nᵣ-L n)) (snd (/nᵣ-L n)))
+   (IsContinuous·ᵣR _)
+  (λ r → fromLipschitz-rat ∙ cong rat (cong (r ℚ.·_) (cong [ 1 /_] (sym (·₊₁-identityˡ _))))
+    ∙ rat·ᵣrat _ _ ∙
+      cong (rat r ·ᵣ_) (sym (invℝ-rat _ _ (fst (rat＃ _ _) p)) )) x
 
 -- /nᵣ-／ᵣ₊ : ∀ n x
 --             → /nᵣ n x ≡ (x ／ᵣ₊ (fromNat (ℕ₊₁→ℕ n)) )
@@ -288,10 +288,10 @@ Seq = ℕ → ℝ
 --  --        ∙ sym (invℝ'-rat _ _ _))) x
 
 
--- /nᵣ-pos : ∀ n x → 0 <ᵣ x → 0 <ᵣ /nᵣ n x
--- /nᵣ-pos n x 0<x = subst (0 <ᵣ_) (sym (/nᵣ-／ᵣ _ _ _))
---                      (ℝ₊· (_ , 0<x) (_ , invℝ-pos _
---                          (<ℚ→<ᵣ _ _ (ℚ.0<→< _ tt))))
+/nᵣ-pos : ∀ n x → 0 <ᵣ x → 0 <ᵣ /nᵣ n x
+/nᵣ-pos n x 0<x = subst (0 <ᵣ_) (sym (/nᵣ-／ᵣ _ _ _))
+                     (ℝ₊· (_ , 0<x) (_ , invℝ-pos _
+                         (<ℚ→<ᵣ _ _ (ℚ.0<→< _ tt))))
 
 seqSumUpTo : (ℕ → ℝ) → ℕ →  ℝ
 seqSumUpTo s zero = 0
@@ -1600,29 +1600,30 @@ opaque
 --                          ))))
 
 
--- expSeq : ℝ → Seq
--- expSeq x zero = 1
--- expSeq x (suc n) = /nᵣ (1+ n) (expSeq x n ·ᵣ x)
+expSeq : ℝ → Seq
+expSeq x zero = 1
+expSeq x (suc n) = /nᵣ (1+ n) (expSeq x n ·ᵣ x)
 
--- expSeq-rat : ∀ (q : ℚ) → (n : ℕ) → Σ[ r ∈ ℚ ] (expSeq (rat q) n ≡ rat r)
--- expSeq-rat q zero = 1 , refl
--- expSeq-rat q (suc n) =
---   let (e , p) = expSeq-rat q n
---   in (e ℚ.· q)  ℚ.· [ 1 / (1+ n) ] ,
---        cong (/nᵣ (1+ n)) (cong (_·ᵣ (rat q)) p ∙ sym (rat·ᵣrat _ _))
+expSeq-rat : ∀ (q : ℚ) → (n : ℕ) → Σ[ r ∈ ℚ ] (expSeq (rat q) n ≡ rat r)
+expSeq-rat q zero = 1 , refl
+expSeq-rat q (suc n) =
+  let (e , p) = expSeq-rat q n
+  in (e ℚ.· q)  ℚ.· [ 1 / (1+ n) ] ,
+       cong (/nᵣ (1+ n)) (cong (_·ᵣ (rat q)) p ∙ sym (rat·ᵣrat _ _))
+       ∙ fromLipschitz-rat
+       
+expSeries-rat : ∀ (q : ℚ) → (n : ℕ) →
+  Σ[ r ∈ ℚ ] (seqΣ (expSeq (rat q)) n ≡ rat r)
+expSeries-rat q zero = 0 , refl
+expSeries-rat q (suc n) =
+  let (e , p) = expSeries-rat q n
+      (e' , p') = expSeq-rat q n
+  in (e ℚ.+ e') , cong₂ _+ᵣ_ p p' ∙ +ᵣ-rat _ _
 
--- expSeries-rat : ∀ (q : ℚ) → (n : ℕ) →
---   Σ[ r ∈ ℚ ] (seqΣ (expSeq (rat q)) n ≡ rat r)
--- expSeries-rat q zero = 0 , refl
--- expSeries-rat q (suc n) =
---   let (e , p) = expSeries-rat q n
---       (e' , p') = expSeq-rat q n
---   in (e ℚ.+ e') , cong₂ _+ᵣ_ p p' ∙ +ᵣ-rat _ _
-
--- expSeqPos : ∀ x → 0 <ᵣ x → ∀ n → 0 <ᵣ expSeq x n
--- expSeqPos x 0<x zero = decℚ<ᵣ?
--- expSeqPos x 0<x (suc n) =
---  /nᵣ-pos (1+ n) _ (ℝ₊· (_ , expSeqPos x 0<x n) (_ , 0<x))
+expSeqPos : ∀ x → 0 <ᵣ x → ∀ n → 0 <ᵣ expSeq x n
+expSeqPos x 0<x zero = decℚ<ᵣ?
+expSeqPos x 0<x (suc n) =
+ /nᵣ-pos (1+ n) _ (ℝ₊· (_ , expSeqPos x 0<x n) (_ , 0<x))
 
 -- limₙ→∞[expSeqRatio]=0 : ∀ x → ∀ (0<x : 0 ℚ.< x)  → lim'ₙ→∞
 --       (λ n →
@@ -2064,8 +2065,16 @@ opaque
 
 
 
--- expSeriesVal : ℕ → ℚ
--- expSeriesVal n = fst (expSeries-rat 1 n)
+expSeriesVal : ℕ → ℚ
+expSeriesVal n = fst (expSeries-rat 1 n)
+
+
+-- digits : ℕ → ℚ → ℕ 
+-- digits n r =
+--  let qq = map-snd ℕ₊₁→ℕ (fst (ℚ.reduced ((ℚ.reduce r) ℚ.· fromNat (10 ℕ.^ n)))) 
+--  in {!!}
+-- expSeriesValT : Σ ℤ.ℤ (λ _ → ℕ₊₁)
+-- expSeriesValT = {!fst (ℚ.reduced (expSeriesVal 100))!}
 
 -- 𝑒 : ℝ
 -- 𝑒 = expℚ₊ 1
