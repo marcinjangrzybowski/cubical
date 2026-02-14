@@ -5,8 +5,8 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure
 
 open import Cubical.Data.Rationals.Fast.Base
-open import Cubical.Data.Int.Fast using (pos;negsuc)
-import Cubical.Data.Int.Fast as ℤ
+open import Cubical.Data.Fast.Int using (pos;negsuc)
+import Cubical.Data.Fast.Int as ℤ
 open import Cubical.Data.List
 open import Cubical.Data.Nat using (ℕ; suc; zero)
 import Cubical.Data.Nat as ℕ

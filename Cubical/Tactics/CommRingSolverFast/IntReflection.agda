@@ -12,8 +12,8 @@ open import Cubical.Data.Maybe
 open import Cubical.Data.Sigma
 open import Cubical.Data.List
 open import Cubical.Data.Nat.Literals
-open import Cubical.Data.Int.Fast.Base hiding (abs; _-_)
-open import Cubical.Data.Int.Fast using (fromNegℤ; fromNatℤ)
+open import Cubical.Data.Fast.Int.Base hiding (abs; _-_)
+open import Cubical.Data.Fast.Int using (fromNegℤ; fromNatℤ)
 open import Cubical.Data.Nat using (ℕ; discreteℕ) renaming (_+_ to _+ℕ_)
 open import Cubical.Data.Bool
 open import Cubical.Data.Bool.SwitchStatement
@@ -34,7 +34,7 @@ open import Cubical.Tactics.Reflection.Utilities
 
 import Cubical.Data.Nat as ℕ
 
-open import Cubical.Algebra.CommRing.Instances.Int.Fast
+open import Cubical.Algebra.CommRing.Instances.Fast.Int
 
 private
   variable

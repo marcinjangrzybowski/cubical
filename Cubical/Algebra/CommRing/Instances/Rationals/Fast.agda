@@ -5,10 +5,10 @@ module Cubical.Algebra.CommRing.Instances.Rationals.Fast where
 open import Cubical.Foundations.Prelude
 open import Cubical.Algebra.CommRing
 open import Cubical.Data.Rationals.Fast as ℚ
-open import Cubical.Algebra.CommRing.Instances.Int.Fast
+open import Cubical.Algebra.CommRing.Instances.Fast.Int
 open import Cubical.Data.NatPlusOne.Base
 open import Cubical.Data.Nat using (zero)
-import Cubical.Data.Int.Fast as ℤ
+import Cubical.Data.Fast.Int as ℤ
 
 ℚCommRing : CommRing ℓ-zero
 ℚCommRing .fst = ℚ

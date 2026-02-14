@@ -10,7 +10,7 @@ open import Cubical.Foundations.Isomorphism
 
 open import Cubical.Data.Bool as 𝟚 hiding (_≤_)
 open import Cubical.Data.Nat as ℕ hiding (_·_;_+_)
-open import Cubical.Data.Int.Fast as ℤ using (pos)
+open import Cubical.Data.Fast.Int as ℤ using (pos)
 import Cubical.Data.Int.Order as ℤ
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
@@ -1361,8 +1361,8 @@ Iso-ℚApproxℙ'-ℚApproxℙ P Q f .Iso.fun x =
     ((λ q → fst ∘ snd ∘ snd ∘ x q) ,
     (λ q → snd ∘ snd ∘ snd ∘ x q))
 Iso-ℚApproxℙ'-ℚApproxℙ P Q f .Iso.inv = _
-Iso-ℚApproxℙ'-ℚApproxℙ P Q f .Iso.rightInv _ = refl
-Iso-ℚApproxℙ'-ℚApproxℙ P Q f .Iso.leftInv _ = refl
+Iso-ℚApproxℙ'-ℚApproxℙ P Q f .Iso.sec _ = refl
+Iso-ℚApproxℙ'-ℚApproxℙ P Q f .Iso.ret _ = refl
 
 
 ℚApproxℙ'≃ℚApproxℙ : (P Q : ℙ ℝ) → ∀ f →

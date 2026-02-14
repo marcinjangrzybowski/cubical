@@ -108,7 +108,6 @@ module _
         (λ a∨b≤x → is-trans _ _ _ ι₁ a∨b≤x , is-trans _ _ _ ι₂ a∨b≤x)
         (uncurry ψ)
 
-
 record IsPseudolatticeEquiv {A : Type ℓ₀} {B : Type ℓ₁}
   (M : PseudolatticeStr ℓ₀' A) (e : A ≃ B) (N : PseudolatticeStr ℓ₁' B)
   : Type (ℓ-max (ℓ-max ℓ₀ ℓ₀') ℓ₁')
@@ -179,6 +178,3 @@ module PseudolatticeReasoning (P' : Pseudolattice ℓ ℓ') where
 
  _◾ : (x : P) → x ≤ x
  x ◾ = is-pseudolattice .is-refl x
-
- infixr 0 _≤⟨_⟩_
- infix  1 _◾

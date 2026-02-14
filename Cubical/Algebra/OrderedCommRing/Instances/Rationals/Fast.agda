@@ -7,6 +7,7 @@ open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
 
 open import Cubical.Data.Empty as ⊥
+import Cubical.Data.Fast.Int.Order as ℤ
 
 open import Cubical.HITs.PropositionalTruncation
 
@@ -65,4 +66,4 @@ isOrderedCommRing (snd ℚOrderedCommRing) = isOrderedCommRingℚ
   isOrderedCommRingℚ .≤-<-trans       = isTrans≤<
   isOrderedCommRingℚ .·MonoR≤         = ≤-·o
   isOrderedCommRingℚ .·MonoR<         = <-·o
-  isOrderedCommRingℚ .0<1             = inj (_ , refl)
+  isOrderedCommRingℚ .0<1             = inj (ℤ.pos<pos tt)

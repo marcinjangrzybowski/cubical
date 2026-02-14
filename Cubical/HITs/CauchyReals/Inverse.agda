@@ -12,7 +12,7 @@ open import Cubical.Data.Bool as 𝟚 hiding (_≤_)
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sum as ⊎
 open import Cubical.Data.Unit
-open import Cubical.Data.Int.Fast as ℤ using (pos)
+open import Cubical.Data.Fast.Int as ℤ using (pos)
 open import Cubical.Data.Sigma
 open import Cubical.Data.Nat
 open import Cubical.Data.NatPlusOne
@@ -28,7 +28,7 @@ open import Cubical.HITs.PropositionalTruncation as PT
 
 open import Cubical.Data.Rationals.Fast as ℚ using (ℚ ; [_/_])
 open import Cubical.Data.Rationals.Fast.Order as ℚ using
-  ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡)
+  ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡ ; [_/_]₊)
 open import Cubical.Data.Rationals.Fast.Order.Properties as ℚ
  using (invℚ₊;/2₊;/3₊;/4₊;x/2<x;invℚ)
 
@@ -679,7 +679,7 @@ opaque
                   z' = subst (rat [ 1 / n ] ≤ᵣ_) (sym (invℝ'-rat q'
                                 (ℚ.<→0< q' (<ᵣ→<ℚ _ _ 0<q')) 0<q'))
                              (≤ℚ→≤ᵣ _ _ (
-                              ℚ.invℚ≤invℚ ([ ℚ.ℕ₊₁→ℤ n / 1 ] , _)
+                              ℚ.invℚ≤invℚ ([ n / 1 ]₊)
                                 (q' , ℚ.<→0< q' (<ᵣ→<ℚ [ pos 0 / 1 ] q' 0<q'))
                                  ((ℚ.min≤' q'* [ pos (ℕ₊₁→ℕ n) / 1 ]))))
                   z : ((invℝ' .fst (rat q') 0<q') +ᵣ (-ᵣ rat [ 1 / n ]))
@@ -700,7 +700,7 @@ opaque
               in isTrans≤<ᵣ _ _ _ (x≤y→0≤y-x _ _ z') z
               )
             (∃rationalApprox u σ))
-       (snd invℝ' u ([ 1 / n ]  , _) p))
+       (snd invℝ' u ([ 1 / n ]₊) p))
    (getClamps u)
 
 
@@ -1492,7 +1492,7 @@ opaque
                            $ fst (z<x/y₊≃y₊·z<x _ _ (ℚ₊→ℝ₊ 2))
                             (isTrans<≡ᵣ _ _ _ η<
                                ((cong ((rat (fst δ) -ᵣ absᵣ (u -ᵣ v)) ·ᵣ_)
-                                (sym (invℝ'-rat 2 _ (snd (ℚ₊→ℝ₊ 2))) ∙
+                                (sym (invℝ'-rat 2 (ℚ.0<pos _ _) (snd (ℚ₊→ℝ₊ 2))) ∙
                                  cong fst (sym (invℝ₊-impl _)))))
 
                                 )
@@ -1595,7 +1595,7 @@ opaque
                 (isTrans≡<ᵣ _ _ _
                   (sym (𝐑'.0LeftAnnihilates _))
                   ((<ᵣ-·ᵣo 0 ((rat (fst δ)) -ᵣ absᵣ (u -ᵣ v))
-                    (ℚ₊→ℝ₊ ([ 1 / 2 ] , _))
+                    (ℚ₊→ℝ₊ ([ 1 / 2 ]₊))
                     (x<y→0<y-x _ _ u-v<δ)))))
                     (denseℚinℝ 0 (minᵣ u v)
                        (snd (minᵣ₊ (u , u∈) (v , v∈))))
@@ -1711,4 +1711,4 @@ Dichotomyℝ' x y z x<z =
 
  where
  Δ₊ : ℝ₊
- Δ₊ = (z -ᵣ x , x<y→0<y-x _ _ x<z) ₊·ᵣ ℚ₊→ℝ₊ ([ 1 / 2 ] , _)
+ Δ₊ = (z -ᵣ x , x<y→0<y-x _ _ x<z) ₊·ᵣ ℚ₊→ℝ₊ ([ 1 / 2 ]₊)

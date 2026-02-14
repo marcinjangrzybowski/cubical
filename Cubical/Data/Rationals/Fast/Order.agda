@@ -10,10 +10,10 @@ open import Cubical.Functions.Logic using (_⊔′_; ⇔toPath)
 open import Cubical.Foundations.Powerset
 
 open import Cubical.Data.Empty as ⊥
-open import Cubical.Data.Int.Fast.Base as ℤ using (ℤ)
-open import Cubical.Data.Int.Fast.Properties as ℤ using ()
-open import Cubical.Data.Int.Fast.Order as ℤ using ()
-open import Cubical.Data.Int.Fast.Divisibility as ℤ
+open import Cubical.Data.Fast.Int.Base as ℤ using (ℤ)
+import Cubical.Data.Fast.Int.Properties as ℤ
+import Cubical.Data.Fast.Int.Order as ℤ
+open import Cubical.Data.Fast.Int.Divisibility as ℤ
 open import Cubical.Data.Rationals.Fast.Base as ℚ
 open import Cubical.Data.Rationals.Fast.Properties as ℚ
 open import Cubical.Data.Nat as ℕ
@@ -265,7 +265,7 @@ module _ where
       lem : (a b : ℤ.ℤ × ℕ₊₁) → ([ a ] ≤ [ b ]) ⊎ ([ b ] ≤ [ a ])
       lem (a , b) (c , d) with (a ℤ.· ℕ₊₁→ℤ d) ℤ.≟ (c ℤ.· ℕ₊₁→ℤ b)
       ... | ℤ.lt ad<cb = inl (inj (ℤ.<-weaken {a ℤ.· ℕ₊₁→ℤ d} ad<cb))
-      ... | ℤ.eq ad≡cb = inl (inj (0 , ℤ.+IdR _ ∙ ad≡cb)) -- (0 , ad≡cb))
+      ... | ℤ.eq ad≡cb = inl (inj (ℤ.Σℕ→≤ (0 , ℤ.+IdR _ ∙ ad≡cb))) 
       ... | ℤ.gt cb<ad = inr (inj (ℤ.<-weaken {c ℤ.· ℕ₊₁→ℤ b} cb<ad))
 
   isConnected< : isConnected _<_
@@ -716,34 +716,41 @@ minus-<' n m p =
 
 
 0<ₚ_ : ℚ → hProp ℓ-zero
-0<ₚ_ = Rec.go w
- where
- w : Rec (hProp ℓ-zero)
- w .Rec.isSetB = isSetHProp
- w .Rec.f (x , _) = ℤ.0< x , ℤ.isProp0< x
- w .Rec.f∼ (x , y) (x' , y') p =
-  ⇔toPath --0<·ℕ₊₁
-     (λ u → ℤ.0<·ℕ₊₁ x' y
-       (subst ℤ.0<_ p (ℤ.·0< x (ℤ.pos (ℕ₊₁→ℕ y'))
-         u _)))
-     (λ u → ℤ.0<·ℕ₊₁ x y'
-       (subst ℤ.0<_ (sym p) (ℤ.·0< x' (ℤ.pos (ℕ₊₁→ℕ y))
-         u _)))
+0<ₚ x  = (0 < x) , isProp< _ _
+-- Rec.go w
+--  where
+--  w : Rec (hProp ℓ-zero)
+--  w .Rec.isSetB = isSetHProp
+--  w .Rec.f (x , _) = (0 ℤ.< x) , ℤ.isProp<
+--  w .Rec.f∼ (x , y) (x' , y') p = {!x x'!}
+--   -- ⇔toPath --0<·ℕ₊₁
+--   --   {!!}
+--   --   {!!}
+--      -- (λ u → ℤ.0<·ℕ₊₁ x' y
+--      --   (subst ℤ.0<_ p (ℤ.·0< x (ℤ.pos (ℕ₊₁→ℕ y'))
+--      --     u _)))
+--      -- (λ u → ℤ.0<·ℕ₊₁ x y'
+--      --   (subst ℤ.0<_ (sym p) (ℤ.·0< x' (ℤ.pos (ℕ₊₁→ℕ y))
+--      --     u _)))
 
 0<_ = fst ∘ 0<ₚ_
 
+opaque
+ ·0< : ∀ m n → 0< m → 0< n → 0< (m ℚ.· n)
+ ·0< = elimProp2
+   (λ x x' → isPropΠ2 λ _ _ → snd (0<ₚ (x ℚ.· x')) )
+   λ where
+     (ℤ.pos zero , snd₁) (ℤ.pos n₁ , snd₂) (inj (ℤ.pos<pos ())) _
+     (ℤ.pos (suc n) , snd₁) (ℤ.pos zero , snd₂) x (inj (ℤ.pos<pos ()))
+     (ℤ.pos (suc n) , snd₁) (ℤ.pos (suc n₁) , snd₂) x x₁ → inj (ℤ.pos<pos tt)
 
-·0< : ∀ m n → 0< m → 0< n → 0< (m ℚ.· n)
-·0< = elimProp2
-  (λ x x' → isPropΠ2 λ _ _ → snd (0<ₚ (x ℚ.· x')) )
-  λ (x , _) (x' , _) → ℤ.·0< x x'
-
-+0< : ∀ m n → 0< m → 0< n → 0< (m ℚ.+ n)
-+0< = elimProp2
-  (λ x x' → isPropΠ2 λ _ _ → snd (0<ₚ (x ℚ.+ x')) )
-  λ (x , y) (x' , y')  p p' →
-    ℤ.+0< (x ℤ.· ℕ₊₁→ℤ y') (x' ℤ.· ℕ₊₁→ℤ y)
-      (ℤ.·0< x (ℕ₊₁→ℤ y') p tt) (ℤ.·0< x' (ℕ₊₁→ℤ y) p' tt)
+ +0< : ∀ m n → 0< m → 0< n → 0< (m ℚ.+ n)
+ +0< = elimProp2
+   (λ x x' → isPropΠ2 λ _ _ → snd (0<ₚ (x ℚ.+ x')) )
+   λ where
+     (ℤ.pos zero , snd₁) (ℤ.pos n₁ , snd₂) (inj (ℤ.pos<pos ())) _
+     (ℤ.pos (suc n) , snd₁) (ℤ.pos zero , snd₂) x (inj (ℤ.pos<pos ()))
+     (ℤ.pos (suc n) , snd₁) (ℤ.pos (suc n₁) , snd₂) x x₁ → inj (ℤ.pos<pos tt)
 
 +0<' : ∀ m n o → 0< m → 0< n → (m ℚ.+ n) ≡ o → 0< o
 +0<' m n o x y p = subst (0<_) p (+0< m n x y)
@@ -759,12 +766,16 @@ minus-<' n m p =
 ℚ₊ : Type
 ℚ₊ = Σ ℚ 0<_
 
+infix 20 [_/_]₊ 
+
+[_/_]₊ : ℕ₊₁ → ℕ₊₁ → ℚ₊
+[_/_]₊ p q = [ ℕ₊₁→ℤ p , q ] , inj (ℤ.pos<pos tt)
 
 instance
   fromNatℚ₊ : HasFromNat ℚ₊
   fromNatℚ₊ =
    record { Constraint = λ { zero → ⊥ ; _ → Unit }
-             ; fromNat = λ { (suc n) → ([ ℤ.pos (suc n) , 1 ] , _) } }
+             ; fromNat = λ { (suc n) → ([ ℤ.pos (suc n) , 1 ] , inj (ℤ.pos<pos tt)) } }
 
 ℚ₊≡ : {x y : ℚ₊} → fst x ≡ fst y → x ≡ y
 ℚ₊≡ = Σ≡Prop (snd ∘ 0<ₚ_)
@@ -778,8 +789,7 @@ _ℚ₊+_ x x₁ = ((fst x) ℚ.+ (fst x₁)) ,
   +0< (fst x) (fst x₁) (snd x) (snd x₁)
 
 0<→< : ∀ q → 0< q → 0 < q
-0<→< = elimProp (λ x → isProp→ (isProp< 0 x))
-  λ { (ℤ.pos (suc a) , x) z → inj (_ , refl) }
+0<→< q x = x 
 
 0<ℚ₊ : (ε : ℚ₊) → 0 < fst ε
 0<ℚ₊ = uncurry 0<→<
@@ -789,22 +799,16 @@ _ℚ₊+_ x x₁ = ((fst x) ℚ.+ (fst x₁)) ,
 
 
 <→0< : ∀ q → 0 < q → 0< q
-<→0< = elimProp (λ x → isProp→ (snd (0<ₚ x)))
- zz
- where
- zz : ∀ a → 0 < [ a ] → 0< [ a ]
- zz (ℤ.pos zero , snd₁) (inj (_ , p)) =
-  ℕ.snotz (ℤ.injPos p)
- zz (ℤ.pos (suc n) , snd₁) x = tt
- zz (ℤ.negsuc n , snd₁) (inj (_ , p)) =
-   ℤ.posNotnegsuc _ _ p
+<→0< q x = x
 
 0<-min : ∀ x y → 0< x → 0< y → 0< (ℚ.min x y)
 0<-min = elimProp2
  (λ x y → isPropΠ2 λ _ _ → snd (0<ₚ (ℚ.min x y)))
- λ a b x x₁ → ℤ.min-0< (a .fst ℤ.· ℕ₊₁→ℤ (b .snd)) (b .fst ℤ.· ℕ₊₁→ℤ (a .snd))
-                (ℤ.·0< (a .fst) (ℕ₊₁→ℤ (b .snd)) x _ )
-                 ((ℤ.·0< (b .fst) (ℕ₊₁→ℤ (a .snd)) x₁ _ ))
+  λ where
+    (ℤ.pos zero , snd₁) (ℤ.pos n₁ , snd₂) (inj (ℤ.pos<pos ())) _
+    (ℤ.pos (suc n) , snd₁) (ℤ.pos zero , snd₂) x (inj (ℤ.pos<pos ()))
+    (ℤ.pos (suc n) , snd₁) (ℤ.pos (suc n₁) , snd₂) x x₁ →
+      subst (0 <_) (cong (λ m → [ ℤ.pos m , _ ]) (sym minSuc)) (inj (ℤ.pos<pos _))
 
 min₊ : ℚ₊ → ℚ₊ → ℚ₊
 min₊ (x , y) (x' , y') =
@@ -953,33 +957,36 @@ clamp d u x = ℚ.min (ℚ.max d x) u
 
 
 eqElim₊ : (lrhs : ℚ₊ → ℚ × ℚ) →
-  (∀ {k m} → fst (lrhs ([ ((ℤ.pos (suc k)) , 1+ m) ] , tt))
-        ≡  snd (lrhs ([ ((ℤ.pos (suc k)) , 1+ m) ] , tt)))
+  (∀ {k m} → fst (lrhs ([ ((ℤ.pos (suc k)) , 1+ m) ] , inj (ℤ.pos<pos tt)))
+        ≡  snd (lrhs ([ ((ℤ.pos (suc k)) , 1+ m) ] , inj (ℤ.pos<pos tt))))
     → ∀ (ε : ℚ₊) → fst (lrhs ε) ≡ snd (lrhs ε)
 eqElim₊ lrhs p = uncurry (ElimProp.go w)
   where
   w : ElimProp (λ z → ∀ p →  fst (lrhs (z , p)) ≡ snd (lrhs (z , p)))
   w .ElimProp.isPropB _ = isPropΠ λ _ → isSetℚ _ _
-  w .ElimProp.f (ℤ.pos (suc n) , (1+ n₁)) _ = p {n} {n₁}
+  w .ElimProp.f (ℤ.pos (suc n) , (1+ n₁)) (inj (ℤ.pos<pos _)) = p {n} {n₁}
 
 
 substℚ₊ : ∀ {ℓ} (A : ℚ → Type ℓ) (lrhs : ℚ₊ → ℚ × ℚ) →
-  (∀ {k m} → fst (lrhs ([ ((ℤ.pos (suc k)) , 1+ m) ] , tt))
-        ≡  snd (lrhs ([ ((ℤ.pos (suc k)) , 1+ m) ] , tt)))
+  (∀ {k m} → fst (lrhs ([ ((ℤ.pos (suc k)) , 1+ m) ] , inj (ℤ.pos<pos tt)))
+        ≡  snd (lrhs ([ ((ℤ.pos (suc k)) , 1+ m) ] , inj (ℤ.pos<pos tt))))
     → ∀ (ε : ℚ₊) → A (fst (lrhs ε)) → A (snd (lrhs ε))
 substℚ₊ A lrhs p ε =
   subst A (eqElim₊ lrhs p ε)
 
 
 eqElim₂₊ : {lhs rhs : ℚ₊ → ℚ₊ → ℚ} →
-  (∀ k m k' m' → lhs ([ ((ℤ.pos (suc k)) , 1+ m) ] , tt) ([ ((ℤ.pos (suc k')) , 1+ m') ] , tt)
-        ≡  rhs ([ ((ℤ.pos (suc k)) , 1+ m) ] , tt) ([ ((ℤ.pos (suc k')) , 1+ m') ] , tt))
+  (∀ k m k' m' → lhs ([ ((ℤ.pos (suc k)) , 1+ m) ] , inj (ℤ.pos<pos tt))
+          ([ ((ℤ.pos (suc k')) , 1+ m') ] , inj (ℤ.pos<pos tt))
+        ≡  rhs ([ ((ℤ.pos (suc k)) , 1+ m) ] , inj (ℤ.pos<pos tt))
+         ([ ((ℤ.pos (suc k')) , 1+ m') ] , inj (ℤ.pos<pos tt)))
     → ∀ {ε ε' : ℚ₊} → lhs ε ε' ≡ rhs ε ε'
 eqElim₂₊ {lhs} {rhs} p {ε , 0<ε} {ε' , 0<ε'} = ElimProp2.go w ε ε' 0<ε 0<ε'
   where
   w : ElimProp2 (λ z z' → ∀ p p' →  lhs (z , p) (z' , p') ≡ rhs (z , p) (z' , p'))
   w .ElimProp2.isPropB _ _ = isPropΠ2 λ _ _ → isSetℚ _ _
-  w .ElimProp2.f (ℤ.pos (suc n) , (1+ n₁)) (ℤ.pos (suc m) , (1+ m₁)) _ _ = p n n₁ m m₁
+  w .ElimProp2.f (ℤ.pos (suc n) , (1+ n₁)) (ℤ.pos (suc m) , (1+ m₁)) (inj (ℤ.pos<pos _)) (inj (ℤ.pos<pos _)) =
+    p n n₁ m m₁
 
 
 module EqElims where
@@ -998,9 +1005,9 @@ module EqElims where
  lrhsDomFst [ℚ] = ℤ
  lrhsDomFst [ℚ₊] = ℕ₊₁
 
- lrhsCtr : ∀ b → lrhsDomFst b → ℕ → (lrhsDom b)
- lrhsCtr [ℚ] k m = [ k , 1+ m ]
- lrhsCtr [ℚ₊] n m = [ ℕ₊₁→ℤ n , (1+ m) ] , _
+ lrhsCtr : ∀ b → lrhsDomFst b → ℕ₊₁ → (lrhsDom b)
+ lrhsCtr [ℚ] k m = [ k , m ]
+ lrhsCtr [ℚ₊] n m = [ ℕ₊₁→ℤ n , m ] , inj (ℤ.pos<pos tt)
 
  LRhs : ℚSignature → Type
  LRhs [] = ℚ × ℚ
@@ -1008,7 +1015,7 @@ module EqElims where
 
  LemType : ∀ s → LRhs s → Type
  LemType [] (lhs , rhs) = lhs ≡ rhs
- LemType (x ∷ xs) lrhs = (k : lrhsDomFst x) (m : ℕ) → LemType xs (lrhs (lrhsCtr x k m))
+ LemType (x ∷ xs) lrhs = (k : lrhsDomFst x) (m : ℕ₊₁) → LemType xs (lrhs (lrhsCtr x k m))
 
 
  EqType : ∀ s → LRhs s → Type
@@ -1025,13 +1032,13 @@ module EqElims where
   where
   w : ElimProp _
   w .ElimProp.isPropB = isPropEqType xs ∘ lrhs
-  w .ElimProp.f (k , 1+ m) = EllimEqₛ xs (lrhs _) (e k m)
+  w .ElimProp.f (k , m) = EllimEqₛ xs (lrhs _) (e k m)
 
  EllimEqₛ ([ℚ₊] ∷ xs) lrhs e = uncurry (ElimProp.go w)
   where
   w : ElimProp (λ z → ∀ p → EqType xs (lrhs (z , p)))
   w .ElimProp.isPropB q = isPropΠ λ _ → isPropEqType xs (lrhs (q , _))
-  w .ElimProp.f (ℤ.pos (suc n) , (1+ m)) _ = EllimEqₛ xs (lrhs _) (e (1+ n) m)
+  w .ElimProp.f (ℤ.pos (suc n) , m) (inj (ℤ.pos<pos _)) = EllimEqₛ xs (lrhs _) (e (1+ n) m)
 
 
 

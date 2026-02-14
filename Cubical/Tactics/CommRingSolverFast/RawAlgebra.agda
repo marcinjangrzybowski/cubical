@@ -3,7 +3,7 @@ module Cubical.Tactics.CommRingSolverFast.RawAlgebra where
 open import Cubical.Foundations.Prelude
 open import Cubical.Data.Nat using (ℕ)
 import Cubical.Data.Nat as ℕ
-open import Cubical.Data.Int.Fast
+open import Cubical.Data.Fast.Int
   renaming
   ( _+_ to _+ℤ_
   ; _·_ to _·ℤ_
@@ -22,7 +22,7 @@ open import Cubical.Tactics.CommRingSolverFast.RawRing renaming (⟨_⟩ to ⟨_
 open import Cubical.Tactics.CommRingSolverFast.IntAsRawRing
 open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.Ring
-open import Cubical.Algebra.CommRing.Instances.Int.Fast
+open import Cubical.Algebra.CommRing.Instances.Fast.Int
 private
   variable
     ℓ ℓ' : Level

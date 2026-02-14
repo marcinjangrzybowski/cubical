@@ -3,7 +3,7 @@ module Cubical.Tactics.CommRingSolverFast.HornerForms where
 open import Cubical.Foundations.Prelude
 
 open import Cubical.Data.Nat using (ℕ)
-open import Cubical.Data.Int.Fast hiding (_+_ ; _·_ ; -_)
+open import Cubical.Data.Fast.Int hiding (_+_ ; _·_ ; -_)
 open import Cubical.Data.FinData
 open import Cubical.Data.Vec
 open import Cubical.Data.Bool

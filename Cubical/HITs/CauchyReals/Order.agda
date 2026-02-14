@@ -11,7 +11,7 @@ open import Cubical.Data.Bool as 𝟚 hiding (_≤_)
 open import Cubical.Data.Nat as ℕ hiding (_·_;_+_)
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sum as ⊎
-open import Cubical.Data.Int.Fast as ℤ
+open import Cubical.Data.Fast.Int as ℤ
 import Cubical.Data.Int.Order as ℤ
 open import Cubical.Data.Sigma
 open import Cubical.Relation.Nullary
@@ -22,7 +22,7 @@ open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
 
 open import Cubical.Data.Rationals.Fast as ℚ using (ℚ ; [_/_])
 open import Cubical.Data.Rationals.Fast.Order as ℚ using
-  ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡)
+  ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡  ; [_/_]₊)
 open import Cubical.Data.Rationals.Fast.Order.Properties as ℚ
  using (invℚ₊;/2₊;/3₊;/4₊)
 
@@ -461,7 +461,7 @@ opaque
  isAntisym≤ᵣ : BinaryRelation.isAntisym _≤ᵣ_
  isAntisym≤ᵣ a b a≤b b≤a = sym b≤a ∙∙ maxᵣComm b a ∙∙ a≤b
 
- ℚ-isLip : Lipschitz-ℚ→ℝ ([ pos 1 / 1+ 0 ] , tt) (λ x → rat (ℚ.- x))
+ ℚ-isLip : Lipschitz-ℚ→ℝ 1 (λ x → rat (ℚ.- x))
  ℚ-isLip q r ε x x₁ =
      subst∼ {ε = ε} (sym $ ℚ.·IdL (fst ε))
       (rat-rat _ _ _ (subst ((ℚ.- fst ε) ℚ.<_)
@@ -473,8 +473,8 @@ opaque
             cong (ℚ.-_) (ℚ.+Comm r (ℚ.- q) ∙
               cong ((ℚ.- q) ℚ.+_) (sym $ ℚ.-Invol r))) x)))
 
- -ᵣR : Σ (ℝ → ℝ) (Lipschitz-ℝ→ℝ (1 , tt))
- -ᵣR = fromLipschitzGo (1 , _)
+ -ᵣR : Σ (ℝ → ℝ) (Lipschitz-ℝ→ℝ 1)
+ -ᵣR = fromLipschitzGo 1
    ((rat ∘ ℚ.-_ ) , ℚ-isLip)
 
  -ᵣ_ : ℝ → ℝ
@@ -488,7 +488,7 @@ opaque
  -ᵣ-rat : ∀ q → -ᵣ (rat q) ≡ rat (ℚ.- q)
  -ᵣ-rat q = refl
 
- -ᵣ-impl : ∀ x → -ᵣ x ≡ fst (fromLipschitzGo (1 , _) ((rat ∘ ℚ.-_ ) , ℚ-isLip)) x
+ -ᵣ-impl : ∀ x → -ᵣ x ≡ fst (fromLipschitzGo 1 ((rat ∘ ℚ.-_ ) , ℚ-isLip)) x
  -ᵣ-impl x = refl
 
  -ᵣ-lip : Lipschitz-ℝ→ℝ 1 -ᵣ_
@@ -816,7 +816,7 @@ instance
      Constraint = λ { zero → ⊥ ; _ → Unit }
    ; fromNat = λ { zero {{()}}  ; (suc n) →
      (rat [ pos (suc n) / 1 ]) , <ℚ→<ᵣ _ _
-       (ℚ.<ℤ→<ℚ _ _ (_ , refl)) }}
+       (ℚ.0<pos _ _) }}
 
 
 fromNat+ᵣ : ∀ n m → fromNat n +ᵣ fromNat m ≡ fromNat (n ℕ.+ m)
@@ -1029,30 +1029,30 @@ opaque
           PT.rec (isProp<ᵣ _ _)
            λ (xx , xx') →
              isTrans<ᵣ _ _ _
-      (let zqz = subst∼ {ε' = (θ ℚ₊· ([ pos 1 / 1+ 2 ] , _))}
+      (let zqz = subst∼ {ε' = (θ ℚ₊· ([ 1 / 1+ 2 ]₊))}
                                 (ℚ.ε/6+ε/6≡ε/3 (fst θ))
                               (𝕣-lim-self
-                                x p (θ ℚ₊· ([ pos 1 / 6 ] , _))
-                                   (θ ℚ₊· ([ pos 1 / 6 ] , _)))
+                                x p (θ ℚ₊· ([ 1 / 6 ]₊))
+                                   (θ ℚ₊· ([ 1 / 6 ]₊)))
            by▵ : Σ (ℚ.0< (fst ε ℚ.- (fst θ ℚ.· ℚ.[ 2 / 3 ] )))
-                     (λ z → x (θ ℚ₊· (ℚ.[ pos 1 / 6 ] , _))
+                     (λ z → x (θ ℚ₊· ([ 1 / 6 ]₊ ))
                       ∼'[ (fst ε ℚ.- (fst θ ℚ.· ℚ.[ 2 / 3 ] )) , z ]
                         0)
-           by▵ = sΣℚ<' {u = x (θ ℚ₊· ([ 1 / 6 ] , tt))} {v = 0}
-                  ℚ!! (triangle∼' (x ( θ  ℚ₊·(ℚ.[ 1 / 6 ] , _)))
-                         (lim x p) 0 (( θ  ℚ₊·(ℚ.[ 1 / 3 ] , _)))
+           by▵ = sΣℚ<' {u = x (θ ℚ₊· ([ 1 / 6 ]₊))} {v = 0}
+                  ℚ!! (triangle∼' (x ( θ  ℚ₊·([ 1 / 6 ]₊)))
+                         (lim x p) 0 (( θ  ℚ₊·([ 1 / 3 ]₊)))
                           ((fst ε ℚ.- fst θ) , xx)
                          zqz xx')
 
-       in ∼→< (absᵣ (x (θ ℚ₊· ([ pos 1 / 6 ] , tt)))) _ (x₁ _ _  (snd (by▵))) (absᵣ (lim x p))
-                   ((θ  ℚ₊· ([ pos 1 / 1+ 2 ] , _))) $
+       in ∼→< (absᵣ (x (θ ℚ₊· ([ 1 / 6 ]₊)))) _ (x₁ _ _  (snd (by▵))) (absᵣ (lim x p))
+                   ((θ  ℚ₊· ([ 1 / 1+ 2 ]₊))) $
                      ∼→∼' _ _ _ $
                              absᵣ-nonExpanding _ _ _ zqz)
       ((<ℚ→<ᵣ ((fst ε ℚ.+ ℚ.- (fst θ ℚ.· [ pos 2 / 1+ 2 ]) ℚ.+
-                 fst (θ ℚ₊· ([ pos 1 / 1+ 2 ] , tt)))) _ (subst2 ℚ._<_
+                 fst (θ ℚ₊· ([  1 / 3 ]₊)))) _ (subst2 ℚ._<_
                    ℚ!! ℚ!!
                     (ℚ.<-o+ (ℚ.- (fst θ ℚ.· [ pos 1 / 1+ 2 ])) 0 (fst ε)
-                   (ℚ.-ℚ₊<0 (θ ℚ₊· ([ pos 1 / 1+ 2 ] , tt))))))))
+                   (ℚ.-ℚ₊<0 (θ ℚ₊· ([ 1 / 3 ]₊))))))))
        ∘S fst (rounded∼' (lim x p) 0 ε)
    w .Elimℝ-Prop.isPropA _ = isPropΠ2 λ _ _ → isProp<ᵣ _ _
 
@@ -1113,7 +1113,7 @@ opaque
                             (-ᵣ-nonExpanding _ _ _ (sym∼ _ _ _ (𝕣-lim-self x' y' δ η))))
 
 
-             δ = (ℚ.<→ℚ₊ θ (fst ε) (<ᵣ→<ℚ _ _ xx')) ℚ₊· ([ 1 / 6 ] , _)
+             δ = (ℚ.<→ℚ₊ θ (fst ε) (<ᵣ→<ℚ _ _ xx')) ℚ₊· ([ 1 / 6 ]₊)
              www = ∼→< (absᵣ (lim x y +ᵣ (-ᵣ lim x' y')))
                        θ
                        xx ((absᵣ (x δ +ᵣ (-ᵣ (x' δ)))))

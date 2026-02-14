@@ -3,8 +3,8 @@ module Cubical.Tactics.CommRingSolverFast.EvalHom where
 open import Cubical.Foundations.Prelude
 
 open import Cubical.Data.Nat using (ℕ)
-open import Cubical.Data.Int.Fast.Base hiding (_+_ ; _·_ ; -_)
-import Cubical.Data.Int.Fast as ℤ
+open import Cubical.Data.Fast.Int.Base hiding (_+_ ; _·_ ; -_)
+import Cubical.Data.Fast.Int as ℤ
 open import Cubical.Data.FinData
 open import Cubical.Data.Vec
 open import Cubical.Data.Bool
@@ -17,7 +17,7 @@ open import Cubical.Tactics.CommRingSolverFast.HornerForms
 open import Cubical.Tactics.CommRingSolverFast.HornerEval
 open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.Ring
-open import Cubical.Algebra.CommRing.Instances.Int.Fast
+open import Cubical.Algebra.CommRing.Instances.Fast.Int
 
 private
   variable

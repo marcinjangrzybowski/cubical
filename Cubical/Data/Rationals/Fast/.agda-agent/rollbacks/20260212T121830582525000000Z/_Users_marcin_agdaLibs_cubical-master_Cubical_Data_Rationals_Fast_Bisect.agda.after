@@ -1,0 +1,93 @@
+module Cubical.Data.Rationals.Fast.Bisect where
+
+open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Equiv.Properties
+open import Cubical.Foundations.Function
+open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Path
+
+open import Cubical.Functions.FunExtEquiv
+open import Cubical.Functions.Involution
+
+open import Cubical.Functions.Logic using (_⊔′_; ⇔toPath)
+
+open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Fast.Int.Base as ℤ using (ℤ;pos;negsuc)
+import Cubical.Data.Bool as 𝟚
+open import Cubical.Data.Fast.Int.Properties as ℤ using ()
+open import Cubical.Data.Fast.Int.Order as ℤ using ()
+open import Cubical.Data.Fast.Int.Divisibility as ℤ
+
+open import Cubical.Data.Nat as ℕ using (ℕ; suc; zero;znots)
+open import Cubical.Data.Nat.Mod as ℕ
+import Cubical.Data.Nat.Order as ℕ
+open import Cubical.Data.NatPlusOne
+open import Cubical.Data.Sigma
+open import Cubical.Data.Sum as ⊎ using (_⊎_; inl; inr; isProp⊎)
+
+open import Cubical.HITs.PropositionalTruncation as ∥₁ using (isPropPropTrunc; ∣_∣₁)
+open import Cubical.HITs.SetQuotients as SQ hiding (_/_)
+
+open import Cubical.Relation.Nullary
+open import Cubical.Relation.Binary.Base
+
+
+open import Cubical.Data.Rationals.Fast.Base as ℚ
+open import Cubical.Data.Rationals.Fast.Properties
+open import Cubical.Data.Rationals.Fast.Order
+open import Cubical.Data.Rationals.Fast.Order.Properties
+
+open import Cubical.Algebra.CommRing.Instances.Rationals.Fast
+open import Cubical.Tactics.CommRingSolverFast.IntPlusReflection
+open import Cubical.Tactics.CommRingSolverFast.RationalsReflection
+open import Cubical.Tactics.CommRingSolverFast.FastRationalsReflectionPre
+
+open import Cubical.Foundations.Powerset
+
+private
+ variable
+  ℓ : Level
+
+record DecidableCut : Type₁ where
+ constructor decCut
+ field
+  P : ℙ ℚ
+  P? : ∀ q → Dec (q ∈ P)
+  P< : ∀ x y → x < y → x ∈ P → y ∈ P
+  <P : ∀ x y → x < y → ¬ (y ∈ P) → ¬ (x ∈ P)
+
+ -- A successful bisection returns the current interval [a , b]
+ -- with small width, such that a ∉ P and b ∈ P.
+ BisectWitness : (a b : ℚ) (ε : ℚ₊) → Type
+ BisectWitness a b ε =
+   (a < b) × ((b - a < fst ε) × ((¬ (a ∈ P)) × (b ∈ P)))
+
+ widthFromWitness : ∀ {a b : ℚ} {ε : ℚ₊} → BisectWitness a b ε → (b - a < fst ε)
+ widthFromWitness (_ , (b-a<ε , _)) = b-a<ε
+
+ -- log2ℕ : ∀ n → Σ _ (Least (λ k → n < 2 ^ k)) is imported already from Nat.Mod, and should be usefull
+
+ -- One bisection step (split at midpoint). Kept separate to avoid `with`.
+
+ bisectStep : (n : ℕ) → (a b : ℚ) → a < b → (ε : ℚ₊) → Dec (BisectWitness a b ε)
+ bisectStep zero a b a<b ε = base (P? a) (P? b)
+  where
+  base : Dec (a ∈ P) → Dec (b ∈ P) → Dec (BisectWitness a b ε)
+  base (yes a∈P) pb =
+    no λ { (_ , (_ , (a∉P , _))) → a∉P a∈P }
+  base (no a∉P) (no b∉P) =
+    no λ { (_ , (_ , (_ , b∈P))) → b∉P b∈P }
+  base (no a∉P) (yes b∈P) = small (<Dec (b - a) (fst ε))
+   where
+   small : Dec (b - a < fst ε) → Dec (BisectWitness a b ε)
+   small (yes b-a<ε) = yes (a<b , (b-a<ε , (a∉P , b∈P)))
+   small (no ¬b-a<ε) = no λ w → ¬b-a<ε (widthFromWitness w)
+
+ bisectStep (suc n) a b a<b ε = {!!}
+
+ -- Main entry point (implementation to be provided via binary bisection).
+ bisect : (n : ℕ) → (a b : ℚ) → a < b → (ε : ℚ₊) → Dec (BisectWitness a b ε)
+ bisect n a b a<b ε = bisectStep n a b a<b ε

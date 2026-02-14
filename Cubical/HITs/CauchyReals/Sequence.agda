@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --lossy-unification #-}
+{-# OPTIONS --safe  #-} 
 
 module Cubical.HITs.CauchyReals.Sequence where
 
@@ -21,8 +21,8 @@ import Cubical.Data.Nat.Order as ℕ
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sum as ⊎
 import Cubical.Data.Fin as F
-open import Cubical.Data.Int.Fast as ℤ using (pos)
-import Cubical.Data.Int.Fast.Order as ℤ
+open import Cubical.Data.Fast.Int as ℤ using (pos)
+import Cubical.Data.Fast.Int.Order as ℤ
 open import Cubical.Data.Sigma
 
 open import Cubical.HITs.PropositionalTruncation as PT
@@ -31,7 +31,7 @@ open import Cubical.Data.NatPlusOne
 
 open import Cubical.Data.Rationals.Fast as ℚ using (ℚ ; [_/_])
 open import Cubical.Data.Rationals.Fast.Order as ℚ using
-  ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡)
+  ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡  ; [_/_]₊)
 open import Cubical.Data.Rationals.Fast.Order.Properties as ℚ
  using (invℚ₊;/2₊;/3₊;/4₊;x/2<x;invℚ;_ℚ^ⁿ_;_ℚ₊^ⁿ_)
 
@@ -45,7 +45,7 @@ open import Cubical.HITs.CauchyReals.Continuous
 open import Cubical.HITs.CauchyReals.Multiplication
 open import Cubical.HITs.CauchyReals.Inverse
 import Cubical.Algebra.CommRing.BinomialThm
-open import Cubical.Algebra.CommRing.Instances.Int.Fast
+open import Cubical.Algebra.CommRing.Instances.Fast.Int
 open import Cubical.Algebra.CommRing.Properties
 open import Cubical.Algebra.CommRing.Base
 import Cubical.Algebra.Ring.BigOps
@@ -247,19 +247,19 @@ Dichotomyℝ ε x x' =
 Seq : Type
 Seq = ℕ → ℝ
 
-/nᵣ-L : (n : ℕ₊₁) → Σ _ (Lipschitz-ℝ→ℝ ([ 1 / n ] , tt))
-/nᵣ-L n = (fromLipschitz ([ 1 / n ] , _)
-  (_ , Lipschitz-rat∘ ([ 1 / n ] , _) (ℚ._· [ 1 / n ])
+/nᵣ-L : (n : ℕ₊₁) → Σ _ (Lipschitz-ℝ→ℝ ([ 1 / n ]₊))
+/nᵣ-L n = (fromLipschitz [ 1 / n ]₊
+  (_ , Lipschitz-rat∘ [ 1 / n ]₊ (ℚ._· [ 1 / n ])
    λ q r ε x →
      subst (ℚ._< ([ 1 / n ]) ℚ.· (fst ε))
       (sym (ℚ.pos·abs [ 1 / n ] (q ℚ.- r)
        (ℚ.<Weaken≤ 0 [ 1 / n ]
-           ( (ℚ.0<→< [ 1 / n ] _))))
-       ∙ cong ℚ.abs (ℚ.·Comm _ _ ∙ ℚ.·DistR+ q (ℚ.- r) [ 1 / n ]
+           ( (ℚ.0<→< [ 1 / n ] (ℚ.0<pos _ _)))))
+       ∙ cong ℚ.abs (ℚ.·Comm [ 1 / n ] (q ℚ.+ ℚ.- r) ∙ ℚ.·DistR+ q (ℚ.- r) [ 1 / n ]
         ∙ cong ((q ℚ.· [ 1 / n ]) ℚ.+_)
             (sym (ℚ.·Assoc -1 r [ 1 / n ]))))
       (ℚ.<-o· (ℚ.abs (q ℚ.- r)) (fst ε) [ 1 / n ]
-       ((ℚ.0<→< [ 1 / n ] _))
+       ((ℚ.0<→< [ 1 / n ] (ℚ.0<pos _ _)))
        x)))
 
 /nᵣ : ℕ₊₁ → ℝ → ℝ
@@ -268,7 +268,7 @@ Seq = ℕ → ℝ
 /nᵣ-／ᵣ : ∀ n x (p : 0 ＃ fromNat (ℕ₊₁→ℕ n))
             → /nᵣ n x ≡ (x ／ᵣ[ fromNat (ℕ₊₁→ℕ n) , p ] )
 /nᵣ-／ᵣ n x p = ≡Continuous _ _
-  (Lipschitz→IsContinuous _ (fst (/nᵣ-L n)) (snd (/nᵣ-L n)))
+  (Lipschitz→IsContinuous [ 1 / n ]₊ (fst (/nᵣ-L n)) (snd (/nᵣ-L n)))
    (IsContinuous·ᵣR _)
   (λ r → fromLipschitz-rat ∙ cong rat (cong (r ℚ.·_) (cong [ 1 /_] (sym (·₊₁-identityˡ _))))
     ∙ rat·ᵣrat _ _ ∙
@@ -291,7 +291,7 @@ Seq = ℕ → ℝ
 /nᵣ-pos : ∀ n x → 0 <ᵣ x → 0 <ᵣ /nᵣ n x
 /nᵣ-pos n x 0<x = subst (0 <ᵣ_) (sym (/nᵣ-／ᵣ _ _ _))
                      (ℝ₊· (_ , 0<x) (_ , invℝ-pos _
-                         (<ℚ→<ᵣ _ _ (ℚ.0<→< _ tt))))
+                         (<ℚ→<ᵣ _ _ (ℚ.0<pos _ _))))
 
 seqSumUpTo : (ℕ → ℝ) → ℕ →  ℝ
 seqSumUpTo s zero = 0
@@ -1021,7 +1021,7 @@ module bⁿ-aⁿ n'  where
       (<ᵣWeaken≤ᵣ _ _ )
       (λ y/2<x →
         ^ⁿMonotone⁻¹ {x} {y} n 0<n
-         (isTrans<ᵣ _ _ _ (snd ((y , 0<y) ₊·ᵣ ℚ₊→ℝ₊ ([ 1 / 2 ] , _)))
+         (isTrans<ᵣ _ _ _ (snd ((y , 0<y) ₊·ᵣ ℚ₊→ℝ₊ [ 1 / 2 ]₊))
            y/2<x) 0<y xⁿ≤yⁿ))
     (Dichotomyℝ' (y ·ᵣ rat [ 1 / 2 ]) x y
       (isTrans<≡ᵣ _ _ _ (<ᵣ-o·ᵣ _ _ (_ , 0<y) decℚ<ᵣ?) (·IdR _) ))
@@ -1384,16 +1384,15 @@ opaque
           (ℚ.isTrans< _ _ (fromNat (2 ^ n))
                   ((snd (ℚ.ceilℚ₊ ε)))
                    (ℚ.<ℤ→<ℚ (ℤ.pos (ℕ₊₁→ℕ (fst (ℚ.ceilℚ₊ ε))))
-                     _ ((ℤ.ℕ≤→≤
-                    (fst (snd (ℕ.log2ℕ (ℕ₊₁→ℕ (fst (ℚ.ceilℚ₊ ε))))))))))
+                     _ (ℤ.ℕ<→pos-<-pos _ _ ((fst (snd (ℕ.log2ℕ (ℕ₊₁→ℕ (fst (ℚ.ceilℚ₊ ε))))))))))
 
 
 1/2ⁿ<ε : (ε : ℚ₊) → Σ[ n ∈ ℕ ] [ 1 / 2 ] ℚ^ⁿ n ℚ.< fst ε
 1/2ⁿ<ε ε =
  let (n , 1/ε<n) = ε<2ⁿ (invℚ₊ ε)
- in n , invEq (ℚ.invℚ₊-<-invℚ₊ (([ 1 / 2 ] , _) ℚ₊^ⁿ n) ε)
+ in n , invEq (ℚ.invℚ₊-<-invℚ₊ (([ 1 / 2 ]₊) ℚ₊^ⁿ n) ε)
          (subst (fst (invℚ₊ ε) ℚ.<_)
-           (sym (ℚ.invℚ₊-ℚ^ⁿ ([ 1 / 2 ] , _) n)) 1/ε<n)
+           (sym (ℚ.invℚ₊-ℚ^ⁿ ([ 1 / 2 ]₊) n)) 1/ε<n)
 
 
 
@@ -1604,6 +1603,7 @@ expSeq : ℝ → Seq
 expSeq x zero = 1
 expSeq x (suc n) = /nᵣ (1+ n) (expSeq x n ·ᵣ x)
 
+
 expSeq-rat : ∀ (q : ℚ) → (n : ℕ) → Σ[ r ∈ ℚ ] (expSeq (rat q) n ≡ rat r)
 expSeq-rat q zero = 1 , refl
 expSeq-rat q (suc n) =
@@ -1619,6 +1619,9 @@ expSeries-rat q (suc n) =
   let (e , p) = expSeries-rat q n
       (e' , p') = expSeq-rat q n
   in (e ℚ.+ e') , cong₂ _+ᵣ_ p p' ∙ +ᵣ-rat _ _
+
+-- _ : ℚ
+-- _ = {!10000 ℚ.· ℚ.[ (fst (ℚ.reduced $ fst (expSeries-rat 1 30))) ]!}
 
 expSeqPos : ∀ x → 0 <ᵣ x → ∀ n → 0 <ᵣ expSeq x n
 expSeqPos x 0<x zero = decℚ<ᵣ?

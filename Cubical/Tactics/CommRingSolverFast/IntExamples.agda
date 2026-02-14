@@ -3,12 +3,12 @@ module Cubical.Tactics.CommRingSolverFast.IntExamples where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure
 
-open import Cubical.Data.Int.Fast hiding (_+_ ; _·_ ; _-_; -_)
+open import Cubical.Data.Fast.Int hiding (_+_ ; _·_ ; _-_; -_)
 open import Cubical.Data.List
 open import Cubical.Data.Nat using (ℕ; suc; zero)
 
 open import Cubical.Algebra.CommRing
-open import Cubical.Algebra.CommRing.Instances.Int.Fast
+open import Cubical.Algebra.CommRing.Instances.Fast.Int
 open import Cubical.Algebra.CommAlgebra
 
 open import Cubical.Tactics.CommRingSolverFast.IntReflection

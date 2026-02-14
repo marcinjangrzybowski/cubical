@@ -7,7 +7,7 @@ open import Cubical.Foundations.Function
 open import Cubical.Data.Nat as ℕ using (discreteℕ)
 open import Cubical.Data.NatPlusOne hiding (_+₁_)
 open import Cubical.Data.Sigma
-open import Cubical.Data.Int.Fast
+open import Cubical.Data.Fast.Int
 
 open import Cubical.HITs.SetQuotients as SetQuotient
   using ([_]; eq/; discreteSetQuotients) renaming (_/_ to _//_) public

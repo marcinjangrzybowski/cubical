@@ -9,8 +9,8 @@ open import Cubical.Data.Bool
 open import Cubical.Data.Nat.Order using (zero-≤)
 open import Cubical.Data.Vec.Base
 import Cubical.Data.Rationals.Fast as ℚ
-open import Cubical.Data.Int.Fast using (pos;negsuc;·AnnihilL)
-import Cubical.Data.Int.Fast as ℤ
+open import Cubical.Data.Fast.Int using (pos;negsuc;·AnnihilL)
+import Cubical.Data.Fast.Int as ℤ
 import Cubical.Data.NatPlusOne as ℕ₊₁
 open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.Ring

@@ -1,7 +1,7 @@
 module Cubical.Tactics.CommRingSolverFast.IntAsRawRing where
 
 open import Cubical.Data.Nat hiding (_+_; _·_)
-open import Cubical.Data.Int.Fast
+open import Cubical.Data.Fast.Int
 
 
 open import Cubical.Foundations.Prelude

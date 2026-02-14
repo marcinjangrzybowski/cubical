@@ -8,7 +8,7 @@ open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Function
 
-open import Cubical.Data.Int.Fast as ℤ using (ℤ; pos·pos; pos0+; pos; negsuc) renaming
+open import Cubical.Data.Fast.Int as ℤ using (ℤ; pos·pos; pos0+; pos; negsuc) renaming
   (_+_ to _+ℤ_ ; _·_ to _·ℤ_ ; -_ to -ℤ_ ; abs to ∣_∣ℤ ; sign to sgn)
 open import Cubical.HITs.SetQuotients as SetQuotient using () renaming (_/_ to _//_)
 

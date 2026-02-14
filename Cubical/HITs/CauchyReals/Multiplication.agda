@@ -13,8 +13,8 @@ open import Cubical.Data.Nat as ℕ hiding (_·_;_+_)
 open import Cubical.Data.Nat.Order as ℕ
 open import Cubical.Data.Unit
 open import Cubical.Data.Sum as ⊎
-open import Cubical.Data.Int.Fast as ℤ using (pos)
-import Cubical.Data.Int.Fast.Order as ℤ
+open import Cubical.Data.Fast.Int as ℤ using (pos)
+import Cubical.Data.Fast.Int.Order as ℤ
 open import Cubical.Data.Sigma
 
 open import Cubical.HITs.PropositionalTruncation as PT
@@ -27,7 +27,7 @@ import Cubical.Algebra.CommRing.Instances.Rationals.Fast as ℚ
 
 open import Cubical.Data.Rationals.Fast as ℚ using (ℚ ; [_/_])
 open import Cubical.Data.Rationals.Fast.Order as ℚ using
-  ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡)
+  ( _ℚ₊+_ ; 0<_ ; ℚ₊ ; _ℚ₊·_ ; ℚ₊≡  ; [_/_]₊)
 open import Cubical.Data.Rationals.Fast.Order.Properties as ℚ
  using (invℚ₊;/2₊;/3₊;/4₊)
 
@@ -112,22 +112,22 @@ Seq⊆-<N : Seq⊆
 Seq⊆-<N .Seq⊆.𝕡 n x = (x <ᵣ fromNat (suc n)) , isProp<ᵣ _ _
 Seq⊆-<N .Seq⊆.𝕡⊆ n x x∈ =
   isTrans<ᵣ _ _ _ x∈
-   (<ℚ→<ᵣ _ _ (ℚ.<ℤ→<ℚ _ _ ℤ.isRefl≤))
+   (<ℚ→<ᵣ _ _ (ℚ.<ℤ→<ℚ _ _ ℤ.<-sucℤ))
 
 Seq⊆-abs<N : Seq⊆
 Seq⊆-abs<N .Seq⊆.𝕡 n = ointervalℙ (fromNeg (suc n)) (fromNat (suc n))
 
 Seq⊆-abs<N .Seq⊆.𝕡⊆ n x (<x , x<) =
   isTrans<ᵣ _ _ _
-   (<ℚ→<ᵣ _ _ (ℚ.<ℤ→<ℚ _ _ ℤ.isRefl≤)) <x
+   (<ℚ→<ᵣ _ _ (ℚ.<ℤ→<ℚ _ _ ℤ.<-sucℤ)) <x
    , isTrans<ᵣ _ _ _ x<
-   (<ℚ→<ᵣ _ _ (ℚ.<ℤ→<ℚ _ _ ℤ.isRefl≤))
+   (<ℚ→<ᵣ _ _ (ℚ.<ℤ→<ℚ _ _ ℤ.<-sucℤ))
 
 Seq⊆-[0,N⟩ : Seq⊆
 Seq⊆-[0,N⟩ .Seq⊆.𝕡 n = pred≤< 0 (fromNat (suc n))
 Seq⊆-[0,N⟩ .Seq⊆.𝕡⊆ n x (0≤x , x<sn) = 0≤x ,
   isTrans<ᵣ _ _ _ x<sn
-   (<ℚ→<ᵣ _ _ (ℚ.<ℤ→<ℚ _ _ ℤ.isRefl≤))
+   (<ℚ→<ᵣ _ _ (ℚ.<ℤ→<ℚ _ _ ℤ.<-sucℤ))
 
 Seq⊆-abs<N-s⊇-⊤Pred : Seq⊆-abs<N Seq⊆.s⊇ ⊤Pred
 Seq⊆-abs<N-s⊇-⊤Pred x _ =     PT.map
@@ -304,8 +304,8 @@ restrSq n q r x x₁ ε x₂ =
 
 clampedSq : ∀ (n : ℕ) → Σ (ℝ → ℝ) (Lipschitz-ℝ→ℝ (2 ℚ₊· fromNat (suc n)))
 clampedSq n =
-  let ex = Lipschitz-ℚ→ℚ-extend _
-             (((2 ℚ₊· fromNat (suc n)))) (λ x → x ℚ.· x) (ℚ.[ (1 , 4) ] , _) (ℚ.<Δ n) (restrSq n)
+  let ex = Lipschitz-ℚ→ℚ-extend ([ 1+ n / 1 ]₊)
+             (((2 ℚ₊· fromNat (suc n)))) (λ x → x ℚ.· x) (ℚ.[ 1 / 4 ]₊) (ℚ.<Δ n) (restrSq n)
   in fromLipschitzGo (((2 ℚ₊· fromNat (suc n)))) (_ , Lipschitz-rat∘ ((2 ℚ₊· fromNat (suc n)))
    (((λ x → x ℚ.· x) ∘
        ℚ.clamp (ℚ.- ([ pos (suc n) , 1 ] ℚ.- [ 1 , 4 ]))
@@ -329,9 +329,9 @@ sqSeq→ .Seq⊆→.fun⊆ x n m x∈ x∈' n<m =
           Q' = ([ pos (suc (suc m)) , 1 ] ℚ.- [ 1 , 4 ])
           Q'<Q : Q ℚ.≤ Q'
           Q'<Q = ℚ.≤-+o [ pos (suc (suc n)) , 1 ] [ pos (suc (suc m)) , 1 ] (ℚ.- [ 1 , 4 ])
-                 (ℚ.≤ℤ→≤ℚ _ _ (ℤ.ℕ≤→≤ (ℕ.≤-k+ {k = 2} (ℕ.<-weaken n<m))) )
+                 (ℚ.≤ℤ→≤ℚ _ _ (ℤ.ℕ≤→pos-≤-pos _ _ ((ℕ.≤-k+ {k = 2} (ℕ.<-weaken n<m)))) )
           sn≤Q : [ pos (suc n) / 1 ] ℚ.≤ Q
-          sn≤Q = ℚ.inj (3 , ℤ!)
+          sn≤Q = ℚ.inj (ℤ.Σℕ→≤ (3 , ℤ!))
       in cong {x = ℚ.clamp (ℚ.- Q) Q r} {y = ℚ.clamp (ℚ.- Q') Q' r}
              (λ x → rat (x ℚ.· x))
            (sym (ℚ.clamp-contained-agree (ℚ.- Q') Q' (ℚ.- Q) Q
@@ -373,9 +373,9 @@ opaque
 -- HoTT (11.3.46)
 
 
- /2ᵣ-L : Σ (ℝ → ℝ) (Lipschitz-ℝ→ℝ ([ 1 / 2 ] , _))
- /2ᵣ-L = fromLipschitzGo ([ 1 / 2 ] , _)
-   (_ , Lipschitz-rat∘ ([ 1 / 2 ] , _) (ℚ._· [ 1 / 2 ])
+ /2ᵣ-L : Σ (ℝ → ℝ) (Lipschitz-ℝ→ℝ ([ 1 / 2 ]₊))
+ /2ᵣ-L = fromLipschitzGo ([ 1 / 2 ]₊)
+   (_ , Lipschitz-rat∘ ([ 1 / 2 ]₊) (ℚ._· [ 1 / 2 ])
     λ q r ε x →
       subst (ℚ._< ([ 1 / 2 ]) ℚ.· (fst ε))
        (sym (ℚ.pos·abs [ 1 / 2 ] (q ℚ.- r)
@@ -393,7 +393,7 @@ opaque
  sqᵣ-rat : ∀ r → sqᵣ (rat r) ≡ rat (r ℚ.· r)
  sqᵣ-rat r = PT.rec (isSetℝ _ _)
   (λ (n , (r∈ , p)) →
-   let sn≤Q = ℚ.inj (3 , ℤ!)
+   let sn≤Q = ℚ.inj (ℤ.Σℕ→≤ (3 , ℤ!))
        pp = (cong (λ x → x ℚ.· x) ((ℚ.∈ℚintervalℙ→clam≡
             ((ℚ.- ([ pos (suc (suc n)) , 1 ] ℚ.- [ 1 , 4 ])))
             (([ pos (suc (suc n)) , 1 ] ℚ.- [ 1 , 4 ])) r
@@ -407,7 +407,7 @@ opaque
 
 
  IsContinuous/2ᵣ : IsContinuous /2ᵣ
- IsContinuous/2ᵣ = Lipschitz→IsContinuous ([ 1 / 2 ] , _) /2ᵣ (snd /2ᵣ-L)
+ IsContinuous/2ᵣ = Lipschitz→IsContinuous ([ 1 / 2 ]₊) /2ᵣ (snd /2ᵣ-L)
 
 
 

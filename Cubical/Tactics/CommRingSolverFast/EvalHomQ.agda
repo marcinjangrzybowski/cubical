@@ -3,7 +3,7 @@ module Cubical.Tactics.CommRingSolverFast.EvalHomQ where
 open import Cubical.Foundations.Prelude
 
 open import Cubical.Data.Nat using (ℕ)
-open import Cubical.Data.Int.Fast.Base hiding (_+_ ; _·_ ; -_)
+open import Cubical.Data.Fast.Int.Base hiding (_+_ ; _·_ ; -_)
 import Cubical.Data.Rationals.Fast as ℚ
 open import Cubical.Data.FinData
 open import Cubical.Data.Vec

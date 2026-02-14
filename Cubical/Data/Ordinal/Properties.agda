@@ -8,8 +8,10 @@ This file contains:
 module Cubical.Data.Ordinal.Properties where
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Isomorphism
 
@@ -18,6 +20,8 @@ open import Cubical.Functions.Embedding
 open import Cubical.Data.Ordinal.Base
 open import Cubical.Data.Empty as ⊥ using (⊥ ; ⊥* ; isProp⊥*)
 open import Cubical.Data.Sigma
+import Cubical.Data.Nat as ℕ
+import Cubical.Data.Nat.Order.Recursive as ℕ
 open import Cubical.Data.Sum as ⊎ hiding (rec ; elim ; map)
 open import Cubical.Data.Unit
 
@@ -59,6 +63,36 @@ propOrd {ℓ} P prop = P , (wosetstr _<_ (iswoset set prp well weak trans))
 𝟘 {ℓ} = propOrd (⊥* {ℓ}) (isProp⊥*)
 𝟙 {ℓ} = propOrd (Unit* {ℓ}) (isPropUnit*)
 
+
+finite : ℕ.ℕ → Ord {ℓ}
+finite ℕ.zero = 𝟘
+finite (ℕ.suc x) = suc (finite x)
+
+open import Cubical.Data.Sum.Base
+
+
+ω : Ord {ℓ-zero}
+ω = ℕ.ℕ , wosetstr (ℕ._<_) iws
+ where
+
+ iws' : ∀ x y → ℕ.Trichotomy x y →
+         ((z : ℕ.ℕ) → (z ℕ.< x) ≃ (z ℕ.< y)) → x ≡ y
+ iws' x y (ℕ.lt x₁) x₂ = ⊥.rec (ℕ.¬m<m {x} (invEq (x₂ x) x₁))
+ iws' x y (ℕ.eq x₁) x₂ = x₁
+ iws' x y (ℕ.gt x₁) x₂ = ⊥.rec (ℕ.¬m<m {y} (fst (x₂ y) x₁))
+ 
+ iws : _
+ iws .IsWoset.is-set = ℕ.isSetℕ
+ iws .IsWoset.is-prop-valued m n = ℕ.isProp≤ {ℕ.suc m} {n}  
+ iws .IsWoset.is-well-founded = ℕ.WellFounded.wf-<
+ iws .IsWoset.is-weakly-extensional x y =
+  snd (propBiimpl→Equiv (ℕ.isSetℕ _ _) (isPropΠ λ z → isOfHLevel≃ 1
+    ((ℕ.isProp≤ {ℕ.suc z} {x} ))
+   (ℕ.isProp≤ {ℕ.suc z} {y}))
+    (λ x≡y z → substEquiv (z ℕ.<_) x≡y) (iws' x y (x ℕ.≟ y)))
+      
+ iws .IsWoset.is-trans x y z = ℕ.<-trans {x} {y} {z}
+ 
 isLeast𝟘 : ∀{ℓ} → isLeast (isPoset→isProset isPoset≼) ((Ord {ℓ}) , (id↪ (Ord {ℓ}))) (𝟘 {ℓ})
 isLeast𝟘 _ = ⊥.elim* , (⊥.elim* , ⊥.elim*)
 
@@ -247,10 +281,10 @@ suc≺ α = (inr tt*) , (eq , makeIsWosetEquiv eq eqsucα eqαsuc)
     is : Iso ⟨ (α + γ) ↓ inr g ⟩ ⟨ α + β ⟩
     Iso.fun is = fun
     Iso.inv is = inv
-    Iso.rightInv is (inl x) = refl
-    Iso.rightInv is (inr x) = cong inr (secEq γ↓g≃β x)
-    Iso.leftInv  is (inl x , _) = ΣPathP (refl , (isPropUnit* _ _))
-    Iso.leftInv  is (inr x , x≺g)
+    Iso.sec is (inl x) = refl
+    Iso.sec is (inr x) = cong inr (secEq γ↓g≃β x)
+    Iso.ret  is (inl x , _) = ΣPathP (refl , (isPropUnit* _ _))
+    Iso.ret  is (inr x , x≺g)
       = ΣPathP (cong inr (PathPΣ (retEq γ↓g≃β (x , x≺g)) .fst)
                         , PathPΣ (retEq γ↓g≃β (x , x≺g)) .snd)
 
@@ -296,3 +330,140 @@ suc≺ α = (inr tt*) , (eq , makeIsWosetEquiv eq eqsucα eqαsuc)
     eq← (inr xg) (inr yg) (inl xg≺yg) = inl xg≺yg
     eq← (inr (xa , xg)) (inr (ya , yg)) (inr (xg≡yg , xa≺ya))
       = inr (cong inr xg≡yg , xa≺ya)
+
+
+
+ω≡𝟙+ω : ω ≡ 𝟙 + ω
+ω≡𝟙+ω = equivFun (WosetPath _ _) (isoToEquiv e ,
+  makeIsWosetEquiv (isoToEquiv e) eq→ eq←)
+
+ where
+ e : Iso ⟨ ω ⟩ ⟨ 𝟙 + ω ⟩
+ e .Iso.fun ℕ.zero = inl _
+ e .Iso.fun (ℕ.suc x) = inr x
+ e .Iso.inv (inl x) = ℕ.zero
+ e .Iso.inv (inr x) = ℕ.suc x
+ e .Iso.sec (inl x) = refl
+ e .Iso.sec (inr x) = refl
+ e .Iso.ret ℕ.zero = refl
+ e .Iso.ret (ℕ.suc a) = refl
+
+ eq→ : _
+ eq→ ℕ.zero (ℕ.suc _) tt = _
+ eq→ (ℕ.suc _) (ℕ.suc _) x = x
+ 
+ eq← : _
+ eq← (inl x) (inr x₂) (lift _) = _
+ eq← (inr _) (inr _) x = x
+
+ω≡𝟚·ω : ω ≡ (𝟙 + 𝟙) · ω
+ω≡𝟚·ω = equivFun (WosetPath _ _) (isoToEquiv e ,
+  makeIsWosetEquiv (isoToEquiv e) eq→ eq←)
+
+ where
+
+ e→ : ⟨ ω ⟩ → ⟨ (𝟙 + 𝟙) · ω ⟩
+ e→ ℕ.zero = inl _ , 0
+ e→ (ℕ.suc ℕ.zero) = inr _ , 0
+ e→ (ℕ.suc (ℕ.suc x)) = map-snd ℕ.suc (e→ x)
+
+ e← : ⟨ (𝟙 + 𝟙) · ω ⟩ → ⟨ ω ⟩
+ e← (inl x , ℕ.zero) = 0
+ e← (inr x , ℕ.zero) = 1
+ e← (x , ℕ.suc k) = ℕ.suc (ℕ.suc (e← (x , k)))
+
+ s : section e→ e←
+ s (inl x , ℕ.zero) = refl
+ s (inr x , ℕ.zero) = refl
+ s (inl x , ℕ.suc k) = cong (map-snd ℕ.suc) (s (inl x , k))
+ s (inr x , ℕ.suc k) = cong (map-snd ℕ.suc) (s (inr x , k))
+
+ r' : ∀ x y → e← (x , ℕ.suc y) ≡ ℕ.suc (ℕ.suc (e← (x , y)))
+ r' (inl x) y = refl
+ r' (inr x) y = refl
+
+ r : retract e→ e←
+ r ℕ.zero = refl
+ r (ℕ.suc ℕ.zero) = refl
+ r (ℕ.suc (ℕ.suc a)) = r' _ _ ∙ cong (2 ℕ.+_) (r a)
+
+
+ e : Iso ⟨ ω ⟩ ⟨ (𝟙 + 𝟙) · ω ⟩
+ e .Iso.fun = e→
+ e .Iso.inv = e←
+ e .Iso.sec = s
+ e .Iso.ret = r
+ 
+ eq→ : _
+ eq→ ℕ.zero (ℕ.suc ℕ.zero) x₁ = inr (refl , _)
+ eq→ ℕ.zero (ℕ.suc (ℕ.suc y)) x₁ = inl _  
+ eq→ (ℕ.suc ℕ.zero) (ℕ.suc (ℕ.suc y)) x₁ = inl _
+ eq→ (ℕ.suc (ℕ.suc x)) (ℕ.suc (ℕ.suc y)) x₁ =
+  let z = eq→ x y x₁
+  in ⊎.map (idfun _) (map-fst (cong ℕ.suc)) z
+ eq→ (ℕ.suc ℕ.zero) (ℕ.suc ℕ.zero) ()
+ eq→ (ℕ.suc (ℕ.suc x₁)) (ℕ.suc ℕ.zero) ()
+ eq→ ℕ.zero ℕ.zero ()
+ eq→ (ℕ.suc x₁) ℕ.zero ()
+ 
+ eq← : _
+ eq← (inl x , ℕ.zero) (inr x₁ , ℕ.zero) _ = _
+ eq← (inl x , ℕ.zero) (inl x₂ , ℕ.suc _) (inl x₁) = _
+ eq← (inr x , ℕ.zero) (inl x₂ , ℕ.suc _) (inl x₁) = _
+ eq← (inr x , ℕ.zero) (inr x₂ , ℕ.suc _) (inl x₁) = _
+ eq← (_ , ℕ.suc snd₁) (fst₁ , ℕ.zero) (inr x) = ⊥.rec (ℕ.snotz (fst x))
+ eq← (inl x , ℕ.zero) (inr x₁ , ℕ.suc _) xx = _
+ eq← (inr x₁ , ℕ.suc snd₁) (fst₁ , ℕ.zero) (inl ())
+ 
+
+ eq← (a , ℕ.suc k) (a' , ℕ.suc k') x₁ = 
+   subst2 ℕ._<_ (sym (r' a k)) (sym (r' a' k')) 
+       $ (eq← (a , k) (a' , k') (⊎.map (idfun _) (map-fst ℕ.injSuc) x₁))
+
+𝟙≡finite1 : finite 1 ≡ 𝟙 {ℓ} 
+𝟙≡finite1 = suc≡+𝟙 𝟘 ∙ +IdL _
+
+finite+ : (m n : ℕ.ℕ) → finite {ℓ} (m ℕ.+ n) ≡ finite m + finite n
+finite+ m (ℕ.zero) = cong finite (ℕ.+-zero m) ∙ sym (+IdR _)
+finite+ m (ℕ.suc n) =
+  cong finite (ℕ.+-suc m n)
+  ∙ (λ i → suc≡+𝟙 (finite+ m n i) i)
+ ∙∙ +Assoc _ _ _ 
+ ∙∙ cong (finite m +_) (sym (suc≡+𝟙 _))
+
+finite+Comm : (m n : ℕ.ℕ) → finite {ℓ} m + finite n ≡ finite n + finite m
+finite+Comm m n =
+     sym (finite+ m n)
+  ∙∙ cong finite (ℕ.+-comm m n)
+  ∙∙ finite+ n m
+
+finite≺ω : ∀ k → finite {ℓ-zero} k ≺ ω
+finite≺ω ℕ.zero = 0 , (isoToEquiv e , iswosetequiv (uncurry λ _ ()))
+ where
+ e : Iso ⟨ ω ↓ 0 ⟩ ⟨ finite ℕ.zero ⟩
+ e .Iso.fun (_ , ())
+ e .Iso.inv (lift ())
+ e .Iso.sec (lift ())
+ e .Iso.ret (_ , ())  
+ 
+finite≺ω (ℕ.suc k) = subst2 _≺_
+       ((cong (_+ finite k) (sym 𝟙≡finite1)
+       ∙∙ finite+Comm 1 k
+       ∙∙ cong (finite k +_) 𝟙≡finite1)
+       ∙ sym (suc≡+𝟙 _)) (sym ω≡𝟙+ω)
+           $ ≺-o+ {β = finite k} {ω} 𝟙 (finite≺ω k)
+
+¬+Comm :  ((α β : Ord {ℓ-zero}) → β + α ≡ α + β) → ⊥
+¬+Comm +comm =
+  wf→x<y→x≢y (isWellFounded≺) (suc≺ ω) (ω≡𝟙+ω ∙∙ +comm ω 𝟙 ∙∙ sym (suc≡+𝟙 ω)) 
+
+¬·Comm :  ((α β : Ord {ℓ-zero}) → β · α ≡ α · β) → ⊥
+¬·Comm ·comm =
+ let sucω≺ω+ω = subst (_≺ (ω + ω))
+            (cong (ω +_) 𝟙≡finite1 ∙ sym (suc≡+𝟙 ω))
+            (≺-o+ ω (finite≺ω 1))
+ in wf→x<y→x≢y (isWellFounded≺) 
+            ((isTrans≺ ω (suc ω) (ω + ω)
+          (suc≺ ω) sucω≺ω+ω))
+         (ω≡𝟚·ω ∙ ·comm ω (𝟙 + 𝟙) ∙∙ ·DistR+ ω 𝟙 𝟙 ∙∙ cong₂ _+_ (·IdR ω) (·IdR ω))
+

@@ -8,7 +8,8 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Powerset
 
 open import Cubical.Data.Sum as ⊎
-open import Cubical.Data.Int.Fast as ℤ
+open import Cubical.Data.Fast.Int as ℤ
+open import Cubical.Data.Fast.Int.Order as ℤ
 open import Cubical.Data.Sigma
 open import Cubical.Data.Empty
 open import Cubical.HITs.PropositionalTruncation as PT
@@ -352,8 +353,8 @@ record NonExpanding₂ (g : ℚ → ℚ → ℚ ) : Type where
 
 
 
- zz : (q : ℚ) → Σ (ℝ → ℝ) (Lipschitz-ℝ→ℝ (1 , tt))
- zz q = fromLipschitzGo (1 , tt) (rat ∘ g q ,
+ zz : (q : ℚ) → Σ (ℝ → ℝ) (Lipschitz-ℝ→ℝ 1)
+ zz q = fromLipschitzGo 1 (rat ∘ g q ,
     λ q₁ r₁ ε x₀ x →
       let zz : ℚ.abs (g q q₁ ℚ.- g q r₁) ℚ.≤ ℚ.abs (q₁ ℚ.- r₁)
           zz = cR q q₁ r₁
@@ -496,12 +497,12 @@ record NonExpanding₂ (g : ℚ → ℚ → ℚ ) : Type where
                         (/2₊ ε/4) ε/4 (λ δ ε₁ → Elimℝ.go∼ w (y δ ε₁) (lim x' y'))
                           _) (subst {x = (fst ε) ℚ.· [ pos 5 / 1+ 7 ]}
                          {y = fst ε ℚ.- (fst (/2₊ ε/4) ℚ.+ (fst (/4₊ ε)))} (ℚ.0<_) ℚ!!
-                          ((snd (ε ℚ₊· (ℚ.[ 5 / 8 ] , _)))))
+                          ((snd (ε ℚ₊· (ℚ.[ 5 / 8 ] , ℚ.inj (pos<pos tt))))))
                         ((go∼R ( x (/2₊ ε/4)) (lim x' y')
                           (x' (/2₊ ε/4)) _
                           ((∼-monotone<
                                 (((ℚ.-<⁻¹ _ _ (subst (0 ℚ.<_) ℚ!!
-                                  (ℚ.0<ℚ₊ (ε ℚ₊· (ℚ.[ 3 / 8 ] , tt)))))))
+                                  (ℚ.0<ℚ₊ (ε ℚ₊· (ℚ.[ 3 / 8 ] , (ℚ.inj (pos<pos tt)))))))))
                                    $ sym∼ _ _ _ (𝕣-lim-self x' y'
                              (/2₊ ε/4) (/2₊ ε/4)))))))
    in _ , zz

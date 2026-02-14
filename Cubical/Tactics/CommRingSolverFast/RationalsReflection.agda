@@ -19,8 +19,9 @@ open import Cubical.Foundations.Function
 open import Cubical.Data.List
 
 open import Cubical.Data.Bool
-open import Cubical.Data.Int.Fast using (ℤ)
-import Cubical.Data.Int.Fast as ℤ
+open import Cubical.Data.Fast.Int using (ℤ)
+import Cubical.Data.Fast.Int as ℤ
+import Cubical.Data.Fast.Int.Order as ℤ
 
 open import Cubical.Tactics.Reflection
 open import Cubical.Algebra.CommRing.Instances.Rationals.Fast
@@ -90,7 +91,8 @@ module _ (dbg : Bool) where
   wrdℚ = withReduceDefs
      (false , ((quote ℚ._+_) ∷ (quote (ℚ.-_)) ∷ (quote ℚ._·_)
        -- ∷ []))
-      ∷ (quote NPO._+₁_) ∷ (quote NPO._·₊₁_) ∷ (quote NPO.ℕ₊₁→ℕ) ∷ (quote ℚ.ℕ₊₁→ℤ) ∷ doNotUnfoldsℚ))
+      ∷ (quote NPO._+₁_) ∷ (quote NPO._·₊₁_) ∷ (quote NPO.ℕ₊₁→ℕ) ∷ (quote ℚ.ℕ₊₁→ℤ)
+       ∷ (quote ℤ.0<→ℕ₊₁-fst) ∷ doNotUnfoldsℚ))
 
 
   solve!-macro : Term → TC Unit
@@ -123,7 +125,8 @@ module _ (dbg : Bool) where
       sbi ← atTargetLam lemType λ tgTy → do
         tgTy2 ← IPR.wrdℕ $ normalise tgTy >>= extractNMs
         debugPrint' "ratSolver" 20 [ tgTy2 ]ₑ
-        wrdℚ $ debugPrint' "ratSolver" 20 ("ℤLemType: " ∷nl [ tgTy2 ]ₑ)
+        tgTy2Nrm ← IPR.wrdℕ $ (normalise tgTy2)
+        wrdℚ $ debugPrint' "ratSolver" 20 ("ℤLemType: " ∷nl [ tgTy2Nrm ]ₑ)
         h2 ← checkType unknown tgTy2
         IPR.solve!-macro h2
         debugPrint' "ratSolver" 20 [ "ints solved!" ]ₑ

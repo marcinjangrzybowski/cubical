@@ -7,7 +7,7 @@ open import Cubical.Data.Nat using (ℕ)
 open import Cubical.Data.Nat.Order using (zero-≤)
 open import Cubical.Data.Vec.Base
 open import Cubical.Algebra.CommRing
-open import Cubical.Algebra.CommRing.Instances.Int.Fast
+open import Cubical.Algebra.CommRing.Instances.Fast.Int
 open import Cubical.Algebra.Ring
 open import Cubical.Tactics.CommRingSolverFast.RawAlgebra renaming (⟨_⟩ to ⟨_⟩ᵣ)
 open import Cubical.Tactics.CommRingSolverFast.AlgebraExpression

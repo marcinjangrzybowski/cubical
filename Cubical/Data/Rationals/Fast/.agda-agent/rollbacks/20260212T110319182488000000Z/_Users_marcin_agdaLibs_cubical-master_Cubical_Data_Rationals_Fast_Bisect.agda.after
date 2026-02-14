@@ -1,0 +1,141 @@
+module Cubical.Data.Rationals.Fast.Bisect where
+
+open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Equiv.Properties
+open import Cubical.Foundations.Function
+open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Path
+
+open import Cubical.Functions.FunExtEquiv
+open import Cubical.Functions.Involution
+
+open import Cubical.Functions.Logic using (_⊔′_; ⇔toPath)
+
+open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Fast.Int.Base as ℤ using (ℤ;pos;negsuc)
+import Cubical.Data.Bool as 𝟚
+open import Cubical.Data.Fast.Int.Properties as ℤ using ()
+open import Cubical.Data.Fast.Int.Order as ℤ using ()
+open import Cubical.Data.Fast.Int.Divisibility as ℤ
+
+open import Cubical.Data.Nat as ℕ using (ℕ; suc; zero;znots)
+open import Cubical.Data.Nat.Mod as ℕ
+import Cubical.Data.Nat.Order as ℕ
+open import Cubical.Data.NatPlusOne
+open import Cubical.Data.Sigma
+open import Cubical.Data.Sum as ⊎ using (_⊎_; inl; inr; isProp⊎)
+
+open import Cubical.HITs.PropositionalTruncation as ∥₁ using (isPropPropTrunc; ∣_∣₁)
+open import Cubical.HITs.SetQuotients as SQ hiding (_/_)
+
+open import Cubical.Relation.Nullary
+open import Cubical.Relation.Binary.Base
+
+
+open import Cubical.Data.Rationals.Fast.Base as ℚ
+open import Cubical.Data.Rationals.Fast.Properties
+open import Cubical.Data.Rationals.Fast.Order
+open import Cubical.Data.Rationals.Fast.Order.Properties
+
+open import Cubical.Algebra.CommRing.Instances.Rationals.Fast
+open import Cubical.Tactics.CommRingSolverFast.IntPlusReflection
+open import Cubical.Tactics.CommRingSolverFast.RationalsReflection
+open import Cubical.Tactics.CommRingSolverFast.FastRationalsReflectionPre
+
+open import Cubical.Foundations.Powerset
+
+private
+ variable
+  ℓ : Level
+
+record DecidableCut : Type₁ where
+ constructor decCut
+ field
+  P : ℙ ℚ
+  P? : ∀ q → Dec (q ∈ P)
+  P< : ∀ x y → x < y → x ∈ P → y ∈ P
+  <P : ∀ x y → x < y → ¬ (y ∈ P) → ¬ (x ∈ P)
+
+ -- A successful bisection returns an interval [l , h] contained in [a , b]
+ -- with small width, such that l ∉ P and h ∈ P.
+ BisectWitness : (a b : ℚ) (ε : ℚ₊) → Type
+ BisectWitness a b ε =
+  Σ-syntax ℚ (λ l →
+  Σ-syntax ℚ (λ h →
+      (a ≤ l)
+    × (l < h)
+    × (h ≤ b)
+    × (h - l < fst ε)
+    × (¬ (l ∈ P))
+    × (h ∈ P)))
+
+ -- One bisection step (split at midpoint). Kept separate to avoid `with`.
+ -- We use an explicit fuel argument to satisfy termination checking.
+ bisectStep : (n : ℕ) → (a b : ℚ) → a < b → (ε : ℚ₊) → Dec (BisectWitness a b ε)
+ bisectStep zero a b a<b ε = ?
+ bisectStep (suc n) a b a<b ε = step (P? a) (P? b)
+  where
+  step : Dec (a ∈ P) → Dec (b ∈ P) → Dec (BisectWitness a b ε)
+  step (yes a∈P) (yes b∈P) =
+    no λ { (l , h , a≤l , l<h , h≤b , h-l<ε , l∉P , h∈P) →
+      case ≤→<⊎≡ a l a≤l of λ where
+        (inl a≡l) → l∉P (subst (λ q → q ∈ P) a≡l a∈P)
+        (inr a<l) → l∉P (P< a l a<l a∈P) }
+  step (yes a∈P) (no  b∉P) =
+    no λ { (l , h , a≤l , l<h , h≤b , h-l<ε , l∉P , h∈P) →
+      case ≤→<⊎≡ a l a≤l of λ where
+        (inl a≡l) → l∉P (subst (λ q → q ∈ P) a≡l a∈P)
+        (inr a<l) → l∉P (P< a l a<l a∈P) }
+  step (no  a∉P) (yes b∈P) = small (<Dec (b - a) (fst ε))
+    where
+    small : Dec (b - a < fst ε) → Dec (BisectWitness a b ε)
+    small (yes b-a<ε) =
+      yes (a , b , isRefl≤ a , a<b , isRefl≤ b , b-a<ε , a∉P , b∈P)
+    small (no  ¬b-a<ε) = midCase (P? m)
+      where
+      half : ℚ
+      half = [ pos 1 / 1+ 1 ]
+
+      m : ℚ
+      m = (a + b) · half
+
+      midCase : Dec (m ∈ P) → Dec (BisectWitness a b ε)
+      midCase (yes m∈P) = liftW (bisectStep n a m a<m ε)
+        where
+        0<m-a : [ pos 0 / 1+ 0 ] < (m - a)
+        0<m-a = let
+          0<b-a : [ pos 0 / 1+ 0 ] < (b - a)
+          0<b-a = -< a b a<b
+
+          0<half : [ pos 0 / 1+ 0 ] < half
+          0<half = 0<pos 0 (1+ 1)
+
+          0<b-a·half : [ pos 0 / 1+ 0 ] < (b - a) · half
+          0<b-a·half = <-·o [ pos 0 / 1+ 0 ] (b - a) half 0<half 0<b-a
+
+          eq : (b - a) · half ≡ (m - a)
+          eq = ?
+          in subst (λ x → [ pos 0 / 1+ 0 ] < x) eq 0<b-a·half
+
+        a<m : a < m
+        a<m = -<⁻¹ a m 0<m-a
+        liftW : Dec (BisectWitness a m ε) → Dec (BisectWitness a b ε)
+        liftW (yes (l , h , a≤l , l<h , h≤m , h-l<ε , l∉P , h∈P)) =
+          yes (l , h , a≤l , l<h , h≤b , h-l<ε , l∉P , h∈P)
+          where
+          h≤b : h ≤ b
+          h≤b = ?
+        liftW (no nw) =
+          no (λ w → nw (restrict w))
+          where
+          restrict : BisectWitness a b ε → BisectWitness a m ε
+          restrict = ?
+      midCase (no  m∉P) = ?
+  step (no  a∉P) (no  b∉P) = ?
+
+ -- Main entry point (implementation to be provided via binary bisection).
+ bisect : (n : ℕ) → (a b : ℚ) → a < b → (ε : ℚ₊) → Dec (BisectWitness a b ε)
+ bisect n a b a<b ε = bisectStep n a b a<b ε

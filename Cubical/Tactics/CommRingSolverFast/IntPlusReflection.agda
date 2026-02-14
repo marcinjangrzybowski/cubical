@@ -12,9 +12,9 @@ open import Cubical.Data.Maybe
 open import Cubical.Data.Sigma
 open import Cubical.Data.List
 open import Cubical.Data.Nat.Literals
-open import Cubical.Data.Int.Fast.Base hiding (abs; _-_)
-open import Cubical.Data.Int.Fast as ℤ using (fromNegℤ; fromNatℤ)
-import Cubical.Data.Int.Fast.Order as ℤ
+open import Cubical.Data.Fast.Int.Base hiding (abs; _-_)
+open import Cubical.Data.Fast.Int as ℤ using (fromNegℤ; fromNatℤ)
+import Cubical.Data.Fast.Int.Order as ℤ
 import Cubical.Data.Rationals.Fast as ℚ
 open import Cubical.Data.Nat using (ℕ; discreteℕ) renaming (_+_ to _+ℕ_)
 open import Cubical.Data.Bool
@@ -37,7 +37,7 @@ import Cubical.Data.NatPlusOne as NPO
 
 import Cubical.Data.Nat as ℕ
 
-open import Cubical.Algebra.CommRing.Instances.Int.Fast
+open import Cubical.Algebra.CommRing.Instances.Fast.Int
 
 open DecCommRingSolver ℤCommRing ℤ.discreteℤ ℤCommRing (idCommRingHom ℤCommRing)
 
@@ -204,8 +204,7 @@ module CommRingReflection where
    do  debugPrint "intSolverVars" 20  (strErr "fromNatPlus t1:" ∷ termErr x ∷ [])
        buildExpressionFromNatPlus f x
 
-  buildExpressionFromNatPlus (ℕ.suc f) (def (quote fst)
-      (_ h∷ _ h∷ _ h∷ _ h∷ (def (quote ℤ.0<→ℕ₊₁) (x v∷ _ v∷ [])) v∷ [])) =
+  buildExpressionFromNatPlus (ℕ.suc f) (def (quote ℤ.0<→ℕ₊₁-fst) (x v∷ [])) =
      buildExpression f x
   buildExpressionFromNatPlus (ℕ.suc f) (con (quote NPO.1+_)
      ((def (quote ℕ._+_) (n v∷
@@ -344,7 +343,8 @@ wrdℕ = withReduceDefs
    (false , ((quote ℕ._·_) ∷
     (quote ℕ._+_) ∷ (quote _+_) ∷ (quote (-_)) ∷ (quote _·_) ∷ (quote _ℕ-_)
      -- ∷ []))
-     ∷ (quote NPO._+₁_) ∷ (quote NPO._·₊₁_) ∷ (quote NPO.ℕ₊₁→ℕ) ∷ (quote ℚ.ℕ₊₁→ℤ) ∷ []))
+     ∷ (quote NPO._+₁_) ∷ (quote NPO._·₊₁_) ∷ (quote NPO.ℕ₊₁→ℕ) ∷ (quote ℚ.ℕ₊₁→ℤ)
+      ∷ (quote ℤ.0<→ℕ₊₁-fst) ∷ []))
 
 
 private
@@ -436,9 +436,9 @@ macro
 -- open import Cubical.Data.Sigma
 -- open import Cubical.Data.List
 -- open import Cubical.Data.Nat.Literals
--- open import Cubical.Data.Int.Fast.Base hiding (abs; _-_)
--- open import Cubical.Data.Int.Fast using (fromNegℤ; fromNatℤ)
--- import Cubical.Data.Int.Fast.Order as ℤ
+-- open import Cubical.Data.Fast.Int.Base hiding (abs; _-_)
+-- open import Cubical.Data.Fast.Int using (fromNegℤ; fromNatℤ)
+-- import Cubical.Data.Fast.Int.Order as ℤ
 -- import Cubical.Data.Rationals.Fast as ℚ
 -- open import Cubical.Data.Nat using (ℕ; discreteℕ) renaming (_+_ to _+ℕ_)
 -- open import Cubical.Data.Bool
@@ -463,7 +463,7 @@ macro
 
 -- import Cubical.Data.Nat as ℕ
 
--- open import Cubical.Algebra.CommRing.Instances.Int.Fast
+-- open import Cubical.Algebra.CommRing.Instances.Fast.Int
 
 -- private
 --   variable
