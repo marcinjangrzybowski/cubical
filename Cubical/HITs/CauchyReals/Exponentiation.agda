@@ -771,26 +771,6 @@ _₀₊·₀₊ᵣ_ : ℝ₀₊ → ℝ₀₊ → ℝ₀₊
 
 
 
-opaque
- unfolding _<ᵣ_
- x<δ→x≤0 : ∀ x → ((ε : ℚ₊) → x <ᵣ (rat (fst ε))) → x ≤ᵣ 0
- x<δ→x≤0 x p = eqℝ _ _
-   λ ε → invEq (∼≃abs<ε _ _ _)
-     (isTrans≡<ᵣ _ _ _
-         (cong absᵣ (+IdR _ ∙ maxᵣComm _ _)
-           ∙ (absᵣNonNeg _ (≤maxᵣ 0 x)) ∙ maxᵣComm _ _) (p' ε))
-   where
-   p' : (ε : ℚ₊) → maxᵣ x 0 <ᵣ (rat (fst ε))
-   p' ε = max<-lem _ _ _  (p ε) (snd (ℚ₊→ℝ₊ ε))
-
-opaque
- unfolding _<ᵣ_
- x<y+δ→x≤y : ∀ x y → ((ε : ℚ₊) → x <ᵣ y +ᵣ (rat (fst ε))) → x ≤ᵣ y
- x<y+δ→x≤y x y p = invEq (x≤y≃0≤y-x _ _)
-  ( isTrans≤≡ᵣ _ _ _
-    (-ᵣ≤ᵣ _ 0 (x<δ→x≤0 _ (a<c+b⇒a-c<b _ _ _ ∘ p)))
-    (-[x-y]≡y-x _ _))
-
 -- lim√→₀ : ∀ n → (ε : ℚ₊) →
 --            ∃[ δ ∈ ℚ₊ ] (∀ x →
 --                fst x <ᵣ rat (fst δ) → fst (root n x) <ᵣ rat (fst ε))

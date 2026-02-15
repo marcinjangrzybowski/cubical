@@ -1,5 +1,3 @@
-{-# OPTIONS --safe  #-} 
-
 module Cubical.HITs.CauchyReals.Sequence where
 
 open import Cubical.Foundations.Prelude
@@ -7,6 +5,7 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Function
+open import Cubical.Foundations.Path
 open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Powerset
@@ -57,6 +56,246 @@ open import Cubical.Tactics.CommRingSolverFast.FastRationalsReflection
 open import Cubical.Tactics.CommRingSolverFast.IntReflection
 open import Cubical.HITs.CauchyReals.LiftingExpr
 open import Cubical.Tactics.CommRingSolverFast.RealsReflection
+
+
+
+Dichotomyℝ' : ∀ x y z → x <ᵣ z →
+              ∥ (y <ᵣ z) ⊎ (x <ᵣ y) ∥₁
+Dichotomyℝ' x y z x<z =
+  PT.map2
+   (λ (q  , x<q  , q<x+Δ)
+      (q' , y-Δ<q' , q'<y)
+     → ⊎.map
+         (λ q'≤q →
+           isTrans<ᵣ _ _ _
+             (a-b<c⇒a<c+b _ _ _ y-Δ<q')
+             (isTrans<≡ᵣ _ _ _
+               (<ᵣ-+o _ _ _
+                 ((isTrans≤<ᵣ _ _ _ (≤ℚ→≤ᵣ q' _ q'≤q)
+                  q<x+Δ ))) ℝ!))
+         (λ q<q' →
+           isTrans<ᵣ _ _ _ (isTrans<ᵣ _ _ _
+               x<q
+               (<ℚ→<ᵣ q _ q<q'))
+             q'<y)
+         (ℚ.Dichotomyℚ q' q))
+    (denseℚinℝ x (x +ᵣ (fst Δ₊))
+      (isTrans≡<ᵣ _ _ _
+        (sym (+IdR x)) (<ᵣ-o+ _ _ _ (snd Δ₊))))
+    (denseℚinℝ (y -ᵣ (fst Δ₊)) y
+      (isTrans<≡ᵣ _ _ _
+         (<ᵣ-o+ _ _ _
+           (isTrans<≡ᵣ _ _ _ (-ᵣ<ᵣ _ _ (snd Δ₊)) (-ᵣ-rat 0)))
+         (+IdR y)))
+
+ where
+ Δ₊ : ℝ₊
+ Δ₊ = (z -ᵣ x , x<y→0<y-x _ _ x<z) ₊·ᵣ ℚ₊→ℝ₊ ([ 1 / 2 ]₊)
+
+
+fromPositive·ᵣ : ∀ {a b} → 0 ≤ᵣ a → 0 ≤ᵣ b → 0 <ᵣ a ·ᵣ b  → 0 <ᵣ b  
+fromPositive·ᵣ {a} {b} 0≤a 0≤b 0<a·b =
+ PT.rec (isProp<ᵣ _ _) (⊎.rec
+   (λ a<1 → isTrans<≤ᵣ _ _ _
+       0<a·b
+       (isTrans≤≡ᵣ _ _ _
+         (≤ᵣ-·ᵣo a 1 b 0≤b (<ᵣWeaken≤ᵣ _ _ a<1))
+         (·IdL b)))
+   (flip (invEq ∘ curry (0<x≃0<y₊·x b) a) 0<a·b))
+   (Dichotomyℝ' 0 a 1 decℚ<ᵣ?)
+
+
+-- opaque
+--  unfolding _<ᵣ_
+x<δ→x≤0 : ∀ x → ((ε : ℚ₊) → x <ᵣ (rat (fst ε))) → x ≤ᵣ 0
+x<δ→x≤0 x p = ≡→≤ᵣ (eqℝ _ _
+  λ ε → invEq (∼≃abs<ε _ _ _)
+    (isTrans≡<ᵣ _ _ _
+      
+        (cong absᵣ (ℝ! ∙ maxᵣComm _ _)
+          ∙ (absᵣNonNeg _ (≤maxᵣ 0 x)) ∙ maxᵣComm _ _)
+          (p' ε)))
+  where
+  p' : (ε : ℚ₊) → maxᵣ x 0 <ᵣ (rat (fst ε))
+  p' ε = max<-lem _ _ _  (p ε) (snd (ℚ₊→ℝ₊ ε))
+
+
+x<y+δ→x≤y : ∀ x y → ((ε : ℚ₊) → x <ᵣ y +ᵣ (rat (fst ε))) → x ≤ᵣ y
+x<y+δ→x≤y x y p = invEq (x≤y≃0≤y-x _ _)
+ ( isTrans≤≡ᵣ _ _ _
+   (isTrans≡≤ᵣ _ _ _ ℝ! (-ᵣ≤ᵣ _ 0 (x<δ→x≤0 _ (a<c+b⇒a-c<b _ _ _ ∘ p)))) -- 
+   (-[x-y]≡y-x _ _))
+
+
+absᵣ-triangle-midpt
+       : (x z y : ℝ) →  absᵣ (x -ᵣ y) ≤ᵣ absᵣ (x -ᵣ z) +ᵣ absᵣ (z -ᵣ y)
+absᵣ-triangle-midpt x z y =
+  isTrans≡≤ᵣ _ _ _
+    (cong absᵣ ℝ!)
+    (absᵣ-triangle (x -ᵣ z) (z -ᵣ y))
+
+
+≤ᵣ→≯ᵣ : ∀ x y →  x ≤ᵣ y → (y <ᵣ x) → ⊥
+≤ᵣ→≯ᵣ x y x≤y y<x =
+ let x=y = isAntisym≤ᵣ x y x≤y (<ᵣWeaken≤ᵣ _ _ y<x)
+ in isAsym<ᵣ y x y<x (subst2 _<ᵣ_ (sym x=y) x=y y<x)
+
+
+
+≯ᵣ→≤ᵣ : ∀ x y →  ((y <ᵣ x) → ⊥) → x ≤ᵣ y
+≯ᵣ→≤ᵣ x y f = x<y+δ→x≤y _ _
+  λ ε → PT.rec (isProp<ᵣ _ _)
+      (⊎.rec (idfun _) (⊥.rec ∘ f ))
+       (Dichotomyℝ' y x (y +ᵣ (rat (fst ε)))
+        (isTrans≡<ᵣ _ _ _ (sym (+IdR _)) (<ᵣ-o+ _ _ _ (snd (ℚ₊→ℝ₊ ε)))))
+
+≤ᵣ≃≯ᵣ : ∀ x y →  (x ≤ᵣ y) ≃ ((y <ᵣ x) → ⊥)
+≤ᵣ≃≯ᵣ _ _ = propBiimpl→Equiv (isProp≤ᵣ _ _)
+  (isPropΠ λ _ → isProp⊥)
+  (≤ᵣ→≯ᵣ _ _) (≯ᵣ→≤ᵣ _ _)
+
+
+
+≡-byContracdition : ∀ x y → ((ε : ℚ₊) → rat (fst ε) <ᵣ absᵣ (x -ᵣ y) → ⊥ )
+                      → x ≡ y
+≡-byContracdition x y X =
+  eqℝ _ _ λ ε →
+    PT.rec (isProp∼ _ _ _)
+        (⊎.rec (invEq (∼≃abs<ε _ _ ε))
+         (⊥.rec ∘ X (/2₊ ε)) )
+      (Dichotomyℝ' (fst (ℚ₊→ℝ₊ (/2₊ ε))) (absᵣ (x -ᵣ y)) (fst (ℚ₊→ℝ₊ ε))
+       (<ℚ→<ᵣ _ _ (x/2<x ε)))
+
+continous-＃ : ∀ P f → IsContinuousWithPred P f
+                → ∀ x y x∈ y∈ → (f x x∈) ＃ (f y y∈) → x ＃ y 
+continous-＃ P f fic x y x∈ y∈ fx＃fy =
+ let z = fst (＃≃0<dist _ _) fx＃fy
+ in PT.rec (isProp＃ _ _)
+     (λ (q , (0<q , q<fx-fy)) →
+       PT.rec (isProp＃ _ _)
+         (λ (δ , Δ) → 
+           PT.rec (isProp＃ _ _)
+            (⊎.rec (λ u → ⊥.rec (isAsym<ᵣ _ _
+              (fst (∼≃abs<ε _ _ _) (Δ y y∈ (invEq (∼≃abs<ε _ _ _) u)))
+               q<fx-fy) ) (invEq (＃≃0<dist _ _)))
+             (Dichotomyℝ' 0 (absᵣ (x -ᵣ y)) (rat (fst δ)) (<ℚ→<ᵣ _ _ (snd δ))))
+         (fic x (q , <ᵣ→<ℚ _ _ 0<q) x∈))
+     (denseℚinℝ _ _ z)
+
+record 3-⊎-prop-elim {ℓa ℓb ℓ} (A : Type ℓa) (B : Type ℓb)
+           (X : A ⊎ B → A ⊎ B → A ⊎ B → Type ℓ)  : Type (ℓ-max (ℓ-max ℓa ℓb) ℓ) where
+ field
+  isPropA : isProp A
+  isPropB : isProp B
+  aaa : ∀ a → X (inl a) (inl a) (inl a)
+  aab : ∀ a b → X (inl a) (inl a) (inr b)
+  aba : ∀ a b → X (inl a) (inr b) (inl a)
+  baa : ∀ a b → X (inr b) (inl a) (inl a)
+  abb : ∀ a b → X (inl a) (inr b) (inr b)
+  bab : ∀ a b → X (inr b) (inl a) (inr b)
+  bba : ∀ a b → X (inr b) (inr b) (inl a)
+  bbb : ∀ b → X (inr b) (inr b) (inr b)
+
+
+ go : ∀ x₀ x₁ x₂ → X x₀ x₁ x₂ 
+ go (inl _) (inl _) (inl _) =
+  subst2 (X (inl _)) (cong inl (isPropA _ _)) (cong inl (isPropA _ _)) (aaa _) 
+ go (inl _) (inl _) (inr _) =
+   subst (λ u → X (inl _) (inl u) (inr _)) (isPropA _ _) (aab _ _)
+ go (inl _) (inr _) (inl _) =
+   subst (λ u → X (inl _) (inr _) (inl u)) (isPropA _ _) (aba _ _)
+ go (inl _) (inr _) (inr _) =
+   subst (λ u → X (inl _) (inr u) (inr _)) (isPropB _ _) (abb _ _)
+ go (inr _) (inl _) (inl _) =
+   subst (λ u → X (inr _) (inl u) (inl _)) (isPropA _ _) (baa _ _)
+ go (inr _) (inl _) (inr _) =
+   subst (λ u → X (inr _) (inl _) (inr u)) (isPropB _ _) (bab _ _)
+ go (inr _) (inr _) (inl _) =
+   subst (λ u → X (inr _) (inr u) (inl _)) (isPropB _ _) (bba _ _)
+ go (inr _) (inr _) (inr _) =
+  subst2 (X (inr _)) (cong inr (isPropB _ _)) (cong inr (isPropB _ _)) (bbb _)
+ 
+module Stiching {ℓ} (A : Type ℓ) (a b : ℝ) (a<b : a <ᵣ b)
+           (f : ∀ x → x <ᵣ b → A)
+           (g : ∀ x → a <ᵣ x → A)
+           (f=g : ∀ x x< <x → f x x< ≡ g x <x)
+            where
+
+
+ w₂ : ∀ x → 2-Constant (⊎.rec (f x) (g x))
+ w₂ x (inl u) (inl v)  = cong (f x) (isProp<ᵣ _ _ u v)
+ w₂ x (inl u) (inr v) = f=g x u v
+ w₂ x (inr u) (inl v) = sym (f=g x v u)
+ w₂ x (inr u) (inr v) = cong (g x) (isProp<ᵣ _ _ u v)
+
+
+ w₃ :  ∀ x → 3-Constant (⊎.rec (f x) (g x))
+ w₃ x .3-Constant.link = w₂ x
+ w₃ x .3-Constant.coh₁ = 3-⊎-prop-elim.go ww
+  where
+  open 3-⊎-prop-elim 
+  ww : 3-⊎-prop-elim (x <ᵣ b) (a <ᵣ x) _
+  ww .isPropA = isProp<ᵣ _ _
+  ww .isPropB = isProp<ᵣ _ _
+  ww .aaa _ = congP (λ _ → cong (f x)) (isSet→isSet' (isProp→isSet (isProp<ᵣ _ _)) _ _  _ _) 
+  ww .aab p q = cong {y = refl} (cong (f x)) (isSet→isSet' (isProp→isSet (isProp<ᵣ _ _)) _ _ _ _)
+    ◁ λ i i₁ → f=g x p q (i ∧ i₁)
+  ww .aba p q = (λ i i₁ → f=g x p q (~ i ∧ i₁)) ▷
+    cong {x = refl} (cong (f x)) (isSet→isSet' (isProp→isSet (isProp<ᵣ _ _)) _ _ _ _)
+  ww .baa p q = flipSquare ((λ _ → refl) ▷
+    cong {x = refl} (cong (f x)) (isSet→isSet' (isProp→isSet (isProp<ᵣ _ _)) _ _ _ _))
+  ww .abb p q = flipSquare ((λ _ → refl) ▷
+    cong {x = refl} (cong (g x)) (isSet→isSet' (isProp→isSet (isProp<ᵣ _ _)) _ _ _ _))
+  ww .bab p q = (λ i i₁ → f=g x p q (~ i₁ ∨ i))
+    ▷ cong {x = refl} (cong (g x)) (isSet→isSet' (isProp→isSet (isProp<ᵣ _ _)) _ _ _ _)
+  ww .bba p q = cong {y = refl} (cong (g x)) (isSet→isSet' (isProp→isSet (isProp<ᵣ _ _)) _ _ _ _)
+    ◁ λ i i₁ → f=g x p q (~ (i₁ ∧ i)) 
+  ww .bbb _ = congP (λ _ → cong (g x)) (isSet→isSet' (isProp→isSet (isProp<ᵣ _ _)) _ _  _ _) 
+  
+ module hLev2 (isSetA : isSet A) where
+   
+    preStichSetFns : ∀ x → ∥ (x <ᵣ b) ⊎ (a <ᵣ x) ∥₁  → A
+    preStichSetFns x = PT.rec→Set isSetA
+        (⊎.rec (f x) (g x))
+        (w₂ x)
+
+
+    stichSetFns : ℝ → A
+    stichSetFns x = preStichSetFns x (Dichotomyℝ' a x b a<b)
+
+    stichSetFns-x< : ∀ x x<b → stichSetFns x ≡ f x x<b
+    stichSetFns-x< x x<b =
+       cong (preStichSetFns x) (squash₁ (Dichotomyℝ' a x b a<b)
+         ∣ inl x<b ∣₁)
+
+    stichSetFns-<x : ∀ x a<x → stichSetFns x ≡ g x a<x
+    stichSetFns-<x x a<x =
+       cong (preStichSetFns x) (squash₁ (Dichotomyℝ' a x b a<b)
+         ∣ inr a<x ∣₁)
+
+
+ module hLev3 (isGrpdA : isGroupoid A) where
+   
+    preStichGrpdFns : ∀ x → ∥ (x <ᵣ b) ⊎ (a <ᵣ x) ∥₁  → A
+    preStichGrpdFns x = PT.rec→Gpd
+        isGrpdA (⊎.rec (f x) (g x))
+         (w₃ x)
+
+    stichGrpdFns : ℝ → A
+    stichGrpdFns x = preStichGrpdFns x (Dichotomyℝ' a x b a<b)
+
+    stichGrpdFns-x< : ∀ x x<b → stichGrpdFns x ≡ f x x<b
+    stichGrpdFns-x< x x<b =
+       cong (preStichGrpdFns x) (squash₁ (Dichotomyℝ' a x b a<b)
+         ∣ inl x<b ∣₁)
+
+    stichGrpdFns-<x : ∀ x a<x → stichGrpdFns x ≡ g x a<x
+    stichGrpdFns-<x x a<x =
+       cong (preStichGrpdFns x) (squash₁ (Dichotomyℝ' a x b a<b)
+         ∣ inr a<x ∣₁)
+
+
+-- open Stiching public using (hLev2.stichSetFns)
 
 
 private

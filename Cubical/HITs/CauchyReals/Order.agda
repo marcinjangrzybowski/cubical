@@ -748,8 +748,6 @@ opaque
   in
     m , ∣ (p , m) , u≤p , p<m , ≤ᵣ-refl _ ∣₁ , ∣ (m , q) , ≤ᵣ-refl _ , m<q , q≤v ∣₁
 
-
-
 0≤absᵣ : ∀ x → 0 ≤ᵣ absᵣ x
 0≤absᵣ = Elimℝ-Prop.go w
  where
@@ -1219,4 +1217,6 @@ ontervalℙ⊂intervalℙ : ∀ {a b}
 ontervalℙ⊂intervalℙ x (a<x , x<b) =
    <ᵣWeaken≤ᵣ _ _ a<x ,
    <ᵣWeaken≤ᵣ _ _ x<b
+
+
 

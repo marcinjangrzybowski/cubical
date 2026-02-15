@@ -1678,37 +1678,3 @@ opaque
                 ( sym (absᵣ-rat _) ∙ cong absᵣ (sym (-ᵣ-rat₂ _ _)))
                 (≤ℚ→≤ᵣ _ _ (ℚ.clampDist L L' u u'))
 
-
-
-Dichotomyℝ' : ∀ x y z → x <ᵣ z →
-              ∥ (y <ᵣ z) ⊎ (x <ᵣ y) ∥₁
-Dichotomyℝ' x y z x<z =
-  PT.map2
-   (λ (q  , x<q  , q<x+Δ)
-      (q' , y-Δ<q' , q'<y)
-     → ⊎.map
-         (λ q'≤q →
-           isTrans<ᵣ _ _ _
-             (a-b<c⇒a<c+b _ _ _ y-Δ<q')
-             (isTrans<≡ᵣ _ _ _
-               (<ᵣ-+o _ _ _
-                 ((isTrans≤<ᵣ _ _ _ (≤ℚ→≤ᵣ q' _ q'≤q)
-                  q<x+Δ ))) ℝ!))
-         (λ q<q' →
-           isTrans<ᵣ _ _ _ (isTrans<ᵣ _ _ _
-               x<q
-               (<ℚ→<ᵣ q _ q<q'))
-             q'<y)
-         (ℚ.Dichotomyℚ q' q))
-    (denseℚinℝ x (x +ᵣ (fst Δ₊))
-      (isTrans≡<ᵣ _ _ _
-        (sym (+IdR x)) (<ᵣ-o+ _ _ _ (snd Δ₊))))
-    (denseℚinℝ (y -ᵣ (fst Δ₊)) y
-      (isTrans<≡ᵣ _ _ _
-         (<ᵣ-o+ _ _ _
-           (isTrans<≡ᵣ _ _ _ (-ᵣ<ᵣ _ _ (snd Δ₊)) (-ᵣ-rat 0)))
-         (+IdR y)))
-
- where
- Δ₊ : ℝ₊
- Δ₊ = (z -ᵣ x , x<y→0<y-x _ _ x<z) ₊·ᵣ ℚ₊→ℝ₊ ([ 1 / 2 ]₊)

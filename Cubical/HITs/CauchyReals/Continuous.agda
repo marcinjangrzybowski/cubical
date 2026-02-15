@@ -310,6 +310,8 @@ opaque
                  (cong₂ ℚ._+_ (ℚ.abs'≡abs r) (ℚ.abs'≡abs r'))
                 (ℚ.abs+≤abs+abs r r') ) )) y) x
 
+absᵣ-triangle'' : (x y : ℝ) → absᵣ (x -ᵣ y) ≤ᵣ (absᵣ x +ᵣ absᵣ y)
+absᵣ-triangle'' x y = isTrans≤≡ᵣ _ _ _ (absᵣ-triangle _ _) (cong (absᵣ x +ᵣ_) (sym (-absᵣ y))) 
 
 
 IsContinuousId : IsContinuous (λ x → x)
@@ -1519,4 +1521,3 @@ sym-intervalℙ⊆ointervalℙ : ∀ a b → a <ᵣ b →
   intervalℙ (-ᵣ a) a ⊆ ointervalℙ (-ᵣ b) b
 sym-intervalℙ⊆ointervalℙ a b a<b =
  intervalℙ⊆ointervalℙ _ _ _ _ (-ᵣ<ᵣ _ _ a<b) a<b
-

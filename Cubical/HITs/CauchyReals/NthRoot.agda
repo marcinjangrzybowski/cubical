@@ -633,30 +633,3 @@ nth-pow-root-iso (2+ n) .Iso.ret = Iso.ret
 
 isEquiv-₊^ⁿ : ∀ n → isEquiv (_₊^ⁿ ℕ₊₁→ℕ n)
 isEquiv-₊^ⁿ n = isoToIsEquiv (nth-pow-root-iso n)
-
-
-module RootValue where
-
- n : ℕ
- n = 2
-
- q : ℚ
- q = 2
-
- open NthRoot (n ℕ.∸ 2)
-
- module BL = IsBilipschitz (rootRest 0)
- 
- ss : ℕ → ℚ
- ss k = ((BL.s q (decℚ≤ᵣ? , decℚ≤ᵣ?)) k) 
-
-
- ss-r : ℕ → ℚ
- ss-r k = ((BL.s-reduced q (decℚ≤ᵣ? , decℚ≤ᵣ?)) k) 
-
- ss' : ℕ → ℚ
- ss' k = (ss k) ℚ.ℚ^ⁿ n
-
-
- ssQ : ℚ
- ssQ = {!ℚ.reduce (ss-r 10)!}
