@@ -26,11 +26,13 @@ open import Cubical.Algebra.CommRing
 open import Cubical.Tactics.CommRingSolver.AlgebraExpression
 open import Cubical.Tactics.CommRingSolver.RawAlgebra
 open import Cubical.Tactics.CommRingSolver.IntAsRawRing
-open import Cubical.Tactics.CommRingSolver.Solver renaming (solve to ringSolve)
+-- open import Cubical.Tactics.CommRingSolver.Solver renaming (solve to ringSolve)
 
 open import Cubical.Tactics.Reflection
 open import Cubical.Tactics.Reflection.Variables
 open import Cubical.Tactics.Reflection.Utilities
+
+open EqualityToNormalform
 
 private
   variable

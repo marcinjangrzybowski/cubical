@@ -86,7 +86,9 @@ Bishop-Proposition7 (suc n) f x =
                          (isTrans<≡ᵣ _ _ _ ε<∑
                            (foldFin+0ᵣ n (fsuc) (f) _
                             ∙ cong₂ _+ᵣ_ (+IdL _) refl)))))
-                          ({!fsuc {suc _}!} ∙ foldFin+map n 0 f fsuc (idfun _))
+                          ((let z : ∀ {x} → -ᵣ f fzero +ᵣ (f fzero +ᵣ x) ≡ x
+                                z = ℝ!
+                            in z) ∙ foldFin+map n 0 f fsuc (idfun _))
                   z = Bishop-Proposition7 n (f ∘ fsuc) zz
               in PT.map ((_ ,_) ∘ snd) z)
             (∣_∣₁ ∘ (_ ,_)))

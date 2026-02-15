@@ -3,8 +3,6 @@ module Cubical.Tactics.CommRingSolverFast.OverDecidable where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function using (_∘_)
-open import Cubical.Tactics.CommRingSolverFast.RawRing
-open import Cubical.Tactics.CommRingSolverFast.AlgebraExpression
 
 open import Cubical.Reflection.Sugar
 
@@ -12,7 +10,7 @@ open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.Ring
 open import Cubical.Relation.Nullary
 
-open import Cubical.Tactics.CommRingSolverFast.RawAlgebra
+
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.Bool using (Bool;true;false;if_then_else_;_and_)
@@ -23,8 +21,14 @@ open import Cubical.Data.FinData
 open import Cubical.Data.Vec
 open import Cubical.Data.Empty
 open import Cubical.Data.Maybe
-open import Cubical.Tactics.CommRingSolverFast.Utility
+
 open import Cubical.Algebra.Ring.Properties
+
+open import Cubical.Tactics.CommRingSolverFast.Utility
+open import Cubical.Tactics.CommRingSolverFast.RawRing
+open import Cubical.Tactics.CommRingSolverFast.AlgebraExpression
+open import Cubical.Tactics.CommRingSolverFast.RawAlgebra
+
 private
   variable
     ℓ ℓ' : Level

@@ -50,6 +50,9 @@ module TestWithℤ (v : ℕ → ℤ) where
   ex13 x y = solve! ℤCommRing
 -}
 
+ ex13 : (x y : ℤ) → (x · y) · 1r ≡ 1r · (y · x)
+ ex13 x y = ℤ!
+
 --   ex0 : (a b : fst ℤCommRing) → a + b ≡ b + a
 --   ex0 a b = solve! ℤCommRing
 
